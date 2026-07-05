@@ -1,0 +1,3 @@
+# Transparent recovery for stopped browser instances
+
+CloakHub will make wake-capable CDP and manual viewer endpoints start a stopped Browser Instance and wait until the requested endpoint is reachable, rather than requiring clients to call a separate launch API first. Each Browser Profile has a stable CDP URL that can be copied before the instance is running and that triggers Transparent Recovery when accessed. This keeps existing Playwright/Puppeteer-style CDP clients simple, gives manual users a single "open viewer" flow, and still allows idle spin-down; if recovery exceeds the configured launch timeout, CloakHub returns a retryable 503-style failure.
