@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "integration:real-runtime": "CLOAKHUB_RUN_REAL_RUNTIME_TESTS=true bun test tests/real-runtime.integration.test.ts",
     "start": "bun run src/server.ts",
     "dev": "bun --watch src/server.ts",
     "test": "bun test",
