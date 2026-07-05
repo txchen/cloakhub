@@ -3,8 +3,8 @@ import { mkdtemp, readdir, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 
-import { createApp } from "../src/app";
-import type { BrowserRuntime, BrowserRuntimeState } from "../src/browser-runtime";
+import { createApp, type CloakHubUpgradeServer, type CloakHubWebSocketData } from "../src/app";
+import { UnsupportedManualViewerProfileError, type BrowserRuntime, type BrowserRuntimeState } from "../src/browser-runtime";
 import type { CloakHubConfig } from "../src/config";
 import { createProfileService } from "../src/profile-service";
 import { openProfileRepository } from "../src/profile-repository";
@@ -326,6 +326,82 @@ describe("Browser Profile admin API", () => {
     expect(html).toContain("1s");
   });
 
+  test("opens manual viewer with admin auth and triggers headed Transparent Recovery", async () => {
+    const browserRuntime = fakeBrowserRuntime();
+    const { app } = await tempApp({ authToken: "admin-token" }, browserRuntime);
+    const cookie = "cloakhub_auth=admin-token";
+    await app.fetch(
+      jsonRequest("http://cloakhub.test/ui/profiles", "POST", {
+        headless: false,
+        profile_id: "work"
+      }, cookie)
+    );
+
+    const anonymous = await app.fetch(new Request("http://cloakhub.test/ui/profiles/work/viewer"));
+    expect(anonymous.status).toBe(401);
+
+    const response = await app.fetch(
+      new Request("http://cloakhub.test/ui/profiles/work/viewer", { headers: { cookie } })
+    );
+    const html = await response.text();
+
+    expect(response.status).toBe(200);
+    expect(browserRuntime.calls).toEqual(["viewer:work"]);
+    expect(html).toContain('id="manual-viewer"');
+    expect(html).toContain('data-vnc-websocket-url="/ui/profiles/work/vnc"');
+  });
+
+  test("upgrades manual viewer websocket after headed Transparent Recovery", async () => {
+    const browserRuntime = fakeBrowserRuntime();
+    const server = fakeUpgradeServer();
+    const { app } = await tempApp({ authToken: "admin-token" }, browserRuntime);
+    const cookie = "cloakhub_auth=admin-token";
+    await app.fetch(
+      jsonRequest("http://cloakhub.test/ui/profiles", "POST", {
+        headless: false,
+        profile_id: "work"
+      }, cookie)
+    );
+
+    const response = await app.fetch(
+      new Request("http://cloakhub.test/ui/profiles/work/vnc", {
+        headers: { cookie, upgrade: "websocket" }
+      }),
+      server
+    );
+
+    expect(response).toBeUndefined();
+    expect(browserRuntime.calls).toEqual(["viewer:work"]);
+    expect(server.upgrades).toEqual([{ profileId: "work", targetHost: "127.0.0.1", targetPort: 5900 }]);
+  });
+
+  test("status responses include active manual viewer count", async () => {
+    const browserRuntime = fakeBrowserRuntime({ activeManualViewerCount: 2 });
+    const { app } = await tempApp({}, browserRuntime);
+    await app.fetch(jsonRequest("http://cloakhub.test/api/profiles", "POST", { profile_id: "work" }));
+
+    const apiResponse = await app.fetch(new Request("http://cloakhub.test/api/profiles/work"));
+    const uiResponse = await app.fetch(new Request("http://cloakhub.test/"));
+    const html = await uiResponse.text();
+
+    expect(await apiResponse.json()).toMatchObject({ manual_viewer_count: 2 });
+    expect(html).toContain("Viewers: 2");
+  });
+
+  test("headless profiles show viewer unavailable without changing headless mode", async () => {
+    const browserRuntime = fakeBrowserRuntime({ viewerError: new UnsupportedManualViewerProfileError("work") });
+    const { app, repository } = await tempApp({}, browserRuntime);
+    await app.fetch(jsonRequest("http://cloakhub.test/api/profiles", "POST", { headless: true, profile_id: "work" }));
+
+    const response = await app.fetch(new Request("http://cloakhub.test/ui/profiles/work/viewer"));
+    const html = await response.text();
+
+    expect(response.status).toBe(400);
+    expect(html).toContain("Manual viewer is unavailable for headless Browser Profiles");
+    expect(html).toContain("Edit the profile to disable headless mode");
+    expect(repository.get("work")?.headless).toBe(true);
+  });
+
   test("manages one plaintext CDP Token through explicit admin actions", async () => {
     const { app, repository } = await tempApp({}, undefined, {
       cdpTokenGenerator: sequenceTokens("first-token", "second-token")
@@ -435,7 +511,11 @@ async function tempApp(
   return { app: createApp(config, { browserRuntime, profileService }), dataRoot, repository };
 }
 
-function fakeBrowserRuntime(options: { activeCdpSessionCount?: number } = {}): BrowserRuntime & { calls: string[] } {
+function fakeBrowserRuntime(options: {
+  activeCdpSessionCount?: number;
+  activeManualViewerCount?: number;
+  viewerError?: Error;
+} = {}): BrowserRuntime & { calls: string[] } {
   const calls: string[] = [];
   const state = (profileId: string, status: BrowserRuntimeState["status"]): BrowserRuntimeState => ({
     cdp_port: status === "running" ? 5100 : -1,
@@ -446,6 +526,7 @@ function fakeBrowserRuntime(options: { activeCdpSessionCount?: number } = {}): B
   return {
     calls,
     activeCdpSessionCount: () => options.activeCdpSessionCount ?? 0,
+    activeManualViewerCount: () => options.activeManualViewerCount ?? 0,
     cdpSessionObservations: () =>
       options.activeCdpSessionCount
         ? [
@@ -462,6 +543,23 @@ function fakeBrowserRuntime(options: { activeCdpSessionCount?: number } = {}): B
       close: () => undefined,
       recordMessage: () => undefined
     }),
+    openManualViewer: async (profileId) => {
+      calls.push(`viewer:${profileId}`);
+      if (options.viewerError) {
+        throw options.viewerError;
+      }
+
+      return {
+        display: ":100",
+        profile_id: profileId,
+        vnc_port: 5900,
+        vnc_ws_path: `/ui/profiles/${profileId}/vnc`
+      };
+    },
+    openManualViewerSession: () => ({
+      close: () => undefined,
+      recordInput: () => undefined
+    }),
     recordCdpDiscovery: () => undefined,
     restart: async (profileId) => {
       calls.push(`restart:${profileId}`);
@@ -475,7 +573,19 @@ function fakeBrowserRuntime(options: { activeCdpSessionCount?: number } = {}): B
       calls.push(`stop:${profileId}:${reason}`);
       return state(profileId, "stopped");
     },
-    spinDownIdleHeadlessInstances: async () => []
+    spinDownIdleInstances: async () => []
+  };
+}
+
+function fakeUpgradeServer(): CloakHubUpgradeServer & { upgrades: CloakHubWebSocketData[] } {
+  const upgrades: CloakHubWebSocketData[] = [];
+
+  return {
+    upgrades,
+    upgrade: (_request, options) => {
+      upgrades.push(options.data);
+      return true;
+    }
   };
 }
 

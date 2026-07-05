@@ -48,6 +48,7 @@ export function createBunBrowserProcessLauncher(
 
       const subprocess = spawn(browserCommand(command), {
         detached: true,
+        ...(command.display ? { env: { ...process.env, DISPLAY: command.display } } : {}),
         stderr: "ignore",
         stdin: "ignore",
         stdout: "ignore"

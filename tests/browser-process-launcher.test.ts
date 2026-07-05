@@ -50,6 +50,26 @@ describe("BunBrowserProcessLauncher", () => {
     expect(await launcher.ownedProfileIds()).toEqual(["work"]);
   });
 
+  test("launches headed CloakBrowser with display environment and without headless flag", async () => {
+    const dataRoot = await tempDataRoot();
+    const spawn = fakeSpawn();
+    const launcher = createBunBrowserProcessLauncher({ dataRoot, spawn: spawn.fn });
+
+    await launcher.launch({
+      browserBin: "/opt/cloakbrowser/cloakbrowser",
+      cdpPort: 5100,
+      customLaunchArgs: [],
+      display: ":100",
+      headless: false,
+      profileId: "work",
+      userDataDir: join(dataRoot, "profiles", "work")
+    });
+
+    expect(spawn.commands[0]).not.toContain("--headless=new");
+    expect(spawn.options[0]?.env).toMatchObject({ DISPLAY: ":100" });
+  });
+
+
   test("discovers and cleans up only profiles with ownership markers", async () => {
     const dataRoot = await tempDataRoot();
     const waits: number[] = [];

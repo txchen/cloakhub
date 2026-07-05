@@ -1,11 +1,14 @@
 import type { CloakHubConfig } from "./config";
 import { CdpUnauthorizedError, parseCdpRoute, type CdpGateway } from "./cdp-gateway";
 import type { CdpWebSocketData } from "./cdp-websocket-proxy";
+import type { VncWebSocketData } from "./vnc-websocket-proxy";
 import {
   BrowserProfileNotFoundError,
-  UnsupportedBrowserProfileError,
+  MissingDisplayRuntimeError,
+  UnsupportedManualViewerProfileError,
   type BrowserRuntime,
   type BrowserRuntimeCdpSessionObservation,
+  type BrowserRuntimeManualViewerState,
   type BrowserRuntimeState
 } from "./browser-runtime";
 import {
@@ -28,6 +31,7 @@ type PresentedBrowserProfile = Omit<BrowserProfile, "cdp_token"> & {
   cdp_token_configured: boolean;
   cdp_session_count: number;
   cdp_sessions: BrowserRuntimeCdpSessionObservation[];
+  manual_viewer_count: number;
 };
 
 export interface CloakHubApp {
@@ -41,8 +45,10 @@ export interface CloakHubApp {
 }
 
 export interface CloakHubUpgradeServer {
-  upgrade(request: Request, options: { data: CdpWebSocketData }): boolean;
+  upgrade(request: Request, options: { data: CloakHubWebSocketData }): boolean;
 }
+
+export type CloakHubWebSocketData = CdpWebSocketData | VncWebSocketData;
 
 export interface CloakHubServices {
   browserRuntime?: BrowserRuntime;
@@ -80,6 +86,16 @@ export function createApp(config: CloakHubConfig, services: CloakHubServices = {
       return cdpTokenResponse;
     }
 
+    const vncWebSocketResponse = await vncWebSocketResponseForRequest(request, url, services.browserRuntime, server);
+    if (vncWebSocketResponse !== undefined || isVncRoute(url)) {
+      return vncWebSocketResponse;
+    }
+
+    const manualViewerResponse = await manualViewerUiResponse(request, url, services.browserRuntime);
+    if (manualViewerResponse) {
+      return manualViewerResponse;
+    }
+
     const lifecycleResponse = await lifecycleApiResponse(request, url, services.browserRuntime);
     if (lifecycleResponse) {
       return lifecycleResponse;
@@ -113,6 +129,70 @@ export function createApp(config: CloakHubConfig, services: CloakHubServices = {
   return {
     fetch: fetch as CloakHubApp["fetch"]
   };
+}
+
+async function vncWebSocketResponseForRequest(
+  request: Request,
+  url: URL,
+  browserRuntime: BrowserRuntime | undefined,
+  server: CloakHubUpgradeServer | undefined
+): Promise<Response | undefined> {
+  const match = /^\/ui\/profiles\/([^/]+)\/vnc$/.exec(url.pathname);
+  if (!match) {
+    return undefined;
+  }
+
+  if (!browserRuntime) {
+    return textResponse("Not found", 404);
+  }
+
+  if (!isWebSocketUpgrade(request)) {
+    return textResponse("VNC websocket upgrade is required", 426);
+  }
+
+  if (!server) {
+    return errorResponse("VNC websocket upgrade is unavailable", 400);
+  }
+
+  try {
+    const viewer = await browserRuntime.openManualViewer(match[1]!);
+    const upgraded = server.upgrade(request, {
+      data: {
+        profileId: viewer.profile_id,
+        targetHost: "127.0.0.1",
+        targetPort: viewer.vnc_port
+      }
+    });
+
+    return upgraded ? undefined : errorResponse("VNC websocket upgrade failed", 400);
+  } catch (error) {
+    return manualViewerErrorResponse(error);
+  }
+}
+
+async function manualViewerUiResponse(
+  request: Request,
+  url: URL,
+  browserRuntime: BrowserRuntime | undefined
+): Promise<Response | undefined> {
+  const match = /^\/ui\/profiles\/([^/]+)\/viewer$/.exec(url.pathname);
+  if (!match) {
+    return undefined;
+  }
+
+  if (!browserRuntime) {
+    return textResponse("Not found", 404);
+  }
+
+  if (request.method !== "GET") {
+    return textResponse("Method not allowed", 405, { Allow: "GET" });
+  }
+
+  try {
+    return htmlResponse(renderManualViewer(await browserRuntime.openManualViewer(match[1]!)));
+  } catch (error) {
+    return manualViewerErrorResponse(error);
+  }
 }
 
 async function cdpApiResponse(
@@ -367,11 +447,22 @@ function lifecycleErrorResponse(error: unknown): Response {
     return errorResponse(error.message, 404);
   }
 
-  if (error instanceof UnsupportedBrowserProfileError) {
-    return errorResponse(error.message, 400);
+  return errorResponse(error instanceof Error ? error.message : String(error), 500);
+}
+
+function manualViewerErrorResponse(error: unknown): Response {
+  if (error instanceof BrowserProfileNotFoundError) {
+    return htmlResponse(renderManualViewerUnavailable(error.message), 404);
   }
 
-  return errorResponse(error instanceof Error ? error.message : String(error), 500);
+  if (error instanceof UnsupportedManualViewerProfileError || error instanceof MissingDisplayRuntimeError) {
+    return htmlResponse(renderManualViewerUnavailable(error.message), 400);
+  }
+
+  return htmlResponse(
+    renderManualViewerUnavailable(error instanceof Error ? error.message : String(error)),
+    503
+  );
 }
 
 function errorResponse(error: string, status: number): Response {
@@ -412,7 +503,8 @@ function presentProfile(
     ...profileWithoutToken,
     cdp_token_configured: Boolean(profile.cdp_token),
     cdp_session_count: browserRuntime?.activeCdpSessionCount(profile.profile_id) ?? 0,
-    cdp_sessions: browserRuntime?.cdpSessionObservations(profile.profile_id) ?? []
+    cdp_sessions: browserRuntime?.cdpSessionObservations(profile.profile_id) ?? [],
+    manual_viewer_count: browserRuntime?.activeManualViewerCount(profile.profile_id) ?? 0
   };
 }
 
@@ -430,8 +522,8 @@ function healthResponse(request: Request): Response {
   });
 }
 
-function htmlResponse(body: string): Response {
-  return new Response(body, htmlResponseInit());
+function htmlResponse(body: string, status = 200): Response {
+  return new Response(body, htmlResponseInit({}, status));
 }
 
 function unauthorizedHtmlResponse(body: string): Response {
@@ -461,8 +553,12 @@ function isCdpRoute(url: URL): boolean {
   return /^\/api\/profiles\/[^/]+\/cdp(?:\/|$)/.test(url.pathname);
 }
 
+function isVncRoute(url: URL): boolean {
+  return /^\/ui\/profiles\/[^/]+\/vnc$/.test(url.pathname);
+}
+
 function isUiProfileActionRoute(url: URL): boolean {
-  return /^\/ui\/profiles(?:\/[^/]+(?:\/(?:start|stop|restart|cdp-token(?:\/regenerate)?))?)?$/.test(
+  return /^\/ui\/profiles(?:\/[^/]+(?:\/(?:start|stop|restart|viewer|vnc|cdp-token(?:\/regenerate)?))?)?$/.test(
     url.pathname
   );
 }
@@ -586,6 +682,114 @@ function renderLoginShell(): string {
 </html>`;
 }
 
+function renderManualViewer(viewer: BrowserRuntimeManualViewerState): string {
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CloakHub Viewer - ${escapeHtml(viewer.profile_id)}</title>
+    <style>
+      body {
+        background: #111418;
+        color: #f4f7fb;
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        margin: 0;
+      }
+
+      header {
+        align-items: center;
+        background: #1d252c;
+        border-bottom: 1px solid #303a44;
+        display: flex;
+        min-height: 52px;
+        padding: 0 18px;
+      }
+
+      h1 {
+        font-size: 1rem;
+        margin: 0;
+      }
+
+      main {
+        align-items: center;
+        display: grid;
+        min-height: calc(100vh - 52px);
+        place-items: center;
+      }
+
+      #manual-viewer {
+        background: #050607;
+        border: 1px solid #303a44;
+        height: min(72vh, 720px);
+        position: relative;
+        width: min(96vw, 1280px);
+      }
+
+      #manual-viewer canvas {
+        display: block;
+        height: 100%;
+        width: 100%;
+      }
+
+      #viewer-status {
+        bottom: 12px;
+        color: #9fb0c2;
+        font-size: 0.9rem;
+        left: 12px;
+        position: absolute;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>${escapeHtml(viewer.profile_id)}</h1>
+    </header>
+    <main>
+      <div id="manual-viewer" data-vnc-websocket-url="${escapeHtml(viewer.vnc_ws_path)}">
+        <canvas aria-hidden="true"></canvas>
+        <span id="viewer-status">Connecting</span>
+      </div>
+    </main>
+    <script>
+      const viewer = document.getElementById("manual-viewer");
+      const status = document.getElementById("viewer-status");
+      const protocol = location.protocol === "https:" ? "wss:" : "ws:";
+      const socket = new WebSocket(protocol + "//" + location.host + viewer.dataset.vncWebsocketUrl);
+      socket.binaryType = "arraybuffer";
+      socket.addEventListener("open", () => {
+        status.textContent = "Connected";
+      });
+      socket.addEventListener("close", () => {
+        status.textContent = "Disconnected";
+      });
+      socket.addEventListener("error", () => {
+        status.textContent = "Connection error";
+      });
+    </script>
+  </body>
+</html>`;
+}
+
+function renderManualViewerUnavailable(message: string): string {
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CloakHub Viewer Unavailable</title>
+  </head>
+  <body>
+    <main>
+      <h1>Viewer unavailable</h1>
+      <p>${escapeHtml(message)}</p>
+      <p>Edit the profile to disable headless mode or use Start for CDP-only operation.</p>
+    </main>
+  </body>
+</html>`;
+}
+
 function renderShell(config: CloakHubConfig, profiles: PresentedBrowserProfile[] = []): string {
   const profileRows =
     profiles.length === 0
@@ -607,6 +811,7 @@ function renderShell(config: CloakHubConfig, profiles: PresentedBrowserProfile[]
               <td>
                 <span>${escapeHtml(profile.instance_status)}</span>
                 <span>CDP Sessions: ${profile.cdp_session_count}</span>
+                <span>Viewers: ${profile.manual_viewer_count}</span>
                 ${renderCdpSessions(profile)}
               </td>
               <td>${sleepPolicyBadge(profile)}</td>
@@ -615,6 +820,7 @@ function renderShell(config: CloakHubConfig, profiles: PresentedBrowserProfile[]
                 <span>${escapeHtml(profile.tags.map((tag) => tag.name).join(", "))}</span>
                 <span>${escapeHtml(profile.proxy)}</span>
                 ${renderCdpTokenControls(profile)}
+                ${renderManualViewerControls(profile)}
                 <button class="profile-lifecycle-button" data-action="start" data-profile-id="${escapeHtml(profile.profile_id)}" type="button">
                   Start
                 </button>
@@ -1253,6 +1459,14 @@ function renderCdpTokenControls(profile: PresentedBrowserProfile): string {
                   <button class="cdp-token-button" data-action="regenerate" data-profile-id="${profileId}" type="button">Regenerate CDP Token</button>
                   <button class="cdp-token-button" data-action="revoke" data-profile-id="${profileId}" type="button">Revoke CDP Token</button>
                 </div>`;
+}
+
+function renderManualViewerControls(profile: PresentedBrowserProfile): string {
+  if (profile.headless) {
+    return `<span>Manual viewer unavailable for headless profiles. Edit the profile to disable headless mode.</span>`;
+  }
+
+  return `<a href="/ui/profiles/${encodeURIComponent(profile.profile_id)}/viewer" target="_blank" rel="noreferrer">Open Viewer</a>`;
 }
 
 function formatDuration(durationMs: number): string {

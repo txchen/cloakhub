@@ -214,10 +214,21 @@ function fakeRuntime(options: { startError?: Error } = {}): BrowserRuntime & { c
     calls,
     cleanupOwnedProcessesOnStartup: async () => undefined,
     activeCdpSessionCount: () => 0,
+    activeManualViewerCount: () => 0,
     cdpSessionObservations: () => [],
     openCdpSession: () => ({
       close: () => undefined,
       recordMessage: () => undefined
+    }),
+    openManualViewer: async (profileId) => ({
+      display: ":100",
+      profile_id: profileId,
+      vnc_port: 5900,
+      vnc_ws_path: `/ui/profiles/${profileId}/vnc`
+    }),
+    openManualViewerSession: () => ({
+      close: () => undefined,
+      recordInput: () => undefined
     }),
     recordCdpDiscovery: (profileId) => {
       calls.push(`discovery:${profileId}`);
@@ -238,7 +249,7 @@ function fakeRuntime(options: { startError?: Error } = {}): BrowserRuntime & { c
       calls.push(`stop:${profileId}`);
       return { ...state, cdp_port: -1, status: "stopped" };
     },
-    spinDownIdleHeadlessInstances: async () => []
+    spinDownIdleInstances: async () => []
   };
 }
 

@@ -1,4 +1,4 @@
-import { createApp } from "./app";
+import { createApp, type CloakHubWebSocketData } from "./app";
 import { resolveBrowserBin } from "./browser-bin";
 import { createBunBrowserProcessLauncher } from "./browser-process-launcher";
 import { createBrowserRuntime } from "./browser-runtime";
@@ -6,14 +6,20 @@ import { createCdpGateway, createProfileCdpAccessPolicy } from "./cdp-gateway";
 import { createCdpWebSocketHandler, type CdpWebSocketData } from "./cdp-websocket-proxy";
 import { loadConfigFromEnv } from "./config";
 import { ensureDataRoot } from "./data-root";
+import { createKasmVncDisplayRuntime, resolveKasmVncBin } from "./display-runtime";
 import { openProfileRepository } from "./profile-repository";
 import { createProfileService } from "./profile-service";
+import { createVncWebSocketHandler, type VncWebSocketData } from "./vnc-websocket-proxy";
 
 async function main(): Promise<void> {
   try {
     const config = loadConfigFromEnv();
     await ensureDataRoot(config.dataRoot);
     const browserBin = await resolveBrowserBin(config.browserBin);
+    const kasmVncBin = await resolveKasmVncBin();
+    if (kasmVncBin.warning) {
+      console.warn(kasmVncBin.warning);
+    }
     const profileRepository = openProfileRepository(config.dataRoot);
     profileRepository.migrate();
     const profileService = createProfileService({
@@ -23,6 +29,10 @@ async function main(): Promise<void> {
     const browserRuntime = createBrowserRuntime({
       browserBin: browserBin.path,
       dataRoot: config.dataRoot,
+      displayRuntime: createKasmVncDisplayRuntime({
+        dataRoot: config.dataRoot,
+        xvncBin: kasmVncBin.path
+      }),
       launcher: createBunBrowserProcessLauncher({ dataRoot: config.dataRoot }),
       repository: profileRepository
     });
@@ -33,7 +43,7 @@ async function main(): Promise<void> {
       cdpTokensForRedaction: () => profileService.cdpTokensForRedaction()
     });
     const idleTimer = setInterval(() => {
-      void browserRuntime.spinDownIdleHeadlessInstances();
+      void browserRuntime.spinDownIdleInstances();
     }, 5000);
     idleTimer.unref();
 
@@ -41,11 +51,39 @@ async function main(): Promise<void> {
       { ...config, browserBin: browserBin.path },
       { browserRuntime, cdpGateway, profileService }
     );
-    Bun.serve<CdpWebSocketData>({
+    const cdpWebSocketHandler = createCdpWebSocketHandler({ cdpSessions: browserRuntime });
+    const vncWebSocketHandler = createVncWebSocketHandler({ manualViewers: browserRuntime });
+
+    Bun.serve<CloakHubWebSocketData>({
       fetch: (request, server) => app.fetch(request, server),
       hostname: config.host,
       port: config.port,
-      websocket: createCdpWebSocketHandler({ cdpSessions: browserRuntime })
+      websocket: {
+        close(ws, code, reason): void {
+          if (isVncWebSocketData(ws.data)) {
+            vncWebSocketHandler.close?.(ws as Bun.ServerWebSocket<VncWebSocketData>, code, reason);
+            return;
+          }
+
+          cdpWebSocketHandler.close?.(ws as Bun.ServerWebSocket<CdpWebSocketData>, code, reason);
+        },
+        message(ws, message): void {
+          if (isVncWebSocketData(ws.data)) {
+            vncWebSocketHandler.message?.(ws as Bun.ServerWebSocket<VncWebSocketData>, message);
+            return;
+          }
+
+          cdpWebSocketHandler.message?.(ws as Bun.ServerWebSocket<CdpWebSocketData>, message);
+        },
+        open(ws): void {
+          if (isVncWebSocketData(ws.data)) {
+            vncWebSocketHandler.open?.(ws as Bun.ServerWebSocket<VncWebSocketData>);
+            return;
+          }
+
+          cdpWebSocketHandler.open?.(ws as Bun.ServerWebSocket<CdpWebSocketData>);
+        }
+      }
     });
 
     console.log(`CloakHub listening on http://${config.host}:${config.port}`);
@@ -56,3 +94,7 @@ async function main(): Promise<void> {
 }
 
 await main();
+
+function isVncWebSocketData(data: CloakHubWebSocketData): data is VncWebSocketData {
+  return "targetPort" in data;
+}

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { createApp, type CloakHubUpgradeServer } from "../src/app";
+import { createApp, type CloakHubUpgradeServer, type CloakHubWebSocketData } from "../src/app";
 import type { CdpGateway } from "../src/cdp-gateway";
 import type { CdpWebSocketData } from "../src/cdp-websocket-proxy";
 import type { CloakHubConfig } from "../src/config";
@@ -91,8 +91,8 @@ function fakeCdpGateway(options: { websocketError?: Error } = {}): CdpGateway & 
   };
 }
 
-function fakeUpgradeServer(): CloakHubUpgradeServer & { upgrades: CdpWebSocketData[] } {
-  const upgrades: CdpWebSocketData[] = [];
+function fakeUpgradeServer(): CloakHubUpgradeServer & { upgrades: CloakHubWebSocketData[] } {
+  const upgrades: CloakHubWebSocketData[] = [];
 
   return {
     upgrades,

@@ -4,8 +4,10 @@ import type { BrowserProfile } from "../src/profile";
 import type { ProfileRepository } from "../src/profile-repository";
 import {
   createBrowserRuntime,
-  UnsupportedBrowserProfileError,
+  MissingDisplayRuntimeError,
   type BrowserClientConnections,
+  type BrowserDisplayRuntime,
+  type BrowserManualReadinessProbe,
   type BrowserProcessLauncher,
   type BrowserReadinessProbe,
   type BrowserRuntimeState
@@ -34,12 +36,46 @@ describe("BrowserRuntime", () => {
     expect(repository.get("work")?.last_activity_at).toBeTruthy();
   });
 
-  test("rejects headed Browser Profiles until headed runtime support exists", async () => {
+  test("starts a headed Browser Instance with a private display runtime and VNC endpoint", async () => {
+    const repository = fakeRepository(profile({ headless: false, profile_id: "work" }));
+    const displayRuntime = fakeDisplayRuntime();
+    const launcher = fakeLauncher();
+    const runtime = runtimeFixture({ displayRuntime, launcher, repository });
+
+    const result = await runtime.start("work");
+
+    expect(result).toMatchObject({
+      cdp_port: 5100,
+      display: ":100",
+      profile_id: "work",
+      status: "running",
+      vnc_port: 5900
+    });
+    expect(displayRuntime.starts).toEqual([
+      {
+        displayNumber: 100,
+        profileId: "work",
+        screenHeight: 1080,
+        screenWidth: 1920,
+        vncPort: 5900
+      }
+    ]);
+    expect(launcher.launches[0]).toMatchObject({
+      display: ":100",
+      headless: false,
+      profileId: "work"
+    });
+  });
+
+  test("headed launch fails clearly when KasmVNC display runtime is unavailable", async () => {
     const repository = fakeRepository(profile({ headless: false, profile_id: "work" }));
     const runtime = runtimeFixture({ repository });
 
-    await expect(runtime.start("work")).rejects.toThrow(UnsupportedBrowserProfileError);
-    expect(repository.get("work")?.instance_status).toBe("stopped");
+    await expect(runtime.start("work")).rejects.toThrow(MissingDisplayRuntimeError);
+    expect(repository.get("work")).toMatchObject({
+      instance_status: "failed",
+      last_launch_error: "Missing KasmVNC Xvnc display runtime"
+    });
   });
 
   test("stop gracefully closes, waits, then hard-kills remaining Owned Processes", async () => {
@@ -133,6 +169,71 @@ describe("BrowserRuntime", () => {
     expect(runtime.cdpSessionObservations("work")).toEqual([]);
   });
 
+  test("manual viewer recovery starts headed profile and exposes viewer state", async () => {
+    const repository = fakeRepository(profile({ headless: false, profile_id: "work" }));
+    const manualReadinessProbe = fakeManualReadinessProbe();
+    const runtime = runtimeFixture({ displayRuntime: fakeDisplayRuntime(), manualReadinessProbe, repository });
+
+    const viewer = await runtime.openManualViewer("work");
+
+    expect(viewer).toEqual({
+      display: ":100",
+      profile_id: "work",
+      vnc_port: 5900,
+      vnc_ws_path: "/ui/profiles/work/vnc"
+    });
+    expect(manualReadinessProbe.readyStates).toEqual([
+      { cdp_port: 5100, display: ":100", profile_id: "work", status: "running", vnc_port: 5900 }
+    ]);
+    expect(repository.get("work")?.instance_status).toBe("running");
+  });
+
+  test("manual viewer presence is tracked separately from Instance Activity", async () => {
+    const repository = fakeRepository(
+      profile({
+        headless: false,
+        last_activity_at: "2026-01-01T00:00:00.000Z",
+        profile_id: "work"
+      })
+    );
+    const runtime = runtimeFixture({ displayRuntime: fakeDisplayRuntime(), repository });
+    await runtime.start("work");
+    repository.recordActivity("work", "2026-01-01T00:00:00.000Z");
+
+    const viewer = runtime.openManualViewerSession("work");
+
+    expect(runtime.activeManualViewerCount("work")).toBe(1);
+    expect(repository.get("work")?.last_activity_at).toBe("2026-01-01T00:00:00.000Z");
+    viewer.close();
+    expect(runtime.activeManualViewerCount("work")).toBe(0);
+  });
+
+  test("manual input records Instance Activity at most once every five seconds", async () => {
+    const repository = fakeRepository(profile({ headless: false, profile_id: "work" }));
+    const monotonic = fakeMonotonicClock();
+    const nowValues = [
+      new Date("2026-01-01T00:00:00.000Z"),
+      new Date("2026-01-01T00:00:01.000Z"),
+      new Date("2026-01-01T00:00:06.000Z")
+    ];
+    const runtime = runtimeFixture({
+      displayRuntime: fakeDisplayRuntime(),
+      monotonicNow: monotonic.now,
+      now: () => nowValues.shift() ?? new Date("2026-01-01T00:00:06.000Z"),
+      repository
+    });
+    await runtime.start("work");
+    const viewer = runtime.openManualViewerSession("work");
+
+    viewer.recordInput();
+    monotonic.advance(1000);
+    viewer.recordInput();
+    monotonic.advance(5000);
+    viewer.recordInput();
+
+    expect(repository.get("work")?.last_activity_at).toBe("2026-01-01T00:00:06.000Z");
+  });
+
   test("open CDP Sessions block idle Spin-down indefinitely", async () => {
     const repository = fakeRepository(profile({ profile_id: "work" }));
     const launcher = fakeLauncher();
@@ -142,7 +243,7 @@ describe("BrowserRuntime", () => {
     const session = runtime.openCdpSession("work");
     monotonic.advance(31 * 60 * 1000);
 
-    const result = await runtime.spinDownIdleHeadlessInstances();
+    const result = await runtime.spinDownIdleInstances();
 
     expect(result).toEqual([]);
     expect(repository.get("work")?.instance_status).toBe("running");
@@ -158,7 +259,7 @@ describe("BrowserRuntime", () => {
     await runtime.start("work");
 
     monotonic.advance(30 * 60 * 1000 + 1);
-    const result = await runtime.spinDownIdleHeadlessInstances();
+    const result = await runtime.spinDownIdleInstances();
 
     expect(result).toEqual([{ profile_id: "work", reason: "idle timeout" }]);
     expect(launcher.handles[0]?.closed).toBe(true);
@@ -166,6 +267,24 @@ describe("BrowserRuntime", () => {
       instance_status: "stopped",
       last_stop_reason: "idle timeout"
     });
+  });
+
+  test("idle headed Browser Instances spin down even with viewer presence only", async () => {
+    const repository = fakeRepository(profile({ headless: false, profile_id: "work" }));
+    const displayRuntime = fakeDisplayRuntime();
+    const launcher = fakeLauncher();
+    const monotonic = fakeMonotonicClock();
+    const runtime = runtimeFixture({ displayRuntime, launcher, monotonicNow: monotonic.now, repository });
+    await runtime.start("work");
+    runtime.openManualViewerSession("work");
+
+    monotonic.advance(30 * 60 * 1000 + 1);
+    const result = await runtime.spinDownIdleInstances();
+
+    expect(result).toEqual([{ profile_id: "work", reason: "idle timeout" }]);
+    expect(launcher.handles[0]?.closed).toBe(true);
+    expect(displayRuntime.handles[0]?.closed).toBe(true);
+    expect(runtime.activeManualViewerCount("work")).toBe(0);
   });
 
   test("never-sleep policy blocks idle Spin-down", async () => {
@@ -182,7 +301,7 @@ describe("BrowserRuntime", () => {
     await runtime.start("work");
     monotonic.advance(24 * 60 * 60 * 1000);
 
-    expect(await runtime.spinDownIdleHeadlessInstances()).toEqual([]);
+    expect(await runtime.spinDownIdleInstances()).toEqual([]);
     expect(repository.get("work")?.instance_status).toBe("running");
   });
 
@@ -195,7 +314,7 @@ describe("BrowserRuntime", () => {
     monotonic.advance(30 * 60 * 1000 + 1);
     repository.list();
 
-    expect(await runtime.spinDownIdleHeadlessInstances()).toEqual([
+    expect(await runtime.spinDownIdleInstances()).toEqual([
       { profile_id: "work", reason: "idle timeout" }
     ]);
   });
@@ -357,7 +476,9 @@ describe("BrowserRuntime", () => {
 
 function runtimeFixture(options: {
   clientConnections?: BrowserClientConnections;
+  displayRuntime?: BrowserDisplayRuntime;
   launcher?: BrowserProcessLauncher;
+  manualReadinessProbe?: BrowserManualReadinessProbe;
   monotonicNow?: () => number;
   now?: () => Date;
   readinessProbe?: BrowserReadinessProbe;
@@ -368,13 +489,46 @@ function runtimeFixture(options: {
     browserBin: "/opt/cloakbrowser/cloakbrowser",
     clientConnections: options.clientConnections,
     dataRoot: "/data",
+    displayRuntime: options.displayRuntime,
     launcher: options.launcher ?? fakeLauncher(),
+    manualReadinessProbe: options.manualReadinessProbe ?? fakeManualReadinessProbe(),
     monotonicNow: options.monotonicNow,
     now: options.now,
     readinessProbe: options.readinessProbe ?? fakeReadinessProbe(),
     repository: options.repository,
     wait: options.wait ?? (async () => undefined)
   });
+}
+
+function fakeManualReadinessProbe(): BrowserManualReadinessProbe & { readyStates: BrowserRuntimeState[] } {
+  const readyStates: BrowserRuntimeState[] = [];
+
+  return {
+    readyStates,
+    waitUntilReady: async (state) => {
+      readyStates.push(state);
+    }
+  };
+}
+
+function fakeDisplayRuntime(): BrowserDisplayRuntime & {
+  handles: FakeBrowserHandle[];
+  starts: unknown[];
+} {
+  const handles: FakeBrowserHandle[] = [];
+  const starts: unknown[] = [];
+
+  return {
+    handles,
+    starts,
+    cleanupOwnedProcesses: async () => undefined,
+    start: async (command) => {
+      starts.push(command);
+      const handle = new FakeBrowserHandle(true);
+      handles.push(handle);
+      return handle;
+    }
+  };
 }
 
 function fakeMonotonicClock(): { advance(milliseconds: number): void; now(): number } {

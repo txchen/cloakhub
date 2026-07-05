@@ -1,4 +1,5 @@
 import { join } from "node:path";
+import { connect as connectTcp } from "node:net";
 
 import type { BrowserProfile, StopReason } from "./profile";
 import type { ProfileRepository } from "./profile-repository";
@@ -7,6 +8,7 @@ export interface BrowserLaunchCommand {
   browserBin: string;
   cdpPort: number;
   customLaunchArgs: string[];
+  display?: string;
   headless: boolean;
   profileId: string;
   userDataDir: string;
@@ -25,6 +27,19 @@ export interface BrowserProcessLauncher {
   ownedProfileIds(): Promise<string[]>;
 }
 
+export interface BrowserDisplayRuntimeCommand {
+  displayNumber: number;
+  profileId: string;
+  screenHeight: number;
+  screenWidth: number;
+  vncPort: number;
+}
+
+export interface BrowserDisplayRuntime {
+  cleanupOwnedProcesses(profileIds: string[]): Promise<void>;
+  start(command: BrowserDisplayRuntimeCommand): Promise<BrowserProcessHandle>;
+}
+
 export interface BrowserClientConnections {
   disconnect(profileId: string, reason: StopReason): Promise<void>;
 }
@@ -33,24 +48,34 @@ export interface BrowserReadinessProbe {
   waitUntilReady(state: BrowserRuntimeState): Promise<void>;
 }
 
+export interface BrowserManualReadinessProbe {
+  waitUntilReady(state: BrowserRuntimeState): Promise<void>;
+}
+
 export interface BrowserRuntimeOptions {
   browserBin: string;
   cdpPortStart?: number;
   clientConnections?: BrowserClientConnections;
   dataRoot: string;
+  displayNumberStart?: number;
+  displayRuntime?: BrowserDisplayRuntime;
   launcher: BrowserProcessLauncher;
+  manualReadinessProbe?: BrowserManualReadinessProbe;
   monotonicNow?: () => number;
   now?: () => Date;
   readinessProbe?: BrowserReadinessProbe;
   repository: ProfileRepository;
   stopGraceMs?: number;
+  vncPortStart?: number;
   wait?: (milliseconds: number) => Promise<void>;
 }
 
 export interface BrowserRuntimeState {
   cdp_port: number;
+  display?: string;
   profile_id: string;
   status: BrowserProfile["instance_status"];
+  vnc_port?: number;
 }
 
 export interface BrowserRuntimeCdpSession {
@@ -70,6 +95,18 @@ export interface BrowserRuntimeCdpSessionObservation {
   user_agent: string | null;
 }
 
+export interface BrowserRuntimeManualViewer {
+  close(): void;
+  recordInput(): void;
+}
+
+export interface BrowserRuntimeManualViewerState {
+  display: string;
+  profile_id: string;
+  vnc_port: number;
+  vnc_ws_path: string;
+}
+
 export interface IdleSpinDownResult {
   profile_id: string;
   reason: "idle timeout";
@@ -78,21 +115,27 @@ export interface IdleSpinDownResult {
 export interface BrowserRuntime {
   cleanupOwnedProcessesOnStartup(): Promise<void>;
   activeCdpSessionCount(profileId: string): number;
+  activeManualViewerCount(profileId: string): number;
   cdpSessionObservations(profileId: string): BrowserRuntimeCdpSessionObservation[];
   openCdpSession(
     profileId: string,
     metadata?: BrowserRuntimeCdpSessionMetadata
   ): BrowserRuntimeCdpSession;
+  openManualViewer(profileId: string): Promise<BrowserRuntimeManualViewerState>;
+  openManualViewerSession(profileId: string): BrowserRuntimeManualViewer;
   recordCdpDiscovery(profileId: string): void;
   restart(profileId: string): Promise<BrowserRuntimeState>;
-  spinDownIdleHeadlessInstances(): Promise<IdleSpinDownResult[]>;
+  spinDownIdleInstances(): Promise<IdleSpinDownResult[]>;
   start(profileId: string): Promise<BrowserRuntimeState>;
   stop(profileId: string, reason?: StopReason): Promise<BrowserRuntimeState>;
 }
 
 interface RunningInstance {
   cdpPort: number;
+  display?: string;
+  displayHandle?: BrowserProcessHandle;
   handle: BrowserProcessHandle;
+  vncPort?: number;
 }
 
 interface ActiveCdpSession extends BrowserRuntimeCdpSessionMetadata {
@@ -101,9 +144,14 @@ interface ActiveCdpSession extends BrowserRuntimeCdpSessionMetadata {
   startedAtWallClock: string;
 }
 
+interface ActiveManualViewer {
+  id: number;
+}
+
 const DEFAULT_STOP_GRACE_MS = 1500;
 const DEFAULT_READY_TIMEOUT_MS = 5000;
 const DEFAULT_READY_POLL_MS = 100;
+const MANUAL_INPUT_ACTIVITY_THROTTLE_MS = 5000;
 const noopClientConnections: BrowserClientConnections = {
   disconnect: async () => undefined
 };
@@ -130,24 +178,57 @@ const cdpReadinessProbe: BrowserReadinessProbe = {
     throw new Error(`Browser Instance CDP endpoint was not ready: ${lastError}`);
   }
 };
+const vncReadinessProbe: BrowserManualReadinessProbe = {
+  async waitUntilReady(state: BrowserRuntimeState): Promise<void> {
+    if (state.vnc_port === undefined) {
+      throw new Error("Browser Instance VNC endpoint was not allocated");
+    }
+
+    const deadline = Date.now() + DEFAULT_READY_TIMEOUT_MS;
+    let lastError = "not ready";
+
+    while (Date.now() <= deadline) {
+      try {
+        await waitForTcpPort(state.vnc_port);
+        return;
+      } catch (error) {
+        lastError = errorMessage(error);
+      }
+
+      await Bun.sleep(DEFAULT_READY_POLL_MS);
+    }
+
+    throw new Error(`Browser Instance VNC endpoint was not ready: ${lastError}`);
+  }
+};
 
 export function createBrowserRuntime(options: BrowserRuntimeOptions): BrowserRuntime {
   const activeCdpSessions = new Map<string, ActiveCdpSession[]>();
+  const activeManualViewers = new Map<string, ActiveManualViewer[]>();
   const lastActivityMs = new Map<string, number>();
+  const lastManualInputActivityMs = new Map<string, number>();
   const launchAttempts = new Map<string, Promise<BrowserRuntimeState>>();
   const runningInstances = new Map<string, RunningInstance>();
   const clientConnections = options.clientConnections ?? noopClientConnections;
   const now = options.now ?? (() => new Date());
+  const manualReadinessProbe = options.manualReadinessProbe ?? vncReadinessProbe;
   const readinessProbe = options.readinessProbe ?? cdpReadinessProbe;
   const stopGraceMs = options.stopGraceMs ?? DEFAULT_STOP_GRACE_MS;
   const wait = options.wait ?? Bun.sleep;
   const monotonicNow = options.monotonicNow ?? (() => performance.now());
   let nextCdpPort = options.cdpPortStart ?? 5100;
   let nextCdpSessionId = 1;
+  let nextDisplayNumber = options.displayNumberStart ?? 100;
+  let nextManualViewerId = 1;
+  let nextVncPort = options.vncPortStart ?? 5900;
 
   return {
     activeCdpSessionCount(profileId: string): number {
       return activeCdpSessions.get(profileId)?.length ?? 0;
+    },
+
+    activeManualViewerCount(profileId: string): number {
+      return activeManualViewers.get(profileId)?.length ?? 0;
     },
 
     cdpSessionObservations(profileId: string): BrowserRuntimeCdpSessionObservation[] {
@@ -162,6 +243,7 @@ export function createBrowserRuntime(options: BrowserRuntimeOptions): BrowserRun
     async cleanupOwnedProcessesOnStartup(): Promise<void> {
       const ownedProfileIds = await options.launcher.ownedProfileIds();
       await options.launcher.cleanupOwnedProcesses(ownedProfileIds);
+      await options.displayRuntime?.cleanupOwnedProcesses(ownedProfileIds);
       options.repository.markAllStopped("restart", nowIso(now));
     },
 
@@ -203,6 +285,60 @@ export function createBrowserRuntime(options: BrowserRuntimeOptions): BrowserRun
       };
     },
 
+    async openManualViewer(profileId: string): Promise<BrowserRuntimeManualViewerState> {
+      const profile = requireProfile(options.repository, profileId);
+      if (profile.headless) {
+        throw new UnsupportedManualViewerProfileError(profile.profile_id);
+      }
+
+      const state = await this.start(profileId);
+      if (state.display === undefined || state.vnc_port === undefined) {
+        throw new Error(`Browser Profile "${profileId}" did not expose a manual viewer endpoint`);
+      }
+
+      await manualReadinessProbe.waitUntilReady(state);
+
+      return {
+        display: state.display,
+        profile_id: profile.profile_id,
+        vnc_port: state.vnc_port,
+        vnc_ws_path: `/ui/profiles/${encodeURIComponent(profile.profile_id)}/vnc`
+      };
+    },
+
+    openManualViewerSession(profileId: string): BrowserRuntimeManualViewer {
+      const profile = requireProfile(options.repository, profileId);
+      if (profile.headless) {
+        throw new UnsupportedManualViewerProfileError(profile.profile_id);
+      }
+
+      const viewer: ActiveManualViewer = { id: nextManualViewerId++ };
+      activeManualViewers.set(profileId, [...(activeManualViewers.get(profileId) ?? []), viewer]);
+      let closed = false;
+
+      return {
+        close(): void {
+          if (closed) {
+            return;
+          }
+
+          closed = true;
+          const nextViewers = (activeManualViewers.get(profileId) ?? []).filter(
+            (entry) => entry.id !== viewer.id
+          );
+          if (nextViewers.length === 0) {
+            activeManualViewers.delete(profileId);
+            return;
+          }
+
+          activeManualViewers.set(profileId, nextViewers);
+        },
+        recordInput(): void {
+          recordManualInput(profileId);
+        }
+      };
+    },
+
     recordCdpDiscovery(profileId: string): void {
       requireProfile(options.repository, profileId);
       recordActivity(profileId);
@@ -216,13 +352,9 @@ export function createBrowserRuntime(options: BrowserRuntimeOptions): BrowserRun
 
     async start(profileId: string): Promise<BrowserRuntimeState> {
       const profile = requireProfile(options.repository, profileId);
-      if (!profile.headless) {
-        throw new UnsupportedBrowserProfileError(profile.profile_id);
-      }
-
       const running = runningInstances.get(profile.profile_id);
       if (running) {
-        return { cdp_port: running.cdpPort, profile_id: profile.profile_id, status: "running" };
+        return runningState(profile.profile_id, running);
       }
 
       const launchAttempt = launchAttempts.get(profile.profile_id);
@@ -245,12 +377,12 @@ export function createBrowserRuntime(options: BrowserRuntimeOptions): BrowserRun
       return stopProfile(profile, reason, { recordActivity: true });
     },
 
-    async spinDownIdleHeadlessInstances(): Promise<IdleSpinDownResult[]> {
+    async spinDownIdleInstances(): Promise<IdleSpinDownResult[]> {
       const results: IdleSpinDownResult[] = [];
 
       for (const profileId of runningInstances.keys()) {
         const profile = options.repository.get(profileId);
-        if (!profile || !profile.headless || profile.sleep_policy_status.blocks_sleep) {
+        if (!profile || profile.sleep_policy_status.blocks_sleep) {
           continue;
         }
 
@@ -274,28 +406,47 @@ export function createBrowserRuntime(options: BrowserRuntimeOptions): BrowserRun
 
   async function launchProfile(profile: BrowserProfile): Promise<BrowserRuntimeState> {
     const cdpPort = nextCdpPort++;
+    const displayNumber = profile.headless ? undefined : nextDisplayNumber++;
+    const vncPort = profile.headless ? undefined : nextVncPort++;
+    const display = displayNumber === undefined ? undefined : `:${displayNumber}`;
 
     options.repository.markStarting(profile.profile_id);
 
     try {
       let handle: BrowserProcessHandle | undefined;
+      let displayHandle: BrowserProcessHandle | undefined;
+
+      if (!profile.headless) {
+        if (!options.displayRuntime || displayNumber === undefined || vncPort === undefined) {
+          throw new MissingDisplayRuntimeError();
+        }
+
+        displayHandle = await options.displayRuntime.start({
+          displayNumber,
+          profileId: profile.profile_id,
+          screenHeight: profile.screen_height,
+          screenWidth: profile.screen_width,
+          vncPort
+        });
+      }
 
       handle = await options.launcher.launch({
         browserBin: options.browserBin,
         cdpPort,
         customLaunchArgs: profile.custom_launch_args,
-        headless: true,
+        display,
+        headless: profile.headless,
         profileId: profile.profile_id,
         userDataDir: join(options.dataRoot, "profiles", profile.profile_id)
       });
 
-      runningInstances.set(profile.profile_id, { cdpPort, handle });
+      runningInstances.set(profile.profile_id, { cdpPort, display, displayHandle, handle, vncPort });
       superviseUnexpectedExit(profile.profile_id, handle);
-      const state = { cdp_port: cdpPort, profile_id: profile.profile_id, status: "running" as const };
+      const state = runningState(profile.profile_id, { cdpPort, display, displayHandle, handle, vncPort });
       try {
         await readinessProbe.waitUntilReady(state);
       } catch (error) {
-        await stopLaunchedProcess(profile.profile_id, handle);
+        await stopLaunchedProcess(profile.profile_id, handle, displayHandle);
         throw error;
       }
 
@@ -311,13 +462,22 @@ export function createBrowserRuntime(options: BrowserRuntimeOptions): BrowserRun
     }
   }
 
-  async function stopLaunchedProcess(profileId: string, handle: BrowserProcessHandle): Promise<void> {
+  async function stopLaunchedProcess(
+    profileId: string,
+    handle: BrowserProcessHandle,
+    displayHandle: BrowserProcessHandle | undefined
+  ): Promise<void> {
     runningInstances.delete(profileId);
     await handle.close();
+    await displayHandle?.close();
     await wait(stopGraceMs);
 
     if (!(await handle.hasExited())) {
       await handle.kill();
+    }
+
+    if (displayHandle && !(await displayHandle.hasExited())) {
+      await displayHandle.kill();
     }
   }
 
@@ -337,11 +497,17 @@ export function createBrowserRuntime(options: BrowserRuntimeOptions): BrowserRun
 
     if (running) {
       runningInstances.delete(profile.profile_id);
+      activeManualViewers.delete(profile.profile_id);
       await running.handle.close();
+      await running.displayHandle?.close();
       await wait(stopGraceMs);
 
       if (!(await running.handle.hasExited())) {
         await running.handle.kill();
+      }
+
+      if (running.displayHandle && !(await running.displayHandle.hasExited())) {
+        await running.displayHandle.kill();
       }
     }
 
@@ -369,6 +535,42 @@ export function createBrowserRuntime(options: BrowserRuntimeOptions): BrowserRun
     lastActivityMs.set(profileId, monotonicNow());
     options.repository.recordActivity(profileId, occurredAt);
   }
+
+  function recordManualInput(profileId: string): void {
+    const current = monotonicNow();
+    const lastRecorded = lastManualInputActivityMs.get(profileId);
+    if (lastRecorded !== undefined && current - lastRecorded < MANUAL_INPUT_ACTIVITY_THROTTLE_MS) {
+      return;
+    }
+
+    lastManualInputActivityMs.set(profileId, current);
+    recordActivity(profileId);
+  }
+
+  function runningState(profileId: string, running: RunningInstance): BrowserRuntimeState {
+    return {
+      cdp_port: running.cdpPort,
+      ...(running.display ? { display: running.display } : {}),
+      profile_id: profileId,
+      status: "running",
+      ...(running.vncPort ? { vnc_port: running.vncPort } : {})
+    };
+  }
+}
+
+function waitForTcpPort(port: number): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const socket = connectTcp({ host: "127.0.0.1", port });
+    socket.once("connect", () => {
+      socket.end();
+      resolve();
+    });
+    socket.once("error", reject);
+    socket.setTimeout(1000, () => {
+      socket.destroy();
+      reject(new Error("connection timed out"));
+    });
+  });
 }
 
 function requireProfile(repository: ProfileRepository, profileId: string): BrowserProfile {
@@ -387,10 +589,17 @@ export class BrowserProfileNotFoundError extends Error {
   }
 }
 
-export class UnsupportedBrowserProfileError extends Error {
+export class UnsupportedManualViewerProfileError extends Error {
   constructor(profileId: string) {
-    super(`Browser Profile "${profileId}" is not headless; headed Browser Instances are not supported yet`);
-    this.name = "UnsupportedBrowserProfileError";
+    super(`Manual viewer is unavailable for headless Browser Profiles. Edit the profile to disable headless mode before opening the viewer for "${profileId}".`);
+    this.name = "UnsupportedManualViewerProfileError";
+  }
+}
+
+export class MissingDisplayRuntimeError extends Error {
+  constructor() {
+    super("Missing KasmVNC Xvnc display runtime");
+    this.name = "MissingDisplayRuntimeError";
   }
 }
 
