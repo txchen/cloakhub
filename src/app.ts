@@ -4,6 +4,7 @@ import type { CdpWebSocketData } from "./cdp-websocket-proxy";
 import type { VncWebSocketData } from "./vnc-websocket-proxy";
 import {
   BrowserProfileNotFoundError,
+  CapacityUnavailableError,
   MissingDisplayRuntimeError,
   UnsupportedManualViewerProfileError,
   type BrowserRuntime,
@@ -238,7 +239,7 @@ async function vncWebSocketResponseForRequest(
 
     return upgraded ? undefined : errorResponse("VNC websocket upgrade failed", 400);
   } catch (error) {
-    return manualViewerErrorResponse(error);
+    return manualViewerJsonErrorResponse(error);
   }
 }
 
@@ -306,6 +307,10 @@ async function cdpApiResponse(
   } catch (error) {
     if (error instanceof CdpUnauthorizedError) {
       return unauthorizedResponse();
+    }
+
+    if (error instanceof CapacityUnavailableError) {
+      return retryableErrorResponse(error.message, 503);
     }
 
     return errorResponse(
@@ -519,6 +524,10 @@ function lifecycleErrorResponse(error: unknown): Response {
     return errorResponse(error.message, 404);
   }
 
+  if (error instanceof CapacityUnavailableError) {
+    return retryableErrorResponse(error.message, 503);
+  }
+
   return errorResponse(error instanceof Error ? error.message : String(error), 500);
 }
 
@@ -529,6 +538,10 @@ function manualViewerErrorResponse(error: unknown): Response {
 
   if (error instanceof UnsupportedManualViewerProfileError || error instanceof MissingDisplayRuntimeError) {
     return htmlResponse(renderManualViewerUnavailable(error.message), 400);
+  }
+
+  if (error instanceof CapacityUnavailableError) {
+    return htmlResponse(renderManualViewerUnavailable(`${error.message}. Retryable.`), 503);
   }
 
   return htmlResponse(
@@ -546,11 +559,19 @@ function manualViewerJsonErrorResponse(error: unknown): Response {
     return errorResponse(error.message, 400);
   }
 
+  if (error instanceof CapacityUnavailableError) {
+    return retryableErrorResponse(error.message, 503);
+  }
+
   return errorResponse(error instanceof Error ? error.message : String(error), 503);
 }
 
 function errorResponse(error: string, status: number): Response {
   return jsonResponse({ error }, status);
+}
+
+function retryableErrorResponse(error: string, status: number): Response {
+  return jsonResponse({ error, retryable: true }, status);
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

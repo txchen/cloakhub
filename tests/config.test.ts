@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { join } from "node:path";
 
-import { loadConfigFromEnv } from "../src/config";
+import { INTERNAL_CDP_PORT_RANGE, INTERNAL_DISPLAY_NUMBER_RANGE, INTERNAL_VNC_PORT_RANGE, loadConfigFromEnv } from "../src/config";
 
 describe("loadConfigFromEnv", () => {
   test("uses documented defaults", () => {
@@ -48,5 +48,15 @@ describe("loadConfigFromEnv", () => {
     expect(() =>
       loadConfigFromEnv({ CLOAKHUB_MAX_RUNNING_INSTANCES: "0" }, "/home/operator")
     ).toThrow("CLOAKHUB_MAX_RUNNING_INSTANCES must be a positive integer");
+
+    expect(() =>
+      loadConfigFromEnv({ CLOAKHUB_MAX_RUNNING_INSTANCES: "101" }, "/home/operator")
+    ).toThrow("CLOAKHUB_MAX_RUNNING_INSTANCES must be no more than 100");
+  });
+
+  test("documents fixed internal resource ranges used for Running Instance capacity", () => {
+    expect(INTERNAL_CDP_PORT_RANGE).toEqual({ endInclusive: 5199, start: 5100 });
+    expect(INTERNAL_DISPLAY_NUMBER_RANGE).toEqual({ endInclusive: 199, start: 100 });
+    expect(INTERNAL_VNC_PORT_RANGE).toEqual({ endInclusive: 5999, start: 5900 });
   });
 });

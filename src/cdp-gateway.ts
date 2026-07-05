@@ -1,4 +1,4 @@
-import type { BrowserRuntime } from "./browser-runtime";
+import { CapacityUnavailableError, type BrowserRuntime } from "./browser-runtime";
 import type { CdpWebSocketData } from "./cdp-websocket-proxy";
 import type { ProfileService } from "./profile-service";
 import { redactProfileSecrets } from "./profile";
@@ -62,6 +62,10 @@ export function createCdpGateway(options: CdpGatewayOptions): CdpGateway {
 
         return Response.json(rewriteDiscoveryUrls(discovery, request, profileId));
       } catch (error) {
+        if (error instanceof CapacityUnavailableError) {
+          return Response.json({ error: error.message, retryable: true }, { status: 503 });
+        }
+
         return Response.json(
           { error: redactProfileSecrets(errorMessage(error), options.cdpTokensForRedaction?.() ?? []) },
           { status: 503 }

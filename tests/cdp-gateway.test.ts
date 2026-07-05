@@ -7,7 +7,7 @@ import {
   type CdpAccessPolicy,
   type CdpBrowserHttpClient
 } from "../src/cdp-gateway";
-import type { BrowserRuntime, BrowserRuntimeState } from "../src/browser-runtime";
+import { CapacityUnavailableError, type BrowserRuntime, type BrowserRuntimeState } from "../src/browser-runtime";
 import type { ProfileService } from "../src/profile-service";
 
 describe("CdpGateway", () => {
@@ -151,6 +151,25 @@ describe("CdpGateway", () => {
 
     expect(response.status).toBe(503);
     expect(await response.json()).toEqual({ error: "launch failed" });
+  });
+
+  test("capacity failures during recovery are reported as retryable", async () => {
+    const gateway = createCdpGateway({
+      browserHttp: fakeBrowserHttp({}),
+      browserRuntime: fakeRuntime({ startError: new CapacityUnavailableError() })
+    });
+
+    const response = await gateway.discoveryResponse(
+      new Request("http://cloakhub.test/api/profiles/work/cdp/json/version"),
+      "work",
+      "/json/version"
+    );
+
+    expect(response.status).toBe(503);
+    expect(await response.json()).toEqual({
+      error: "Running Instance capacity is full; retry after another Browser Instance stops",
+      retryable: true
+    });
   });
 
   test("failed recovery redacts CDP Token values from errors", async () => {

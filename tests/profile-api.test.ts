@@ -4,7 +4,12 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 
 import { createApp, type CloakHubUpgradeServer, type CloakHubWebSocketData } from "../src/app";
-import { UnsupportedManualViewerProfileError, type BrowserRuntime, type BrowserRuntimeState } from "../src/browser-runtime";
+import {
+  CapacityUnavailableError,
+  UnsupportedManualViewerProfileError,
+  type BrowserRuntime,
+  type BrowserRuntimeState
+} from "../src/browser-runtime";
 import type { CloakHubConfig } from "../src/config";
 import { createProfileService } from "../src/profile-service";
 import { openProfileRepository } from "../src/profile-repository";
@@ -301,6 +306,21 @@ describe("Browser Profile admin API", () => {
     expect(browserRuntime.calls).toEqual(["start:work"]);
   });
 
+  test("capacity failures from lifecycle actions are retryable", async () => {
+    const browserRuntime = fakeBrowserRuntime({ startError: new CapacityUnavailableError() });
+    const { app } = await tempApp({}, browserRuntime);
+
+    const response = await app.fetch(
+      new Request("http://cloakhub.test/api/profiles/work/start", { method: "POST" })
+    );
+
+    expect(response.status).toBe(503);
+    expect(await response.json()).toEqual({
+      error: "Running Instance capacity is full; retry after another Browser Instance stops",
+      retryable: true
+    });
+  });
+
   test("shows active CDP Session observations in API and UI status", async () => {
     const browserRuntime = fakeBrowserRuntime({ activeCdpSessionCount: 1 });
     const { app } = await tempApp({}, browserRuntime);
@@ -363,6 +383,18 @@ describe("Browser Profile admin API", () => {
     expect(await response.text()).toContain("class RFB");
   });
 
+  test("manual viewer capacity failures are retryable", async () => {
+    const browserRuntime = fakeBrowserRuntime({ viewerError: new CapacityUnavailableError() });
+    const { app } = await tempApp({}, browserRuntime);
+
+    const response = await app.fetch(new Request("http://cloakhub.test/ui/profiles/work/viewer"));
+    const html = await response.text();
+
+    expect(response.status).toBe(503);
+    expect(html).toContain("Running Instance capacity is full");
+    expect(html).toContain("Retryable");
+  });
+
   test("upgrades manual viewer websocket after headed Transparent Recovery", async () => {
     const browserRuntime = fakeBrowserRuntime();
     const server = fakeUpgradeServer();
@@ -385,6 +417,27 @@ describe("Browser Profile admin API", () => {
     expect(response).toBeUndefined();
     expect(browserRuntime.calls).toEqual(["viewer:work"]);
     expect(server.upgrades).toEqual([{ profileId: "work", targetHost: "127.0.0.1", targetPort: 5900 }]);
+  });
+
+  test("manual viewer websocket capacity failures are retryable JSON", async () => {
+    const browserRuntime = fakeBrowserRuntime({ viewerError: new CapacityUnavailableError() });
+    const server = fakeUpgradeServer();
+    const { app } = await tempApp({ authToken: "admin-token" }, browserRuntime);
+    const cookie = "cloakhub_auth=admin-token";
+
+    const response = await app.fetch(
+      new Request("http://cloakhub.test/ui/profiles/work/vnc", {
+        headers: { cookie, upgrade: "websocket" }
+      }),
+      server
+    );
+
+    expect(response?.status).toBe(503);
+    expect(await response?.json()).toEqual({
+      error: "Running Instance capacity is full; retry after another Browser Instance stops",
+      retryable: true
+    });
+    expect(server.upgrades).toEqual([]);
   });
 
   test("status responses include active manual viewer count", async () => {
@@ -548,6 +601,7 @@ function fakeBrowserRuntime(options: {
   activeCdpSessionCount?: number;
   activeManualViewerCount?: number;
   lastManualInputAt?: string | null;
+  startError?: Error;
   viewerError?: Error;
 } = {}): BrowserRuntime & { calls: string[] } {
   const calls: string[] = [];
@@ -602,6 +656,10 @@ function fakeBrowserRuntime(options: {
     },
     start: async (profileId) => {
       calls.push(`start:${profileId}`);
+      if (options.startError) {
+        throw options.startError;
+      }
+
       return state(profileId, "running");
     },
     stop: async (profileId, reason = "manual stop") => {

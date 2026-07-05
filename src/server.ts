@@ -36,6 +36,7 @@ async function main(): Promise<void> {
         xvncBin: kasmVncBin.path
       }),
       launcher: createBunBrowserProcessLauncher({ dataRoot: config.dataRoot }),
+      maxRunningInstances: config.maxRunningInstances,
       repository: profileRepository
     });
     await browserRuntime.cleanupOwnedProcessesOnStartup();

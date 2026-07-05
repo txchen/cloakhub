@@ -3,6 +3,7 @@ import { describe, expect, test } from "bun:test";
 import type { BrowserProfile } from "../src/profile";
 import type { ProfileRepository } from "../src/profile-repository";
 import {
+  CapacityUnavailableError,
   createBrowserRuntime,
   MissingDisplayRuntimeError,
   type BrowserClientConnections,
@@ -347,6 +348,217 @@ describe("BrowserRuntime", () => {
     ]);
   });
 
+  test("capacity preemption stops the least-recently-active eligible Browser Instance", async () => {
+    const repository = fakeRepository(
+      profile({ profile_id: "old" }),
+      profile({ headless: false, profile_id: "headed" }),
+      profile({ profile_id: "next" })
+    );
+    const displayRuntime = fakeDisplayRuntime();
+    const launcher = fakeLauncher();
+    const nowValues = [
+      new Date("2026-01-01T00:00:00.000Z"),
+      new Date("2026-01-01T00:01:00.000Z"),
+      new Date("2026-01-01T00:02:00.000Z")
+    ];
+    const runtime = runtimeFixture({
+      displayRuntime,
+      launcher,
+      maxRunningInstances: 2,
+      now: () => nowValues.shift() ?? new Date("2026-01-01T00:02:00.000Z"),
+      repository
+    });
+
+    await runtime.start("old");
+    await runtime.start("headed");
+    await runtime.start("next");
+
+    expect(repository.get("old")).toMatchObject({
+      instance_status: "stopped",
+      last_stop_reason: "capacity preemption"
+    });
+    expect(repository.get("headed")?.instance_status).toBe("running");
+    expect(repository.get("next")?.instance_status).toBe("running");
+    expect(launcher.handles[0]?.closed).toBe(true);
+    expect(launcher.launches).toHaveLength(3);
+  });
+
+  test("capacity preemption can stop viewer-only never-sleep Browser Instances", async () => {
+    const repository = fakeRepository(
+      profile({
+        headless: false,
+        profile_id: "viewer",
+        sleep_policy: { mode: "never" },
+        sleep_policy_status: { blocks_sleep: true, effective_minutes: null, mode: "never" }
+      }),
+      profile({ profile_id: "next" })
+    );
+    const displayRuntime = fakeDisplayRuntime();
+    const runtime = runtimeFixture({ displayRuntime, maxRunningInstances: 1, repository });
+    await runtime.start("viewer");
+    runtime.openManualViewerSession("viewer");
+
+    await runtime.start("next");
+
+    expect(repository.get("viewer")).toMatchObject({
+      instance_status: "stopped",
+      last_stop_reason: "capacity preemption"
+    });
+    expect(runtime.activeManualViewerCount("viewer")).toBe(0);
+    expect(repository.get("next")?.instance_status).toBe("running");
+  });
+
+  test("capacity preemption protects active CDP Sessions and recent Manual Input", async () => {
+    const repository = fakeRepository(
+      profile({ profile_id: "cdp" }),
+      profile({ headless: false, profile_id: "manual" }),
+      profile({ profile_id: "next" })
+    );
+    const displayRuntime = fakeDisplayRuntime();
+    const runtime = runtimeFixture({
+      displayRuntime,
+      maxRunningInstances: 2,
+      now: () => new Date("2026-01-01T00:00:10.000Z"),
+      repository
+    });
+    await runtime.start("cdp");
+    await runtime.start("manual");
+    const session = runtime.openCdpSession("cdp");
+    runtime.openManualViewerSession("manual").recordInput();
+
+    await expect(runtime.start("next")).rejects.toThrow(CapacityUnavailableError);
+
+    expect(repository.get("cdp")?.instance_status).toBe("running");
+    expect(repository.get("manual")?.instance_status).toBe("running");
+    expect(repository.get("next")?.instance_status).toBe("stopped");
+    session.close();
+  });
+
+  test("capacity preemption protects throttled Manual Input from the last 60 seconds", async () => {
+    const repository = fakeRepository(
+      profile({ headless: false, profile_id: "manual" }),
+      profile({ profile_id: "next" })
+    );
+    let currentTime = new Date("2026-01-01T00:00:00.000Z");
+    const monotonic = fakeMonotonicClock();
+    const runtime = runtimeFixture({
+      displayRuntime: fakeDisplayRuntime(),
+      maxRunningInstances: 1,
+      monotonicNow: monotonic.now,
+      now: () => currentTime,
+      repository
+    });
+    await runtime.start("manual");
+    const viewer = runtime.openManualViewerSession("manual");
+    viewer.recordInput();
+    monotonic.advance(4000);
+    currentTime = new Date("2026-01-01T00:00:04.000Z");
+    viewer.recordInput();
+    monotonic.advance(57_000);
+    currentTime = new Date("2026-01-01T00:01:01.000Z");
+
+    await expect(runtime.start("next")).rejects.toThrow(CapacityUnavailableError);
+
+    expect(repository.get("manual")?.instance_status).toBe("running");
+  });
+
+  test("capacity preemption uses throttled Manual Input for least-recently-active selection", async () => {
+    const repository = fakeRepository(
+      profile({ headless: false, profile_id: "manual" }),
+      profile({ profile_id: "other" }),
+      profile({ profile_id: "next" })
+    );
+    let currentTime = new Date("2026-01-01T00:00:00.000Z");
+    const monotonic = fakeMonotonicClock();
+    const runtime = runtimeFixture({
+      displayRuntime: fakeDisplayRuntime(),
+      maxRunningInstances: 2,
+      monotonicNow: monotonic.now,
+      now: () => currentTime,
+      repository
+    });
+    await runtime.start("manual");
+    await runtime.start("other");
+    const viewer = runtime.openManualViewerSession("manual");
+    viewer.recordInput();
+    monotonic.advance(4000);
+    currentTime = new Date("2026-01-01T00:00:04.000Z");
+    viewer.recordInput();
+    monotonic.advance(61_000);
+    currentTime = new Date("2026-01-01T00:01:05.000Z");
+
+    await runtime.start("next");
+
+    expect(repository.get("manual")?.instance_status).toBe("running");
+    expect(repository.get("other")).toMatchObject({
+      instance_status: "stopped",
+      last_stop_reason: "capacity preemption"
+    });
+  });
+
+  test("concurrent starts for different profiles respect the Running Instance Limit", async () => {
+    const repository = fakeRepository(profile({ profile_id: "first" }), profile({ profile_id: "second" }));
+    let releaseLaunch!: () => void;
+    const launcher = fakeLauncher({
+      beforeLaunchResolves: () =>
+        new Promise<void>((resolve) => {
+          releaseLaunch = resolve;
+        })
+    });
+    const runtime = runtimeFixture({ launcher, maxRunningInstances: 1, repository });
+
+    const first = runtime.start("first");
+    const second = runtime.start("second");
+    releaseLaunch();
+
+    await expect(Promise.allSettled([first, second])).resolves.toEqual([
+      expect.objectContaining({ status: "fulfilled" }),
+      expect.objectContaining({
+        reason: expect.any(CapacityUnavailableError),
+        status: "rejected"
+      })
+    ]);
+    expect(launcher.launches).toHaveLength(1);
+    expect(repository.get("first")?.instance_status).toBe("running");
+    expect(repository.get("second")?.instance_status).toBe("stopped");
+  });
+
+  test("concurrent starts that need preemption still reserve only one new Browser Instance", async () => {
+    const repository = fakeRepository(
+      profile({ profile_id: "victim" }),
+      profile({ profile_id: "first" }),
+      profile({ profile_id: "second" })
+    );
+    let releaseStop!: () => void;
+    const clientConnections = {
+      disconnect: async () =>
+        new Promise<void>((resolve) => {
+          releaseStop = resolve;
+        })
+    };
+    const runtime = runtimeFixture({ clientConnections, maxRunningInstances: 1, repository });
+    await runtime.start("victim");
+
+    const first = runtime.start("first");
+    const second = runtime.start("second");
+    await Promise.resolve();
+    releaseStop();
+
+    await expect(Promise.allSettled([first, second])).resolves.toEqual([
+      expect.objectContaining({ status: "fulfilled" }),
+      expect.objectContaining({
+        reason: expect.any(CapacityUnavailableError),
+        status: "rejected"
+      })
+    ]);
+    expect(repository.get("victim")).toMatchObject({
+      instance_status: "stopped",
+      last_stop_reason: "capacity preemption"
+    });
+    expect(repository.get("first")?.instance_status).toBe("running");
+    expect(repository.get("second")?.instance_status).toBe("stopped");
+  });
+
   test("restart records stop then starts a new Browser Instance", async () => {
     const repository = fakeRepository(profile({ profile_id: "work" }));
     const launcher = fakeLauncher();
@@ -508,6 +720,7 @@ function runtimeFixture(options: {
   displayRuntime?: BrowserDisplayRuntime;
   launcher?: BrowserProcessLauncher;
   manualReadinessProbe?: BrowserManualReadinessProbe;
+  maxRunningInstances?: number;
   monotonicNow?: () => number;
   now?: () => Date;
   readinessProbe?: BrowserReadinessProbe;
@@ -522,6 +735,7 @@ function runtimeFixture(options: {
     displayRuntime: options.displayRuntime,
     launcher: options.launcher ?? fakeLauncher(),
     manualReadinessProbe: options.manualReadinessProbe ?? fakeManualReadinessProbe(),
+    maxRunningInstances: options.maxRunningInstances,
     monotonicNow: options.monotonicNow,
     now: options.now,
     readinessProbe: options.readinessProbe ?? fakeReadinessProbe(),
