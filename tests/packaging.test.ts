@@ -29,4 +29,24 @@ describe("Docker-first packaging", () => {
     expect(integrationTest).toContain('process.env.CLOAKHUB_RUN_REAL_RUNTIME_TESTS === "true"');
     expect(integrationTest).toContain("test.skip");
   });
+
+  test("GitHub Actions builds pull requests and publishes release images to GHCR", async () => {
+    const workflow = await Bun.file(".github/workflows/docker-image.yml").text();
+    const requiredWorkflowSnippets = [
+      "registry: ghcr.io",
+      "packages: write",
+      "docker/login-action@v3",
+      "docker/metadata-action@v5",
+      "docker/build-push-action@v6",
+      "images: ghcr.io/${{ github.repository }}",
+      "push: ${{ github.event_name != 'pull_request' }}",
+      "pull_request:",
+      "tags:",
+      "type=raw,value=latest,enable={{is_default_branch}}",
+    ];
+
+    for (const snippet of requiredWorkflowSnippets) {
+      expect(workflow).toContain(snippet);
+    }
+  });
 });
