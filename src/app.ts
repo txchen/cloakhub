@@ -27,6 +27,7 @@ import {
   ProfileValidationError,
   type ProfileService
 } from "./profile-service";
+import { ownedProcessResourceUsageByProfile, type OwnedProcessResourceUsage } from "./owned-process";
 
 type PresentedBrowserProfile = Omit<BrowserProfile, "cdp_token"> & {
   cdp_token_configured: boolean;
@@ -34,7 +35,16 @@ type PresentedBrowserProfile = Omit<BrowserProfile, "cdp_token"> & {
   cdp_sessions: BrowserRuntimeCdpSessionObservation[];
   last_manual_input_at: string | null;
   manual_viewer_count: number;
+  resource_usage: OwnedProcessResourceUsage;
+  sleep_status: string;
 };
+
+type DashboardSort = "last_activity" | "status";
+
+interface DashboardControls {
+  query: string;
+  sort: DashboardSort;
+}
 
 export interface CloakHubApp {
   fetch: {
@@ -116,6 +126,7 @@ export function createApp(config: CloakHubConfig, services: CloakHubServices = {
     const profileResponse = await profileApiResponse(
       request,
       url,
+      config,
       services.profileService,
       services.browserRuntime
     );
@@ -128,11 +139,10 @@ export function createApp(config: CloakHubConfig, services: CloakHubServices = {
         return unauthorizedHtmlResponse(renderLoginShell());
       }
 
-      const profiles =
-        services.profileService?.listProfiles().map((profile) =>
-          presentProfile(profile, services.browserRuntime, true)
-        ) ?? [];
-      return htmlResponse(renderShell(config, profiles));
+      const profiles = services.profileService
+        ? await dashboardProfiles(services.profileService.listProfiles(), url, config, services.browserRuntime)
+        : [];
+      return htmlResponse(renderShell(config, profiles, dashboardControls(url)));
     }
 
     return textResponse("Not found", 404);
@@ -418,6 +428,7 @@ function lifecycleResponseState(state: BrowserRuntimeState): Omit<BrowserRuntime
 async function profileApiResponse(
   request: Request,
   url: URL,
+  config: CloakHubConfig,
   profileService: ProfileService | undefined,
   browserRuntime: BrowserRuntime | undefined
 ): Promise<Response | undefined> {
@@ -436,26 +447,27 @@ async function profileApiResponse(
     const body = request.method === "POST" || request.method === "PATCH" ? await jsonBody(request) : undefined;
 
     if (!profileId && request.method === "GET") {
-      return jsonResponse(profileResponseProfiles(profileService.listProfiles(), url, browserRuntime));
+      return jsonResponse(await profileResponseProfiles(profileService.listProfiles(), url, config, browserRuntime));
     }
 
     if (!profileId && request.method === "POST") {
       const profile = await profileService.createProfile(body);
-      return jsonResponse(profileResponseProfile(profile, url, browserRuntime), 201);
+      return jsonResponse(await profileResponseProfile(profile, url, config, browserRuntime), 201);
     }
 
     if (profileId && request.method === "GET") {
       const profile = profileService.getProfile(profileId);
       return profile
-        ? jsonResponse(profileResponseProfile(profile, url, browserRuntime))
+        ? jsonResponse(await profileResponseProfile(profile, url, config, browserRuntime))
         : errorResponse("Browser Profile was not found", 404);
     }
 
     if (profileId && request.method === "PATCH") {
       return jsonResponse(
-        profileResponseProfile(
+        await profileResponseProfile(
           await profileService.updateProfile(profileId, uiPatchBody(body, url)),
           url,
+          config,
           browserRuntime
         )
       );
@@ -578,22 +590,50 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function profileResponseProfiles(
+function timestampMs(value: string | null | undefined): number {
+  if (!value) {
+    return 0;
+  }
+
+  const parsed = Date.parse(value);
+  return Number.isNaN(parsed) ? 0 : parsed;
+}
+
+async function profileResponseProfiles(
   profiles: BrowserProfile[],
   url: URL,
+  config: CloakHubConfig,
   browserRuntime: BrowserRuntime | undefined
-): PresentedBrowserProfile[] {
+): Promise<PresentedBrowserProfile[]> {
+  const resourceUsageByProfileId = await ownedProcessResourceUsageByProfile(
+    config.dataRoot,
+    profiles.map((profile) => profile.profile_id)
+  );
   return profiles.map((profile) =>
-    presentProfile(profile, browserRuntime, isUiProfileActionRoute(url))
+    presentProfileWithResourceUsage(
+      profile,
+      resourceUsageByProfileId.get(profile.profile_id),
+      browserRuntime,
+      isUiProfileActionRoute(url)
+    )
   );
 }
 
-function profileResponseProfile(
+async function profileResponseProfile(
   profile: BrowserProfile,
   url: URL,
+  config: CloakHubConfig,
   browserRuntime: BrowserRuntime | undefined
-): PresentedBrowserProfile {
-  return presentProfile(profile, browserRuntime, isUiProfileActionRoute(url));
+): Promise<PresentedBrowserProfile> {
+  const resourceUsageByProfileId = await ownedProcessResourceUsageByProfile(config.dataRoot, [
+    profile.profile_id
+  ]);
+  return presentProfileWithResourceUsage(
+    profile,
+    resourceUsageByProfileId.get(profile.profile_id),
+    browserRuntime,
+    isUiProfileActionRoute(url)
+  );
 }
 
 function presentProfile(
@@ -604,13 +644,101 @@ function presentProfile(
   const { cdp_token: _cdpToken, ...profileWithoutToken } = redactSecrets
     ? redactProfileSecretsFromProfile(profile)
     : profile;
-  return {
+  const presented = {
     ...profileWithoutToken,
     cdp_token_configured: Boolean(profile.cdp_token),
     cdp_session_count: browserRuntime?.activeCdpSessionCount(profile.profile_id) ?? 0,
     cdp_sessions: browserRuntime?.cdpSessionObservations(profile.profile_id) ?? [],
     last_manual_input_at: browserRuntime?.lastManualInputAt(profile.profile_id) ?? null,
-    manual_viewer_count: browserRuntime?.activeManualViewerCount(profile.profile_id) ?? 0
+    manual_viewer_count: browserRuntime?.activeManualViewerCount(profile.profile_id) ?? 0,
+    resource_usage: { owned_process_count: 0, rss_bytes: null },
+    sleep_status: ""
+  };
+  return {
+    ...presented,
+    sleep_status: sleepStatusLabel(presented)
+  };
+}
+
+function presentProfileWithResourceUsage(
+  profile: BrowserProfile,
+  resourceUsage: OwnedProcessResourceUsage | undefined,
+  browserRuntime: BrowserRuntime | undefined,
+  redactSecrets = false
+): PresentedBrowserProfile {
+  const presented = presentProfile(profile, browserRuntime, redactSecrets);
+  const withResourceUsage = {
+    ...presented,
+    resource_usage: resourceUsage ?? { owned_process_count: 0, rss_bytes: null }
+  };
+  return {
+    ...withResourceUsage,
+    sleep_status: sleepStatusLabel(withResourceUsage)
+  };
+}
+
+async function dashboardProfiles(
+  profiles: BrowserProfile[],
+  url: URL,
+  config: CloakHubConfig,
+  browserRuntime: BrowserRuntime | undefined
+): Promise<PresentedBrowserProfile[]> {
+  const controls = dashboardControls(url);
+  const filtered = profiles.filter((profile) => dashboardProfileMatches(profile, controls.query));
+  const sorted = sortDashboardProfiles(filtered, controls.sort);
+  const resourceUsageByProfileId = await ownedProcessResourceUsageByProfile(
+    config.dataRoot,
+    sorted.map((profile) => profile.profile_id)
+  );
+  return sorted.map((profile) =>
+    presentProfileWithResourceUsage(
+      redactDashboardProfile(profile),
+      resourceUsageByProfileId.get(profile.profile_id),
+      browserRuntime,
+      true
+    )
+  );
+}
+
+function dashboardControls(url: URL): DashboardControls {
+  const sort = url.searchParams.get("sort");
+  return {
+    query: url.searchParams.get("q")?.trim() ?? "",
+    sort: sort === "last_activity" ? "last_activity" : "status"
+  };
+}
+
+function dashboardProfileMatches(profile: BrowserProfile, query: string): boolean {
+  if (!query) {
+    return true;
+  }
+
+  const normalized = query.toLowerCase();
+  return [profile.display_name, ...profile.tags.map((tag) => tag.name)].some((value) =>
+    value.toLowerCase().includes(normalized)
+  );
+}
+
+function sortDashboardProfiles(profiles: BrowserProfile[], sort: DashboardSort): BrowserProfile[] {
+  return [...profiles].sort((left, right) => {
+    if (sort === "last_activity") {
+      return timestampMs(right.last_activity_at) - timestampMs(left.last_activity_at);
+    }
+
+    return (
+      left.instance_status.localeCompare(right.instance_status) ||
+      timestampMs(right.last_activity_at) - timestampMs(left.last_activity_at) ||
+      left.profile_id.localeCompare(right.profile_id)
+    );
+  });
+}
+
+function redactDashboardProfile(profile: BrowserProfile): BrowserProfile {
+  return {
+    ...profile,
+    last_launch_error: profile.last_launch_error
+      ? redactProfileSecrets(profile.last_launch_error, profile.cdp_token ? [profile.cdp_token] : [])
+      : null
   };
 }
 
@@ -897,6 +1025,13 @@ function renderManualViewer(viewer: BrowserRuntimeManualViewerState): string {
       rfb.resizeSession = false;
       rfb.addEventListener("connect", () => {
         status.textContent = "Connected";
+        window.opener?.postMessage(
+          {
+            profile_id: "${escapeHtml(viewer.profile_id)}",
+            type: "cloakhub-viewer-connected"
+          },
+          location.origin
+        );
       });
       rfb.addEventListener("disconnect", () => {
         status.textContent = "Disconnected";
@@ -929,7 +1064,11 @@ function renderManualViewerUnavailable(message: string): string {
 </html>`;
 }
 
-function renderShell(config: CloakHubConfig, profiles: PresentedBrowserProfile[] = []): string {
+function renderShell(
+  config: CloakHubConfig,
+  profiles: PresentedBrowserProfile[] = [],
+  controls: DashboardControls = { query: "", sort: "status" }
+): string {
   const profileRows =
     profiles.length === 0
       ? `<tr>
@@ -948,10 +1087,16 @@ function renderShell(config: CloakHubConfig, profiles: PresentedBrowserProfile[]
                 </form>
               </td>
               <td>
-                <span>${escapeHtml(profile.instance_status)}</span>
+                <span>Instance Status: ${escapeHtml(profile.instance_status)}</span>
                 <span>CDP Sessions: ${profile.cdp_session_count}</span>
                 <span>Viewers: ${profile.manual_viewer_count}</span>
                 <span>Last Manual Input: ${escapeHtml(profile.last_manual_input_at ?? "none")}</span>
+                <span>Last Activity: ${escapeHtml(profile.last_activity_at ?? "none")}</span>
+                <span>${escapeHtml(profile.sleep_status)}</span>
+                <span>${escapeHtml(resourceUsageLabel(profile.resource_usage))}</span>
+                <span>Owned Processes: ${profile.resource_usage.owned_process_count}</span>
+                <span>Last Stop Reason: ${escapeHtml(profile.last_stop_reason ?? "none")}</span>
+                <span>Last Launch Error: ${escapeHtml(profile.last_launch_error ?? "none")}</span>
                 ${renderCdpSessions(profile)}
               </td>
               <td>${sleepPolicyBadge(profile)}</td>
@@ -961,13 +1106,13 @@ function renderShell(config: CloakHubConfig, profiles: PresentedBrowserProfile[]
                 <span>${escapeHtml(profile.proxy)}</span>
                 ${renderCdpTokenControls(profile)}
                 ${renderManualViewerControls(profile)}
-                <button class="profile-lifecycle-button" data-action="start" data-profile-id="${escapeHtml(profile.profile_id)}" type="button">
+                <button class="profile-lifecycle-button" data-action="start" data-cdp-session-count="${profile.cdp_session_count}" data-manual-viewer-count="${profile.manual_viewer_count}" data-profile-id="${escapeHtml(profile.profile_id)}" type="button">
                   Start
                 </button>
-                <button class="profile-lifecycle-button" data-action="stop" data-profile-id="${escapeHtml(profile.profile_id)}" type="button">
+                <button class="profile-lifecycle-button" data-action="stop" data-cdp-session-count="${profile.cdp_session_count}" data-manual-viewer-count="${profile.manual_viewer_count}" data-profile-id="${escapeHtml(profile.profile_id)}" type="button">
                   Stop
                 </button>
-                <button class="profile-lifecycle-button" data-action="restart" data-profile-id="${escapeHtml(profile.profile_id)}" type="button">
+                <button class="profile-lifecycle-button" data-action="restart" data-cdp-session-count="${profile.cdp_session_count}" data-manual-viewer-count="${profile.manual_viewer_count}" data-profile-id="${escapeHtml(profile.profile_id)}" type="button">
                   Restart
                 </button>
                 <button class="profile-delete-button" data-profile-id="${escapeHtml(profile.profile_id)}" type="button">
@@ -1251,6 +1396,21 @@ function renderShell(config: CloakHubConfig, profiles: PresentedBrowserProfile[]
         <span class="status">Service online</span>
         <span class="limit">Running Instance Limit: ${config.maxRunningInstances}</span>
       </div>
+      <form id="dashboard-filter-form" method="GET">
+        <label>
+          Search
+          <input name="q" value="${escapeHtml(controls.query)}">
+        </label>
+        <label>
+          Sort
+          <select name="sort">
+            ${selectOption("status", controls.sort)}
+            ${selectOption("last_activity", controls.sort)}
+          </select>
+        </label>
+        <button type="submit">Apply</button>
+      </form>
+      <p class="dashboard-copy">Automatic Spin-down is different from Explicit Stop.</p>
       <form id="create-profile-form">
         <label>
           Profile ID
@@ -1288,6 +1448,21 @@ function renderShell(config: CloakHubConfig, profiles: PresentedBrowserProfile[]
       </section>
     </main>
       <script>
+      function refreshDashboard() {
+        location.reload();
+      }
+
+      setInterval(refreshDashboard, 2500);
+
+      window.addEventListener("message", (event) => {
+        if (
+          event.origin === location.origin &&
+          event.data?.type === "cloakhub-viewer-connected"
+        ) {
+          refreshDashboard();
+        }
+      });
+
       document.getElementById("create-profile-form").addEventListener("submit", async (event) => {
         event.preventDefault();
         const values = compactFormValues(new FormData(event.currentTarget));
@@ -1298,7 +1473,7 @@ function renderShell(config: CloakHubConfig, profiles: PresentedBrowserProfile[]
         });
 
         if (response.ok) {
-          location.reload();
+          refreshDashboard();
         }
       });
 
@@ -1313,7 +1488,7 @@ function renderShell(config: CloakHubConfig, profiles: PresentedBrowserProfile[]
           });
 
           if (response.ok) {
-            location.reload();
+            refreshDashboard();
           }
         });
       });
@@ -1326,8 +1501,15 @@ function renderShell(config: CloakHubConfig, profiles: PresentedBrowserProfile[]
           });
 
           if (response.ok) {
-            location.reload();
+            refreshDashboard();
           }
+        });
+      });
+
+      document.querySelectorAll(".manual-viewer-link").forEach((link) => {
+        link.addEventListener("click", (event) => {
+          event.preventDefault();
+          window.open(event.currentTarget.href, "_blank");
         });
       });
 
@@ -1335,8 +1517,12 @@ function renderShell(config: CloakHubConfig, profiles: PresentedBrowserProfile[]
         button.addEventListener("click", async (event) => {
           const profileId = event.currentTarget.dataset.profileId;
           const action = event.currentTarget.dataset.action;
+          const activeClientCount =
+            Number(event.currentTarget.dataset.cdpSessionCount ?? 0) +
+            Number(event.currentTarget.dataset.manualViewerCount ?? 0);
           if (
-            (action === "stop" || action === "restart") &&
+            action === "stop" &&
+            activeClientCount > 0 &&
             !confirm("This may disconnect active CDP sessions or viewers. Continue?")
           ) {
             return;
@@ -1348,7 +1534,7 @@ function renderShell(config: CloakHubConfig, profiles: PresentedBrowserProfile[]
           );
 
           if (response.ok) {
-            location.reload();
+            refreshDashboard();
           }
         });
       });
@@ -1366,6 +1552,17 @@ function renderShell(config: CloakHubConfig, profiles: PresentedBrowserProfile[]
             path += "/regenerate";
           } else if (action === "revoke") {
             method = "DELETE";
+          }
+
+          if (action === "copy-open-url") {
+            const cdpUrl =
+              location.origin +
+              "/api/profiles/" +
+              encodeURIComponent(profileId) +
+              "/cdp/json/version";
+            await navigator.clipboard.writeText(cdpUrl);
+            refreshDashboard();
+            return;
           }
 
           if (action === "copy-url" && !confirm("Token-bearing CDP URLs can leak access. Continue?")) {
@@ -1386,10 +1583,11 @@ function renderShell(config: CloakHubConfig, profiles: PresentedBrowserProfile[]
               "/cdp/json/version?token=" +
               encodeURIComponent(body.cdp_token);
             await navigator.clipboard.writeText(cdpUrl);
+            refreshDashboard();
             return;
           }
 
-          location.reload();
+          refreshDashboard();
         });
       });
 
@@ -1567,6 +1765,50 @@ function sleepPolicyLabel(profile: BrowserProfile | PresentedBrowserProfile): st
   return `Sleep Policy: ${profile.sleep_policy_status.effective_minutes} minutes`;
 }
 
+function sleepStatusLabel(profile: PresentedBrowserProfile): string {
+  if (profile.sleep_policy_status.blocks_sleep) {
+    return "Sleep Blocker: never-sleep policy";
+  }
+
+  if (profile.cdp_session_count > 0) {
+    return "Sleep Blocker: active CDP Session";
+  }
+
+  if (profile.instance_status !== "running") {
+    return "Sleep Countdown: not running";
+  }
+
+  if (!profile.last_activity_at || profile.sleep_policy_status.effective_minutes === null) {
+    return "Sleep Countdown: unavailable";
+  }
+
+  const remainingMs =
+    timestampMs(profile.last_activity_at) +
+    profile.sleep_policy_status.effective_minutes * 60 * 1000 -
+    Date.now();
+  if (remainingMs <= 0) {
+    return "Sleep Countdown: due now";
+  }
+
+  return `Sleep Countdown: ${formatDuration(remainingMs)}`;
+}
+
+function resourceUsageLabel(resourceUsage: OwnedProcessResourceUsage): string {
+  if (resourceUsage.rss_bytes === null) {
+    return "Approx. Resource Usage: unavailable";
+  }
+
+  return `Approx. Resource Usage: ${formatBytes(resourceUsage.rss_bytes)} RSS`;
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024 * 1024) {
+    return `${Math.round(bytes / 1024)} KiB`;
+  }
+
+  return `${Math.round(bytes / 1024 / 1024)} MiB`;
+}
+
 function renderCdpSessions(profile: PresentedBrowserProfile): string {
   if (profile.cdp_sessions.length === 0) {
     return "";
@@ -1587,6 +1829,7 @@ function renderCdpTokenControls(profile: PresentedBrowserProfile): string {
     return `
                 <span class="cdp-token-status open">CDP access is open because no CDP Token exists.</span>
                 <div class="cdp-token-actions">
+                  <button class="cdp-token-button" data-action="copy-open-url" data-profile-id="${profileId}" type="button">Copy open CDP URL</button>
                   <button class="cdp-token-button" data-action="create" data-profile-id="${profileId}" type="button">Create CDP Token</button>
                 </div>`;
   }
@@ -1606,7 +1849,7 @@ function renderManualViewerControls(profile: PresentedBrowserProfile): string {
     return `<span>Manual viewer unavailable for headless profiles. Edit the profile to disable headless mode.</span>`;
   }
 
-  return `<a href="/ui/profiles/${encodeURIComponent(profile.profile_id)}/viewer" target="_blank" rel="noreferrer">Open Viewer</a>`;
+  return `<a class="manual-viewer-link" href="/ui/profiles/${encodeURIComponent(profile.profile_id)}/viewer" target="_blank" rel="noreferrer">Open Viewer</a>`;
 }
 
 function formatDuration(durationMs: number): string {

@@ -6,6 +6,7 @@ import type {
   BrowserProcessHandle,
   BrowserProcessLauncher
 } from "./browser-runtime";
+import { ownedProcessEnv } from "./owned-process";
 
 export interface BunBrowserProcessLauncherOptions {
   dataRoot: string;
@@ -48,7 +49,10 @@ export function createBunBrowserProcessLauncher(
 
       const subprocess = spawn(browserCommand(command), {
         detached: true,
-        ...(command.display ? { env: { ...process.env, DISPLAY: command.display } } : {}),
+        env: ownedProcessEnv(options.dataRoot, command.profileId, {
+          ...process.env,
+          ...(command.display ? { DISPLAY: command.display } : {})
+        }),
         stderr: "ignore",
         stdin: "ignore",
         stdout: "ignore"

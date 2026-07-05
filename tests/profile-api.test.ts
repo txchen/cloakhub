@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { mkdtemp, readdir, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, readdir, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 
@@ -11,6 +11,7 @@ import {
   type BrowserRuntimeState
 } from "../src/browser-runtime";
 import type { CloakHubConfig } from "../src/config";
+import { ownedProcessEnv } from "../src/owned-process";
 import { createProfileService } from "../src/profile-service";
 import { openProfileRepository } from "../src/profile-repository";
 
@@ -40,8 +41,12 @@ describe("Browser Profile admin API", () => {
     expect(html).toContain('class="profile-lifecycle-button" data-action="start"');
     expect(html).toContain('class="profile-lifecycle-button" data-action="stop"');
     expect(html).toContain('class="profile-lifecycle-button" data-action="restart"');
+    expect(html).toContain("setInterval(refreshDashboard, 2500)");
     expect(html).toContain("This may disconnect active CDP sessions or viewers.");
+    expect(html).toContain('action === "stop"');
+    expect(html).not.toContain('action === "restart" &&');
     expect(html).toContain("CDP access is open because no CDP Token exists.");
+    expect(html).toContain('class="cdp-token-button" data-action="copy-open-url"');
     expect(html).toContain('class="cdp-token-button" data-action="create"');
     expect(html).toContain('name="proxy"');
     expect(html).toContain('name="fingerprint_seed"');
@@ -240,6 +245,7 @@ describe("Browser Profile admin API", () => {
     const before = repository.get("work")?.last_activity_at;
 
     await app.fetch(new Request("http://cloakhub.test/api/profiles"));
+    await app.fetch(new Request("http://cloakhub.test/"));
 
     expect(repository.get("work")?.last_activity_at).toBe(before);
   });
@@ -458,6 +464,162 @@ describe("Browser Profile admin API", () => {
     });
     expect(html).toContain("Viewers: 2");
     expect(html).toContain("Last Manual Input: 2026-01-01T00:00:05.000Z");
+  });
+
+  test("dashboard renders operational status fields, filters, sorting, and approximate Resource Usage", async () => {
+    const browserRuntime = fakeBrowserRuntime({
+      activeCdpSessionCount: 1,
+      activeManualViewerCount: 2,
+      lastManualInputAt: "2026-01-01T00:00:05.000Z"
+    });
+    const { app, dataRoot, repository } = await tempApp({}, browserRuntime);
+    await app.fetch(
+      jsonRequest("http://cloakhub.test/api/profiles", "POST", {
+        display_name: "Work",
+        profile_id: "work",
+        proxy: "http://user:secret@proxy.example:8080",
+        tags: [{ name: "client" }]
+      })
+    );
+    repository.markRunning("work", "2026-01-01T00:00:00.000Z");
+    repository.recordActivity("work", "2026-01-01T00:02:00.000Z");
+    repository.markStopped("work", "capacity preemption", "2026-01-01T00:03:00.000Z");
+    repository.setCdpToken("work", "profile-token");
+    repository.markLaunchFailed("work", "launch failed for profile-token", "2026-01-01T00:04:00.000Z");
+    await mkdir(join(dataRoot, "runtime", "work"), { recursive: true });
+    await Bun.write(join(dataRoot, "runtime", "work", "browser.pid"), "999999\n");
+    const ownedProcess = Bun.spawn(["/bin/sleep", "30"], {
+      detached: true,
+      env: ownedProcessEnv(dataRoot, "work"),
+      stderr: "ignore",
+      stdin: "ignore",
+      stdout: "ignore"
+    });
+    ownedProcess.unref();
+
+    try {
+      await Bun.write(join(dataRoot, "runtime", "work", "display.pid"), `${ownedProcess.pid}\n`);
+
+      const response = await app.fetch(new Request("http://cloakhub.test/?q=client&sort=last_activity"));
+      const html = await response.text();
+
+      expect(response.status).toBe(200);
+      expect(html).toContain('name="q"');
+      expect(html).toContain('value="client"');
+      expect(html).toContain('name="sort"');
+      expect(html).toContain('value="last_activity" selected');
+      expect(html).not.toContain('value="profile_id"');
+      expect(html).toContain("Instance Status");
+      expect(html).toContain("CDP Sessions: 1");
+      expect(html).toContain('data-cdp-session-count="1"');
+      expect(html).toContain("Viewers: 2");
+      expect(html).toContain('data-manual-viewer-count="2"');
+      expect(html).toContain("Last Manual Input: 2026-01-01T00:00:05.000Z");
+      expect(html).toContain("Sleep Blocker: active CDP Session");
+      expect(html).toContain("Approx. Resource Usage:");
+      expect(html).toContain(" RSS");
+      expect(html).toContain("Owned Processes: 1");
+      expect(html).toContain("Last Stop Reason: launch failure");
+      expect(html).toContain("Last Launch Error: launch failed for ***");
+      expect(html).toContain("Automatic Spin-down");
+      expect(html).toContain("Explicit Stop");
+      expect(html).toContain('class="manual-viewer-link"');
+      expect(html).toContain('event.data?.type === "cloakhub-viewer-connected"');
+      expect(html).toContain("await navigator.clipboard.writeText(cdpUrl)");
+      expect(html).toContain("refreshDashboard();");
+      expect(html).toContain("http://user:***@proxy.example:8080");
+      expect(html).not.toContain("secret");
+      expect(html).not.toContain("profile-token");
+
+      const apiProfile = await (await app.fetch(new Request("http://cloakhub.test/api/profiles/work"))).json();
+      expect(apiProfile.resource_usage.owned_process_count).toBe(1);
+      expect(apiProfile.resource_usage.rss_bytes).toBeGreaterThan(0);
+      expect(apiProfile.sleep_status).toBe("Sleep Blocker: active CDP Session");
+    } finally {
+      killProcessGroup(ownedProcess.pid);
+      await ownedProcess.exited.catch(() => undefined);
+    }
+  });
+
+  test("dashboard search filters by display name and tag", async () => {
+    const { app } = await tempApp();
+    await app.fetch(
+      jsonRequest("http://cloakhub.test/api/profiles", "POST", {
+        display_name: "Client Work",
+        profile_id: "work",
+        tags: [{ name: "client" }]
+      })
+    );
+    await app.fetch(
+      jsonRequest("http://cloakhub.test/api/profiles", "POST", {
+        display_name: "Personal",
+        profile_id: "personal",
+        tags: [{ name: "home" }]
+      })
+    );
+    await app.fetch(
+      jsonRequest("http://cloakhub.test/api/profiles", "POST", {
+        display_name: "Archive",
+        profile_id: "ops",
+        tags: [{ name: "cold" }]
+      })
+    );
+
+    const byName = await (await app.fetch(new Request("http://cloakhub.test/?q=client"))).text();
+    const byTag = await (await app.fetch(new Request("http://cloakhub.test/?q=home"))).text();
+    const byProfileId = await (await app.fetch(new Request("http://cloakhub.test/?q=ops"))).text();
+
+    expect(byName).toContain("Client Work");
+    expect(byName).not.toContain("Personal");
+    expect(byTag).toContain("Personal");
+    expect(byTag).not.toContain("Client Work");
+    expect(byProfileId).not.toContain("Archive");
+  });
+
+  test("dashboard script polls, refreshes after actions, and warns only for active Explicit Stop", async () => {
+    const { app } = await tempApp({}, undefined, { cdpTokenGenerator: sequenceTokens("profile-token") });
+    await app.fetch(jsonRequest("http://cloakhub.test/api/profiles", "POST", { profile_id: "work" }));
+    await app.fetch(new Request("http://cloakhub.test/ui/profiles/work/cdp-token", { method: "POST" }));
+
+    const html = await (await app.fetch(new Request("http://cloakhub.test/"))).text();
+    const dashboard = dashboardScriptHarness(html);
+
+    dashboard.run();
+    expect(dashboard.intervalMs).toEqual([2500]);
+
+    dashboard.confirmResults.push(false);
+    await dashboard.stopButton.click();
+    expect(dashboard.confirmMessages).toEqual(["This may disconnect active CDP sessions or viewers. Continue?"]);
+    expect(dashboard.fetches).toEqual([]);
+
+    dashboard.confirmResults.push(true);
+    await dashboard.stopButton.click();
+    expect(dashboard.fetches.at(-1)).toEqual({
+      method: "POST",
+      path: "/ui/profiles/work/stop"
+    });
+    expect(dashboard.reloads).toBe(1);
+
+    await dashboard.restartButton.click();
+    expect(dashboard.confirmMessages).toHaveLength(2);
+    expect(dashboard.fetches.at(-1)).toEqual({
+      method: "POST",
+      path: "/ui/profiles/work/restart"
+    });
+    expect(dashboard.reloads).toBe(2);
+
+    await dashboard.copyTokenButton.click();
+    expect(dashboard.clipboardWrites).toEqual([
+      "http://cloakhub.test/api/profiles/work/cdp/json/version?token=profile-token"
+    ]);
+    expect(dashboard.reloads).toBe(3);
+
+    await dashboard.viewerLink.click();
+    expect(dashboard.openedUrls).toEqual(["http://cloakhub.test/ui/profiles/work/viewer"]);
+    expect(dashboard.reloads).toBe(3);
+
+    dashboard.postViewerConnected();
+    expect(dashboard.reloads).toBe(4);
   });
 
   test("manual clipboard endpoint writes text through the Browser Runtime", async () => {
@@ -699,4 +861,178 @@ function jsonRequest(url: string, method: string, body: unknown, cookie?: string
 function sequenceTokens(...tokens: string[]): () => string {
   let index = 0;
   return () => tokens[index++] ?? tokens.at(-1) ?? "profile-token";
+}
+
+function dashboardScriptHarness(html: string) {
+  const script = /<script>([\s\S]*)<\/script>/.exec(html)?.[1];
+  if (!script) {
+    throw new Error("dashboard script not found");
+  }
+
+  const createForm = fakeDashboardElement();
+  const stopButton = fakeDashboardElement({
+    action: "stop",
+    cdpSessionCount: "1",
+    manualViewerCount: "0",
+    profileId: "work"
+  });
+  const restartButton = fakeDashboardElement({
+    action: "restart",
+    cdpSessionCount: "1",
+    manualViewerCount: "0",
+    profileId: "work"
+  });
+  const copyTokenButton = fakeDashboardElement({ action: "copy-url", profileId: "work" });
+  const viewerLink = fakeDashboardElement({}, "http://cloakhub.test/ui/profiles/work/viewer");
+  const fetches: Array<{ method: string; path: string }> = [];
+  const clipboardWrites: string[] = [];
+  const confirmMessages: string[] = [];
+  const confirmResults: boolean[] = [];
+  const intervalMs: number[] = [];
+  const openedUrls: string[] = [];
+  let messageHandler:
+    | ((event: { data?: { type?: string }; origin: string }) => void)
+    | undefined;
+  let reloads = 0;
+
+  const document = {
+    getElementById: (id: string) => {
+      if (id !== "create-profile-form") {
+        throw new Error(`unexpected element id ${id}`);
+      }
+
+      return createForm;
+    },
+    querySelectorAll: (selector: string) => {
+      if (selector === ".profile-update-form" || selector === ".profile-delete-button") {
+        return [];
+      }
+
+      if (selector === ".manual-viewer-link") {
+        return [viewerLink];
+      }
+
+      if (selector === ".profile-lifecycle-button") {
+        return [stopButton, restartButton];
+      }
+
+      if (selector === ".cdp-token-button") {
+        return [copyTokenButton];
+      }
+
+      throw new Error(`unexpected selector ${selector}`);
+    }
+  };
+  const location = {
+    origin: "http://cloakhub.test",
+    reload: () => {
+      reloads += 1;
+    }
+  };
+  const fetch = async (path: string, options: { method?: string } = {}) => {
+    fetches.push({ method: options.method ?? "GET", path });
+    return {
+      json: async () => ({ cdp_token: "profile-token" }),
+      ok: true
+    };
+  };
+  const navigator = {
+    clipboard: {
+      writeText: async (value: string) => {
+        clipboardWrites.push(value);
+      }
+    }
+  };
+  const window = {
+    addEventListener: (
+      eventName: string,
+      handler: (event: { data?: { type?: string }; origin: string }) => void
+    ) => {
+      if (eventName === "message") {
+        messageHandler = handler;
+      }
+    },
+    open: (url: string) => {
+      openedUrls.push(url);
+      return {};
+    }
+  };
+  const confirm = (message: string) => {
+    confirmMessages.push(message);
+    return confirmResults.shift() ?? true;
+  };
+  const setInterval = (_callback: () => void, milliseconds: number) => {
+    intervalMs.push(milliseconds);
+    return 1;
+  };
+
+  return {
+    get clipboardWrites() {
+      return clipboardWrites;
+    },
+    confirmMessages,
+    confirmResults,
+    fetches,
+    intervalMs,
+    openedUrls,
+    postViewerConnected: () => {
+      messageHandler?.({
+        data: { type: "cloakhub-viewer-connected" },
+        origin: "http://cloakhub.test"
+      });
+    },
+    get reloads() {
+      return reloads;
+    },
+    restartButton,
+    run: () => {
+      const scriptFunction = new Function(
+        "document",
+        "location",
+        "fetch",
+        "navigator",
+        "window",
+        "confirm",
+        "setInterval",
+        "FormData",
+        script
+      );
+      scriptFunction(document, location, fetch, navigator, window, confirm, setInterval, FormData);
+    },
+    stopButton,
+    viewerLink,
+    copyTokenButton
+  };
+}
+
+function fakeDashboardElement(dataset: Record<string, string> = {}, href = "") {
+  const handlers = new Map<string, (event: { currentTarget: unknown; preventDefault: () => void }) => unknown>();
+  return {
+    dataset,
+    href,
+    addEventListener: (
+      eventName: string,
+      handler: (event: { currentTarget: unknown; preventDefault: () => void }) => unknown
+    ) => {
+      handlers.set(eventName, handler);
+    },
+    click: async () => {
+      await handlers.get("click")?.({
+        currentTarget: { dataset, href },
+        preventDefault: () => undefined
+      });
+    }
+  };
+}
+
+function killProcessGroup(pid: number): void {
+  try {
+    process.kill(-pid, "SIGKILL");
+  } catch {
+    try {
+      process.kill(pid, "SIGKILL");
+    } catch {
+      // The test process may have already exited.
+    }
+  }
 }

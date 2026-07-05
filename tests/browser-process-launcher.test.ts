@@ -38,6 +38,10 @@ describe("BunBrowserProcessLauncher", () => {
     ]);
     expect(spawn.options[0]).toMatchObject({
       detached: true,
+      env: {
+        CLOAKHUB_DATA_ROOT: dataRoot,
+        CLOAKHUB_PROFILE_ID: "work"
+      },
       stderr: "ignore",
       stdin: "ignore",
       stdout: "ignore"

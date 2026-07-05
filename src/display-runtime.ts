@@ -8,6 +8,7 @@ import type {
   BrowserProcessHandle
 } from "./browser-runtime";
 import { MissingDisplayRuntimeError } from "./browser-runtime";
+import { ownedProcessEnv } from "./owned-process";
 
 export interface KasmVncBinInfo {
   path?: string;
@@ -82,6 +83,7 @@ export function createKasmVncDisplayRuntime(
       await mkdir(runtimeProfilePath(options.dataRoot, command.profileId), { recursive: true });
       const subprocess = spawn(displayCommand(options.xvncBin, command), {
         detached: true,
+        env: ownedProcessEnv(options.dataRoot, command.profileId),
         stderr: "ignore",
         stdin: "ignore",
         stdout: "ignore"
