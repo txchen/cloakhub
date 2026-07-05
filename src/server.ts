@@ -4,6 +4,7 @@ import { createBunBrowserProcessLauncher } from "./browser-process-launcher";
 import { createBrowserRuntime } from "./browser-runtime";
 import { createCdpGateway, createProfileCdpAccessPolicy } from "./cdp-gateway";
 import { createCdpWebSocketHandler, type CdpWebSocketData } from "./cdp-websocket-proxy";
+import { createXclipClipboardWriter } from "./clipboard-writer";
 import { loadConfigFromEnv } from "./config";
 import { ensureDataRoot } from "./data-root";
 import { createKasmVncDisplayRuntime, resolveKasmVncBin } from "./display-runtime";
@@ -28,6 +29,7 @@ async function main(): Promise<void> {
     });
     const browserRuntime = createBrowserRuntime({
       browserBin: browserBin.path,
+      clipboardWriter: createXclipClipboardWriter(),
       dataRoot: config.dataRoot,
       displayRuntime: createKasmVncDisplayRuntime({
         dataRoot: config.dataRoot,

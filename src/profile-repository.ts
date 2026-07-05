@@ -27,6 +27,7 @@ export interface ProfileRepository {
   markStopping(profileId: string): void;
   migrate(): void;
   recordActivity(profileId: string, occurredAt: string): void;
+  recordManualInput(profileId: string, occurredAt: string): void;
   recordDeleteError(profileId: string, error: string): void;
   setCdpToken(profileId: string, token: string | null): BrowserProfile | undefined;
   update(profileId: string, input: UpdateProfileInput): BrowserProfile | undefined;
@@ -61,6 +62,7 @@ class SqliteProfileRepository implements ProfileRepository {
         last_delete_error TEXT,
         last_launch_error TEXT,
         last_launch_failed_at TEXT,
+        last_manual_input_at TEXT,
         last_started_at TEXT,
         last_stop_reason TEXT,
         last_stopped_at TEXT,
@@ -79,6 +81,7 @@ class SqliteProfileRepository implements ProfileRepository {
     this.ensureColumn("profiles", "last_activity_at", "TEXT");
     this.ensureColumn("profiles", "last_launch_error", "TEXT");
     this.ensureColumn("profiles", "last_launch_failed_at", "TEXT");
+    this.ensureColumn("profiles", "last_manual_input_at", "TEXT");
     this.ensureColumn("profiles", "last_started_at", "TEXT");
     this.ensureColumn("profiles", "last_stop_reason", "TEXT");
     this.ensureColumn("profiles", "last_stopped_at", "TEXT");
@@ -99,6 +102,7 @@ class SqliteProfileRepository implements ProfileRepository {
           last_delete_error,
           last_launch_error,
           last_launch_failed_at,
+          last_manual_input_at,
           last_started_at,
           last_stop_reason,
           last_stopped_at,
@@ -113,6 +117,7 @@ class SqliteProfileRepository implements ProfileRepository {
           $display_name,
           $notes,
           'stopped',
+          NULL,
           NULL,
           NULL,
           NULL,
@@ -348,6 +353,25 @@ class SqliteProfileRepository implements ProfileRepository {
       )
       .run({
         $last_activity_at: occurredAt,
+        $profile_id: profileId,
+        $updated_at: nowIso()
+      });
+  }
+
+  recordManualInput(profileId: string, occurredAt: string): void {
+    this.db
+      .query(
+        `
+        UPDATE profiles
+        SET last_activity_at = $last_activity_at,
+            last_manual_input_at = $last_manual_input_at,
+            updated_at = $updated_at
+        WHERE profile_id = $profile_id
+      `
+      )
+      .run({
+        $last_activity_at: occurredAt,
+        $last_manual_input_at: occurredAt,
         $profile_id: profileId,
         $updated_at: nowIso()
       });

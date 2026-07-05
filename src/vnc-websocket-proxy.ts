@@ -1,11 +1,18 @@
 import { connect as connectTcp } from "node:net";
 
 import type { BrowserRuntimeManualViewer } from "./browser-runtime";
+import {
+  createRfbProxyState,
+  translateClientFrame,
+  translateServerChunk,
+  type RfbProxyState
+} from "./rfb-compatibility";
 
 type VncWebSocketMessage = string | Bun.BufferSource;
 
 export interface VncWebSocketData {
   profileId: string;
+  rfb?: RfbProxyState;
   session?: BrowserRuntimeManualViewer;
   targetHost: string;
   targetPort: number;
@@ -61,15 +68,30 @@ export function createVncWebSocketHandler(
       ws.data.upstream?.close();
     },
     message(ws, message): void {
-      ws.data.upstream?.write(toBuffer(message));
+      const state = ws.data.rfb ?? createRfbProxyState();
+      ws.data.rfb = state;
+      const result = translateClientFrame(toBuffer(message), state);
+      if (result.manualInput) {
+        ws.data.session?.recordInput();
+      }
+
+      if (result.data.length > 0) {
+        ws.data.upstream?.write(result.data);
+      }
     },
     open(ws): void {
+      ws.data.rfb = createRfbProxyState();
       ws.data.session = options.manualViewers?.openManualViewerSession(ws.data.profileId);
       const upstream = factory.connect(ws.data.targetHost, ws.data.targetPort);
       ws.data.upstream = upstream;
 
       upstream.ondata = (data) => {
-        ws.send(data);
+        const state = ws.data.rfb ?? createRfbProxyState();
+        ws.data.rfb = state;
+        const translated = translateServerChunk(data, state);
+        if (translated.length > 0) {
+          ws.send(translated);
+        }
       };
 
       upstream.onerror = () => {

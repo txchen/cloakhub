@@ -119,6 +119,7 @@ describe("ProfileRepository", () => {
     first.create({ profile_id: "personal" });
     first.markFailed("work", "boom", "2026-01-01T00:00:00.000Z");
     first.markRunning("work", "2026-01-01T00:01:00.000Z");
+    first.recordManualInput("work", "2026-01-01T00:01:30.000Z");
     first.markRunning("personal", "2026-01-01T00:02:00.000Z");
     first.markAllStopped("restart", "2026-01-01T00:03:00.000Z");
     first.close();
@@ -128,8 +129,10 @@ describe("ProfileRepository", () => {
 
     expect(second.get("work")).toMatchObject({
       instance_status: "stopped",
+      last_activity_at: "2026-01-01T00:01:30.000Z",
       last_launch_error: "boom",
       last_launch_failed_at: "2026-01-01T00:00:00.000Z",
+      last_manual_input_at: "2026-01-01T00:01:30.000Z",
       last_started_at: "2026-01-01T00:01:00.000Z",
       last_stop_reason: "restart",
       last_stopped_at: "2026-01-01T00:03:00.000Z"

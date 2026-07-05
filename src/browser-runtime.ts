@@ -54,6 +54,7 @@ export interface BrowserManualReadinessProbe {
 
 export interface BrowserRuntimeOptions {
   browserBin: string;
+  clipboardWriter?: BrowserClipboardWriter;
   cdpPortStart?: number;
   clientConnections?: BrowserClientConnections;
   dataRoot: string;
@@ -107,6 +108,10 @@ export interface BrowserRuntimeManualViewerState {
   vnc_ws_path: string;
 }
 
+export interface BrowserClipboardWriter {
+  writeText(display: string, text: string): Promise<void>;
+}
+
 export interface IdleSpinDownResult {
   profile_id: string;
   reason: "idle timeout";
@@ -117,6 +122,7 @@ export interface BrowserRuntime {
   activeCdpSessionCount(profileId: string): number;
   activeManualViewerCount(profileId: string): number;
   cdpSessionObservations(profileId: string): BrowserRuntimeCdpSessionObservation[];
+  lastManualInputAt(profileId: string): string | null;
   openCdpSession(
     profileId: string,
     metadata?: BrowserRuntimeCdpSessionMetadata
@@ -128,6 +134,7 @@ export interface BrowserRuntime {
   spinDownIdleInstances(): Promise<IdleSpinDownResult[]>;
   start(profileId: string): Promise<BrowserRuntimeState>;
   stop(profileId: string, reason?: StopReason): Promise<BrowserRuntimeState>;
+  writeManualClipboard(profileId: string, text: string): Promise<void>;
 }
 
 interface RunningInstance {
@@ -238,6 +245,10 @@ export function createBrowserRuntime(options: BrowserRuntimeOptions): BrowserRun
         started_at: session.startedAtWallClock,
         user_agent: session.userAgent ?? null
       }));
+    },
+
+    lastManualInputAt(profileId: string): string | null {
+      return options.repository.get(profileId)?.last_manual_input_at ?? null;
     },
 
     async cleanupOwnedProcessesOnStartup(): Promise<void> {
@@ -375,6 +386,24 @@ export function createBrowserRuntime(options: BrowserRuntimeOptions): BrowserRun
     async stop(profileId: string, reason: StopReason = "manual stop"): Promise<BrowserRuntimeState> {
       const profile = requireProfile(options.repository, profileId);
       return stopProfile(profile, reason, { recordActivity: true });
+    },
+
+    async writeManualClipboard(profileId: string, text: string): Promise<void> {
+      const profile = requireProfile(options.repository, profileId);
+      if (profile.headless) {
+        throw new UnsupportedManualViewerProfileError(profile.profile_id);
+      }
+
+      const running = runningInstances.get(profile.profile_id);
+      if (!running?.display) {
+        throw new Error(`Browser Profile "${profile.profile_id}" does not have a running manual viewer display`);
+      }
+
+      if (!options.clipboardWriter) {
+        throw new Error("Manual clipboard writer is unavailable");
+      }
+
+      await options.clipboardWriter.writeText(running.display, text);
     },
 
     async spinDownIdleInstances(): Promise<IdleSpinDownResult[]> {
@@ -544,7 +573,9 @@ export function createBrowserRuntime(options: BrowserRuntimeOptions): BrowserRun
     }
 
     lastManualInputActivityMs.set(profileId, current);
-    recordActivity(profileId);
+    const occurredAt = nowIso(now);
+    lastActivityMs.set(profileId, current);
+    options.repository.recordManualInput(profileId, occurredAt);
   }
 
   function runningState(profileId: string, running: RunningInstance): BrowserRuntimeState {

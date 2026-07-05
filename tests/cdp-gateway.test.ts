@@ -216,6 +216,7 @@ function fakeRuntime(options: { startError?: Error } = {}): BrowserRuntime & { c
     activeCdpSessionCount: () => 0,
     activeManualViewerCount: () => 0,
     cdpSessionObservations: () => [],
+    lastManualInputAt: () => null,
     openCdpSession: () => ({
       close: () => undefined,
       recordMessage: () => undefined
@@ -249,7 +250,8 @@ function fakeRuntime(options: { startError?: Error } = {}): BrowserRuntime & { c
       calls.push(`stop:${profileId}`);
       return { ...state, cdp_port: -1, status: "stopped" };
     },
-    spinDownIdleInstances: async () => []
+    spinDownIdleInstances: async () => [],
+    writeManualClipboard: async () => undefined
   };
 }
 

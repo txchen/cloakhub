@@ -31,6 +31,7 @@ type PresentedBrowserProfile = Omit<BrowserProfile, "cdp_token"> & {
   cdp_token_configured: boolean;
   cdp_session_count: number;
   cdp_sessions: BrowserRuntimeCdpSessionObservation[];
+  last_manual_input_at: string | null;
   manual_viewer_count: number;
 };
 
@@ -68,6 +69,11 @@ export function createApp(config: CloakHubConfig, services: CloakHubServices = {
       return adminLoginResponse(request, config.authToken);
     }
 
+    const noVncAssetResponse = await noVncAssetResponseForRequest(request, url);
+    if (noVncAssetResponse) {
+      return noVncAssetResponse;
+    }
+
     if (isAdminApiRoute(url) && !isAdminApiAuthorized(request, config.authToken)) {
       return unauthorizedResponse();
     }
@@ -89,6 +95,11 @@ export function createApp(config: CloakHubConfig, services: CloakHubServices = {
     const vncWebSocketResponse = await vncWebSocketResponseForRequest(request, url, services.browserRuntime, server);
     if (vncWebSocketResponse !== undefined || isVncRoute(url)) {
       return vncWebSocketResponse;
+    }
+
+    const clipboardResponse = await manualClipboardResponse(request, url, services.browserRuntime);
+    if (clipboardResponse) {
+      return clipboardResponse;
     }
 
     const manualViewerResponse = await manualViewerUiResponse(request, url, services.browserRuntime);
@@ -129,6 +140,67 @@ export function createApp(config: CloakHubConfig, services: CloakHubServices = {
   return {
     fetch: fetch as CloakHubApp["fetch"]
   };
+}
+
+async function noVncAssetResponseForRequest(request: Request, url: URL): Promise<Response | undefined> {
+  const prefix = "/assets/novnc/";
+  if (!url.pathname.startsWith(prefix)) {
+    return undefined;
+  }
+
+  if (request.method !== "GET") {
+    return textResponse("Method not allowed", 405, { Allow: "GET" });
+  }
+
+  const assetPath = url.pathname.slice(prefix.length);
+  if (!/^(?:core|vendor)\/[A-Za-z0-9_./-]+\.js$/.test(assetPath) || assetPath.includes("..")) {
+    return textResponse("Not found", 404);
+  }
+
+  const asset = Bun.file(new URL(`../node_modules/@novnc/novnc/${assetPath}`, import.meta.url));
+  if (!(await asset.exists())) {
+    return textResponse("Not found", 404);
+  }
+
+  return new Response(asset, {
+    headers: { "content-type": "text/javascript; charset=utf-8" }
+  });
+}
+
+async function manualClipboardResponse(
+  request: Request,
+  url: URL,
+  browserRuntime: BrowserRuntime | undefined
+): Promise<Response | undefined> {
+  const match = /^\/ui\/profiles\/([^/]+)\/clipboard$/.exec(url.pathname);
+  if (!match) {
+    return undefined;
+  }
+
+  if (!browserRuntime) {
+    return textResponse("Not found", 404);
+  }
+
+  if (request.method !== "POST") {
+    return textResponse("Method not allowed", 405, { Allow: "POST" });
+  }
+
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return errorResponse("Request body must be valid JSON", 400);
+  }
+  if (!isRecord(body) || typeof body.text !== "string") {
+    return errorResponse("clipboard text is required", 400);
+  }
+
+  try {
+    await browserRuntime.writeManualClipboard(match[1]!, body.text);
+    return jsonResponse({ ok: true });
+  } catch (error) {
+    return manualViewerJsonErrorResponse(error);
+  }
 }
 
 async function vncWebSocketResponseForRequest(
@@ -465,6 +537,18 @@ function manualViewerErrorResponse(error: unknown): Response {
   );
 }
 
+function manualViewerJsonErrorResponse(error: unknown): Response {
+  if (error instanceof BrowserProfileNotFoundError) {
+    return errorResponse(error.message, 404);
+  }
+
+  if (error instanceof UnsupportedManualViewerProfileError || error instanceof MissingDisplayRuntimeError) {
+    return errorResponse(error.message, 400);
+  }
+
+  return errorResponse(error instanceof Error ? error.message : String(error), 503);
+}
+
 function errorResponse(error: string, status: number): Response {
   return jsonResponse({ error }, status);
 }
@@ -504,6 +588,7 @@ function presentProfile(
     cdp_token_configured: Boolean(profile.cdp_token),
     cdp_session_count: browserRuntime?.activeCdpSessionCount(profile.profile_id) ?? 0,
     cdp_sessions: browserRuntime?.cdpSessionObservations(profile.profile_id) ?? [],
+    last_manual_input_at: browserRuntime?.lastManualInputAt(profile.profile_id) ?? null,
     manual_viewer_count: browserRuntime?.activeManualViewerCount(profile.profile_id) ?? 0
   };
 }
@@ -558,7 +643,7 @@ function isVncRoute(url: URL): boolean {
 }
 
 function isUiProfileActionRoute(url: URL): boolean {
-  return /^\/ui\/profiles(?:\/[^/]+(?:\/(?:start|stop|restart|viewer|vnc|cdp-token(?:\/regenerate)?))?)?$/.test(
+  return /^\/ui\/profiles(?:\/[^/]+(?:\/(?:start|stop|restart|viewer|vnc|clipboard|cdp-token(?:\/regenerate)?))?)?$/.test(
     url.pathname
   );
 }
@@ -752,20 +837,53 @@ function renderManualViewer(viewer: BrowserRuntimeManualViewerState): string {
         <span id="viewer-status">Connecting</span>
       </div>
     </main>
-    <script>
+    <script type="module">
+      import RFB from "/assets/novnc/core/rfb.js";
+
       const viewer = document.getElementById("manual-viewer");
       const status = document.getElementById("viewer-status");
       const protocol = location.protocol === "https:" ? "wss:" : "ws:";
-      const socket = new WebSocket(protocol + "//" + location.host + viewer.dataset.vncWebsocketUrl);
-      socket.binaryType = "arraybuffer";
-      socket.addEventListener("open", () => {
+      let rfb;
+      document.addEventListener("keydown", async (event) => {
+        if (!viewer.contains(event.target)) {
+          return;
+        }
+
+        if (event.key !== "v" || (!event.ctrlKey && !event.metaKey) || event.altKey || event.shiftKey) {
+          return;
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+        const text = await navigator.clipboard?.readText().catch(() => "");
+        if (!text) {
+          return;
+        }
+
+        await fetch("/ui/profiles/${encodeURIComponent(viewer.profile_id)}/clipboard", {
+          body: JSON.stringify({ text }),
+          headers: { "content-type": "application/json" },
+          method: "POST"
+        });
+        rfb.sendKey(0xffe3, "ControlLeft", true);
+        rfb.sendKey(0x0076, "KeyV", true);
+        rfb.sendKey(0x0076, "KeyV", false);
+        rfb.sendKey(0xffe3, "ControlLeft", false);
+      }, true);
+      rfb = new RFB(viewer, protocol + "//" + location.host + viewer.dataset.vncWebsocketUrl);
+      rfb.scaleViewport = true;
+      rfb.resizeSession = false;
+      rfb.addEventListener("connect", () => {
         status.textContent = "Connected";
       });
-      socket.addEventListener("close", () => {
+      rfb.addEventListener("disconnect", () => {
         status.textContent = "Disconnected";
       });
-      socket.addEventListener("error", () => {
-        status.textContent = "Connection error";
+      rfb.addEventListener("clipboard", (event) => {
+        if (event.detail?.text) {
+          navigator.clipboard?.writeText(event.detail.text).catch(() => undefined);
+        }
       });
     </script>
   </body>
@@ -812,6 +930,7 @@ function renderShell(config: CloakHubConfig, profiles: PresentedBrowserProfile[]
                 <span>${escapeHtml(profile.instance_status)}</span>
                 <span>CDP Sessions: ${profile.cdp_session_count}</span>
                 <span>Viewers: ${profile.manual_viewer_count}</span>
+                <span>Last Manual Input: ${escapeHtml(profile.last_manual_input_at ?? "none")}</span>
                 ${renderCdpSessions(profile)}
               </td>
               <td>${sleepPolicyBadge(profile)}</td>

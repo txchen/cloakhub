@@ -208,6 +208,21 @@ describe("BrowserRuntime", () => {
     expect(runtime.activeManualViewerCount("work")).toBe(0);
   });
 
+  test("multiple manual viewers are tracked independently", async () => {
+    const repository = fakeRepository(profile({ headless: false, profile_id: "work" }));
+    const runtime = runtimeFixture({ displayRuntime: fakeDisplayRuntime(), repository });
+    await runtime.start("work");
+
+    const first = runtime.openManualViewerSession("work");
+    const second = runtime.openManualViewerSession("work");
+
+    expect(runtime.activeManualViewerCount("work")).toBe(2);
+    first.close();
+    expect(runtime.activeManualViewerCount("work")).toBe(1);
+    second.close();
+    expect(runtime.activeManualViewerCount("work")).toBe(0);
+  });
+
   test("manual input records Instance Activity at most once every five seconds", async () => {
     const repository = fakeRepository(profile({ headless: false, profile_id: "work" }));
     const monotonic = fakeMonotonicClock();
@@ -232,6 +247,19 @@ describe("BrowserRuntime", () => {
     viewer.recordInput();
 
     expect(repository.get("work")?.last_activity_at).toBe("2026-01-01T00:00:06.000Z");
+    expect(runtime.lastManualInputAt("work")).toBe("2026-01-01T00:00:06.000Z");
+  });
+
+  test("manual clipboard writes through the running display without recording Manual Input", async () => {
+    const repository = fakeRepository(profile({ headless: false, profile_id: "work" }));
+    const clipboardWriter = fakeClipboardWriter();
+    const runtime = runtimeFixture({ clipboardWriter, displayRuntime: fakeDisplayRuntime(), repository });
+    await runtime.start("work");
+
+    await runtime.writeManualClipboard("work", "pasted text");
+
+    expect(clipboardWriter.writes).toEqual([{ display: ":100", text: "pasted text" }]);
+    expect(runtime.lastManualInputAt("work")).toBeNull();
   });
 
   test("open CDP Sessions block idle Spin-down indefinitely", async () => {
@@ -476,6 +504,7 @@ describe("BrowserRuntime", () => {
 
 function runtimeFixture(options: {
   clientConnections?: BrowserClientConnections;
+  clipboardWriter?: Parameters<typeof createBrowserRuntime>[0]["clipboardWriter"];
   displayRuntime?: BrowserDisplayRuntime;
   launcher?: BrowserProcessLauncher;
   manualReadinessProbe?: BrowserManualReadinessProbe;
@@ -487,6 +516,7 @@ function runtimeFixture(options: {
 }) {
   return createBrowserRuntime({
     browserBin: "/opt/cloakbrowser/cloakbrowser",
+    clipboardWriter: options.clipboardWriter,
     clientConnections: options.clientConnections,
     dataRoot: "/data",
     displayRuntime: options.displayRuntime,
@@ -498,6 +528,20 @@ function runtimeFixture(options: {
     repository: options.repository,
     wait: options.wait ?? (async () => undefined)
   });
+}
+
+function fakeClipboardWriter(): {
+  writes: Array<{ display: string; text: string }>;
+  writeText(display: string, text: string): Promise<void>;
+} {
+  const writes: Array<{ display: string; text: string }> = [];
+
+  return {
+    writes,
+    writeText: async (display, text) => {
+      writes.push({ display, text });
+    }
+  };
 }
 
 function fakeManualReadinessProbe(): BrowserManualReadinessProbe & { readyStates: BrowserRuntimeState[] } {
@@ -703,6 +747,9 @@ function fakeRepository(...initialProfiles: BrowserProfile[]): ProfileRepository
     recordActivity: (profileId, occurredAt) => {
       update(profileId, { last_activity_at: occurredAt });
     },
+    recordManualInput: (profileId, occurredAt) => {
+      update(profileId, { last_activity_at: occurredAt, last_manual_input_at: occurredAt });
+    },
     recordDeleteError: () => undefined,
     setCdpToken: (profileId, token) => update(profileId, { cdp_token: token }),
     update: (profileId, input) => update(profileId, input)
@@ -741,6 +788,7 @@ function profile(overrides: Partial<BrowserProfile>): BrowserProfile {
     last_delete_error: null,
     last_launch_error: null,
     last_launch_failed_at: null,
+    last_manual_input_at: null,
     last_started_at: null,
     last_stop_reason: null,
     last_stopped_at: null,

@@ -349,6 +349,18 @@ describe("Browser Profile admin API", () => {
     expect(browserRuntime.calls).toEqual(["viewer:work"]);
     expect(html).toContain('id="manual-viewer"');
     expect(html).toContain('data-vnc-websocket-url="/ui/profiles/work/vnc"');
+    expect(html).toContain('import RFB from "/assets/novnc/core/rfb.js"');
+    expect(html).toContain("/ui/profiles/work/clipboard");
+  });
+
+  test("serves noVNC browser modules for the manual viewer", async () => {
+    const { app } = await tempApp({ authToken: "admin-token" });
+
+    const response = await app.fetch(new Request("http://cloakhub.test/assets/novnc/core/rfb.js"));
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-type")).toContain("text/javascript");
+    expect(await response.text()).toContain("class RFB");
   });
 
   test("upgrades manual viewer websocket after headed Transparent Recovery", async () => {
@@ -376,7 +388,10 @@ describe("Browser Profile admin API", () => {
   });
 
   test("status responses include active manual viewer count", async () => {
-    const browserRuntime = fakeBrowserRuntime({ activeManualViewerCount: 2 });
+    const browserRuntime = fakeBrowserRuntime({
+      activeManualViewerCount: 2,
+      lastManualInputAt: "2026-01-01T00:00:05.000Z"
+    });
     const { app } = await tempApp({}, browserRuntime);
     await app.fetch(jsonRequest("http://cloakhub.test/api/profiles", "POST", { profile_id: "work" }));
 
@@ -384,8 +399,26 @@ describe("Browser Profile admin API", () => {
     const uiResponse = await app.fetch(new Request("http://cloakhub.test/"));
     const html = await uiResponse.text();
 
-    expect(await apiResponse.json()).toMatchObject({ manual_viewer_count: 2 });
+    expect(await apiResponse.json()).toMatchObject({
+      last_manual_input_at: "2026-01-01T00:00:05.000Z",
+      manual_viewer_count: 2
+    });
     expect(html).toContain("Viewers: 2");
+    expect(html).toContain("Last Manual Input: 2026-01-01T00:00:05.000Z");
+  });
+
+  test("manual clipboard endpoint writes text through the Browser Runtime", async () => {
+    const browserRuntime = fakeBrowserRuntime();
+    const { app } = await tempApp({ authToken: "admin-token" }, browserRuntime);
+    const cookie = "cloakhub_auth=admin-token";
+
+    const response = await app.fetch(
+      jsonRequest("http://cloakhub.test/ui/profiles/work/clipboard", "POST", { text: "pasted" }, cookie)
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ ok: true });
+    expect(browserRuntime.calls).toEqual(["clipboard:work:pasted"]);
   });
 
   test("headless profiles show viewer unavailable without changing headless mode", async () => {
@@ -514,6 +547,7 @@ async function tempApp(
 function fakeBrowserRuntime(options: {
   activeCdpSessionCount?: number;
   activeManualViewerCount?: number;
+  lastManualInputAt?: string | null;
   viewerError?: Error;
 } = {}): BrowserRuntime & { calls: string[] } {
   const calls: string[] = [];
@@ -538,6 +572,7 @@ function fakeBrowserRuntime(options: {
             }
           ]
         : [],
+    lastManualInputAt: () => options.lastManualInputAt ?? null,
     cleanupOwnedProcessesOnStartup: async () => undefined,
     openCdpSession: () => ({
       close: () => undefined,
@@ -573,7 +608,10 @@ function fakeBrowserRuntime(options: {
       calls.push(`stop:${profileId}:${reason}`);
       return state(profileId, "stopped");
     },
-    spinDownIdleInstances: async () => []
+    spinDownIdleInstances: async () => [],
+    writeManualClipboard: async (profileId, text) => {
+      calls.push(`clipboard:${profileId}:${text}`);
+    }
   };
 }
 

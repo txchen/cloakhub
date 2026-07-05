@@ -52,6 +52,7 @@ export interface BrowserProfile extends LaunchProfileFields {
   last_delete_error: string | null;
   last_launch_error: string | null;
   last_launch_failed_at: string | null;
+  last_manual_input_at: string | null;
   last_started_at: string | null;
   last_stop_reason: StopReason | null;
   last_stopped_at: string | null;
