@@ -1,4 +1,4 @@
-FROM oven/bun:1.3.11-debian
+FROM oven/bun:1.3.14-debian
 
 WORKDIR /app
 

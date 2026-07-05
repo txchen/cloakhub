@@ -1,6 +1,12 @@
 import { describe, expect, test } from "bun:test";
 
 describe("Docker-first packaging", () => {
+  test("Dockerfile uses a published Bun Debian base image tag", async () => {
+    const dockerfile = await Bun.file("Dockerfile").text();
+
+    expect(dockerfile).toContain("FROM oven/bun:1.3.14-debian");
+  });
+
   test("Dockerfile exposes port 7788 and uses /data without runtime downloads", async () => {
     const dockerfile = await Bun.file("Dockerfile").text();
 
