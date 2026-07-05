@@ -40,7 +40,7 @@ services:
       - ./data:/data
 ```
 
-The container listens on `0.0.0.0:7788` internally. The image does not download CloakBrowser at runtime; provide the CloakBrowser Binary in the image at `/opt/cloakbrowser/cloakbrowser`, mount it in, or set `CLOAKHUB_BROWSER_BIN` to an executable path available inside the container.
+The container listens on `0.0.0.0:7788` internally. The published image includes the CloakBrowser Binary at `/opt/cloakbrowser/cloakbrowser` and KasmVNC for headed Browser Profiles.
 
 ## Configuration
 

@@ -1,10 +1,11 @@
 import { describe, expect, test } from "bun:test";
 
 describe("Docker-first packaging", () => {
-  test("Dockerfile uses a published Bun Debian base image tag", async () => {
+  test("Dockerfile uses published CloakBrowser and Bun image tags", async () => {
     const dockerfile = await Bun.file("Dockerfile").text();
 
-    expect(dockerfile).toContain("FROM oven/bun:1.3.14-debian");
+    expect(dockerfile).toContain("FROM oven/bun:1.3.14-debian AS bun");
+    expect(dockerfile).toContain("FROM cloakhq/cloakbrowser:latest");
   });
 
   test("Dockerfile exposes port 7788 and uses /data without runtime downloads", async () => {
@@ -15,7 +16,16 @@ describe("Docker-first packaging", () => {
     expect(dockerfile).toContain("CLOAKHUB_PORT=7788");
     expect(dockerfile).toContain("EXPOSE 7788");
     expect(dockerfile).toContain('VOLUME ["/data"]');
-    expect(dockerfile).not.toMatch(/curl|wget|apt-get.*cloakbrowser|cloakbrowser.*download/i);
+    expect(dockerfile).toContain("COPY --from=bun /usr/local/bin/bun /usr/local/bin/bun");
+    expect(dockerfile).toContain('find /root/.cloakbrowser -maxdepth 2 -type f -name chrome');
+    expect(dockerfile).toContain("/opt/cloakbrowser/cloakbrowser");
+    expect(dockerfile).toContain("kasmvncserver_bookworm");
+    expect(dockerfile).toContain("xclip");
+    expect(dockerfile).toContain("ENTRYPOINT []");
+    expect(dockerfile).not.toContain("cloakbrowser[geoip]");
+    expect(dockerfile).not.toContain("pip install");
+    expect(dockerfile).not.toContain("COPY --from=cloakbrowser");
+    expect(dockerfile).not.toMatch(/CMD .*ensure_binary|ENTRYPOINT .*ensure_binary/i);
   });
 
   test("README documents registry-first Docker and Compose usage", async () => {
