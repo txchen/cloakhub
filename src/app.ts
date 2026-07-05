@@ -1583,7 +1583,7 @@ function renderShell(
         border-radius: 8px;
         box-shadow: 0 24px 80px rgb(15 23 42 / 0.24);
         max-height: min(860px, calc(100vh - 32px));
-        max-width: min(760px, calc(100vw - 32px));
+        max-width: min(1100px, calc(100vw - 32px));
         overflow: auto;
         padding: 0;
         width: 100%;
@@ -1602,7 +1602,212 @@ function renderShell(
       }
 
       #create-profile-form {
-        padding: 16px;
+        padding: 0;
+      }
+
+      .create-profile-form {
+        display: grid;
+        gap: 0;
+      }
+
+      .create-profile-body {
+        display: grid;
+        grid-template-columns: 148px minmax(0, 1fr) 240px;
+        min-height: min(640px, calc(100vh - 132px));
+        padding: 0;
+      }
+
+      .create-profile-tabs {
+        background: #f4f7fa;
+        border-right: 1px solid var(--border);
+        display: grid;
+        gap: 4px;
+        align-content: start;
+        padding: 12px 8px;
+      }
+
+      .create-tab-button {
+        background: transparent;
+        border-radius: 6px;
+        color: var(--muted);
+        justify-content: flex-start;
+        min-height: 34px;
+        text-align: left;
+        width: 100%;
+      }
+
+      .create-tab-button.active {
+        background: #dceafe;
+        color: #174ea6;
+      }
+
+      .create-profile-panels {
+        min-height: 0;
+        overflow: auto;
+        padding: 14px;
+      }
+
+      .create-tab-panel {
+        display: grid;
+        gap: 12px;
+      }
+
+      .create-tab-panel[hidden] {
+        display: none;
+      }
+
+      .create-profile-summary {
+        background: #f7f9fb;
+        border-left: 1px solid var(--border);
+        color: var(--muted);
+        display: grid;
+        gap: 10px;
+        align-content: start;
+        padding: 14px;
+      }
+
+      .create-profile-summary h3 {
+        color: var(--ink);
+        font-size: 0.86rem;
+        margin: 0;
+      }
+
+      .summary-list {
+        display: grid;
+        gap: 7px;
+        margin: 0;
+      }
+
+      .summary-list div {
+        display: grid;
+        gap: 2px;
+      }
+
+      .summary-list dt {
+        font-size: 0.68rem;
+        font-weight: 800;
+        text-transform: uppercase;
+      }
+
+      .summary-list dd {
+        color: var(--ink);
+        font-size: 0.78rem;
+        margin: 0;
+        overflow-wrap: anywhere;
+      }
+
+      .form-section {
+        background: transparent;
+        border: 0;
+        border-radius: 0;
+        display: grid;
+        gap: 12px;
+        padding: 0;
+      }
+
+      .form-section.full {
+        grid-column: 1 / -1;
+      }
+
+      .form-section-head {
+        display: grid;
+        gap: 3px;
+      }
+
+      .form-section-head h3 {
+        font-size: 0.88rem;
+        line-height: 1.2;
+        margin: 0;
+      }
+
+      .form-section-head p {
+        color: var(--muted);
+        font-size: 0.78rem;
+        line-height: 1.35;
+        margin: 0;
+      }
+
+      .form-fields {
+        display: grid;
+        gap: 10px;
+        grid-template-columns: minmax(118px, 160px) minmax(0, 1fr);
+      }
+
+      .form-field {
+        align-items: start;
+        display: contents;
+        min-width: 0;
+      }
+
+      .form-field.full {
+        grid-column: 1 / -1;
+      }
+
+      .form-field.full .field-title,
+      .form-field.full input,
+      .form-field.full select,
+      .form-field.full textarea,
+      .form-field.full .field-hint {
+        grid-column: 1 / -1;
+      }
+
+      .field-title {
+        color: var(--ink);
+        font-size: 0.78rem;
+        font-weight: 800;
+        line-height: 1.2;
+        padding-top: 8px;
+        text-transform: none;
+      }
+
+      .create-profile-form .field-hint {
+        grid-column: 2;
+        margin-top: -6px;
+      }
+
+      .create-profile-form label {
+        font-size: 0.78rem;
+        gap: 5px;
+        text-transform: none;
+      }
+
+      .create-profile-form input,
+      .create-profile-form select,
+      .create-profile-form textarea {
+        font-size: 0.84rem;
+        min-height: 32px;
+      }
+
+      .create-profile-form textarea {
+        min-height: 64px;
+      }
+
+      .inline-fields {
+        display: grid;
+        gap: 8px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .advanced-section summary {
+        cursor: pointer;
+        font-size: 0.86rem;
+        font-weight: 800;
+      }
+
+      .advanced-section .form-section-head {
+        margin-top: 10px;
+      }
+
+      .modal-actions {
+        align-items: center;
+        background: var(--panel);
+        border-top: 1px solid var(--border);
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+        padding: 10px 14px;
+        position: sticky;
+        bottom: 0;
       }
 
       .empty {
@@ -1645,6 +1850,36 @@ function renderShell(
         .viewer-pane {
           min-height: 60vh;
         }
+
+        .create-profile-body {
+          grid-template-columns: 1fr;
+        }
+
+        .create-profile-tabs {
+          border-bottom: 1px solid var(--border);
+          border-right: 0;
+          display: flex;
+          overflow-x: auto;
+        }
+
+        .create-tab-button {
+          flex: 0 0 auto;
+          width: auto;
+        }
+
+        .create-profile-summary {
+          border-left: 0;
+          border-top: 1px solid var(--border);
+        }
+
+        .form-fields {
+          grid-template-columns: 1fr;
+        }
+
+        .create-profile-form .field-hint {
+          grid-column: auto;
+          margin-top: 0;
+        }
       }
     </style>
   </head>
@@ -1684,32 +1919,27 @@ function renderShell(
           <h2>Create Profile</h2>
           <button class="secondary" id="close-create-profile" type="button">Close</button>
         </div>
-        <form id="create-profile-form">
-        <label>
-          Profile ID
-          <input name="profile_id" pattern="^[a-z][a-z0-9_]*$" required>
-          <span class="field-hint">Use lower-case letters, numbers, and underscores. This becomes the immutable URL and directory name.</span>
-        </label>
-        <label>
-          Display Name
-          <input name="display_name">
-          <span class="field-hint">Human-readable label for the left profile list.</span>
-        </label>
-        <label>
-          Notes
-          <input name="notes">
-          <span class="field-hint">Private context for operators; not used by CloakBrowser launch.</span>
-        </label>
-        ${renderLaunchProfileInputs()}
-        <div class="form-actions">
-          <button type="submit">Create</button>
-          <button class="secondary" id="cancel-create-profile" type="button">Cancel</button>
-        </div>
-      </form>
+        ${renderCreateProfileForm()}
       </dialog>
     </main>
       <script>
       const createProfileModal = document.getElementById("create-profile-modal");
+      const createDisplayNameInput = document.getElementById("create-display-name");
+      const createHeadlessSelect = document.getElementById("create-headless");
+      const createLocaleInput = document.getElementById("create-locale");
+      const createProxyInput = document.getElementById("create-proxy");
+      const createProfileIdInput = document.getElementById("create-profile-id");
+      const createScreenHeightInput = document.getElementById("create-screen-height");
+      const createScreenWidthInput = document.getElementById("create-screen-width");
+      const createSummaryId = document.getElementById("create-summary-id");
+      const createSummaryMode = document.getElementById("create-summary-mode");
+      const createSummaryName = document.getElementById("create-summary-name");
+      const createSummaryProxy = document.getElementById("create-summary-proxy");
+      const createSummaryRegion = document.getElementById("create-summary-region");
+      const createSummaryScreen = document.getElementById("create-summary-screen");
+      const createTabButtons = Array.from(document.querySelectorAll(".create-tab-button"));
+      const createTabPanels = Array.from(document.querySelectorAll(".create-tab-panel"));
+      const createTimezoneInput = document.getElementById("create-timezone");
       const managerShell = document.querySelector(".manager-shell");
       const resizer = document.getElementById("sidebar-resizer");
       const showSidebarButton = document.getElementById("show-sidebar");
@@ -1732,6 +1962,63 @@ function renderShell(
       }
 
       setInterval(refreshDashboard, 2500);
+
+      let createProfileIdEdited = false;
+
+      createProfileIdInput?.addEventListener("input", () => {
+        createProfileIdEdited = true;
+        updateCreateProfileSummary();
+      });
+
+      createDisplayNameInput?.addEventListener("input", () => {
+        if (createProfileIdEdited) {
+          return;
+        }
+
+        createProfileIdInput.value = slugifyProfileId(createDisplayNameInput.value);
+        updateCreateProfileSummary();
+      });
+
+      createTabButtons.forEach((button) => {
+        button.addEventListener("click", (event) => {
+          const tab = event.currentTarget.dataset.createTab;
+          createTabButtons.forEach((tabButton) => {
+            tabButton.classList.toggle("active", tabButton.dataset.createTab === tab);
+          });
+          createTabPanels.forEach((panel) => {
+            panel.hidden = panel.dataset.createPanel !== tab;
+          });
+        });
+      });
+
+      for (const input of [
+        createDisplayNameInput,
+        createHeadlessSelect,
+        createLocaleInput,
+        createProfileIdInput,
+        createProxyInput,
+        createScreenHeightInput,
+        createScreenWidthInput,
+        createTimezoneInput
+      ]) {
+        input?.addEventListener("input", updateCreateProfileSummary);
+        input?.addEventListener("change", updateCreateProfileSummary);
+      }
+
+      updateCreateProfileSummary();
+
+      function updateCreateProfileSummary() {
+        const timezone = createTimezoneInput?.value || "Default timezone";
+        const locale = createLocaleInput?.value || "default locale";
+        createSummaryName.textContent = createDisplayNameInput?.value || "Untitled profile";
+        createSummaryId.textContent = createProfileIdInput?.value || "Required";
+        createSummaryMode.textContent =
+          createHeadlessSelect?.value === "true" ? "Headless CDP only" : "VNC/manual browser";
+        createSummaryProxy.textContent = createProxyInput?.value || "No proxy";
+        createSummaryRegion.textContent = timezone + " / " + locale;
+        createSummaryScreen.textContent =
+          (createScreenWidthInput?.value || "1920") + " x " + (createScreenHeightInput?.value || "1080");
+      }
 
       function setSidebarCollapsed(collapsed) {
         managerShell.classList.toggle("sidebar-collapsed", collapsed);
@@ -1981,9 +2268,236 @@ function renderShell(
         delete values.tags_json;
         return values;
       }
+
+      function slugifyProfileId(value) {
+        return value
+          .trim()
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "_")
+          .replace(/^_+|_+$/g, "")
+          .replace(/^[^a-z]+/, "");
+      }
     </script>
   </body>
 </html>`;
+}
+
+function renderCreateProfileForm(): string {
+  return `<form class="create-profile-form" id="create-profile-form">
+          <div class="create-profile-body create-profile-grid">
+            <nav class="create-profile-tabs" aria-label="Create profile sections">
+              <button class="create-tab-button active" data-create-tab="basic" type="button">Basic</button>
+              <button class="create-tab-button" data-create-tab="browser" type="button">Browser</button>
+              <button class="create-tab-button" data-create-tab="fingerprint" type="button">Fingerprint</button>
+              <button class="create-tab-button" data-create-tab="advanced" type="button">Advanced</button>
+            </nav>
+            <div class="create-profile-panels">
+              <section class="form-section create-tab-panel" data-create-panel="basic" aria-labelledby="create-profile-basic">
+                <div class="form-section-head">
+                  <h3 id="create-profile-basic">Basic information</h3>
+                  <p>Create the profile identity, network route, and operator notes.</p>
+                </div>
+                <div class="form-fields">
+                  <label class="form-field">
+                    <span class="field-title">Profile Name</span>
+                    <input id="create-display-name" name="display_name" placeholder="Client A - US desktop" autocomplete="off">
+                    <span class="field-hint">Shown in the profile list.</span>
+                  </label>
+                  <label class="form-field">
+                    <span class="field-title">Profile ID</span>
+                    <input id="create-profile-id" name="profile_id" pattern="^[a-z][a-z0-9_]*$" placeholder="client_a_us" required autocomplete="off">
+                    <span class="field-hint">Lower-case letters, numbers, and underscores. This becomes the immutable URL and directory name.</span>
+                  </label>
+                  <label class="form-field">
+                    <span class="field-title">Proxy</span>
+                    <input id="create-proxy" name="proxy" placeholder="http://user:pass@host:port">
+                    <span class="field-hint">Supports scheme URLs, host:port, or host:port:user:pass.</span>
+                  </label>
+                  <label class="form-field">
+                    <span class="field-title">Notes</span>
+                    <input name="notes" placeholder="Owner, purpose, login context, or reminders">
+                    <span class="field-hint">Private operator context; not sent to CloakBrowser.</span>
+                  </label>
+                </div>
+              </section>
+
+              <section class="form-section create-tab-panel" data-create-panel="browser" aria-labelledby="create-profile-browser" hidden>
+                <div class="form-section-head">
+                  <h3 id="create-profile-browser">Browser settings</h3>
+                  <p>Choose whether this profile is manual-viewer first or CDP-only.</p>
+                </div>
+                <div class="form-fields">
+                  <label class="form-field">
+                    <span class="field-title">Mode</span>
+                    <select id="create-headless" name="headless">
+                      <option value="false" selected>VNC/manual browser</option>
+                      <option value="true">Headless CDP only</option>
+                    </select>
+                    <span class="field-hint">Manual browser exposes the right-side VNC viewer.</span>
+                  </label>
+                  <label class="form-field">
+                    <span class="field-title">Clipboard Sync</span>
+                    <select name="clipboard_sync">
+                      <option value="true" selected>Enabled</option>
+                      <option value="false">Disabled</option>
+                    </select>
+                    <span class="field-hint">Allows manual paste and VNC clipboard transfer.</span>
+                  </label>
+                  <label class="form-field">
+                    <span class="field-title">Humanize</span>
+                    <select name="humanize">
+                      <option value="false" selected>Disabled</option>
+                      <option value="true">Enabled</option>
+                    </select>
+                    <span class="field-hint">Enables CloakBrowser humanization behavior when supported.</span>
+                  </label>
+                  <label class="form-field">
+                    <span class="field-title">Human Preset</span>
+                    <input name="human_preset" placeholder="Optional preset name">
+                    <span class="field-hint">Leave blank unless you maintain named presets.</span>
+                  </label>
+                  <label class="form-field">
+                    <span class="field-title">Sleep Policy</span>
+                    <select name="sleep_policy_mode">
+                      <option value="default" selected>Global default</option>
+                      <option value="minutes">Custom minutes</option>
+                      <option value="never">Never sleep</option>
+                    </select>
+                    <span class="field-hint">Automatic spin-down for idle Browser Instances.</span>
+                  </label>
+                  <label class="form-field">
+                    <span class="field-title">Sleep Minutes</span>
+                    <input name="sleep_policy_minutes" type="number" min="1" max="1440" placeholder="30">
+                    <span class="field-hint">Used only with Custom minutes.</span>
+                  </label>
+                </div>
+              </section>
+
+              <section class="form-section create-tab-panel" data-create-panel="fingerprint" aria-labelledby="create-profile-fingerprint" hidden>
+                <div class="form-section-head">
+                  <h3 id="create-profile-fingerprint">Fingerprint</h3>
+                  <p>Set regional, platform, display, and CPU signals.</p>
+                </div>
+                <div class="form-fields">
+                  <label class="form-field">
+                    <span class="field-title">Timezone</span>
+                    <input id="create-timezone" name="timezone" placeholder="America/Los_Angeles" autocomplete="off">
+                    <span class="field-hint">Blank keeps CloakBrowser defaults.</span>
+                  </label>
+                  <label class="form-field">
+                    <span class="field-title">Locale</span>
+                    <input id="create-locale" name="locale" placeholder="en-US" autocomplete="off">
+                    <span class="field-hint">Browser language and locale signal.</span>
+                  </label>
+                  <label class="form-field">
+                    <span class="field-title">GeoIP</span>
+                    <input name="geoip" placeholder="Optional CloakBrowser GeoIP hint">
+                    <span class="field-hint">Use only when overriding automatic proxy-based behavior.</span>
+                  </label>
+                  <label class="form-field">
+                    <span class="field-title">Platform</span>
+                    <input id="create-platform" name="platform" value="linux" autocomplete="off">
+                    <span class="field-hint">Fingerprint platform value.</span>
+                  </label>
+                  <label class="form-field">
+                    <span class="field-title">Screen</span>
+                    <span class="inline-fields">
+                      <input id="create-screen-width" name="screen_width" type="number" min="100" max="10000" value="1920" aria-label="Screen width">
+                      <input id="create-screen-height" name="screen_height" type="number" min="100" max="10000" value="1080" aria-label="Screen height">
+                    </span>
+                    <span class="field-hint">Virtual display width and height in pixels.</span>
+                  </label>
+                  <label class="form-field">
+                    <span class="field-title">CPU Threads</span>
+                    <input name="hardware_concurrency" type="number" min="1" max="256" value="4">
+                    <span class="field-hint">Hardware concurrency exposed to pages.</span>
+                  </label>
+                  <label class="form-field">
+                    <span class="field-title">Color Scheme</span>
+                    <select name="color_scheme">
+                      <option value="system" selected>System</option>
+                      <option value="light">Light</option>
+                      <option value="dark">Dark</option>
+                    </select>
+                    <span class="field-hint">Preferred color scheme exposed to websites.</span>
+                  </label>
+                </div>
+              </section>
+
+              <section class="form-section create-tab-panel" data-create-panel="advanced" aria-labelledby="create-profile-advanced" hidden>
+                <div class="form-section-head">
+                  <h3 id="create-profile-advanced">Advanced fingerprint and launch settings</h3>
+                  <p>Only set these when a profile needs exact fingerprint or launch overrides.</p>
+                </div>
+                <div class="form-fields">
+                  <label class="form-field">
+                    <span class="field-title">Fingerprint Seed</span>
+                    <input name="fingerprint_seed" placeholder="Auto-generated if blank">
+                    <span class="field-hint">Stable random seed generated by default.</span>
+                  </label>
+                  <label class="form-field">
+                    <span class="field-title">User Agent</span>
+                    <input name="user_agent" placeholder="Optional full user agent override">
+                    <span class="field-hint">Blank keeps CloakBrowser defaults.</span>
+                  </label>
+                  <label class="form-field">
+                    <span class="field-title">GPU Vendor</span>
+                    <input name="gpu_vendor" placeholder="Optional vendor override">
+                    <span class="field-hint">Advanced fingerprint override.</span>
+                  </label>
+                  <label class="form-field">
+                    <span class="field-title">GPU Renderer</span>
+                    <input name="gpu_renderer" placeholder="Optional renderer override">
+                    <span class="field-hint">Advanced fingerprint override.</span>
+                  </label>
+                  <label class="form-field">
+                    <span class="field-title">Launch Args</span>
+                    <textarea name="custom_launch_args" placeholder="--flag=value"></textarea>
+                    <span class="field-hint">One browser flag per line. CloakHub-owned data-dir and CDP flags are rejected.</span>
+                  </label>
+                  <label class="form-field">
+                    <span class="field-title">Tags JSON</span>
+                    <textarea name="tags_json" placeholder='[{"name":"client","color":"#2463eb"}]'></textarea>
+                    <span class="field-hint">Optional JSON array for grouping profiles.</span>
+                  </label>
+                </div>
+              </section>
+            </div>
+            <aside class="create-profile-summary" aria-label="Browser information">
+              <h3>Browser information</h3>
+              <dl class="summary-list">
+                <div>
+                  <dt>Name</dt>
+                  <dd id="create-summary-name">Untitled profile</dd>
+                </div>
+                <div>
+                  <dt>Profile ID</dt>
+                  <dd id="create-summary-id">Required</dd>
+                </div>
+                <div>
+                  <dt>Mode</dt>
+                  <dd id="create-summary-mode">VNC/manual browser</dd>
+                </div>
+                <div>
+                  <dt>Proxy</dt>
+                  <dd id="create-summary-proxy">No proxy</dd>
+                </div>
+                <div>
+                  <dt>Region</dt>
+                  <dd id="create-summary-region">Default timezone / locale</dd>
+                </div>
+                <div>
+                  <dt>Screen</dt>
+                  <dd id="create-summary-screen">1920 x 1080</dd>
+                </div>
+              </dl>
+            </aside>
+          </div>
+          <div class="modal-actions">
+            <button class="secondary" id="cancel-create-profile" type="button">Cancel</button>
+            <button type="submit">Create Profile</button>
+          </div>
+        </form>`;
 }
 
 function renderLaunchProfileInputs(profile?: BrowserProfile | PresentedBrowserProfile): string {
