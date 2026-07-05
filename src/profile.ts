@@ -44,6 +44,7 @@ export interface LaunchProfileFields {
 }
 
 export interface BrowserProfile extends LaunchProfileFields {
+  cdp_token: string | null;
   created_at: string;
   display_name: string;
   instance_status: InstanceStatus;
@@ -183,16 +184,24 @@ export function maskProxyCredentials(proxy: string): string {
 export function redactProfileSecretsFromProfile(profile: BrowserProfile): BrowserProfile {
   return {
     ...profile,
+    cdp_token: null,
     proxy: maskProxyCredentials(profile.proxy)
   };
 }
 
-export function redactProfileSecrets(message: string): string {
-  return message.replace(
+export function redactProfileSecrets(message: string, cdpTokens: string[] = []): string {
+  return redactCdpTokens(message, cdpTokens).replace(
     /((?:https?|socks5):\/\/)([^:\s/@]+):([^@\s]+)@([^:\s/@]+):([0-9]+)/g,
     (_match, scheme: string, username: string, _password: string, hostname: string, port: string) =>
       `${scheme}${username}:***@${hostname}:${port}`
   );
+}
+
+export function redactCdpTokens(message: string, cdpTokens: string[] = []): string {
+  const queryRedacted = message.replace(/([?&]token=)[^&\s"')]+/g, "$1***");
+  return cdpTokens
+    .filter((token) => token.length > 0)
+    .reduce((redacted, token) => redacted.replaceAll(token, "***"), queryRedacted);
 }
 
 export function resolveSleepPolicy(

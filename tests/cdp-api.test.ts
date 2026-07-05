@@ -50,9 +50,24 @@ describe("CDP API", () => {
       }
     ]);
   });
+
+  test("redacts token values from CDP websocket errors", async () => {
+    const cdpGateway = fakeCdpGateway({ websocketError: new Error("failed for profile-token") });
+    const app = createApp(config, { cdpGateway });
+
+    const response = await app.fetch(
+      new Request("http://cloakhub.test/api/profiles/work/cdp/devtools/page/page-1?token=profile-token", {
+        headers: { upgrade: "websocket" }
+      }),
+      fakeUpgradeServer()
+    );
+
+    expect(response?.status).toBe(503);
+    expect(await response?.json()).toEqual({ error: "failed for ***" });
+  });
 });
 
-function fakeCdpGateway(): CdpGateway & {
+function fakeCdpGateway(options: { websocketError?: Error } = {}): CdpGateway & {
   discoveryCalls: Array<{ cdpPath: string; profileId: string }>;
   websocketCalls: Array<{ cdpPath: string; profileId: string }>;
 } {
@@ -68,6 +83,9 @@ function fakeCdpGateway(): CdpGateway & {
     },
     websocketData: async (_request, profileId, cdpPath) => {
       websocketCalls.push({ cdpPath, profileId });
+      if (options.websocketError) {
+        throw options.websocketError;
+      }
       return { profileId, targetUrl: `ws://127.0.0.1:5100${cdpPath}` };
     }
   };

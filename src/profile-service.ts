@@ -1,4 +1,5 @@
 import { mkdir, rm } from "node:fs/promises";
+import { randomBytes } from "node:crypto";
 import { join } from "node:path";
 
 import type { BrowserProfile, CreateProfileInput, UpdateProfileInput } from "./profile";
@@ -11,14 +12,26 @@ export interface ProfileFileStore {
 }
 
 export interface ProfileService {
+  createCdpToken(profileId: string): CdpTokenState;
   createProfile(input: unknown): Promise<BrowserProfile>;
+  cdpTokensForRedaction(): string[];
   deleteStoppedProfile(profileId: string): Promise<void>;
   getProfile(profileId: string): BrowserProfile | undefined;
+  getCdpToken(profileId: string): CdpTokenState;
   listProfiles(): BrowserProfile[];
+  regenerateCdpToken(profileId: string): CdpTokenState;
+  revokeCdpToken(profileId: string): void;
   updateProfile(profileId: string, input: unknown): BrowserProfile;
 }
 
+export interface CdpTokenState {
+  cdp_token: string | null;
+  cdp_token_configured: boolean;
+  profile_id: string;
+}
+
 export interface ProfileServiceOptions {
+  cdpTokenGenerator?: () => string;
   dataRoot: string;
   fileStore?: Partial<ProfileFileStore>;
   repository: ProfileRepository;
@@ -47,8 +60,18 @@ export class DeleteProfileDataError extends Error {
 
 export function createProfileService(options: ProfileServiceOptions): ProfileService {
   const fileStore = createFileStore(options);
+  const generateCdpToken = options.cdpTokenGenerator ?? defaultCdpTokenGenerator;
 
   return {
+    createCdpToken(profileId: string): CdpTokenState {
+      const profile = requireProfile(options.repository, profileId);
+      if (profile.cdp_token) {
+        return cdpTokenState(profile);
+      }
+
+      return cdpTokenState(options.repository.setCdpToken(profileId, generateCdpToken())!);
+    },
+
     async createProfile(input: unknown): Promise<BrowserProfile> {
       const normalized = normalizeCreateProfileInput(input);
       ensureUnique(options.repository, normalized.profile_id);
@@ -56,6 +79,13 @@ export function createProfileService(options: ProfileServiceOptions): ProfileSer
       await fileStore.createProfileData(normalized.profile_id);
 
       return options.repository.create(normalized);
+    },
+
+    cdpTokensForRedaction(): string[] {
+      return options.repository
+        .list()
+        .map((profile) => profile.cdp_token)
+        .filter((token): token is string => Boolean(token));
     },
 
     deleteStoppedProfile: async (profileId: string): Promise<void> => {
@@ -75,8 +105,22 @@ export function createProfileService(options: ProfileServiceOptions): ProfileSer
       return options.repository.get(profileId);
     },
 
+    getCdpToken(profileId: string): CdpTokenState {
+      return cdpTokenState(requireProfile(options.repository, profileId));
+    },
+
     listProfiles(): BrowserProfile[] {
       return options.repository.list();
+    },
+
+    regenerateCdpToken(profileId: string): CdpTokenState {
+      requireProfile(options.repository, profileId);
+      return cdpTokenState(options.repository.setCdpToken(profileId, generateCdpToken())!);
+    },
+
+    revokeCdpToken(profileId: string): void {
+      requireProfile(options.repository, profileId);
+      options.repository.setCdpToken(profileId, null);
     },
 
     updateProfile(profileId: string, input: unknown): BrowserProfile {
@@ -130,4 +174,16 @@ function profileDataPath(dataRoot: string, profileId: string): string {
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
+}
+
+function cdpTokenState(profile: BrowserProfile): CdpTokenState {
+  return {
+    cdp_token: profile.cdp_token,
+    cdp_token_configured: Boolean(profile.cdp_token),
+    profile_id: profile.profile_id
+  };
+}
+
+function defaultCdpTokenGenerator(): string {
+  return `cdp_${randomBytes(24).toString("base64url")}`;
 }

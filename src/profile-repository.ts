@@ -28,6 +28,7 @@ export interface ProfileRepository {
   migrate(): void;
   recordActivity(profileId: string, occurredAt: string): void;
   recordDeleteError(profileId: string, error: string): void;
+  setCdpToken(profileId: string, token: string | null): BrowserProfile | undefined;
   update(profileId: string, input: UpdateProfileInput): BrowserProfile | undefined;
 }
 
@@ -52,6 +53,7 @@ class SqliteProfileRepository implements ProfileRepository {
 
       CREATE TABLE IF NOT EXISTS profiles (
         profile_id TEXT PRIMARY KEY,
+        cdp_token TEXT,
         display_name TEXT NOT NULL,
         notes TEXT NOT NULL DEFAULT '',
         instance_status TEXT NOT NULL DEFAULT 'stopped',
@@ -71,6 +73,7 @@ class SqliteProfileRepository implements ProfileRepository {
       INSERT OR IGNORE INTO schema_migrations (version, applied_at)
       VALUES (1, strftime('%Y-%m-%dT%H:%M:%fZ', 'now'));
     `);
+    this.ensureColumn("profiles", "cdp_token", "TEXT");
     this.ensureColumn("profiles", "launch_profile_json", "TEXT NOT NULL DEFAULT '{}'");
     this.ensureColumn("profiles", "tags_json", "TEXT NOT NULL DEFAULT '[]'");
     this.ensureColumn("profiles", "last_activity_at", "TEXT");
@@ -88,6 +91,7 @@ class SqliteProfileRepository implements ProfileRepository {
         `
         INSERT INTO profiles (
           profile_id,
+          cdp_token,
           display_name,
           notes,
           instance_status,
@@ -105,6 +109,7 @@ class SqliteProfileRepository implements ProfileRepository {
         )
         VALUES (
           $profile_id,
+          NULL,
           $display_name,
           $notes,
           'stopped',
@@ -181,6 +186,25 @@ class SqliteProfileRepository implements ProfileRepository {
         $notes: input.notes ?? existing.notes,
         $profile_id: profileId,
         $tags_json: JSON.stringify(nextTags),
+        $updated_at: nowIso()
+      });
+
+    return this.get(profileId);
+  }
+
+  setCdpToken(profileId: string, token: string | null): BrowserProfile | undefined {
+    this.db
+      .query(
+        `
+        UPDATE profiles
+        SET cdp_token = $cdp_token,
+            updated_at = $updated_at
+        WHERE profile_id = $profile_id
+      `
+      )
+      .run({
+        $cdp_token: token,
+        $profile_id: profileId,
         $updated_at: nowIso()
       });
 
@@ -380,6 +404,7 @@ function rowToProfile(row: ProfileRow): BrowserProfile {
 
   return {
     ...profileRow,
+    cdp_token: profileRow.cdp_token ?? null,
     ...DEFAULT_LAUNCH_PROFILE_FIELDS,
     ...launchProfile,
     sleep_policy: sleepPolicy,

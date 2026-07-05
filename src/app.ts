@@ -24,7 +24,8 @@ import {
   type ProfileService
 } from "./profile-service";
 
-type PresentedBrowserProfile = BrowserProfile & {
+type PresentedBrowserProfile = Omit<BrowserProfile, "cdp_token"> & {
+  cdp_token_configured: boolean;
   cdp_session_count: number;
   cdp_sessions: BrowserRuntimeCdpSessionObservation[];
 };
@@ -74,6 +75,11 @@ export function createApp(config: CloakHubConfig, services: CloakHubServices = {
       return cdpResponse;
     }
 
+    const cdpTokenResponse = await cdpTokenApiResponse(request, url, services.profileService);
+    if (cdpTokenResponse) {
+      return cdpTokenResponse;
+    }
+
     const lifecycleResponse = await lifecycleApiResponse(request, url, services.browserRuntime);
     if (lifecycleResponse) {
       return lifecycleResponse;
@@ -96,7 +102,7 @@ export function createApp(config: CloakHubConfig, services: CloakHubServices = {
 
       const profiles =
         services.profileService?.listProfiles().map((profile) =>
-          presentProfile(redactProfileSecretsFromProfile(profile), services.browserRuntime)
+          presentProfile(profile, services.browserRuntime, true)
         ) ?? [];
       return htmlResponse(renderShell(config, profiles));
     }
@@ -150,7 +156,58 @@ async function cdpApiResponse(
       return unauthorizedResponse();
     }
 
-    return errorResponse(error instanceof Error ? error.message : String(error), 503);
+    return errorResponse(
+      redactProfileSecrets(error instanceof Error ? error.message : String(error), cdpTokensFromRequest(request)),
+      503
+    );
+  }
+}
+
+function cdpTokensFromRequest(request: Request): string[] {
+  const token = new URL(request.url).searchParams.get("token");
+  return token ? [token] : [];
+}
+
+async function cdpTokenApiResponse(
+  request: Request,
+  url: URL,
+  profileService: ProfileService | undefined
+): Promise<Response | undefined> {
+  const match = /^\/(?:api|ui)\/profiles\/([^/]+)\/cdp-token(?:\/(regenerate))?$/.exec(url.pathname);
+  if (!match) {
+    return undefined;
+  }
+
+  if (!profileService) {
+    return textResponse("Not found", 404);
+  }
+
+  const profileId = match[1]!;
+  const action = match[2];
+
+  try {
+    if (!action && request.method === "GET") {
+      return jsonResponse(profileService.getCdpToken(profileId));
+    }
+
+    if (!action && request.method === "POST") {
+      return jsonResponse(profileService.createCdpToken(profileId), 201);
+    }
+
+    if (action === "regenerate" && request.method === "POST") {
+      return jsonResponse(profileService.regenerateCdpToken(profileId));
+    }
+
+    if (!action && request.method === "DELETE") {
+      profileService.revokeCdpToken(profileId);
+      return new Response(null, { status: 204 });
+    }
+
+    return textResponse("Method not allowed", 405, {
+      Allow: action === "regenerate" ? "POST" : "GET, POST, DELETE"
+    });
+  } catch (error) {
+    return cdpTokenErrorResponse(error);
   }
 }
 
@@ -297,6 +354,14 @@ function profileErrorResponse(error: unknown): Response {
   throw error;
 }
 
+function cdpTokenErrorResponse(error: unknown): Response {
+  if (error instanceof ProfileNotFoundError) {
+    return errorResponse(redactProfileSecrets(error.message), 404);
+  }
+
+  throw error;
+}
+
 function lifecycleErrorResponse(error: unknown): Response {
   if (error instanceof BrowserProfileNotFoundError) {
     return errorResponse(error.message, 404);
@@ -323,7 +388,7 @@ function profileResponseProfiles(
   browserRuntime: BrowserRuntime | undefined
 ): PresentedBrowserProfile[] {
   return profiles.map((profile) =>
-    presentProfile(isUiProfileActionRoute(url) ? redactProfileSecretsFromProfile(profile) : profile, browserRuntime)
+    presentProfile(profile, browserRuntime, isUiProfileActionRoute(url))
   );
 }
 
@@ -332,15 +397,20 @@ function profileResponseProfile(
   url: URL,
   browserRuntime: BrowserRuntime | undefined
 ): PresentedBrowserProfile {
-  return presentProfile(isUiProfileActionRoute(url) ? redactProfileSecretsFromProfile(profile) : profile, browserRuntime);
+  return presentProfile(profile, browserRuntime, isUiProfileActionRoute(url));
 }
 
 function presentProfile(
   profile: BrowserProfile,
-  browserRuntime: BrowserRuntime | undefined
+  browserRuntime: BrowserRuntime | undefined,
+  redactSecrets = false
 ): PresentedBrowserProfile {
+  const { cdp_token: _cdpToken, ...profileWithoutToken } = redactSecrets
+    ? redactProfileSecretsFromProfile(profile)
+    : profile;
   return {
-    ...profile,
+    ...profileWithoutToken,
+    cdp_token_configured: Boolean(profile.cdp_token),
     cdp_session_count: browserRuntime?.activeCdpSessionCount(profile.profile_id) ?? 0,
     cdp_sessions: browserRuntime?.cdpSessionObservations(profile.profile_id) ?? []
   };
@@ -392,7 +462,9 @@ function isCdpRoute(url: URL): boolean {
 }
 
 function isUiProfileActionRoute(url: URL): boolean {
-  return /^\/ui\/profiles(?:\/[^/]+(?:\/(?:start|stop|restart))?)?$/.test(url.pathname);
+  return /^\/ui\/profiles(?:\/[^/]+(?:\/(?:start|stop|restart|cdp-token(?:\/regenerate)?))?)?$/.test(
+    url.pathname
+  );
 }
 
 function renderLoginShell(): string {
@@ -542,6 +614,7 @@ function renderShell(config: CloakHubConfig, profiles: PresentedBrowserProfile[]
                 <span>${escapeHtml(profile.notes)}</span>
                 <span>${escapeHtml(profile.tags.map((tag) => tag.name).join(", "))}</span>
                 <span>${escapeHtml(profile.proxy)}</span>
+                ${renderCdpTokenControls(profile)}
                 <button class="profile-lifecycle-button" data-action="start" data-profile-id="${escapeHtml(profile.profile_id)}" type="button">
                   Start
                 </button>
@@ -721,6 +794,36 @@ function renderShell(config: CloakHubConfig, profiles: PresentedBrowserProfile[]
         background: #fff1d6;
         border: 1px solid #d99a00;
         color: #7a4b00;
+      }
+
+      .cdp-token-status {
+        display: block;
+        margin-bottom: 8px;
+      }
+
+      .cdp-token-status.open {
+        color: #b42318;
+        font-weight: 700;
+      }
+
+      .cdp-token-status.protected {
+        color: #0f8f5f;
+        font-weight: 700;
+      }
+
+      .cdp-token-actions {
+        align-items: center;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 8px 0;
+      }
+
+      .cdp-token-warning {
+        color: #7a4b00;
+        display: block;
+        font-size: 0.8rem;
+        margin-bottom: 8px;
       }
 
       section {
@@ -904,6 +1007,46 @@ function renderShell(config: CloakHubConfig, profiles: PresentedBrowserProfile[]
         });
       });
 
+      document.querySelectorAll(".cdp-token-button").forEach((button) => {
+        button.addEventListener("click", async (event) => {
+          const profileId = event.currentTarget.dataset.profileId;
+          const action = event.currentTarget.dataset.action;
+          let path = "/ui/profiles/" + encodeURIComponent(profileId) + "/cdp-token";
+          let method = "POST";
+
+          if (action === "copy-url") {
+            method = "GET";
+          } else if (action === "regenerate") {
+            path += "/regenerate";
+          } else if (action === "revoke") {
+            method = "DELETE";
+          }
+
+          if (action === "copy-url" && !confirm("Token-bearing CDP URLs can leak access. Continue?")) {
+            return;
+          }
+
+          const response = await fetch(path, { method });
+          if (!response.ok) {
+            return;
+          }
+
+          if (action === "copy-url") {
+            const body = await response.json();
+            const cdpUrl =
+              location.origin +
+              "/api/profiles/" +
+              encodeURIComponent(profileId) +
+              "/cdp/json/version?token=" +
+              encodeURIComponent(body.cdp_token);
+            await navigator.clipboard.writeText(cdpUrl);
+            return;
+          }
+
+          location.reload();
+        });
+      });
+
       function compactFormValues(formData) {
         const includeEmpty = formData.get("_include_empty") === "true";
         const values = Object.fromEntries(
@@ -959,7 +1102,7 @@ function renderShell(config: CloakHubConfig, profiles: PresentedBrowserProfile[]
 </html>`;
 }
 
-function renderLaunchProfileInputs(profile?: BrowserProfile): string {
+function renderLaunchProfileInputs(profile?: BrowserProfile | PresentedBrowserProfile): string {
   const tagsJson = profile ? JSON.stringify(profile.tags) : "";
   const launchArgs = profile?.custom_launch_args.join("\n") ?? "";
   const sleepPolicyMode = profile?.sleep_policy.mode ?? "default";
@@ -1070,7 +1213,7 @@ function renderLaunchProfileInputs(profile?: BrowserProfile): string {
         </label>`;
 }
 
-function sleepPolicyLabel(profile: BrowserProfile): string {
+function sleepPolicyLabel(profile: BrowserProfile | PresentedBrowserProfile): string {
   if (profile.sleep_policy_status.mode === "never") {
     return "never-sleep";
   }
@@ -1092,6 +1235,26 @@ function renderCdpSessions(profile: PresentedBrowserProfile): string {
     .join("")}</ul>`;
 }
 
+function renderCdpTokenControls(profile: PresentedBrowserProfile): string {
+  const profileId = escapeHtml(profile.profile_id);
+  if (!profile.cdp_token_configured) {
+    return `
+                <span class="cdp-token-status open">CDP access is open because no CDP Token exists.</span>
+                <div class="cdp-token-actions">
+                  <button class="cdp-token-button" data-action="create" data-profile-id="${profileId}" type="button">Create CDP Token</button>
+                </div>`;
+  }
+
+  return `
+                <span class="cdp-token-status protected">CDP Token is configured.</span>
+                <span class="cdp-token-warning">Token-bearing CDP URLs can leak access. Copy only for trusted CDP Clients.</span>
+                <div class="cdp-token-actions">
+                  <button class="cdp-token-button" data-action="copy-url" data-profile-id="${profileId}" type="button">Copy token-bearing CDP URL</button>
+                  <button class="cdp-token-button" data-action="regenerate" data-profile-id="${profileId}" type="button">Regenerate CDP Token</button>
+                  <button class="cdp-token-button" data-action="revoke" data-profile-id="${profileId}" type="button">Revoke CDP Token</button>
+                </div>`;
+}
+
 function formatDuration(durationMs: number): string {
   const seconds = Math.floor(durationMs / 1000);
   if (seconds < 60) {
@@ -1102,7 +1265,7 @@ function formatDuration(durationMs: number): string {
   return `${minutes}m`;
 }
 
-function sleepPolicyBadge(profile: BrowserProfile): string {
+function sleepPolicyBadge(profile: BrowserProfile | PresentedBrowserProfile): string {
   const className =
     profile.sleep_policy_status.mode === "never" ? "never-sleep" : profile.sleep_policy_status.mode;
 

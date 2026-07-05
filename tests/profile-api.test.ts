@@ -17,7 +17,7 @@ afterEach(async () => {
 
 describe("Browser Profile admin API", () => {
   test("renders Browser Profile management in the UI shell", async () => {
-    const { app } = await tempApp();
+    const { app } = await tempApp({}, undefined, { cdpTokenGenerator: sequenceTokens("profile-token") });
     await app.fetch(
       jsonRequest("http://cloakhub.test/api/profiles", "POST", {
         display_name: "Work",
@@ -36,6 +36,8 @@ describe("Browser Profile admin API", () => {
     expect(html).toContain('class="profile-lifecycle-button" data-action="stop"');
     expect(html).toContain('class="profile-lifecycle-button" data-action="restart"');
     expect(html).toContain("This may disconnect active CDP sessions or viewers.");
+    expect(html).toContain("CDP access is open because no CDP Token exists.");
+    expect(html).toContain('class="cdp-token-button" data-action="create"');
     expect(html).toContain('name="proxy"');
     expect(html).toContain('name="fingerprint_seed"');
     expect(html).toContain('name="timezone"');
@@ -57,6 +59,15 @@ describe("Browser Profile admin API", () => {
     expect(html).toContain('name="tags_json"');
     expect(html).toContain("work");
     expect(html).toContain("Work");
+
+    await app.fetch(new Request("http://cloakhub.test/ui/profiles/work/cdp-token", { method: "POST" }));
+    const protectedHtmlResponse = await app.fetch(new Request("http://cloakhub.test/"));
+    const protectedHtml = await protectedHtmlResponse.text();
+
+    expect(protectedHtml).toContain("CDP Token is configured.");
+    expect(protectedHtml).toContain("Copy token-bearing CDP URL");
+    expect(protectedHtml).toContain("Token-bearing CDP URLs can leak access");
+    expect(protectedHtml).not.toContain("profile-token");
   });
 
   test("creates, lists, reads, updates, and deletes stopped Browser Profiles", async () => {
@@ -314,14 +325,103 @@ describe("Browser Profile admin API", () => {
     expect(html).toContain("Playwright");
     expect(html).toContain("1s");
   });
+
+  test("manages one plaintext CDP Token through explicit admin actions", async () => {
+    const { app, repository } = await tempApp({}, undefined, {
+      cdpTokenGenerator: sequenceTokens("first-token", "second-token")
+    });
+    await app.fetch(jsonRequest("http://cloakhub.test/api/profiles", "POST", { profile_id: "work" }));
+
+    const initialView = await app.fetch(new Request("http://cloakhub.test/api/profiles/work/cdp-token"));
+    expect(await initialView.json()).toEqual({
+      cdp_token: null,
+      cdp_token_configured: false,
+      profile_id: "work"
+    });
+
+    const created = await app.fetch(
+      new Request("http://cloakhub.test/api/profiles/work/cdp-token", { method: "POST" })
+    );
+    expect(created.status).toBe(201);
+    expect(await created.json()).toEqual({
+      cdp_token: "first-token",
+      cdp_token_configured: true,
+      profile_id: "work"
+    });
+    expect(repository.get("work")?.cdp_token).toBe("first-token");
+
+    const profile = await app.fetch(new Request("http://cloakhub.test/api/profiles/work"));
+    const profileBody = await profile.json();
+    expect(profileBody.cdp_token_configured).toBe(true);
+    expect(profileBody.cdp_token).toBeUndefined();
+
+    const viewed = await app.fetch(new Request("http://cloakhub.test/api/profiles/work/cdp-token"));
+    expect(await viewed.json()).toEqual({
+      cdp_token: "first-token",
+      cdp_token_configured: true,
+      profile_id: "work"
+    });
+
+    const regenerated = await app.fetch(
+      new Request("http://cloakhub.test/api/profiles/work/cdp-token/regenerate", { method: "POST" })
+    );
+    expect(await regenerated.json()).toEqual({
+      cdp_token: "second-token",
+      cdp_token_configured: true,
+      profile_id: "work"
+    });
+    expect(repository.get("work")?.cdp_token).toBe("second-token");
+
+    const revoked = await app.fetch(
+      new Request("http://cloakhub.test/api/profiles/work/cdp-token", { method: "DELETE" })
+    );
+    expect(revoked.status).toBe(204);
+    expect(repository.get("work")?.cdp_token).toBeNull();
+  });
+
+  test("requires admin auth for CDP Token management and keeps CDP Tokens out of admin auth", async () => {
+    const { app } = await tempApp(
+      { authToken: "admin-token" },
+      undefined,
+      { cdpTokenGenerator: sequenceTokens("profile-token") }
+    );
+    const adminCookie = "cloakhub_auth=admin-token";
+    await app.fetch(
+      jsonRequest("http://cloakhub.test/ui/profiles", "POST", { profile_id: "work" }, adminCookie)
+    );
+
+    const anonymousCreate = await app.fetch(
+      new Request("http://cloakhub.test/api/profiles/work/cdp-token", { method: "POST" })
+    );
+    expect(anonymousCreate.status).toBe(401);
+
+    const created = await app.fetch(
+      new Request("http://cloakhub.test/ui/profiles/work/cdp-token", {
+        headers: { cookie: adminCookie },
+        method: "POST"
+      })
+    );
+    expect(created.status).toBe(201);
+
+    const cdpTokenAsAdminAuth = await app.fetch(
+      new Request("http://cloakhub.test/api/profiles", {
+        headers: { authorization: "Bearer profile-token" }
+      })
+    );
+    expect(cdpTokenAsAdminAuth.status).toBe(401);
+  });
 });
 
-async function tempApp(overrides: Partial<CloakHubConfig> = {}, browserRuntime?: BrowserRuntime) {
+async function tempApp(
+  overrides: Partial<CloakHubConfig> = {},
+  browserRuntime?: BrowserRuntime,
+  serviceOptions: { cdpTokenGenerator?: () => string } = {}
+) {
   const dataRoot = await mkdtemp(join(tmpdir(), "cloakhub-profile-api-"));
   cleanupPaths.push(dataRoot);
   const repository = openProfileRepository(dataRoot);
   repository.migrate();
-  const profileService = createProfileService({ dataRoot, repository });
+  const profileService = createProfileService({ dataRoot, repository, ...serviceOptions });
   const config: CloakHubConfig = {
     authToken: undefined,
     browserBin: undefined,
@@ -388,4 +488,9 @@ function jsonRequest(url: string, method: string, body: unknown, cookie?: string
     },
     method
   });
+}
+
+function sequenceTokens(...tokens: string[]): () => string {
+  let index = 0;
+  return () => tokens[index++] ?? tokens.at(-1) ?? "profile-token";
 }

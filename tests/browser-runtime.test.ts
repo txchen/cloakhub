@@ -550,6 +550,7 @@ function fakeRepository(...initialProfiles: BrowserProfile[]): ProfileRepository
       update(profileId, { last_activity_at: occurredAt });
     },
     recordDeleteError: () => undefined,
+    setCdpToken: (profileId, token) => update(profileId, { cdp_token: token }),
     update: (profileId, input) => update(profileId, input)
   };
 
@@ -568,6 +569,7 @@ function fakeRepository(...initialProfiles: BrowserProfile[]): ProfileRepository
 function profile(overrides: Partial<BrowserProfile>): BrowserProfile {
   return {
     clipboard_sync: true,
+    cdp_token: null,
     color_scheme: "system",
     created_at: "2026-01-01T00:00:00.000Z",
     custom_launch_args: [],

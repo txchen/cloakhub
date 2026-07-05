@@ -29,7 +29,8 @@ async function main(): Promise<void> {
     await browserRuntime.cleanupOwnedProcessesOnStartup();
     const cdpGateway = createCdpGateway({
       accessPolicy: createProfileCdpAccessPolicy(profileService),
-      browserRuntime
+      browserRuntime,
+      cdpTokensForRedaction: () => profileService.cdpTokensForRedaction()
     });
     const idleTimer = setInterval(() => {
       void browserRuntime.spinDownIdleHeadlessInstances();

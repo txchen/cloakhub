@@ -1,6 +1,7 @@
 import type { BrowserRuntime } from "./browser-runtime";
 import type { CdpWebSocketData } from "./cdp-websocket-proxy";
 import type { ProfileService } from "./profile-service";
+import { redactProfileSecrets } from "./profile";
 
 export interface CdpAccessPolicy {
   authorize(request: Request, profileId: string): Promise<boolean> | boolean;
@@ -26,6 +27,7 @@ export interface CdpGatewayOptions {
   accessPolicy?: CdpAccessPolicy;
   browserHttp?: CdpBrowserHttpClient;
   browserRuntime: BrowserRuntime;
+  cdpTokensForRedaction?: () => string[];
 }
 
 const allowAllCdpAccess: CdpAccessPolicy = {
@@ -60,7 +62,10 @@ export function createCdpGateway(options: CdpGatewayOptions): CdpGateway {
 
         return Response.json(rewriteDiscoveryUrls(discovery, request, profileId));
       } catch (error) {
-        return Response.json({ error: errorMessage(error) }, { status: 503 });
+        return Response.json(
+          { error: redactProfileSecrets(errorMessage(error), options.cdpTokensForRedaction?.() ?? []) },
+          { status: 503 }
+        );
       }
     },
 

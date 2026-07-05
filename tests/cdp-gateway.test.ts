@@ -123,6 +123,20 @@ describe("CdpGateway", () => {
     );
   });
 
+  test("profile CDP access policy scopes tokens to their owning profile", async () => {
+    const policy = createProfileCdpAccessPolicy(
+      fakeProfileService([
+        { cdp_token: "work-token", profile_id: "work" },
+        { cdp_token: "personal-token", profile_id: "personal" }
+      ])
+    );
+
+    expect(await policy.authorize(new Request("http://cloakhub.test?token=personal-token"), "work")).toBe(
+      false
+    );
+    expect(await policy.authorize(new Request("http://cloakhub.test?token=work-token"), "work")).toBe(true);
+  });
+
   test("failed recovery returns one clear retryable response", async () => {
     const gateway = createCdpGateway({
       browserHttp: fakeBrowserHttp({}),
@@ -137,6 +151,22 @@ describe("CdpGateway", () => {
 
     expect(response.status).toBe(503);
     expect(await response.json()).toEqual({ error: "launch failed" });
+  });
+
+  test("failed recovery redacts CDP Token values from errors", async () => {
+    const gateway = createCdpGateway({
+      browserHttp: fakeBrowserHttp({}),
+      browserRuntime: fakeRuntime({ startError: new Error("launch failed for profile-token") }),
+      cdpTokensForRedaction: () => ["profile-token"]
+    });
+
+    const response = await gateway.discoveryResponse(
+      new Request("http://cloakhub.test/api/profiles/work/cdp/json/version?token=profile-token"),
+      "work",
+      "/json/version"
+    );
+
+    expect(await response.json()).toEqual({ error: "launch failed for ***" });
   });
 
   test("prepares websocket proxy target after Transparent Recovery", async () => {
@@ -212,14 +242,36 @@ function fakeRuntime(options: { startError?: Error } = {}): BrowserRuntime & { c
   };
 }
 
-function fakeProfileService(profile: Record<string, unknown>): ProfileService {
+function fakeProfileService(profileOrProfiles: Record<string, unknown> | Array<Record<string, unknown>>): ProfileService {
+  const profiles = Array.isArray(profileOrProfiles) ? profileOrProfiles : [profileOrProfiles];
   return {
+    createCdpToken: (profileId) => ({
+      cdp_token: "not-used",
+      cdp_token_configured: true,
+      profile_id: profileId
+    }),
     createProfile: async () => {
       throw new Error("not used");
     },
+    cdpTokensForRedaction: () =>
+      profiles.map((profile) => profile.cdp_token).filter((token): token is string => typeof token === "string"),
     deleteStoppedProfile: async () => undefined,
-    getProfile: () => profile as unknown as ReturnType<ProfileService["getProfile"]>,
-    listProfiles: () => [profile as unknown as ReturnType<ProfileService["listProfiles"]>[number]],
+    getCdpToken: (profileId) => ({
+      cdp_token: null,
+      cdp_token_configured: false,
+      profile_id: profileId
+    }),
+    getProfile: (profileId) =>
+      profiles.find((profile) => profile.profile_id === profileId) as unknown as ReturnType<
+        ProfileService["getProfile"]
+      >,
+    listProfiles: () => profiles as unknown as ReturnType<ProfileService["listProfiles"]>,
+    regenerateCdpToken: (profileId) => ({
+      cdp_token: "not-used",
+      cdp_token_configured: true,
+      profile_id: profileId
+    }),
+    revokeCdpToken: () => undefined,
     updateProfile: () => {
       throw new Error("not used");
     }

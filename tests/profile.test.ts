@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 
 import {
   normalizeCreateProfileInput,
+  redactCdpTokens,
   redactProfileSecrets,
   resolveSleepPolicy,
   validateProfileId
@@ -133,6 +134,15 @@ describe("Browser Profile validation", () => {
     expect(
       redactProfileSecrets("launch failed for http://user:secret@proxy.example:8080")
     ).toBe("launch failed for http://user:***@proxy.example:8080");
+  });
+
+  test("redacts CDP Tokens from messages and token-bearing URLs", () => {
+    expect(
+      redactCdpTokens(
+        "failed to fetch /api/profiles/work/cdp/json/version?token=profile-token with Bearer profile-token",
+        ["profile-token"]
+      )
+    ).toBe("failed to fetch /api/profiles/work/cdp/json/version?token=*** with Bearer ***");
   });
 
   test("resolves Sleep Policy from global default, per-profile minutes, or never-sleep", () => {
