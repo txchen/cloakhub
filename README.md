@@ -17,17 +17,30 @@ Headed Browser Profiles also require KasmVNC `Xvnc`; if it is missing, startup c
 Docker-first operation uses `/data` as the Data Root and exposes CloakHub on port `7788`:
 
 ```sh
-docker compose up --build
-```
-
-Published images are available from GitHub Container Registry:
-
-```sh
 docker pull ghcr.io/txchen/cloakhub:latest
-docker run --rm -p 127.0.0.1:7788:7788 -v cloakhub-data:/data ghcr.io/txchen/cloakhub:latest
+docker run --rm \
+  -p 127.0.0.1:7788:7788 \
+  -v cloakhub-data:/data \
+  ghcr.io/txchen/cloakhub:latest
 ```
 
-The compose default maps `127.0.0.1:7788:7788` on the host while the container listens on `0.0.0.0:7788` internally. The image does not download CloakBrowser at runtime; provide the CloakBrowser Binary in the image at `/opt/cloakbrowser/cloakbrowser`, mount it in, or set `CLOAKHUB_BROWSER_BIN` to an executable path available inside the container.
+Equivalent Docker Compose service:
+
+```yaml
+services:
+  cloakhub:
+    image: ghcr.io/txchen/cloakhub:latest
+    environment:
+      CLOAKHUB_DATA_DIR: /data
+      CLOAKHUB_HOST: 0.0.0.0
+      CLOAKHUB_PORT: "7788"
+    ports:
+      - "7788:7788"
+    volumes:
+      - ./data:/data
+```
+
+The container listens on `0.0.0.0:7788` internally. The image does not download CloakBrowser at runtime; provide the CloakBrowser Binary in the image at `/opt/cloakbrowser/cloakbrowser`, mount it in, or set `CLOAKHUB_BROWSER_BIN` to an executable path available inside the container.
 
 ## Configuration
 

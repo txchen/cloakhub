@@ -415,7 +415,7 @@ Docker defaults:
 
 - expose port `7788`
 - set host to `0.0.0.0` inside container
-- default compose mapping should be `127.0.0.1:7788:7788`
+- example host mapping should be `127.0.0.1:7788:7788`
 - set `CLOAKHUB_DATA_DIR=/data`
 
 Timing defaults:

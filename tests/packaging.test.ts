@@ -18,13 +18,17 @@ describe("Docker-first packaging", () => {
     expect(dockerfile).not.toMatch(/curl|wget|apt-get.*cloakbrowser|cloakbrowser.*download/i);
   });
 
-  test("compose binds safely on loopback while the container listens on all interfaces", async () => {
-    const compose = await Bun.file("docker-compose.yml").text();
+  test("README documents registry-first Docker and Compose usage", async () => {
+    const readme = await Bun.file("README.md").text();
 
-    expect(compose).toContain("127.0.0.1:7788:7788");
-    expect(compose).toContain("CLOAKHUB_HOST: 0.0.0.0");
-    expect(compose).toContain("CLOAKHUB_DATA_DIR: /data");
-    expect(compose).toContain("cloakhub-data:/data");
+    expect(readme).toContain("docker pull ghcr.io/txchen/cloakhub:latest");
+    expect(readme).toContain("docker run --rm");
+    expect(readme).toContain("image: ghcr.io/txchen/cloakhub:latest");
+    expect(readme).toContain('"7788:7788"');
+    expect(readme).toContain("CLOAKHUB_HOST: 0.0.0.0");
+    expect(readme).toContain("CLOAKHUB_DATA_DIR: /data");
+    expect(readme).toContain("./data:/data");
+    expect(readme).not.toContain("docker compose up --build");
   });
 
   test("real runtime integration tests are opt-in for normal CI", async () => {
