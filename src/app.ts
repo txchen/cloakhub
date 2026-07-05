@@ -1,4 +1,11 @@
 import type { CloakHubConfig } from "./config";
+import {
+  adminLoginResponse,
+  isAdminApiAuthorized,
+  isUiAuthorized,
+  unauthorizedResponse
+} from "./auth";
+import { textResponse } from "./http";
 
 export interface CloakHubApp {
   fetch(request: Request): Response | Promise<Response>;
@@ -6,16 +13,24 @@ export interface CloakHubApp {
 
 export function createApp(config: CloakHubConfig): CloakHubApp {
   return {
-    fetch(request: Request): Response {
+    async fetch(request: Request): Promise<Response> {
       const url = new URL(request.url);
 
       if (url.pathname === "/api/health") {
         return healthResponse(request);
       }
 
+      if (url.pathname === "/api/auth/login") {
+        return adminLoginResponse(request, config.authToken);
+      }
+
+      if (isAdminApiRoute(url) && !isAdminApiAuthorized(request, config.authToken)) {
+        return unauthorizedResponse();
+      }
+
       if (url.pathname === "/" || url.pathname === "/index.html") {
-        if (!isAdminAuthorized(request, config.authToken)) {
-          return textResponse("Unauthorized", 401, { "WWW-Authenticate": "Bearer" });
+        if (!isUiAuthorized(request, config.authToken)) {
+          return unauthorizedHtmlResponse(renderLoginShell());
         }
 
         return htmlResponse(renderShell(config));
@@ -41,53 +56,153 @@ function healthResponse(request: Request): Response {
 }
 
 function htmlResponse(body: string): Response {
-  return new Response(body, {
-    headers: {
-      "content-type": "text/html; charset=utf-8"
-    },
-    status: 200
-  });
+  return new Response(body, htmlResponseInit());
 }
 
-function textResponse(body: string, status: number, headers: HeadersInit = {}): Response {
-  return new Response(body, {
+function unauthorizedHtmlResponse(body: string): Response {
+  return new Response(body, htmlResponseInit({ "WWW-Authenticate": "Bearer" }, 401));
+}
+
+function htmlResponseInit(headers: HeadersInit = {}, status = 200): ResponseInit {
+  return {
     headers: {
-      "content-type": "text/plain; charset=utf-8",
+      "content-type": "text/html; charset=utf-8",
       ...headers
     },
     status
-  });
+  };
 }
 
-function isAdminAuthorized(request: Request, authToken: string | undefined): boolean {
-  if (!authToken) {
-    return true;
-  }
-
-  const authorization = request.headers.get("authorization");
-  if (authorization === `Bearer ${authToken}`) {
-    return true;
-  }
-
-  return request.headers
-    .get("cookie")
-    ?.split(";")
-    .map((cookie) => cookie.trim())
-    .some((cookie) => {
-      const separatorIndex = cookie.indexOf("=");
-      const name = separatorIndex === -1 ? cookie : cookie.slice(0, separatorIndex);
-      const value = separatorIndex === -1 ? "" : cookie.slice(separatorIndex + 1);
-
-      return name === "cloakhub_auth" && safeDecodeURIComponent(value) === authToken;
-    }) ?? false;
+function isAdminApiRoute(url: URL): boolean {
+  return (
+    url.pathname.startsWith("/api/") &&
+    url.pathname !== "/api/health" &&
+    url.pathname !== "/api/auth/login" &&
+    !isCdpRoute(url)
+  );
 }
 
-function safeDecodeURIComponent(value: string): string {
-  try {
-    return decodeURIComponent(value);
-  } catch {
-    return value;
-  }
+function isCdpRoute(url: URL): boolean {
+  return /^\/api\/profiles\/[^/]+\/cdp(?:\/|$)/.test(url.pathname);
+}
+
+function renderLoginShell(): string {
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CloakHub Login</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f6f7f8;
+        --border: #d7dbdf;
+        --ink: #1d252c;
+        --muted: #60707d;
+        --panel: #ffffff;
+        --accent: #1f6feb;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        align-items: center;
+        background: var(--bg);
+        color: var(--ink);
+        display: flex;
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        justify-content: center;
+        margin: 0;
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      main {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        max-width: 380px;
+        padding: 22px;
+        width: 100%;
+      }
+
+      h1 {
+        font-size: 1.15rem;
+        margin: 0 0 18px;
+      }
+
+      label {
+        color: var(--muted);
+        display: block;
+        font-size: 0.84rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+      }
+
+      input,
+      button {
+        border-radius: 6px;
+        font: inherit;
+        min-height: 40px;
+        width: 100%;
+      }
+
+      input {
+        border: 1px solid var(--border);
+        margin-bottom: 12px;
+        padding: 8px 10px;
+      }
+
+      button {
+        background: var(--accent);
+        border: 0;
+        color: white;
+        cursor: pointer;
+        font-weight: 700;
+      }
+
+      .error {
+        color: #b42318;
+        display: none;
+        font-size: 0.86rem;
+        margin-top: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>CloakHub</h1>
+      <form id="login-form">
+        <label for="token">Admin Token</label>
+        <input id="token" name="token" type="password" autocomplete="current-password" required>
+        <button type="submit">Sign in</button>
+        <p class="error" id="login-error">Invalid admin token</p>
+      </form>
+    </main>
+    <script>
+      document.getElementById("login-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const token = new FormData(event.currentTarget).get("token");
+        const response = await fetch("/api/auth/login", {
+          body: JSON.stringify({ token }),
+          headers: { "content-type": "application/json" },
+          method: "POST"
+        });
+
+        if (response.ok) {
+          location.href = "/";
+          return;
+        }
+
+        document.getElementById("login-error").style.display = "block";
+      });
+    </script>
+  </body>
+</html>`;
 }
 
 function renderShell(config: CloakHubConfig): string {
