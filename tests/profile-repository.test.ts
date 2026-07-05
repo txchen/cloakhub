@@ -46,6 +46,45 @@ describe("ProfileRepository", () => {
 
     repository.close();
   });
+
+  test("round-trips the supported launch/profile field set", async () => {
+    const repository = openProfileRepository(await tempDataRoot());
+    repository.migrate();
+
+    repository.create({
+      clipboard_sync: false,
+      color_scheme: "dark",
+      custom_launch_args: ["--disable-webgl"],
+      fingerprint_seed: "seed-1",
+      geoip: "US",
+      gpu_renderer: "Mesa",
+      gpu_vendor: "Intel",
+      hardware_concurrency: 8,
+      headless: true,
+      human_preset: "balanced",
+      humanize: true,
+      locale: "en-US",
+      platform: "linux",
+      profile_id: "work",
+      proxy: "http://user:secret@proxy.example:8080",
+      screen_height: 1080,
+      screen_width: 1920,
+      tags: [{ color: "#1f6feb", name: "client" }],
+      timezone: "America/Los_Angeles",
+      user_agent: "Mozilla/5.0"
+    });
+
+    expect(repository.get("work")).toMatchObject({
+      clipboard_sync: false,
+      color_scheme: "dark",
+      custom_launch_args: ["--disable-webgl"],
+      fingerprint_seed: "seed-1",
+      proxy: "http://user:secret@proxy.example:8080",
+      tags: [{ color: "#1f6feb", name: "client" }]
+    });
+
+    repository.close();
+  });
 });
 
 async function tempDataRoot(): Promise<string> {

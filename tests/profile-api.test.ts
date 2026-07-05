@@ -31,6 +31,25 @@ describe("Browser Profile admin API", () => {
     expect(html).toContain('id="create-profile-form"');
     expect(html).toContain('class="profile-update-form"');
     expect(html).toContain('class="profile-delete-button"');
+    expect(html).toContain('name="proxy"');
+    expect(html).toContain('name="fingerprint_seed"');
+    expect(html).toContain('name="timezone"');
+    expect(html).toContain('name="locale"');
+    expect(html).toContain('name="geoip"');
+    expect(html).toContain('name="platform"');
+    expect(html).toContain('name="screen_width"');
+    expect(html).toContain('name="screen_height"');
+    expect(html).toContain('name="gpu_vendor"');
+    expect(html).toContain('name="gpu_renderer"');
+    expect(html).toContain('name="hardware_concurrency"');
+    expect(html).toContain('name="user_agent"');
+    expect(html).toContain('name="color_scheme"');
+    expect(html).toContain('name="humanize"');
+    expect(html).toContain('name="human_preset"');
+    expect(html).toContain('name="headless"');
+    expect(html).toContain('name="clipboard_sync"');
+    expect(html).toContain('name="custom_launch_args"');
+    expect(html).toContain('name="tags_json"');
     expect(html).toContain("work");
     expect(html).toContain("Work");
   });
@@ -119,6 +138,51 @@ describe("Browser Profile admin API", () => {
     );
     expect(mutable.status).toBe(400);
   });
+
+  test("redacts proxy credentials in API and UI responses while preserving stored metadata", async () => {
+    const { app, repository } = await tempApp();
+
+    const created = await app.fetch(
+      jsonRequest("http://cloakhub.test/api/profiles", "POST", {
+        profile_id: "work",
+        proxy: "http://user:secret@proxy.example:8080",
+        sleep_policy: { mode: "minutes", minutes: 30 },
+        tags: [{ color: "#1f6feb", name: "client" }],
+        notes: "private notes"
+      })
+    );
+    const body = await created.json();
+    const htmlResponse = await app.fetch(new Request("http://cloakhub.test/"));
+    const html = await htmlResponse.text();
+
+    expect(body.proxy).toBe("http://user:secret@proxy.example:8080");
+    expect(repository.get("work")?.proxy).toBe("http://user:secret@proxy.example:8080");
+    expect(html).toContain("client");
+    expect(html).toContain("private notes");
+    expect(html).toContain("http://user:***@proxy.example:8080");
+    expect(html).not.toContain("secret");
+  });
+
+  test("UI edit preserves stored proxy when the proxy field is left blank", async () => {
+    const { app, repository } = await tempApp();
+    await app.fetch(
+      jsonRequest("http://cloakhub.test/api/profiles", "POST", {
+        profile_id: "work",
+        proxy: "http://user:secret@proxy.example:8080"
+      })
+    );
+
+    const updated = await app.fetch(
+      jsonRequest("http://cloakhub.test/ui/profiles/work", "PATCH", {
+        _include_empty: "true",
+        display_name: "Work 2",
+        proxy: ""
+      })
+    );
+
+    expect(updated.status).toBe(200);
+    expect(repository.get("work")?.proxy).toBe("http://user:secret@proxy.example:8080");
+  });
 });
 
 async function tempApp(overrides: Partial<CloakHubConfig> = {}) {
@@ -137,7 +201,7 @@ async function tempApp(overrides: Partial<CloakHubConfig> = {}) {
     ...overrides
   };
 
-  return { app: createApp(config, { profileService }), dataRoot };
+  return { app: createApp(config, { profileService }), dataRoot, repository };
 }
 
 function jsonRequest(url: string, method: string, body: unknown, cookie?: string): Request {
