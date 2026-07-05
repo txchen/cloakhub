@@ -85,6 +85,31 @@ describe("ProfileRepository", () => {
 
     repository.close();
   });
+
+  test("persists Sleep Policy changes across repository reopen", async () => {
+    const dataRoot = await tempDataRoot();
+    const first = openProfileRepository(dataRoot);
+    first.migrate();
+    first.create({ profile_id: "work" });
+    first.update("work", { sleep_policy: { mode: "minutes", minutes: 45 } });
+    first.recordActivity("work", "2026-01-01T00:00:00.000Z");
+    first.close();
+
+    const second = openProfileRepository(dataRoot);
+    second.migrate();
+
+    expect(second.get("work")).toMatchObject({
+      last_activity_at: "2026-01-01T00:00:00.000Z",
+      sleep_policy: { mode: "minutes", minutes: 45 },
+      sleep_policy_status: {
+        blocks_sleep: false,
+        effective_minutes: 45,
+        mode: "minutes"
+      }
+    });
+
+    second.close();
+  });
 });
 
 async function tempDataRoot(): Promise<string> {

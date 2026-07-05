@@ -338,7 +338,7 @@ function renderShell(config: CloakHubConfig, profiles: BrowserProfile[] = []): s
   const profileRows =
     profiles.length === 0
       ? `<tr>
-              <td class="empty" colspan="4">No Browser Profiles registered</td>
+              <td class="empty" colspan="5">No Browser Profiles registered</td>
             </tr>`
       : profiles
           .map(
@@ -353,6 +353,7 @@ function renderShell(config: CloakHubConfig, profiles: BrowserProfile[] = []): s
                 </form>
               </td>
               <td>${escapeHtml(profile.instance_status)}</td>
+              <td>${sleepPolicyBadge(profile)}</td>
               <td>
                 <span>${escapeHtml(profile.notes)}</span>
                 <span>${escapeHtml(profile.tags.map((tag) => tag.name).join(", "))}</span>
@@ -509,6 +510,26 @@ function renderShell(config: CloakHubConfig, profiles: BrowserProfile[] = []): s
         padding: 8px 10px;
       }
 
+      .sleep-policy-badge {
+        border-radius: 999px;
+        display: inline-block;
+        font-size: 0.78rem;
+        font-weight: 800;
+        padding: 4px 8px;
+      }
+
+      .sleep-policy-badge.default,
+      .sleep-policy-badge.minutes {
+        background: #e8f1ff;
+        color: #174ea6;
+      }
+
+      .sleep-policy-badge.never-sleep {
+        background: #fff1d6;
+        border: 1px solid #d99a00;
+        color: #7a4b00;
+      }
+
       section {
         background: var(--panel);
         border: 1px solid var(--border);
@@ -614,6 +635,7 @@ function renderShell(config: CloakHubConfig, profiles: BrowserProfile[] = []): s
               <th scope="col">Profile ID</th>
               <th scope="col">Display Name</th>
               <th scope="col">Instance Status</th>
+              <th scope="col">Sleep Policy</th>
               <th scope="col">Notes</th>
             </tr>
           </thead>
@@ -831,6 +853,21 @@ function renderLaunchProfileInputs(profile?: BrowserProfile): string {
           Tags JSON
           <textarea name="tags_json">${escapeHtml(tagsJson)}</textarea>
         </label>`;
+}
+
+function sleepPolicyLabel(profile: BrowserProfile): string {
+  if (profile.sleep_policy_status.mode === "never") {
+    return "never-sleep";
+  }
+
+  return `Sleep Policy: ${profile.sleep_policy_status.effective_minutes} minutes`;
+}
+
+function sleepPolicyBadge(profile: BrowserProfile): string {
+  const className =
+    profile.sleep_policy_status.mode === "never" ? "never-sleep" : profile.sleep_policy_status.mode;
+
+  return `<span class="sleep-policy-badge ${escapeHtml(className)}">${escapeHtml(sleepPolicyLabel(profile))}</span>`;
 }
 
 function selectOption(value: string, selectedValue: string, defaultValue = ""): string {

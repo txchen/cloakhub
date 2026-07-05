@@ -1,6 +1,11 @@
 import { describe, expect, test } from "bun:test";
 
-import { normalizeCreateProfileInput, redactProfileSecrets, validateProfileId } from "../src/profile";
+import {
+  normalizeCreateProfileInput,
+  redactProfileSecrets,
+  resolveSleepPolicy,
+  validateProfileId
+} from "../src/profile";
 
 describe("Browser Profile validation", () => {
   test("accepts v1 Profile IDs", () => {
@@ -95,6 +100,27 @@ describe("Browser Profile validation", () => {
     expect(() =>
       normalizeCreateProfileInput({
         profile_id: "work",
+        sleep_policy: { mode: "minutes", minutes: 1441 }
+      })
+    ).toThrow("sleep_policy.minutes must be an integer between 1 and 1440");
+
+    expect(() =>
+      normalizeCreateProfileInput({
+        profile_id: "work",
+        sleep_policy: { mode: "minutes" }
+      })
+    ).toThrow("sleep_policy.minutes must be an integer between 1 and 1440");
+
+    expect(() =>
+      normalizeCreateProfileInput({
+        profile_id: "work",
+        sleep_policy: { mode: "minutes", minutes: 1.5 }
+      })
+    ).toThrow("sleep_policy.minutes must be an integer between 1 and 1440");
+
+    expect(() =>
+      normalizeCreateProfileInput({
+        profile_id: "work",
         sleep_policy: { mode: "unsupported" }
       })
     ).toThrow("sleep_policy.mode must be default, minutes, or never");
@@ -107,5 +133,23 @@ describe("Browser Profile validation", () => {
     expect(
       redactProfileSecrets("launch failed for http://user:secret@proxy.example:8080")
     ).toBe("launch failed for http://user:***@proxy.example:8080");
+  });
+
+  test("resolves Sleep Policy from global default, per-profile minutes, or never-sleep", () => {
+    expect(resolveSleepPolicy({ mode: "default" }, 30)).toEqual({
+      blocks_sleep: false,
+      effective_minutes: 30,
+      mode: "default"
+    });
+    expect(resolveSleepPolicy({ mode: "minutes", minutes: 45 }, 30)).toEqual({
+      blocks_sleep: false,
+      effective_minutes: 45,
+      mode: "minutes"
+    });
+    expect(resolveSleepPolicy({ mode: "never" }, 30)).toEqual({
+      blocks_sleep: true,
+      effective_minutes: null,
+      mode: "never"
+    });
   });
 });

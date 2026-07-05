@@ -3,6 +3,7 @@ import { join } from "node:path";
 
 import {
   DEFAULT_LAUNCH_PROFILE_FIELDS,
+  resolveSleepPolicy,
   type BrowserProfile,
   type CreateProfileInput,
   type LaunchProfileFields,
@@ -17,6 +18,7 @@ export interface ProfileRepository {
   get(profileId: string): BrowserProfile | undefined;
   list(): BrowserProfile[];
   migrate(): void;
+  recordActivity(profileId: string, occurredAt: string): void;
   recordDeleteError(profileId: string, error: string): void;
   update(profileId: string, input: UpdateProfileInput): BrowserProfile | undefined;
 }
@@ -45,6 +47,7 @@ class SqliteProfileRepository implements ProfileRepository {
         display_name TEXT NOT NULL,
         notes TEXT NOT NULL DEFAULT '',
         instance_status TEXT NOT NULL DEFAULT 'stopped',
+        last_activity_at TEXT,
         last_delete_error TEXT,
         launch_profile_json TEXT NOT NULL DEFAULT '{}',
         tags_json TEXT NOT NULL DEFAULT '[]',
@@ -57,6 +60,7 @@ class SqliteProfileRepository implements ProfileRepository {
     `);
     this.ensureColumn("profiles", "launch_profile_json", "TEXT NOT NULL DEFAULT '{}'");
     this.ensureColumn("profiles", "tags_json", "TEXT NOT NULL DEFAULT '[]'");
+    this.ensureColumn("profiles", "last_activity_at", "TEXT");
   }
 
   create(input: CreateProfileInput): BrowserProfile {
@@ -69,6 +73,7 @@ class SqliteProfileRepository implements ProfileRepository {
           display_name,
           notes,
           instance_status,
+          last_activity_at,
           last_delete_error,
           launch_profile_json,
           tags_json,
@@ -80,6 +85,7 @@ class SqliteProfileRepository implements ProfileRepository {
           $display_name,
           $notes,
           'stopped',
+          NULL,
           NULL,
           $launch_profile_json,
           $tags_json,
@@ -170,6 +176,23 @@ class SqliteProfileRepository implements ProfileRepository {
       });
   }
 
+  recordActivity(profileId: string, occurredAt: string): void {
+    this.db
+      .query(
+        `
+        UPDATE profiles
+        SET last_activity_at = $last_activity_at,
+            updated_at = $updated_at
+        WHERE profile_id = $profile_id
+      `
+      )
+      .run({
+        $last_activity_at: occurredAt,
+        $profile_id: profileId,
+        $updated_at: nowIso()
+      });
+  }
+
   delete(profileId: string): void {
     this.db
       .query("DELETE FROM profiles WHERE profile_id = $profile_id")
@@ -199,10 +222,15 @@ function rowToProfile(row: ProfileRow): BrowserProfile {
   );
   const tags = parseJson<ProfileTag[]>(row.tags_json, []);
 
+  const { launch_profile_json: _launchProfileJson, tags_json: _tagsJson, ...profileRow } = row;
+  const sleepPolicy = launchProfile.sleep_policy ?? DEFAULT_LAUNCH_PROFILE_FIELDS.sleep_policy;
+
   return {
-    ...row,
+    ...profileRow,
     ...DEFAULT_LAUNCH_PROFILE_FIELDS,
     ...launchProfile,
+    sleep_policy: sleepPolicy,
+    sleep_policy_status: resolveSleepPolicy(sleepPolicy),
     tags
   };
 }

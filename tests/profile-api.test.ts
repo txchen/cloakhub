@@ -183,6 +183,65 @@ describe("Browser Profile admin API", () => {
     expect(updated.status).toBe(200);
     expect(repository.get("work")?.proxy).toBe("http://user:secret@proxy.example:8080");
   });
+
+  test("shows stopped Instance Status and never-sleep Sleep Policy in API and UI", async () => {
+    const { app } = await tempApp();
+    await app.fetch(
+      jsonRequest("http://cloakhub.test/api/profiles", "POST", {
+        profile_id: "work",
+        sleep_policy: { mode: "never" }
+      })
+    );
+
+    const apiResponse = await app.fetch(new Request("http://cloakhub.test/api/profiles/work"));
+    const apiBody = await apiResponse.json();
+    const uiResponse = await app.fetch(new Request("http://cloakhub.test/"));
+    const html = await uiResponse.text();
+
+    expect(apiBody).toMatchObject({
+      instance_status: "stopped",
+      sleep_policy: { mode: "never" },
+      sleep_policy_status: {
+        blocks_sleep: true,
+        effective_minutes: null,
+        mode: "never"
+      }
+    });
+    expect(html).toContain("stopped");
+    expect(html).toContain("Sleep Policy");
+    expect(html).toContain("sleep-policy-badge never-sleep");
+  });
+
+  test("profile list polling does not count as Instance Activity", async () => {
+    const { app, repository } = await tempApp();
+    await app.fetch(jsonRequest("http://cloakhub.test/api/profiles", "POST", { profile_id: "work" }));
+    repository.recordActivity("work", "2026-01-01T00:00:00.000Z");
+    const before = repository.get("work")?.last_activity_at;
+
+    await app.fetch(new Request("http://cloakhub.test/api/profiles"));
+
+    expect(repository.get("work")?.last_activity_at).toBe(before);
+  });
+
+  test("updates Sleep Policy through the admin API", async () => {
+    const { app } = await tempApp();
+    await app.fetch(jsonRequest("http://cloakhub.test/api/profiles", "POST", { profile_id: "work" }));
+
+    const updated = await app.fetch(
+      jsonRequest("http://cloakhub.test/api/profiles/work", "PATCH", {
+        sleep_policy: { mode: "minutes", minutes: 45 }
+      })
+    );
+
+    expect(await updated.json()).toMatchObject({
+      sleep_policy: { mode: "minutes", minutes: 45 },
+      sleep_policy_status: {
+        blocks_sleep: false,
+        effective_minutes: 45,
+        mode: "minutes"
+      }
+    });
+  });
 });
 
 async function tempApp(overrides: Partial<CloakHubConfig> = {}) {

@@ -40,9 +40,11 @@ export interface BrowserProfile extends LaunchProfileFields {
   created_at: string;
   display_name: string;
   instance_status: InstanceStatus;
+  last_activity_at: string | null;
   last_delete_error: string | null;
   notes: string;
   profile_id: string;
+  sleep_policy_status: ResolvedSleepPolicy;
   updated_at: string;
 }
 
@@ -57,6 +59,14 @@ export type UpdateProfileInput = Partial<LaunchProfileFields> & {
   notes?: string;
   profile_id?: string;
 };
+
+export interface ResolvedSleepPolicy {
+  blocks_sleep: boolean;
+  effective_minutes: number | null;
+  mode: SleepPolicy["mode"];
+}
+
+export const DEFAULT_SLEEP_POLICY_MINUTES = 30;
 
 export type ProfileIdValidationResult =
   | { ok: true; profile_id: string }
@@ -171,6 +181,33 @@ export function redactProfileSecrets(message: string): string {
     (_match, scheme: string, username: string, _password: string, hostname: string, port: string) =>
       `${scheme}${username}:***@${hostname}:${port}`
   );
+}
+
+export function resolveSleepPolicy(
+  sleepPolicy: SleepPolicy,
+  globalDefaultMinutes = DEFAULT_SLEEP_POLICY_MINUTES
+): ResolvedSleepPolicy {
+  if (sleepPolicy.mode === "never") {
+    return {
+      blocks_sleep: true,
+      effective_minutes: null,
+      mode: "never"
+    };
+  }
+
+  if (sleepPolicy.mode === "minutes") {
+    return {
+      blocks_sleep: false,
+      effective_minutes: sleepPolicy.minutes,
+      mode: "minutes"
+    };
+  }
+
+  return {
+    blocks_sleep: false,
+    effective_minutes: globalDefaultMinutes,
+    mode: "default"
+  };
 }
 
 function normalizeLaunchProfileFields(
