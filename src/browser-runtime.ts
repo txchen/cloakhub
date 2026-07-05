@@ -52,8 +52,16 @@ export interface BrowserRuntimeState {
   status: BrowserProfile["instance_status"];
 }
 
+export interface BrowserRuntimeCdpSession {
+  close(): void;
+  recordMessage(): void;
+}
+
 export interface BrowserRuntime {
   cleanupOwnedProcessesOnStartup(): Promise<void>;
+  activeCdpSessionCount(profileId: string): number;
+  openCdpSession(profileId: string): BrowserRuntimeCdpSession;
+  recordCdpDiscovery(profileId: string): void;
   restart(profileId: string): Promise<BrowserRuntimeState>;
   start(profileId: string): Promise<BrowserRuntimeState>;
   stop(profileId: string, reason?: StopReason): Promise<BrowserRuntimeState>;
@@ -95,6 +103,7 @@ const cdpReadinessProbe: BrowserReadinessProbe = {
 };
 
 export function createBrowserRuntime(options: BrowserRuntimeOptions): BrowserRuntime {
+  const activeCdpSessions = new Map<string, number>();
   const launchAttempts = new Map<string, Promise<BrowserRuntimeState>>();
   const runningInstances = new Map<string, RunningInstance>();
   const clientConnections = options.clientConnections ?? noopClientConnections;
@@ -105,10 +114,46 @@ export function createBrowserRuntime(options: BrowserRuntimeOptions): BrowserRun
   let nextCdpPort = options.cdpPortStart ?? 5100;
 
   return {
+    activeCdpSessionCount(profileId: string): number {
+      return activeCdpSessions.get(profileId) ?? 0;
+    },
+
     async cleanupOwnedProcessesOnStartup(): Promise<void> {
       const ownedProfileIds = await options.launcher.ownedProfileIds();
       await options.launcher.cleanupOwnedProcesses(ownedProfileIds);
       options.repository.markAllStopped("restart", nowIso(now));
+    },
+
+    openCdpSession(profileId: string): BrowserRuntimeCdpSession {
+      requireProfile(options.repository, profileId);
+      activeCdpSessions.set(profileId, (activeCdpSessions.get(profileId) ?? 0) + 1);
+      options.repository.recordActivity(profileId, nowIso(now));
+      let closed = false;
+
+      return {
+        close(): void {
+          if (closed) {
+            return;
+          }
+
+          closed = true;
+          const count = Math.max((activeCdpSessions.get(profileId) ?? 1) - 1, 0);
+          if (count === 0) {
+            activeCdpSessions.delete(profileId);
+            return;
+          }
+
+          activeCdpSessions.set(profileId, count);
+        },
+        recordMessage(): void {
+          options.repository.recordActivity(profileId, nowIso(now));
+        }
+      };
+    },
+
+    recordCdpDiscovery(profileId: string): void {
+      requireProfile(options.repository, profileId);
+      options.repository.recordActivity(profileId, nowIso(now));
     },
 
     async restart(profileId: string): Promise<BrowserRuntimeState> {

@@ -85,6 +85,26 @@ describe("BrowserRuntime", () => {
     expect(clientConnections.disconnects).toEqual([{ profileId: "work", reason: "manual stop" }]);
   });
 
+  test("CDP discovery and websocket sessions record Instance Activity", async () => {
+    const repository = fakeRepository(profile({ profile_id: "work" }));
+    const nowValues = [
+      new Date("2026-01-01T00:00:00.000Z"),
+      new Date("2026-01-01T00:01:00.000Z")
+    ];
+    const runtime = runtimeFixture({
+      now: () => nowValues.shift() ?? new Date("2026-01-01T00:01:00.000Z"),
+      repository
+    });
+
+    runtime.recordCdpDiscovery("work");
+    const session = runtime.openCdpSession("work");
+    session.recordMessage();
+    session.close();
+
+    expect(runtime.activeCdpSessionCount("work")).toBe(0);
+    expect(repository.get("work")?.last_activity_at).toBe("2026-01-01T00:01:00.000Z");
+  });
+
   test("restart records stop then starts a new Browser Instance", async () => {
     const repository = fakeRepository(profile({ profile_id: "work" }));
     const launcher = fakeLauncher();

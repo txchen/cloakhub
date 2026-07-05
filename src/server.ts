@@ -2,6 +2,8 @@ import { createApp } from "./app";
 import { resolveBrowserBin } from "./browser-bin";
 import { createBunBrowserProcessLauncher } from "./browser-process-launcher";
 import { createBrowserRuntime } from "./browser-runtime";
+import { createCdpGateway, createProfileCdpAccessPolicy } from "./cdp-gateway";
+import { createCdpWebSocketHandler, type CdpWebSocketData } from "./cdp-websocket-proxy";
 import { loadConfigFromEnv } from "./config";
 import { ensureDataRoot } from "./data-root";
 import { openProfileRepository } from "./profile-repository";
@@ -25,12 +27,20 @@ async function main(): Promise<void> {
       repository: profileRepository
     });
     await browserRuntime.cleanupOwnedProcessesOnStartup();
+    const cdpGateway = createCdpGateway({
+      accessPolicy: createProfileCdpAccessPolicy(profileService),
+      browserRuntime
+    });
 
-    const app = createApp({ ...config, browserBin: browserBin.path }, { browserRuntime, profileService });
-    Bun.serve({
-      fetch: app.fetch,
+    const app = createApp(
+      { ...config, browserBin: browserBin.path },
+      { browserRuntime, cdpGateway, profileService }
+    );
+    Bun.serve<CdpWebSocketData>({
+      fetch: (request, server) => app.fetch(request, server),
       hostname: config.host,
-      port: config.port
+      port: config.port,
+      websocket: createCdpWebSocketHandler({ cdpSessions: browserRuntime })
     });
 
     console.log(`CloakHub listening on http://${config.host}:${config.port}`);

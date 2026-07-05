@@ -320,7 +320,13 @@ function fakeBrowserRuntime(): BrowserRuntime & { calls: string[] } {
 
   return {
     calls,
+    activeCdpSessionCount: () => 0,
     cleanupOwnedProcessesOnStartup: async () => undefined,
+    openCdpSession: () => ({
+      close: () => undefined,
+      recordMessage: () => undefined
+    }),
+    recordCdpDiscovery: () => undefined,
     restart: async (profileId) => {
       calls.push(`restart:${profileId}`);
       return state(profileId, "running");

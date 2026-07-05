@@ -1,4 +1,6 @@
 import type { CloakHubConfig } from "./config";
+import { CdpUnauthorizedError, parseCdpRoute, type CdpGateway } from "./cdp-gateway";
+import type { CdpWebSocketData } from "./cdp-websocket-proxy";
 import {
   BrowserProfileNotFoundError,
   UnsupportedBrowserProfileError,
@@ -22,57 +24,121 @@ import {
 } from "./profile-service";
 
 export interface CloakHubApp {
-  fetch(request: Request): Response | Promise<Response>;
+  fetch: {
+    (request: Request): Response | Promise<Response>;
+    (
+      request: Request,
+      server: CloakHubUpgradeServer
+    ): Response | Promise<Response | undefined> | undefined;
+  };
+}
+
+export interface CloakHubUpgradeServer {
+  upgrade(request: Request, options: { data: CdpWebSocketData }): boolean;
 }
 
 export interface CloakHubServices {
   browserRuntime?: BrowserRuntime;
+  cdpGateway?: CdpGateway;
   profileService?: ProfileService;
 }
 
 export function createApp(config: CloakHubConfig, services: CloakHubServices = {}): CloakHubApp {
-  return {
-    async fetch(request: Request): Promise<Response> {
-      const url = new URL(request.url);
+  async function fetch(request: Request, server?: CloakHubUpgradeServer): Promise<Response | undefined> {
+    const url = new URL(request.url);
 
-      if (url.pathname === "/api/health") {
-        return healthResponse(request);
-      }
-
-      if (url.pathname === "/api/auth/login") {
-        return adminLoginResponse(request, config.authToken);
-      }
-
-      if (isAdminApiRoute(url) && !isAdminApiAuthorized(request, config.authToken)) {
-        return unauthorizedResponse();
-      }
-
-      if (isUiProfileActionRoute(url) && !isUiAuthorized(request, config.authToken)) {
-        return unauthorizedResponse();
-      }
-
-      const lifecycleResponse = await lifecycleApiResponse(request, url, services.browserRuntime);
-      if (lifecycleResponse) {
-        return lifecycleResponse;
-      }
-
-      const profileResponse = await profileApiResponse(request, url, services.profileService);
-      if (profileResponse) {
-        return profileResponse;
-      }
-
-      if (url.pathname === "/" || url.pathname === "/index.html") {
-        if (!isUiAuthorized(request, config.authToken)) {
-          return unauthorizedHtmlResponse(renderLoginShell());
-        }
-
-        const profiles = services.profileService?.listProfiles().map(redactProfileSecretsFromProfile) ?? [];
-        return htmlResponse(renderShell(config, profiles));
-      }
-
-      return textResponse("Not found", 404);
+    if (url.pathname === "/api/health") {
+      return healthResponse(request);
     }
+
+    if (url.pathname === "/api/auth/login") {
+      return adminLoginResponse(request, config.authToken);
+    }
+
+    if (isAdminApiRoute(url) && !isAdminApiAuthorized(request, config.authToken)) {
+      return unauthorizedResponse();
+    }
+
+    if (isUiProfileActionRoute(url) && !isUiAuthorized(request, config.authToken)) {
+      return unauthorizedResponse();
+    }
+
+    const cdpResponse = await cdpApiResponse(request, url, services.cdpGateway, server);
+    if (cdpResponse !== undefined || isCdpRoute(url)) {
+      return cdpResponse;
+    }
+
+    const lifecycleResponse = await lifecycleApiResponse(request, url, services.browserRuntime);
+    if (lifecycleResponse) {
+      return lifecycleResponse;
+    }
+
+    const profileResponse = await profileApiResponse(request, url, services.profileService);
+    if (profileResponse) {
+      return profileResponse;
+    }
+
+    if (url.pathname === "/" || url.pathname === "/index.html") {
+      if (!isUiAuthorized(request, config.authToken)) {
+        return unauthorizedHtmlResponse(renderLoginShell());
+      }
+
+      const profiles = services.profileService?.listProfiles().map(redactProfileSecretsFromProfile) ?? [];
+      return htmlResponse(renderShell(config, profiles));
+    }
+
+    return textResponse("Not found", 404);
+  }
+
+  return {
+    fetch: fetch as CloakHubApp["fetch"]
   };
+}
+
+async function cdpApiResponse(
+  request: Request,
+  url: URL,
+  cdpGateway: CdpGateway | undefined,
+  server: CloakHubUpgradeServer | undefined
+): Promise<Response | undefined> {
+  const route = parseCdpRoute(url.pathname);
+  if (!route) {
+    return undefined;
+  }
+
+  if (!cdpGateway) {
+    return textResponse("Not found", 404);
+  }
+
+  try {
+    if (isWebSocketUpgrade(request)) {
+      if (!server) {
+        return errorResponse("CDP websocket upgrade is unavailable", 400);
+      }
+
+      const upgraded = server.upgrade(request, {
+        data: await cdpGateway.websocketData(request, route.profileId, route.cdpPath)
+      });
+
+      return upgraded ? undefined : errorResponse("CDP websocket upgrade failed", 400);
+    }
+
+    if (request.method !== "GET") {
+      return textResponse("Method not allowed", 405, { Allow: "GET" });
+    }
+
+    return await cdpGateway.discoveryResponse(request, route.profileId, route.cdpPath);
+  } catch (error) {
+    if (error instanceof CdpUnauthorizedError) {
+      return unauthorizedResponse();
+    }
+
+    return errorResponse(error instanceof Error ? error.message : String(error), 503);
+  }
+}
+
+function isWebSocketUpgrade(request: Request): boolean {
+  return request.headers.get("upgrade")?.toLowerCase() === "websocket";
 }
 
 async function lifecycleApiResponse(
