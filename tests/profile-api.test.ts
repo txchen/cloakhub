@@ -35,12 +35,22 @@ describe("Browser Profile admin API", () => {
     const html = await response.text();
 
     expect(response.status).toBe(200);
+    expect(html).toContain('class="manager-shell"');
+    expect(html).toContain('class="profile-sidebar"');
+    expect(html).toContain('id="sidebar-resizer"');
+    expect(html).toContain('id="toggle-sidebar"');
+    expect(html).toContain('id="show-sidebar"');
+    expect(html).toContain('class="viewer-pane"');
+    expect(html).toContain('id="create-profile-modal"');
     expect(html).toContain('id="create-profile-form"');
+    expect(html).toContain("Use lower-case letters, numbers, and underscores.");
+    expect(html).toContain("Leave blank to generate a stable random fingerprint seed.");
     expect(html).toContain('class="profile-update-form"');
     expect(html).toContain('class="profile-delete-button"');
     expect(html).toContain('class="profile-lifecycle-button" data-action="start"');
     expect(html).toContain('class="profile-lifecycle-button" data-action="stop"');
     expect(html).toContain('class="profile-lifecycle-button" data-action="restart"');
+    expect(html).not.toContain('id="dashboard-filter-form"');
     expect(html).toContain("setInterval(refreshDashboard, 2500)");
     expect(html).toContain("This may disconnect active CDP sessions or viewers.");
     expect(html).toContain('action === "stop"');
@@ -466,7 +476,7 @@ describe("Browser Profile admin API", () => {
     expect(html).toContain("Last Manual Input: 2026-01-01T00:00:05.000Z");
   });
 
-  test("dashboard renders operational status fields, filters, sorting, and approximate Resource Usage", async () => {
+  test("dashboard renders compact profile manager, embedded viewer, and approximate Resource Usage", async () => {
     const browserRuntime = fakeBrowserRuntime({
       activeCdpSessionCount: 1,
       activeManualViewerCount: 2,
@@ -500,15 +510,16 @@ describe("Browser Profile admin API", () => {
     try {
       await Bun.write(join(dataRoot, "runtime", "work", "display.pid"), `${ownedProcess.pid}\n`);
 
-      const response = await app.fetch(new Request("http://cloakhub.test/?q=client&sort=last_activity"));
+      const response = await app.fetch(new Request("http://cloakhub.test/"));
       const html = await response.text();
 
       expect(response.status).toBe(200);
-      expect(html).toContain('name="q"');
-      expect(html).toContain('value="client"');
-      expect(html).toContain('name="sort"');
-      expect(html).toContain('value="last_activity" selected');
-      expect(html).not.toContain('value="profile_id"');
+      expect(html).toContain('id="sidebar-resizer"');
+      expect(html).toContain('id="toggle-sidebar"');
+      expect(html).toContain('id="show-sidebar"');
+      expect(html).toContain('grid-template-columns: minmax(220px, var(--sidebar-width)) 6px minmax(0, 1fr)');
+      expect(html).not.toContain('name="q"');
+      expect(html).not.toContain('name="sort"');
       expect(html).toContain("Instance Status");
       expect(html).toContain("CDP Sessions: 1");
       expect(html).toContain('data-cdp-session-count="1"');
@@ -521,9 +532,10 @@ describe("Browser Profile admin API", () => {
       expect(html).toContain("Owned Processes: 1");
       expect(html).toContain("Last Stop Reason: launch failure");
       expect(html).toContain("Last Launch Error: launch failed for ***");
-      expect(html).toContain("Automatic Spin-down");
-      expect(html).toContain("Explicit Stop");
-      expect(html).toContain('class="manual-viewer-link"');
+      expect(html).toContain('class="manual-viewer-button"');
+      expect(html).toContain('id="viewer-frame"');
+      expect(html).not.toContain('target="_blank"');
+      expect(html).not.toContain("window.open");
       expect(html).toContain('event.data?.type === "cloakhub-viewer-connected"');
       expect(html).toContain("await navigator.clipboard.writeText(cdpUrl)");
       expect(html).toContain("refreshDashboard();");
@@ -541,7 +553,7 @@ describe("Browser Profile admin API", () => {
     }
   });
 
-  test("dashboard search filters by display name and tag", async () => {
+  test("dashboard ignores obsolete search query params and renders all profiles", async () => {
     const { app } = await tempApp();
     await app.fetch(
       jsonRequest("http://cloakhub.test/api/profiles", "POST", {
@@ -570,10 +582,10 @@ describe("Browser Profile admin API", () => {
     const byProfileId = await (await app.fetch(new Request("http://cloakhub.test/?q=ops"))).text();
 
     expect(byName).toContain("Client Work");
-    expect(byName).not.toContain("Personal");
+    expect(byName).toContain("Personal");
     expect(byTag).toContain("Personal");
-    expect(byTag).not.toContain("Client Work");
-    expect(byProfileId).not.toContain("Archive");
+    expect(byTag).toContain("Client Work");
+    expect(byProfileId).toContain("Archive");
   });
 
   test("dashboard script polls, refreshes after actions, and warns only for active Explicit Stop", async () => {
@@ -586,6 +598,11 @@ describe("Browser Profile admin API", () => {
 
     dashboard.run();
     expect(dashboard.intervalMs).toEqual([2500]);
+
+    await dashboard.toggleSidebarButton.click();
+    expect(dashboard.managerShellClasses).toContain("sidebar-collapsed");
+    await dashboard.showSidebarButton.click();
+    expect(dashboard.managerShellClasses).not.toContain("sidebar-collapsed");
 
     dashboard.confirmResults.push(false);
     await dashboard.stopButton.click();
@@ -614,12 +631,17 @@ describe("Browser Profile admin API", () => {
     ]);
     expect(dashboard.reloads).toBe(3);
 
-    await dashboard.viewerLink.click();
-    expect(dashboard.openedUrls).toEqual(["http://cloakhub.test/ui/profiles/work/viewer"]);
+    await dashboard.viewerButton.click();
+    expect(dashboard.viewerSources).toEqual(["/ui/profiles/work/viewer"]);
+    expect(dashboard.openedUrls).toEqual([]);
     expect(dashboard.reloads).toBe(3);
 
     dashboard.postViewerConnected();
-    expect(dashboard.reloads).toBe(4);
+    expect(dashboard.reloads).toBe(3);
+    expect(dashboard.fetches.at(-1)).toEqual({
+      method: "GET",
+      path: "/ui/profiles"
+    });
   });
 
   test("manual clipboard endpoint writes text through the Browser Runtime", async () => {
@@ -870,6 +892,14 @@ function dashboardScriptHarness(html: string) {
   }
 
   const createForm = fakeDashboardElement();
+  const createProfileModal = fakeDashboardElement();
+  const openCreateButton = fakeDashboardElement();
+  const closeCreateButton = fakeDashboardElement();
+  const cancelCreateButton = fakeDashboardElement();
+  const managerShell = fakeDashboardElement();
+  const resizer = fakeDashboardElement();
+  const showSidebarButton = fakeDashboardElement();
+  const toggleSidebarButton = fakeDashboardElement();
   const stopButton = fakeDashboardElement({
     action: "stop",
     cdpSessionCount: "1",
@@ -883,13 +913,15 @@ function dashboardScriptHarness(html: string) {
     profileId: "work"
   });
   const copyTokenButton = fakeDashboardElement({ action: "copy-url", profileId: "work" });
-  const viewerLink = fakeDashboardElement({}, "http://cloakhub.test/ui/profiles/work/viewer");
+  const viewerButton = fakeDashboardElement({ profileId: "work" });
+  const viewerFrame = { src: "" };
   const fetches: Array<{ method: string; path: string }> = [];
   const clipboardWrites: string[] = [];
   const confirmMessages: string[] = [];
   const confirmResults: boolean[] = [];
   const intervalMs: number[] = [];
   const openedUrls: string[] = [];
+  const viewerSources: string[] = [];
   let messageHandler:
     | ((event: { data?: { type?: string }; origin: string }) => void)
     | undefined;
@@ -897,19 +929,58 @@ function dashboardScriptHarness(html: string) {
 
   const document = {
     getElementById: (id: string) => {
-      if (id !== "create-profile-form") {
-        throw new Error(`unexpected element id ${id}`);
+      if (id === "create-profile-form") {
+        return createForm;
       }
 
-      return createForm;
+      if (id === "create-profile-modal") {
+        return createProfileModal;
+      }
+
+      if (id === "open-create-profile") {
+        return openCreateButton;
+      }
+
+      if (id === "close-create-profile") {
+        return closeCreateButton;
+      }
+
+      if (id === "cancel-create-profile") {
+        return cancelCreateButton;
+      }
+
+      if (id === "sidebar-resizer") {
+        return resizer;
+      }
+
+      if (id === "show-sidebar") {
+        return showSidebarButton;
+      }
+
+      if (id === "toggle-sidebar") {
+        return toggleSidebarButton;
+      }
+
+      if (id === "viewer-frame") {
+        return viewerFrame;
+      }
+
+      throw new Error(`unexpected element id ${id}`);
+    },
+    querySelector: (selector: string) => {
+      if (selector === ".manager-shell") {
+        return managerShell;
+      }
+
+      throw new Error(`unexpected selector ${selector}`);
     },
     querySelectorAll: (selector: string) => {
       if (selector === ".profile-update-form" || selector === ".profile-delete-button") {
         return [];
       }
 
-      if (selector === ".manual-viewer-link") {
-        return [viewerLink];
+      if (selector === ".manual-viewer-button") {
+        return [viewerButton];
       }
 
       if (selector === ".profile-lifecycle-button") {
@@ -925,6 +996,7 @@ function dashboardScriptHarness(html: string) {
   };
   const location = {
     origin: "http://cloakhub.test",
+    search: "",
     reload: () => {
       reloads += 1;
     }
@@ -943,6 +1015,13 @@ function dashboardScriptHarness(html: string) {
       }
     }
   };
+  const localStorageValues = new Map<string, string>();
+  const localStorage = {
+    getItem: (key: string) => localStorageValues.get(key) ?? null,
+    setItem: (key: string, value: string) => {
+      localStorageValues.set(key, value);
+    }
+  };
   const window = {
     addEventListener: (
       eventName: string,
@@ -955,7 +1034,8 @@ function dashboardScriptHarness(html: string) {
     open: (url: string) => {
       openedUrls.push(url);
       return {};
-    }
+    },
+    removeEventListener: () => undefined
   };
   const confirm = (message: string) => {
     confirmMessages.push(message);
@@ -984,7 +1064,11 @@ function dashboardScriptHarness(html: string) {
     get reloads() {
       return reloads;
     },
+    get viewerSources() {
+      return viewerSources.length > 0 ? viewerSources : viewerFrame.src ? [viewerFrame.src] : [];
+    },
     restartButton,
+    showSidebarButton,
     run: () => {
       const scriptFunction = new Function(
         "document",
@@ -994,28 +1078,64 @@ function dashboardScriptHarness(html: string) {
         "window",
         "confirm",
         "setInterval",
+        "localStorage",
         "FormData",
         script
       );
-      scriptFunction(document, location, fetch, navigator, window, confirm, setInterval, FormData);
+      scriptFunction(document, location, fetch, navigator, window, confirm, setInterval, localStorage, FormData);
     },
     stopButton,
-    viewerLink,
+    get managerShellClasses() {
+      return managerShell.classes;
+    },
+    toggleSidebarButton,
+    viewerButton,
     copyTokenButton
   };
 }
 
 function fakeDashboardElement(dataset: Record<string, string> = {}, href = "") {
   const handlers = new Map<string, (event: { currentTarget: unknown; preventDefault: () => void }) => unknown>();
+  const classes = new Set<string>();
+  const styleValues = new Map<string, string>();
   return {
+    classes,
     dataset,
     href,
+    style: {
+      setProperty: (name: string, value: string) => {
+        styleValues.set(name, value);
+      }
+    },
+    classList: {
+      add: (className: string) => {
+        classes.add(className);
+      },
+      contains: (className: string) => classes.has(className),
+      remove: (className: string) => {
+        classes.delete(className);
+      },
+      toggle: (className: string, force?: boolean) => {
+        const shouldAdd = force ?? !classes.has(className);
+        if (shouldAdd) {
+          classes.add(className);
+        } else {
+          classes.delete(className);
+        }
+        return shouldAdd;
+      }
+    },
     addEventListener: (
       eventName: string,
       handler: (event: { currentTarget: unknown; preventDefault: () => void }) => unknown
     ) => {
       handlers.set(eventName, handler);
     },
+    removeAttribute: () => undefined,
+    releasePointerCapture: () => undefined,
+    setAttribute: () => undefined,
+    setPointerCapture: () => undefined,
+    textContent: "",
     click: async () => {
       await handlers.get("click")?.({
         currentTarget: { dataset, href },

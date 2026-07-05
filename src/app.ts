@@ -39,13 +39,6 @@ type PresentedBrowserProfile = Omit<BrowserProfile, "cdp_token"> & {
   sleep_status: string;
 };
 
-type DashboardSort = "last_activity" | "status";
-
-interface DashboardControls {
-  query: string;
-  sort: DashboardSort;
-}
-
 export interface CloakHubApp {
   fetch: {
     (request: Request): Response | Promise<Response>;
@@ -142,7 +135,7 @@ export function createApp(config: CloakHubConfig, services: CloakHubServices = {
       const profiles = services.profileService
         ? await dashboardProfiles(services.profileService.listProfiles(), url, config, services.browserRuntime)
         : [];
-      return htmlResponse(renderShell(config, profiles, dashboardControls(url)));
+      return htmlResponse(renderShell(config, profiles));
     }
 
     return textResponse("Not found", 404);
@@ -683,9 +676,7 @@ async function dashboardProfiles(
   config: CloakHubConfig,
   browserRuntime: BrowserRuntime | undefined
 ): Promise<PresentedBrowserProfile[]> {
-  const controls = dashboardControls(url);
-  const filtered = profiles.filter((profile) => dashboardProfileMatches(profile, controls.query));
-  const sorted = sortDashboardProfiles(filtered, controls.sort);
+  const sorted = sortDashboardProfiles(profiles);
   const resourceUsageByProfileId = await ownedProcessResourceUsageByProfile(
     config.dataRoot,
     sorted.map((profile) => profile.profile_id)
@@ -700,31 +691,8 @@ async function dashboardProfiles(
   );
 }
 
-function dashboardControls(url: URL): DashboardControls {
-  const sort = url.searchParams.get("sort");
-  return {
-    query: url.searchParams.get("q")?.trim() ?? "",
-    sort: sort === "last_activity" ? "last_activity" : "status"
-  };
-}
-
-function dashboardProfileMatches(profile: BrowserProfile, query: string): boolean {
-  if (!query) {
-    return true;
-  }
-
-  const normalized = query.toLowerCase();
-  return [profile.display_name, ...profile.tags.map((tag) => tag.name)].some((value) =>
-    value.toLowerCase().includes(normalized)
-  );
-}
-
-function sortDashboardProfiles(profiles: BrowserProfile[], sort: DashboardSort): BrowserProfile[] {
+function sortDashboardProfiles(profiles: BrowserProfile[]): BrowserProfile[] {
   return [...profiles].sort((left, right) => {
-    if (sort === "last_activity") {
-      return timestampMs(right.last_activity_at) - timestampMs(left.last_activity_at);
-    }
-
     return (
       left.instance_status.localeCompare(right.instance_status) ||
       timestampMs(right.last_activity_at) - timestampMs(left.last_activity_at) ||
@@ -1066,27 +1034,22 @@ function renderManualViewerUnavailable(message: string): string {
 
 function renderShell(
   config: CloakHubConfig,
-  profiles: PresentedBrowserProfile[] = [],
-  controls: DashboardControls = { query: "", sort: "status" }
+  profiles: PresentedBrowserProfile[] = []
 ): string {
-  const profileRows =
+  const profileItems =
     profiles.length === 0
-      ? `<tr>
-              <td class="empty" colspan="5">No Browser Profiles registered</td>
-            </tr>`
+      ? `<div class="empty">No Browser Profiles registered</div>`
       : profiles
           .map(
-            (profile) => `<tr>
-              <td>${escapeHtml(profile.profile_id)}</td>
-              <td>
-                <form class="profile-update-form" data-profile-id="${escapeHtml(profile.profile_id)}">
-                  <input name="display_name" value="${escapeHtml(profile.display_name)}">
-                  <input name="notes" value="${escapeHtml(profile.notes)}">
-                  ${renderLaunchProfileInputs(profile)}
-                  <button type="submit">Save</button>
-                </form>
-              </td>
-              <td>
+            (profile) => `<article class="profile-item" data-profile-id="${escapeHtml(profile.profile_id)}">
+              <div class="profile-summary">
+                <div class="profile-title">
+                  <strong>${escapeHtml(profile.display_name)}</strong>
+                  <code>${escapeHtml(profile.profile_id)}</code>
+                </div>
+                <span class="instance-pill ${escapeHtml(profile.instance_status)}">${escapeHtml(profile.instance_status)}</span>
+              </div>
+              <div class="profile-facts">
                 <span>Instance Status: ${escapeHtml(profile.instance_status)}</span>
                 <span>CDP Sessions: ${profile.cdp_session_count}</span>
                 <span>Viewers: ${profile.manual_viewer_count}</span>
@@ -1098,29 +1061,44 @@ function renderShell(
                 <span>Last Stop Reason: ${escapeHtml(profile.last_stop_reason ?? "none")}</span>
                 <span>Last Launch Error: ${escapeHtml(profile.last_launch_error ?? "none")}</span>
                 ${renderCdpSessions(profile)}
-              </td>
-              <td>${sleepPolicyBadge(profile)}</td>
-              <td>
-                <span>${escapeHtml(profile.notes)}</span>
-                <span>${escapeHtml(profile.tags.map((tag) => tag.name).join(", "))}</span>
-                <span>${escapeHtml(profile.proxy)}</span>
-                ${renderCdpTokenControls(profile)}
+              </div>
+              <div class="profile-tags">
+                ${sleepPolicyBadge(profile)}
+                ${profile.tags.map((tag) => `<span class="tag">${escapeHtml(tag.name)}</span>`).join("")}
+                ${profile.proxy ? `<span class="proxy">${escapeHtml(profile.proxy)}</span>` : ""}
+                ${profile.notes ? `<span>${escapeHtml(profile.notes)}</span>` : ""}
+              </div>
+              <div class="profile-actions">
                 ${renderManualViewerControls(profile)}
-                <button class="profile-lifecycle-button" data-action="start" data-cdp-session-count="${profile.cdp_session_count}" data-manual-viewer-count="${profile.manual_viewer_count}" data-profile-id="${escapeHtml(profile.profile_id)}" type="button">
-                  Start
-                </button>
-                <button class="profile-lifecycle-button" data-action="stop" data-cdp-session-count="${profile.cdp_session_count}" data-manual-viewer-count="${profile.manual_viewer_count}" data-profile-id="${escapeHtml(profile.profile_id)}" type="button">
-                  Stop
-                </button>
-                <button class="profile-lifecycle-button" data-action="restart" data-cdp-session-count="${profile.cdp_session_count}" data-manual-viewer-count="${profile.manual_viewer_count}" data-profile-id="${escapeHtml(profile.profile_id)}" type="button">
-                  Restart
-                </button>
-                <button class="profile-delete-button" data-profile-id="${escapeHtml(profile.profile_id)}" type="button">
-                  Delete
-                </button>
-                ${profile.last_delete_error ? `<span>${escapeHtml(profile.last_delete_error)}</span>` : ""}
-              </td>
-            </tr>`
+                <button class="profile-lifecycle-button" data-action="start" data-cdp-session-count="${profile.cdp_session_count}" data-manual-viewer-count="${profile.manual_viewer_count}" data-profile-id="${escapeHtml(profile.profile_id)}" type="button">Start</button>
+                <button class="profile-lifecycle-button" data-action="stop" data-cdp-session-count="${profile.cdp_session_count}" data-manual-viewer-count="${profile.manual_viewer_count}" data-profile-id="${escapeHtml(profile.profile_id)}" type="button">Stop</button>
+                <button class="profile-lifecycle-button" data-action="restart" data-cdp-session-count="${profile.cdp_session_count}" data-manual-viewer-count="${profile.manual_viewer_count}" data-profile-id="${escapeHtml(profile.profile_id)}" type="button">Restart</button>
+              </div>
+              <div class="profile-security">
+                ${renderCdpTokenControls(profile)}
+              </div>
+              <details class="profile-edit">
+                <summary>Edit profile</summary>
+                <form class="profile-update-form" data-profile-id="${escapeHtml(profile.profile_id)}">
+                  <label>
+                    Display Name
+                    <input name="display_name" value="${escapeHtml(profile.display_name)}">
+                    <span class="field-hint">Shown in the profile list; changing it does not alter automation URLs.</span>
+                  </label>
+                  <label>
+                    Notes
+                    <input name="notes" value="${escapeHtml(profile.notes)}">
+                    <span class="field-hint">Private operator notes for this Browser Profile.</span>
+                  </label>
+                  ${renderLaunchProfileInputs(profile)}
+                  <div class="form-actions">
+                    <button type="submit">Save</button>
+                    <button class="profile-delete-button" data-profile-id="${escapeHtml(profile.profile_id)}" type="button">Delete</button>
+                  </div>
+                  ${profile.last_delete_error ? `<span class="form-error">${escapeHtml(profile.last_delete_error)}</span>` : ""}
+                </form>
+              </details>
+            </article>`
           )
           .join("");
 
@@ -1133,13 +1111,17 @@ function renderShell(
     <style>
       :root {
         color-scheme: light;
-        --bg: #f6f7f8;
-        --border: #d7dbdf;
-        --ink: #1d252c;
-        --muted: #60707d;
+        --sidebar-width: 292px;
+        --bg: #eef1f4;
+        --border: #cfd7df;
+        --ink: #17202a;
+        --muted: #657584;
         --panel: #ffffff;
-        --status: #0f8f5f;
-        --accent: #1f6feb;
+        --panel-strong: #f8fafb;
+        --success: #0f8f5f;
+        --accent: #2463eb;
+        --warning: #b7791f;
+        --danger: #b42318;
       }
 
       * {
@@ -1154,14 +1136,26 @@ function renderShell(
           Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       }
 
-      header {
+      body {
+        min-height: 100vh;
+        overflow: hidden;
+      }
+
+      .app-header {
         align-items: center;
         background: var(--panel);
         border-bottom: 1px solid var(--border);
         display: flex;
         gap: 18px;
-        min-height: 64px;
-        padding: 0 28px;
+        min-height: 58px;
+        padding: 0 18px;
+      }
+
+      .header-meta {
+        align-items: center;
+        display: flex;
+        gap: 10px;
+        margin-left: auto;
       }
 
       .mark {
@@ -1178,39 +1172,74 @@ function renderShell(
       }
 
       h1 {
-        font-size: 1.15rem;
+        font-size: 1.05rem;
         line-height: 1.2;
         margin: 0;
       }
 
-      main {
-        margin: 0 auto;
-        max-width: 1180px;
-        padding: 28px;
+      .manager-shell {
+        display: grid;
+        grid-template-columns: minmax(220px, var(--sidebar-width)) 6px minmax(0, 1fr);
+        height: calc(100vh - 58px);
+        min-height: 0;
       }
 
-      .toolbar {
+      .manager-shell.sidebar-collapsed {
+        grid-template-columns: 0 6px minmax(0, 1fr);
+      }
+
+      .profile-sidebar {
+        background: var(--panel);
+        border-right: 1px solid var(--border);
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+        min-height: 0;
+        min-width: 0;
+        overflow: hidden;
+      }
+
+      .manager-shell.sidebar-collapsed .profile-sidebar {
+        border-right: 0;
+      }
+
+      .sidebar-head {
         align-items: center;
         display: flex;
-        flex-wrap: wrap;
         gap: 12px;
         justify-content: space-between;
-        margin-bottom: 18px;
       }
 
-      form {
-        align-items: end;
+      #show-sidebar {
+        align-items: center;
+        display: inline-flex;
+        min-height: 28px;
+      }
+
+      #show-sidebar[hidden] {
+        display: none;
+      }
+
+      .sidebar-head {
+        border-bottom: 1px solid var(--border);
+        min-width: 220px;
+        padding: 10px 12px;
+      }
+
+      .sidebar-actions {
+        align-items: center;
+        display: flex;
+        gap: 6px;
+      }
+
+      h2 {
+        font-size: 0.88rem;
+        margin: 0;
+      }
+
+      form,
+      .profile-update-form {
         display: grid;
         gap: 10px;
-        grid-template-columns: minmax(160px, 1fr) minmax(180px, 1fr) auto;
-        margin-bottom: 18px;
-      }
-
-      .profile-update-form {
-        align-items: center;
-        display: grid;
-        grid-template-columns: repeat(5, minmax(90px, 1fr)) auto;
-        margin: 0;
       }
 
       label {
@@ -1222,16 +1251,36 @@ function renderShell(
         text-transform: uppercase;
       }
 
-      input,
-      button {
-        border-radius: 6px;
-        font: inherit;
-        min-height: 38px;
+      .field-hint {
+        color: var(--muted);
+        font-size: 0.78rem;
+        font-weight: 500;
+        line-height: 1.35;
+        text-transform: none;
       }
 
-      input {
+      input,
+      button,
+      select,
+      textarea {
+        border-radius: 6px;
+        font: inherit;
+        min-height: 34px;
+      }
+
+      input,
+      select,
+      textarea {
+        background: #ffffff;
         border: 1px solid var(--border);
+        color: var(--ink);
         padding: 7px 9px;
+        width: 100%;
+      }
+
+      textarea {
+        min-height: 72px;
+        resize: vertical;
       }
 
       button {
@@ -1239,8 +1288,29 @@ function renderShell(
         border: 0;
         color: white;
         cursor: pointer;
+        font-size: 0.78rem;
         font-weight: 700;
-        padding: 0 13px;
+        padding: 0 10px;
+      }
+
+      button.secondary {
+        background: #e8edf3;
+        color: var(--ink);
+      }
+
+      .profile-delete-button {
+        background: var(--danger);
+      }
+
+      .profile-lifecycle-button[data-action="stop"],
+      .profile-lifecycle-button[data-action="restart"] {
+        background: #e8edf3;
+        color: var(--ink);
+      }
+
+      button:disabled {
+        cursor: not-allowed;
+        opacity: 0.6;
       }
 
       .status {
@@ -1252,7 +1322,7 @@ function renderShell(
       }
 
       .status::before {
-        background: var(--status);
+        background: var(--success);
         border-radius: 50%;
         content: "";
         height: 9px;
@@ -1267,12 +1337,80 @@ function renderShell(
         padding: 8px 10px;
       }
 
-      .sleep-policy-badge {
+      .profile-list {
+        display: grid;
+        align-content: start;
+        gap: 8px;
+        min-height: 0;
+        overflow: auto;
+        padding: 8px;
+      }
+
+      .profile-item {
+        background: var(--panel-strong);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        display: grid;
+        gap: 8px;
+        padding: 9px;
+      }
+
+      .profile-summary,
+      .profile-actions,
+      .profile-tags,
+      .form-actions {
+        align-items: center;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .profile-summary {
+        justify-content: space-between;
+      }
+
+      .profile-title {
+        display: grid;
+        gap: 2px;
+        min-width: 0;
+      }
+
+      .profile-title strong {
+        font-size: 0.86rem;
+      }
+
+      .profile-title strong,
+      .profile-title code {
+        overflow-wrap: anywhere;
+      }
+
+      code {
+        color: var(--muted);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.72rem;
+      }
+
+      .profile-facts {
+        color: var(--muted);
+        display: grid;
+        font-size: 0.75rem;
+        gap: 3px;
+      }
+
+      .profile-facts ul {
+        margin: 4px 0 0;
+        padding-left: 18px;
+      }
+
+      .sleep-policy-badge,
+      .tag,
+      .proxy,
+      .instance-pill {
         border-radius: 999px;
         display: inline-block;
-        font-size: 0.78rem;
+        font-size: 0.7rem;
         font-weight: 800;
-        padding: 4px 8px;
+        padding: 3px 7px;
       }
 
       .sleep-policy-badge.default,
@@ -1283,8 +1421,41 @@ function renderShell(
 
       .sleep-policy-badge.never-sleep {
         background: #fff1d6;
-        border: 1px solid #d99a00;
-        color: #7a4b00;
+        border: 1px solid var(--warning);
+        color: #754c0b;
+      }
+
+      .tag {
+        background: #e8f5ee;
+        color: #12613f;
+      }
+
+      .proxy {
+        background: #eceff3;
+        color: #3d4a57;
+        max-width: 100%;
+        overflow-wrap: anywhere;
+      }
+
+      .instance-pill.running {
+        background: #dff7ea;
+        color: #12613f;
+      }
+
+      .instance-pill.failed {
+        background: #fee4e2;
+        color: var(--danger);
+      }
+
+      .instance-pill.starting,
+      .instance-pill.stopping {
+        background: #fff1d6;
+        color: #754c0b;
+      }
+
+      .instance-pill.stopped {
+        background: #eceff3;
+        color: #3d4a57;
       }
 
       .cdp-token-status {
@@ -1293,12 +1464,12 @@ function renderShell(
       }
 
       .cdp-token-status.open {
-        color: #b42318;
+        color: var(--danger);
         font-weight: 700;
       }
 
       .cdp-token-status.protected {
-        color: #0f8f5f;
+        color: var(--success);
         font-weight: 700;
       }
 
@@ -1306,25 +1477,123 @@ function renderShell(
         align-items: center;
         display: flex;
         flex-wrap: wrap;
-        gap: 8px;
-        margin: 8px 0;
+        gap: 6px;
+        margin: 6px 0;
       }
 
       .cdp-token-warning {
-        color: #7a4b00;
+        color: #754c0b;
         display: block;
         font-size: 0.8rem;
         margin-bottom: 8px;
       }
 
-      section {
+      .profile-security {
+        font-size: 0.75rem;
+      }
+
+      .profile-edit {
+        border-top: 1px solid var(--border);
+        padding-top: 8px;
+      }
+
+      .profile-edit summary {
+        color: var(--muted);
+        cursor: pointer;
+        font-size: 0.76rem;
+        font-weight: 700;
+      }
+
+      .profile-update-form {
+        margin-top: 8px;
+      }
+
+      .sidebar-resizer {
+        background: #dde3ea;
+        cursor: col-resize;
+        min-width: 6px;
+        position: relative;
+      }
+
+      .sidebar-resizer::after {
+        background: #a9b5c1;
+        border-radius: 999px;
+        content: "";
+        inset: 42% 2px;
+        opacity: 0;
+        position: absolute;
+        transition: opacity 120ms ease;
+      }
+
+      .sidebar-resizer:hover::after,
+      .sidebar-resizer.resizing::after {
+        opacity: 1;
+      }
+
+      .manager-shell.sidebar-collapsed .sidebar-resizer {
+        cursor: default;
+      }
+
+      .viewer-pane {
+        background: #11161d;
+        display: grid;
+        grid-template-rows: minmax(0, 1fr);
+        min-width: 0;
+      }
+
+      .sr-only {
+        clip: rect(0 0 0 0);
+        clip-path: inset(50%);
+        height: 1px;
+        overflow: hidden;
+        position: absolute;
+        white-space: nowrap;
+        width: 1px;
+      }
+
+      .viewer-frame-wrap {
+        min-height: 0;
+        position: relative;
+      }
+
+      #viewer-frame {
+        background: #050607;
+        border: 0;
+        display: block;
+        height: 100%;
+        width: 100%;
+      }
+
+      .viewer-placeholder {
+        align-items: center;
+        color: #b6c2ce;
+        display: grid;
+        inset: 0;
+        justify-items: center;
+        position: absolute;
+      }
+
+      #viewer-frame[src] + .viewer-placeholder {
+        display: none;
+      }
+
+      dialog {
         background: var(--panel);
         border: 1px solid var(--border);
         border-radius: 8px;
-        overflow: hidden;
+        box-shadow: 0 24px 80px rgb(15 23 42 / 0.24);
+        max-height: min(860px, calc(100vh - 32px));
+        max-width: min(760px, calc(100vw - 32px));
+        overflow: auto;
+        padding: 0;
+        width: 100%;
       }
 
-      .section-head {
+      dialog::backdrop {
+        background: rgb(15 23 42 / 0.48);
+      }
+
+      .modal-head {
         align-items: center;
         border-bottom: 1px solid var(--border);
         display: flex;
@@ -1332,127 +1601,197 @@ function renderShell(
         padding: 14px 16px;
       }
 
-      h2 {
-        font-size: 0.96rem;
-        margin: 0;
-      }
-
-      table {
-        border-collapse: collapse;
-        table-layout: fixed;
-        width: 100%;
-      }
-
-      th,
-      td {
-        border-bottom: 1px solid var(--border);
-        font-size: 0.9rem;
-        padding: 13px 16px;
-        text-align: left;
-      }
-
-      th {
-        color: var(--muted);
-        font-size: 0.78rem;
-        font-weight: 700;
-        text-transform: uppercase;
-      }
-
-      tr:last-child td {
-        border-bottom: 0;
+      #create-profile-form {
+        padding: 16px;
       }
 
       .empty {
         color: var(--muted);
+        padding: 12px;
       }
 
-      @media (max-width: 640px) {
-        header,
-        main {
-          padding-left: 16px;
-          padding-right: 16px;
+      .form-error {
+        color: var(--danger);
+        font-size: 0.84rem;
+      }
+
+      @media (max-width: 860px) {
+        body {
+          overflow: auto;
         }
 
-        .section-head,
-        th,
-        td {
-          padding-left: 12px;
-          padding-right: 12px;
-        }
-
-        form {
+        .manager-shell {
           grid-template-columns: 1fr;
+          height: auto;
+        }
+
+        .manager-shell.sidebar-collapsed {
+          grid-template-columns: 1fr;
+        }
+
+        .profile-sidebar {
+          border-right: 0;
+          min-height: 48vh;
+        }
+
+        .manager-shell.sidebar-collapsed .profile-sidebar {
+          display: none;
+        }
+
+        .sidebar-resizer {
+          display: none;
+        }
+
+        .viewer-pane {
+          min-height: 60vh;
         }
       }
     </style>
   </head>
   <body>
-    <header>
+    <header class="app-header">
       <span class="mark" aria-hidden="true">CH</span>
       <h1>CloakHub</h1>
-    </header>
-    <main>
-      <div class="toolbar">
+      <div class="header-meta">
         <span class="status">Service online</span>
         <span class="limit">Running Instance Limit: ${config.maxRunningInstances}</span>
+        <button class="secondary" id="show-sidebar" type="button" hidden>Profiles</button>
       </div>
-      <form id="dashboard-filter-form" method="GET">
-        <label>
-          Search
-          <input name="q" value="${escapeHtml(controls.query)}">
-        </label>
-        <label>
-          Sort
-          <select name="sort">
-            ${selectOption("status", controls.sort)}
-            ${selectOption("last_activity", controls.sort)}
-          </select>
-        </label>
-        <button type="submit">Apply</button>
-      </form>
-      <p class="dashboard-copy">Automatic Spin-down is different from Explicit Stop.</p>
-      <form id="create-profile-form">
+    </header>
+    <main class="manager-shell">
+      <aside class="profile-sidebar" aria-labelledby="profiles-heading">
+        <div class="sidebar-head">
+          <h2 id="profiles-heading">Browser Profiles</h2>
+          <div class="sidebar-actions">
+            <button id="open-create-profile" type="button">Create</button>
+            <button class="secondary" id="toggle-sidebar" type="button">Hide</button>
+          </div>
+        </div>
+        <div class="profile-list">
+          ${profileItems}
+        </div>
+      </aside>
+      <div class="sidebar-resizer" id="sidebar-resizer" role="separator" aria-orientation="vertical" aria-label="Resize profile sidebar"></div>
+      <section class="viewer-pane" aria-labelledby="viewer-heading">
+        <h2 class="sr-only" id="viewer-heading">Manual VNC viewer</h2>
+        <div class="viewer-frame-wrap">
+          <iframe id="viewer-frame" title="CloakHub VNC Viewer"></iframe>
+          <div class="viewer-placeholder">No active viewer</div>
+        </div>
+      </section>
+      <dialog id="create-profile-modal">
+        <div class="modal-head">
+          <h2>Create Profile</h2>
+          <button class="secondary" id="close-create-profile" type="button">Close</button>
+        </div>
+        <form id="create-profile-form">
         <label>
           Profile ID
           <input name="profile_id" pattern="^[a-z][a-z0-9_]*$" required>
+          <span class="field-hint">Use lower-case letters, numbers, and underscores. This becomes the immutable URL and directory name.</span>
         </label>
         <label>
           Display Name
           <input name="display_name">
+          <span class="field-hint">Human-readable label for the left profile list.</span>
         </label>
         <label>
           Notes
           <input name="notes">
+          <span class="field-hint">Private context for operators; not used by CloakBrowser launch.</span>
         </label>
         ${renderLaunchProfileInputs()}
-        <button type="submit">Create</button>
-      </form>
-      <section aria-labelledby="profiles-heading">
-        <div class="section-head">
-          <h2 id="profiles-heading">Browser Profiles</h2>
+        <div class="form-actions">
+          <button type="submit">Create</button>
+          <button class="secondary" id="cancel-create-profile" type="button">Cancel</button>
         </div>
-        <table>
-          <thead>
-            <tr>
-              <th scope="col">Profile ID</th>
-              <th scope="col">Display Name</th>
-              <th scope="col">Instance Status</th>
-              <th scope="col">Sleep Policy</th>
-              <th scope="col">Notes</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${profileRows}
-          </tbody>
-        </table>
-      </section>
+      </form>
+      </dialog>
     </main>
       <script>
-      function refreshDashboard() {
+      const createProfileModal = document.getElementById("create-profile-modal");
+      const managerShell = document.querySelector(".manager-shell");
+      const resizer = document.getElementById("sidebar-resizer");
+      const showSidebarButton = document.getElementById("show-sidebar");
+      const toggleSidebarButton = document.getElementById("toggle-sidebar");
+      const viewerFrame = document.getElementById("viewer-frame");
+      const savedSidebarWidth = Number(localStorage.getItem("cloakhub.sidebarWidth"));
+      const savedSidebarCollapsed = localStorage.getItem("cloakhub.sidebarCollapsed") === "true";
+
+      if (savedSidebarWidth >= 220 && savedSidebarWidth <= 520) {
+        managerShell.style.setProperty("--sidebar-width", savedSidebarWidth + "px");
+      }
+      setSidebarCollapsed(savedSidebarCollapsed);
+
+      function reloadDashboard() {
         location.reload();
       }
 
+      async function refreshDashboard() {
+        await fetch("/ui/profiles").catch(() => undefined);
+      }
+
       setInterval(refreshDashboard, 2500);
+
+      function setSidebarCollapsed(collapsed) {
+        managerShell.classList.toggle("sidebar-collapsed", collapsed);
+        toggleSidebarButton.textContent = collapsed ? "Show" : "Hide";
+        showSidebarButton.hidden = !collapsed;
+        localStorage.setItem("cloakhub.sidebarCollapsed", String(collapsed));
+      }
+
+      toggleSidebarButton?.addEventListener("click", () => {
+        setSidebarCollapsed(!managerShell.classList.contains("sidebar-collapsed"));
+      });
+
+      showSidebarButton?.addEventListener("click", () => {
+        setSidebarCollapsed(false);
+      });
+
+      resizer?.addEventListener("pointerdown", (event) => {
+        if (managerShell.classList.contains("sidebar-collapsed")) {
+          return;
+        }
+
+        event.preventDefault();
+        resizer.setPointerCapture(event.pointerId);
+        resizer.classList.add("resizing");
+
+        const onPointerMove = (moveEvent) => {
+          const width = Math.min(520, Math.max(220, moveEvent.clientX));
+          managerShell.style.setProperty("--sidebar-width", width + "px");
+          localStorage.setItem("cloakhub.sidebarWidth", String(width));
+        };
+        const onPointerUp = (upEvent) => {
+          resizer.releasePointerCapture(upEvent.pointerId);
+          resizer.classList.remove("resizing");
+          window.removeEventListener("pointermove", onPointerMove);
+          window.removeEventListener("pointerup", onPointerUp);
+        };
+
+        window.addEventListener("pointermove", onPointerMove);
+        window.addEventListener("pointerup", onPointerUp);
+      });
+
+      document.getElementById("open-create-profile")?.addEventListener("click", () => {
+        if (typeof createProfileModal.showModal === "function") {
+          createProfileModal.showModal();
+          return;
+        }
+
+        createProfileModal.setAttribute("open", "");
+      });
+
+      for (const closeButtonId of ["close-create-profile", "cancel-create-profile"]) {
+        document.getElementById(closeButtonId)?.addEventListener("click", () => {
+          if (typeof createProfileModal.close === "function") {
+            createProfileModal.close();
+            return;
+          }
+
+          createProfileModal.removeAttribute("open");
+        });
+      }
 
       window.addEventListener("message", (event) => {
         if (
@@ -1473,7 +1812,7 @@ function renderShell(
         });
 
         if (response.ok) {
-          refreshDashboard();
+          reloadDashboard();
         }
       });
 
@@ -1488,7 +1827,7 @@ function renderShell(
           });
 
           if (response.ok) {
-            refreshDashboard();
+            reloadDashboard();
           }
         });
       });
@@ -1501,15 +1840,16 @@ function renderShell(
           });
 
           if (response.ok) {
-            refreshDashboard();
+            reloadDashboard();
           }
         });
       });
 
-      document.querySelectorAll(".manual-viewer-link").forEach((link) => {
-        link.addEventListener("click", (event) => {
+      document.querySelectorAll(".manual-viewer-button").forEach((button) => {
+        button.addEventListener("click", (event) => {
           event.preventDefault();
-          window.open(event.currentTarget.href, "_blank");
+          const profileId = event.currentTarget.dataset.profileId;
+          viewerFrame.src = "/ui/profiles/" + encodeURIComponent(profileId) + "/viewer";
         });
       });
 
@@ -1534,7 +1874,7 @@ function renderShell(
           );
 
           if (response.ok) {
-            refreshDashboard();
+            reloadDashboard();
           }
         });
       });
@@ -1561,7 +1901,7 @@ function renderShell(
               encodeURIComponent(profileId) +
               "/cdp/json/version";
             await navigator.clipboard.writeText(cdpUrl);
-            refreshDashboard();
+            reloadDashboard();
             return;
           }
 
@@ -1583,11 +1923,11 @@ function renderShell(
               "/cdp/json/version?token=" +
               encodeURIComponent(body.cdp_token);
             await navigator.clipboard.writeText(cdpUrl);
-            refreshDashboard();
+            reloadDashboard();
             return;
           }
 
-          refreshDashboard();
+          reloadDashboard();
         });
       });
 
@@ -1657,50 +1997,62 @@ function renderLaunchProfileInputs(profile?: BrowserProfile | PresentedBrowserPr
         <label>
           Fingerprint Seed
           <input name="fingerprint_seed" value="${escapeHtml(profile?.fingerprint_seed ?? "")}">
+          <span class="field-hint">Leave blank to generate a stable random fingerprint seed.</span>
         </label>
         <label>
           Proxy
           <input name="proxy" ${profile ? `placeholder="${escapeHtml(profile.proxy)}"` : ""}>
+          <span class="field-hint">Optional proxy as scheme://user:pass@host:port, host:port, or host:port:user:pass.</span>
         </label>
         <label>
           Timezone
           <input name="timezone" value="${escapeHtml(profile?.timezone ?? "")}">
+          <span class="field-hint">IANA timezone such as America/Los_Angeles; blank keeps CloakBrowser defaults.</span>
         </label>
         <label>
           Locale
           <input name="locale" value="${escapeHtml(profile?.locale ?? "")}">
+          <span class="field-hint">Browser locale such as en-US or fr-FR.</span>
         </label>
         <label>
           GeoIP
           <input name="geoip" value="${escapeHtml(profile?.geoip ?? "")}">
+          <span class="field-hint">Optional GeoIP hint supported by CloakBrowser.</span>
         </label>
         <label>
           Platform
           <input name="platform" value="${escapeHtml(profile?.platform ?? "")}">
+          <span class="field-hint">Fingerprint platform value; linux is the default.</span>
         </label>
         <label>
           Screen Width
           <input name="screen_width" type="number" min="100" max="10000" value="${profile?.screen_width ?? ""}">
+          <span class="field-hint">Virtual display width in pixels.</span>
         </label>
         <label>
           Screen Height
           <input name="screen_height" type="number" min="100" max="10000" value="${profile?.screen_height ?? ""}">
+          <span class="field-hint">Virtual display height in pixels.</span>
         </label>
         <label>
           GPU Vendor
           <input name="gpu_vendor" value="${escapeHtml(profile?.gpu_vendor ?? "")}">
+          <span class="field-hint">Optional fingerprint GPU vendor override.</span>
         </label>
         <label>
           GPU Renderer
           <input name="gpu_renderer" value="${escapeHtml(profile?.gpu_renderer ?? "")}">
+          <span class="field-hint">Optional fingerprint GPU renderer override.</span>
         </label>
         <label>
           Hardware Concurrency
           <input name="hardware_concurrency" type="number" min="1" max="256" value="${profile?.hardware_concurrency ?? ""}">
+          <span class="field-hint">CPU thread count exposed to pages.</span>
         </label>
         <label>
           User Agent
           <input name="user_agent" value="${escapeHtml(profile?.user_agent ?? "")}">
+          <span class="field-hint">Optional full user agent override; blank keeps CloakBrowser defaults.</span>
         </label>
         <label>
           Color Scheme
@@ -1709,6 +2061,7 @@ function renderLaunchProfileInputs(profile?: BrowserProfile | PresentedBrowserPr
             ${selectOption("light", profile?.color_scheme ?? "")}
             ${selectOption("dark", profile?.color_scheme ?? "")}
           </select>
+          <span class="field-hint">Preferred color scheme exposed to websites.</span>
         </label>
         <label>
           Humanize
@@ -1716,10 +2069,12 @@ function renderLaunchProfileInputs(profile?: BrowserProfile | PresentedBrowserPr
             ${selectOption("false", String(profile?.humanize ?? false))}
             ${selectOption("true", String(profile?.humanize ?? false))}
           </select>
+          <span class="field-hint">Enables CloakBrowser humanization behavior when supported.</span>
         </label>
         <label>
           Human Preset
           <input name="human_preset" value="${escapeHtml(profile?.human_preset ?? "")}">
+          <span class="field-hint">Optional named humanization preset.</span>
         </label>
         <label>
           Headless
@@ -1727,6 +2082,7 @@ function renderLaunchProfileInputs(profile?: BrowserProfile | PresentedBrowserPr
             ${selectOption("false", String(profile?.headless ?? false))}
             ${selectOption("true", String(profile?.headless ?? false))}
           </select>
+          <span class="field-hint">Headless profiles support CDP but do not expose a manual VNC viewer.</span>
         </label>
         <label>
           Clipboard Sync
@@ -1734,6 +2090,7 @@ function renderLaunchProfileInputs(profile?: BrowserProfile | PresentedBrowserPr
             ${selectOption("true", String(profile?.clipboard_sync ?? true))}
             ${selectOption("false", String(profile?.clipboard_sync ?? true))}
           </select>
+          <span class="field-hint">Allows manual paste and VNC clipboard transfer for this profile.</span>
         </label>
         <label>
           Sleep Policy
@@ -1742,18 +2099,22 @@ function renderLaunchProfileInputs(profile?: BrowserProfile | PresentedBrowserPr
             ${selectOption("minutes", sleepPolicyMode)}
             ${selectOption("never", sleepPolicyMode)}
           </select>
+          <span class="field-hint">Controls automatic spin-down for idle Browser Instances.</span>
         </label>
         <label>
           Sleep Policy Minutes
           <input name="sleep_policy_minutes" type="number" min="1" max="1440" value="${sleepPolicyMinutes}">
+          <span class="field-hint">Used only when Sleep Policy is minutes.</span>
         </label>
         <label>
           Launch Args
           <textarea name="custom_launch_args">${escapeHtml(launchArgs)}</textarea>
+          <span class="field-hint">One browser flag per line. CloakHub-owned data-dir and CDP flags are rejected.</span>
         </label>
         <label>
           Tags JSON
           <textarea name="tags_json">${escapeHtml(tagsJson)}</textarea>
+          <span class="field-hint">JSON array like [{"name":"client","color":"#2463eb"}].</span>
         </label>`;
 }
 
@@ -1849,7 +2210,7 @@ function renderManualViewerControls(profile: PresentedBrowserProfile): string {
     return `<span>Manual viewer unavailable for headless profiles. Edit the profile to disable headless mode.</span>`;
   }
 
-  return `<a class="manual-viewer-link" href="/ui/profiles/${encodeURIComponent(profile.profile_id)}/viewer" target="_blank" rel="noreferrer">Open Viewer</a>`;
+  return `<button class="manual-viewer-button" data-profile-id="${escapeHtml(profile.profile_id)}" type="button">View</button>`;
 }
 
 function formatDuration(durationMs: number): string {
