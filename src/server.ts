@@ -31,6 +31,10 @@ async function main(): Promise<void> {
       accessPolicy: createProfileCdpAccessPolicy(profileService),
       browserRuntime
     });
+    const idleTimer = setInterval(() => {
+      void browserRuntime.spinDownIdleHeadlessInstances();
+    }, 5000);
+    idleTimer.unref();
 
     const app = createApp(
       { ...config, browserBin: browserBin.path },

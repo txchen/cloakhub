@@ -5,6 +5,7 @@ import {
   BrowserProfileNotFoundError,
   UnsupportedBrowserProfileError,
   type BrowserRuntime,
+  type BrowserRuntimeCdpSessionObservation,
   type BrowserRuntimeState
 } from "./browser-runtime";
 import {
@@ -22,6 +23,11 @@ import {
   ProfileValidationError,
   type ProfileService
 } from "./profile-service";
+
+type PresentedBrowserProfile = BrowserProfile & {
+  cdp_session_count: number;
+  cdp_sessions: BrowserRuntimeCdpSessionObservation[];
+};
 
 export interface CloakHubApp {
   fetch: {
@@ -73,7 +79,12 @@ export function createApp(config: CloakHubConfig, services: CloakHubServices = {
       return lifecycleResponse;
     }
 
-    const profileResponse = await profileApiResponse(request, url, services.profileService);
+    const profileResponse = await profileApiResponse(
+      request,
+      url,
+      services.profileService,
+      services.browserRuntime
+    );
     if (profileResponse) {
       return profileResponse;
     }
@@ -83,7 +94,10 @@ export function createApp(config: CloakHubConfig, services: CloakHubServices = {
         return unauthorizedHtmlResponse(renderLoginShell());
       }
 
-      const profiles = services.profileService?.listProfiles().map(redactProfileSecretsFromProfile) ?? [];
+      const profiles =
+        services.profileService?.listProfiles().map((profile) =>
+          presentProfile(redactProfileSecretsFromProfile(profile), services.browserRuntime)
+        ) ?? [];
       return htmlResponse(renderShell(config, profiles));
     }
 
@@ -117,7 +131,10 @@ async function cdpApiResponse(
       }
 
       const upgraded = server.upgrade(request, {
-        data: await cdpGateway.websocketData(request, route.profileId, route.cdpPath)
+        data: {
+          ...(await cdpGateway.websocketData(request, route.profileId, route.cdpPath)),
+          requestUserAgent: request.headers.get("user-agent") ?? undefined
+        }
       });
 
       return upgraded ? undefined : errorResponse("CDP websocket upgrade failed", 400);
@@ -187,7 +204,8 @@ function lifecycleResponseState(state: BrowserRuntimeState): Omit<BrowserRuntime
 async function profileApiResponse(
   request: Request,
   url: URL,
-  profileService: ProfileService | undefined
+  profileService: ProfileService | undefined,
+  browserRuntime: BrowserRuntime | undefined
 ): Promise<Response | undefined> {
   const match = /^\/(?:api|ui)\/profiles(?:\/([^/]+))?$/.exec(url.pathname);
   if (!match) {
@@ -204,21 +222,29 @@ async function profileApiResponse(
     const body = request.method === "POST" || request.method === "PATCH" ? await jsonBody(request) : undefined;
 
     if (!profileId && request.method === "GET") {
-      return jsonResponse(profileResponseProfiles(profileService.listProfiles(), url));
+      return jsonResponse(profileResponseProfiles(profileService.listProfiles(), url, browserRuntime));
     }
 
     if (!profileId && request.method === "POST") {
       const profile = await profileService.createProfile(body);
-      return jsonResponse(profileResponseProfile(profile, url), 201);
+      return jsonResponse(profileResponseProfile(profile, url, browserRuntime), 201);
     }
 
     if (profileId && request.method === "GET") {
       const profile = profileService.getProfile(profileId);
-      return profile ? jsonResponse(profileResponseProfile(profile, url)) : errorResponse("Browser Profile was not found", 404);
+      return profile
+        ? jsonResponse(profileResponseProfile(profile, url, browserRuntime))
+        : errorResponse("Browser Profile was not found", 404);
     }
 
     if (profileId && request.method === "PATCH") {
-      return jsonResponse(profileResponseProfile(await profileService.updateProfile(profileId, uiPatchBody(body, url)), url));
+      return jsonResponse(
+        profileResponseProfile(
+          await profileService.updateProfile(profileId, uiPatchBody(body, url)),
+          url,
+          browserRuntime
+        )
+      );
     }
 
     if (profileId && request.method === "DELETE") {
@@ -291,12 +317,33 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function profileResponseProfiles(profiles: BrowserProfile[], url: URL): BrowserProfile[] {
-  return isUiProfileActionRoute(url) ? profiles.map(redactProfileSecretsFromProfile) : profiles;
+function profileResponseProfiles(
+  profiles: BrowserProfile[],
+  url: URL,
+  browserRuntime: BrowserRuntime | undefined
+): PresentedBrowserProfile[] {
+  return profiles.map((profile) =>
+    presentProfile(isUiProfileActionRoute(url) ? redactProfileSecretsFromProfile(profile) : profile, browserRuntime)
+  );
 }
 
-function profileResponseProfile(profile: BrowserProfile, url: URL): BrowserProfile {
-  return isUiProfileActionRoute(url) ? redactProfileSecretsFromProfile(profile) : profile;
+function profileResponseProfile(
+  profile: BrowserProfile,
+  url: URL,
+  browserRuntime: BrowserRuntime | undefined
+): PresentedBrowserProfile {
+  return presentProfile(isUiProfileActionRoute(url) ? redactProfileSecretsFromProfile(profile) : profile, browserRuntime);
+}
+
+function presentProfile(
+  profile: BrowserProfile,
+  browserRuntime: BrowserRuntime | undefined
+): PresentedBrowserProfile {
+  return {
+    ...profile,
+    cdp_session_count: browserRuntime?.activeCdpSessionCount(profile.profile_id) ?? 0,
+    cdp_sessions: browserRuntime?.cdpSessionObservations(profile.profile_id) ?? []
+  };
 }
 
 function healthResponse(request: Request): Response {
@@ -467,7 +514,7 @@ function renderLoginShell(): string {
 </html>`;
 }
 
-function renderShell(config: CloakHubConfig, profiles: BrowserProfile[] = []): string {
+function renderShell(config: CloakHubConfig, profiles: PresentedBrowserProfile[] = []): string {
   const profileRows =
     profiles.length === 0
       ? `<tr>
@@ -485,7 +532,11 @@ function renderShell(config: CloakHubConfig, profiles: BrowserProfile[] = []): s
                   <button type="submit">Save</button>
                 </form>
               </td>
-              <td>${escapeHtml(profile.instance_status)}</td>
+              <td>
+                <span>${escapeHtml(profile.instance_status)}</span>
+                <span>CDP Sessions: ${profile.cdp_session_count}</span>
+                ${renderCdpSessions(profile)}
+              </td>
               <td>${sleepPolicyBadge(profile)}</td>
               <td>
                 <span>${escapeHtml(profile.notes)}</span>
@@ -1025,6 +1076,30 @@ function sleepPolicyLabel(profile: BrowserProfile): string {
   }
 
   return `Sleep Policy: ${profile.sleep_policy_status.effective_minutes} minutes`;
+}
+
+function renderCdpSessions(profile: PresentedBrowserProfile): string {
+  if (profile.cdp_sessions.length === 0) {
+    return "";
+  }
+
+  return `<ul>${profile.cdp_sessions
+    .map(
+      (session) => `<li>${escapeHtml(formatDuration(session.duration_ms))} ${escapeHtml(
+        session.remote_address ?? "unknown"
+      )} ${escapeHtml(session.user_agent ?? "")}</li>`
+    )
+    .join("")}</ul>`;
+}
+
+function formatDuration(durationMs: number): string {
+  const seconds = Math.floor(durationMs / 1000);
+  if (seconds < 60) {
+    return `${seconds}s`;
+  }
+
+  const minutes = Math.floor(seconds / 60);
+  return `${minutes}m`;
 }
 
 function sleepPolicyBadge(profile: BrowserProfile): string {

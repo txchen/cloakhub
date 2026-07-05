@@ -105,6 +105,101 @@ describe("BrowserRuntime", () => {
     expect(repository.get("work")?.last_activity_at).toBe("2026-01-01T00:01:00.000Z");
   });
 
+  test("CDP Session observations include count, duration, remote address, and user agent", async () => {
+    const repository = fakeRepository(profile({ profile_id: "work" }));
+    const monotonic = fakeMonotonicClock();
+    const runtime = runtimeFixture({
+      monotonicNow: monotonic.now,
+      now: () => new Date("2026-01-01T00:00:00.000Z"),
+      repository
+    });
+
+    const session = runtime.openCdpSession("work", {
+      remoteAddress: "203.0.113.10",
+      userAgent: "Playwright"
+    });
+    monotonic.advance(1250);
+
+    expect(runtime.cdpSessionObservations("work")).toEqual([
+      {
+        duration_ms: 1250,
+        remote_address: "203.0.113.10",
+        started_at: "2026-01-01T00:00:00.000Z",
+        user_agent: "Playwright"
+      }
+    ]);
+
+    session.close();
+    expect(runtime.cdpSessionObservations("work")).toEqual([]);
+  });
+
+  test("open CDP Sessions block idle Spin-down indefinitely", async () => {
+    const repository = fakeRepository(profile({ profile_id: "work" }));
+    const launcher = fakeLauncher();
+    const monotonic = fakeMonotonicClock();
+    const runtime = runtimeFixture({ launcher, monotonicNow: monotonic.now, repository });
+    await runtime.start("work");
+    const session = runtime.openCdpSession("work");
+    monotonic.advance(31 * 60 * 1000);
+
+    const result = await runtime.spinDownIdleHeadlessInstances();
+
+    expect(result).toEqual([]);
+    expect(repository.get("work")?.instance_status).toBe("running");
+    expect(launcher.handles[0]?.closed).toBe(false);
+    session.close();
+  });
+
+  test("idle headless Browser Instances spin down when Sleep Policy allows it", async () => {
+    const repository = fakeRepository(profile({ profile_id: "work" }));
+    const launcher = fakeLauncher();
+    const monotonic = fakeMonotonicClock();
+    const runtime = runtimeFixture({ launcher, monotonicNow: monotonic.now, repository });
+    await runtime.start("work");
+
+    monotonic.advance(30 * 60 * 1000 + 1);
+    const result = await runtime.spinDownIdleHeadlessInstances();
+
+    expect(result).toEqual([{ profile_id: "work", reason: "idle timeout" }]);
+    expect(launcher.handles[0]?.closed).toBe(true);
+    expect(repository.get("work")).toMatchObject({
+      instance_status: "stopped",
+      last_stop_reason: "idle timeout"
+    });
+  });
+
+  test("never-sleep policy blocks idle Spin-down", async () => {
+    const repository = fakeRepository(
+      profile({
+        profile_id: "work",
+        sleep_policy: { mode: "never" },
+        sleep_policy_status: { blocks_sleep: true, effective_minutes: null, mode: "never" }
+      })
+    );
+    const launcher = fakeLauncher();
+    const monotonic = fakeMonotonicClock();
+    const runtime = runtimeFixture({ launcher, monotonicNow: monotonic.now, repository });
+    await runtime.start("work");
+    monotonic.advance(24 * 60 * 60 * 1000);
+
+    expect(await runtime.spinDownIdleHeadlessInstances()).toEqual([]);
+    expect(repository.get("work")?.instance_status).toBe("running");
+  });
+
+  test("passive profile polling does not affect idle Spin-down decisions", async () => {
+    const repository = fakeRepository(profile({ profile_id: "work" }));
+    const monotonic = fakeMonotonicClock();
+    const runtime = runtimeFixture({ monotonicNow: monotonic.now, repository });
+    await runtime.start("work");
+
+    monotonic.advance(30 * 60 * 1000 + 1);
+    repository.list();
+
+    expect(await runtime.spinDownIdleHeadlessInstances()).toEqual([
+      { profile_id: "work", reason: "idle timeout" }
+    ]);
+  });
+
   test("restart records stop then starts a new Browser Instance", async () => {
     const repository = fakeRepository(profile({ profile_id: "work" }));
     const launcher = fakeLauncher();
@@ -263,6 +358,7 @@ describe("BrowserRuntime", () => {
 function runtimeFixture(options: {
   clientConnections?: BrowserClientConnections;
   launcher?: BrowserProcessLauncher;
+  monotonicNow?: () => number;
   now?: () => Date;
   readinessProbe?: BrowserReadinessProbe;
   repository: ProfileRepository;
@@ -273,11 +369,25 @@ function runtimeFixture(options: {
     clientConnections: options.clientConnections,
     dataRoot: "/data",
     launcher: options.launcher ?? fakeLauncher(),
+    monotonicNow: options.monotonicNow,
     now: options.now,
     readinessProbe: options.readinessProbe ?? fakeReadinessProbe(),
     repository: options.repository,
     wait: options.wait ?? (async () => undefined)
   });
+}
+
+function fakeMonotonicClock(): { advance(milliseconds: number): void; now(): number } {
+  let current = 0;
+
+  return {
+    advance(milliseconds: number): void {
+      current += milliseconds;
+    },
+    now(): number {
+      return current;
+    }
+  };
 }
 
 function fakeLauncher(options: {

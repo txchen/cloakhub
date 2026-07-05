@@ -184,6 +184,7 @@ function fakeRuntime(options: { startError?: Error } = {}): BrowserRuntime & { c
     calls,
     cleanupOwnedProcessesOnStartup: async () => undefined,
     activeCdpSessionCount: () => 0,
+    cdpSessionObservations: () => [],
     openCdpSession: () => ({
       close: () => undefined,
       recordMessage: () => undefined
@@ -206,7 +207,8 @@ function fakeRuntime(options: { startError?: Error } = {}): BrowserRuntime & { c
     stop: async (profileId) => {
       calls.push(`stop:${profileId}`);
       return { ...state, cdp_port: -1, status: "stopped" };
-    }
+    },
+    spinDownIdleHeadlessInstances: async () => []
   };
 }
 

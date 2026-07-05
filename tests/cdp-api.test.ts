@@ -35,7 +35,7 @@ describe("CDP API", () => {
 
     const response = await app.fetch(
       new Request("http://cloakhub.test/api/profiles/work/cdp/devtools/page/page-1", {
-        headers: { upgrade: "websocket" }
+        headers: { upgrade: "websocket", "user-agent": "Playwright" }
       }),
       server
     );
@@ -45,6 +45,7 @@ describe("CDP API", () => {
     expect(server.upgrades).toEqual([
       {
         profileId: "work",
+        requestUserAgent: "Playwright",
         targetUrl: "ws://127.0.0.1:5100/devtools/page/page-1"
       }
     ]);

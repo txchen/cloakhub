@@ -18,6 +18,7 @@ describe("CdpWebSocketProxy", () => {
     const handler = createCdpWebSocketHandler({ cdpSessions: sessions, factory });
     const client = fakeServerWebSocket({
       profileId: "work",
+      requestUserAgent: "Playwright",
       targetUrl: "ws://127.0.0.1:5100/devtools/page/1"
     });
 
@@ -29,7 +30,11 @@ describe("CdpWebSocketProxy", () => {
 
     expect(browser.sent).toEqual(["queued-before-open", JSON.stringify({ id: 1, method: "Runtime.enable" })]);
     expect(client.sent).toEqual([JSON.stringify({ id: 1, result: {} })]);
-    expect(sessions.events).toEqual(["open:work", "message", "message"]);
+    expect(sessions.events).toEqual([
+      "open:work:127.0.0.1:Playwright",
+      "message",
+      "message"
+    ]);
   });
 
   test("closes the browser websocket when the client closes", async () => {
@@ -38,6 +43,7 @@ describe("CdpWebSocketProxy", () => {
     const handler = createCdpWebSocketHandler({ cdpSessions: sessions, factory: { connect: () => browser } });
     const client = fakeServerWebSocket({
       profileId: "work",
+      requestUserAgent: "Playwright",
       targetUrl: "ws://127.0.0.1:5100/devtools/page/1"
     });
 
@@ -45,7 +51,7 @@ describe("CdpWebSocketProxy", () => {
     await handler.close?.(client, 1000, "done");
 
     expect(browser.closed).toBe(true);
-    expect(sessions.events).toEqual(["open:work", "close"]);
+    expect(sessions.events).toEqual(["open:work:127.0.0.1:Playwright", "close"]);
   });
 });
 
@@ -54,8 +60,8 @@ function fakeCdpSessions(): CdpSessionObserver & { events: string[] } {
 
   return {
     events,
-    openCdpSession: (profileId) => {
-      events.push(`open:${profileId}`);
+    openCdpSession: (profileId, metadata) => {
+      events.push(`open:${profileId}:${metadata?.remoteAddress}:${metadata?.userAgent}`);
       return {
         close: () => {
           events.push("close");

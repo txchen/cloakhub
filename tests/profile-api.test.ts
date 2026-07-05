@@ -289,6 +289,31 @@ describe("Browser Profile admin API", () => {
     expect(response.status).toBe(200);
     expect(browserRuntime.calls).toEqual(["start:work"]);
   });
+
+  test("shows active CDP Session observations in API and UI status", async () => {
+    const browserRuntime = fakeBrowserRuntime({ activeCdpSessionCount: 1 });
+    const { app } = await tempApp({}, browserRuntime);
+    await app.fetch(jsonRequest("http://cloakhub.test/api/profiles", "POST", { profile_id: "work" }));
+
+    const apiResponse = await app.fetch(new Request("http://cloakhub.test/api/profiles/work"));
+    const uiResponse = await app.fetch(new Request("http://cloakhub.test/"));
+    const html = await uiResponse.text();
+
+    expect(await apiResponse.json()).toMatchObject({
+      cdp_session_count: 1,
+      cdp_sessions: [
+        {
+          duration_ms: 1250,
+          remote_address: "203.0.113.10",
+          started_at: "2026-01-01T00:00:00.000Z",
+          user_agent: "Playwright"
+        }
+      ]
+    });
+    expect(html).toContain("CDP Sessions: 1");
+    expect(html).toContain("Playwright");
+    expect(html).toContain("1s");
+  });
 });
 
 async function tempApp(overrides: Partial<CloakHubConfig> = {}, browserRuntime?: BrowserRuntime) {
@@ -310,7 +335,7 @@ async function tempApp(overrides: Partial<CloakHubConfig> = {}, browserRuntime?:
   return { app: createApp(config, { browserRuntime, profileService }), dataRoot, repository };
 }
 
-function fakeBrowserRuntime(): BrowserRuntime & { calls: string[] } {
+function fakeBrowserRuntime(options: { activeCdpSessionCount?: number } = {}): BrowserRuntime & { calls: string[] } {
   const calls: string[] = [];
   const state = (profileId: string, status: BrowserRuntimeState["status"]): BrowserRuntimeState => ({
     cdp_port: status === "running" ? 5100 : -1,
@@ -320,7 +345,18 @@ function fakeBrowserRuntime(): BrowserRuntime & { calls: string[] } {
 
   return {
     calls,
-    activeCdpSessionCount: () => 0,
+    activeCdpSessionCount: () => options.activeCdpSessionCount ?? 0,
+    cdpSessionObservations: () =>
+      options.activeCdpSessionCount
+        ? [
+            {
+              duration_ms: 1250,
+              remote_address: "203.0.113.10",
+              started_at: "2026-01-01T00:00:00.000Z",
+              user_agent: "Playwright"
+            }
+          ]
+        : [],
     cleanupOwnedProcessesOnStartup: async () => undefined,
     openCdpSession: () => ({
       close: () => undefined,
@@ -338,7 +374,8 @@ function fakeBrowserRuntime(): BrowserRuntime & { calls: string[] } {
     stop: async (profileId, reason = "manual stop") => {
       calls.push(`stop:${profileId}:${reason}`);
       return state(profileId, "stopped");
-    }
+    },
+    spinDownIdleHeadlessInstances: async () => []
   };
 }
 

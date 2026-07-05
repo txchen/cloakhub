@@ -39,6 +39,7 @@ export interface BrowserRuntimeOptions {
   clientConnections?: BrowserClientConnections;
   dataRoot: string;
   launcher: BrowserProcessLauncher;
+  monotonicNow?: () => number;
   now?: () => Date;
   readinessProbe?: BrowserReadinessProbe;
   repository: ProfileRepository;
@@ -57,12 +58,34 @@ export interface BrowserRuntimeCdpSession {
   recordMessage(): void;
 }
 
+export interface BrowserRuntimeCdpSessionMetadata {
+  remoteAddress?: string;
+  userAgent?: string;
+}
+
+export interface BrowserRuntimeCdpSessionObservation {
+  duration_ms: number;
+  remote_address: string | null;
+  started_at: string;
+  user_agent: string | null;
+}
+
+export interface IdleSpinDownResult {
+  profile_id: string;
+  reason: "idle timeout";
+}
+
 export interface BrowserRuntime {
   cleanupOwnedProcessesOnStartup(): Promise<void>;
   activeCdpSessionCount(profileId: string): number;
-  openCdpSession(profileId: string): BrowserRuntimeCdpSession;
+  cdpSessionObservations(profileId: string): BrowserRuntimeCdpSessionObservation[];
+  openCdpSession(
+    profileId: string,
+    metadata?: BrowserRuntimeCdpSessionMetadata
+  ): BrowserRuntimeCdpSession;
   recordCdpDiscovery(profileId: string): void;
   restart(profileId: string): Promise<BrowserRuntimeState>;
+  spinDownIdleHeadlessInstances(): Promise<IdleSpinDownResult[]>;
   start(profileId: string): Promise<BrowserRuntimeState>;
   stop(profileId: string, reason?: StopReason): Promise<BrowserRuntimeState>;
 }
@@ -70,6 +93,12 @@ export interface BrowserRuntime {
 interface RunningInstance {
   cdpPort: number;
   handle: BrowserProcessHandle;
+}
+
+interface ActiveCdpSession extends BrowserRuntimeCdpSessionMetadata {
+  id: number;
+  startedAtMs: number;
+  startedAtWallClock: string;
 }
 
 const DEFAULT_STOP_GRACE_MS = 1500;
@@ -103,7 +132,8 @@ const cdpReadinessProbe: BrowserReadinessProbe = {
 };
 
 export function createBrowserRuntime(options: BrowserRuntimeOptions): BrowserRuntime {
-  const activeCdpSessions = new Map<string, number>();
+  const activeCdpSessions = new Map<string, ActiveCdpSession[]>();
+  const lastActivityMs = new Map<string, number>();
   const launchAttempts = new Map<string, Promise<BrowserRuntimeState>>();
   const runningInstances = new Map<string, RunningInstance>();
   const clientConnections = options.clientConnections ?? noopClientConnections;
@@ -111,11 +141,22 @@ export function createBrowserRuntime(options: BrowserRuntimeOptions): BrowserRun
   const readinessProbe = options.readinessProbe ?? cdpReadinessProbe;
   const stopGraceMs = options.stopGraceMs ?? DEFAULT_STOP_GRACE_MS;
   const wait = options.wait ?? Bun.sleep;
+  const monotonicNow = options.monotonicNow ?? (() => performance.now());
   let nextCdpPort = options.cdpPortStart ?? 5100;
+  let nextCdpSessionId = 1;
 
   return {
     activeCdpSessionCount(profileId: string): number {
-      return activeCdpSessions.get(profileId) ?? 0;
+      return activeCdpSessions.get(profileId)?.length ?? 0;
+    },
+
+    cdpSessionObservations(profileId: string): BrowserRuntimeCdpSessionObservation[] {
+      return (activeCdpSessions.get(profileId) ?? []).map((session) => ({
+        duration_ms: monotonicNow() - session.startedAtMs,
+        remote_address: session.remoteAddress ?? null,
+        started_at: session.startedAtWallClock,
+        user_agent: session.userAgent ?? null
+      }));
     },
 
     async cleanupOwnedProcessesOnStartup(): Promise<void> {
@@ -124,10 +165,19 @@ export function createBrowserRuntime(options: BrowserRuntimeOptions): BrowserRun
       options.repository.markAllStopped("restart", nowIso(now));
     },
 
-    openCdpSession(profileId: string): BrowserRuntimeCdpSession {
+    openCdpSession(
+      profileId: string,
+      metadata: BrowserRuntimeCdpSessionMetadata = {}
+    ): BrowserRuntimeCdpSession {
       requireProfile(options.repository, profileId);
-      activeCdpSessions.set(profileId, (activeCdpSessions.get(profileId) ?? 0) + 1);
-      options.repository.recordActivity(profileId, nowIso(now));
+      const session: ActiveCdpSession = {
+        ...metadata,
+        id: nextCdpSessionId++,
+        startedAtMs: monotonicNow(),
+        startedAtWallClock: nowIso(now)
+      };
+      activeCdpSessions.set(profileId, [...(activeCdpSessions.get(profileId) ?? []), session]);
+      recordActivity(profileId);
       let closed = false;
 
       return {
@@ -137,23 +187,25 @@ export function createBrowserRuntime(options: BrowserRuntimeOptions): BrowserRun
           }
 
           closed = true;
-          const count = Math.max((activeCdpSessions.get(profileId) ?? 1) - 1, 0);
-          if (count === 0) {
+          const nextSessions = (activeCdpSessions.get(profileId) ?? []).filter(
+            (entry) => entry.id !== session.id
+          );
+          if (nextSessions.length === 0) {
             activeCdpSessions.delete(profileId);
             return;
           }
 
-          activeCdpSessions.set(profileId, count);
+          activeCdpSessions.set(profileId, nextSessions);
         },
         recordMessage(): void {
-          options.repository.recordActivity(profileId, nowIso(now));
+          recordActivity(profileId);
         }
       };
     },
 
     recordCdpDiscovery(profileId: string): void {
       requireProfile(options.repository, profileId);
-      options.repository.recordActivity(profileId, nowIso(now));
+      recordActivity(profileId);
     },
 
     async restart(profileId: string): Promise<BrowserRuntimeState> {
@@ -190,26 +242,33 @@ export function createBrowserRuntime(options: BrowserRuntimeOptions): BrowserRun
 
     async stop(profileId: string, reason: StopReason = "manual stop"): Promise<BrowserRuntimeState> {
       const profile = requireProfile(options.repository, profileId);
-      const running = runningInstances.get(profile.profile_id);
-      const occurredAt = nowIso(now);
+      return stopProfile(profile, reason, { recordActivity: true });
+    },
 
-      options.repository.markStopping(profile.profile_id);
-      options.repository.recordActivity(profile.profile_id, occurredAt);
-      await clientConnections.disconnect(profile.profile_id, reason);
+    async spinDownIdleHeadlessInstances(): Promise<IdleSpinDownResult[]> {
+      const results: IdleSpinDownResult[] = [];
 
-      if (running) {
-        runningInstances.delete(profile.profile_id);
-        await running.handle.close();
-        await wait(stopGraceMs);
-
-        if (!(await running.handle.hasExited())) {
-          await running.handle.kill();
+      for (const profileId of runningInstances.keys()) {
+        const profile = options.repository.get(profileId);
+        if (!profile || !profile.headless || profile.sleep_policy_status.blocks_sleep) {
+          continue;
         }
+
+        const idleWindowMinutes = profile.sleep_policy_status.effective_minutes;
+        if (idleWindowMinutes === null || this.activeCdpSessionCount(profileId) > 0) {
+          continue;
+        }
+
+        const lastActivity = lastActivityMs.get(profileId);
+        if (lastActivity === undefined || monotonicNow() - lastActivity < idleWindowMinutes * 60 * 1000) {
+          continue;
+        }
+
+        await stopProfile(profile, "idle timeout", { recordActivity: false });
+        results.push({ profile_id: profileId, reason: "idle timeout" });
       }
 
-      options.repository.markStopped(profile.profile_id, reason, nowIso(now));
-
-      return { cdp_port: running?.cdpPort ?? -1, profile_id: profile.profile_id, status: "stopped" };
+      return results;
     }
   };
 
@@ -242,7 +301,7 @@ export function createBrowserRuntime(options: BrowserRuntimeOptions): BrowserRun
 
       const occurredAt = nowIso(now);
       options.repository.markRunning(profile.profile_id, occurredAt);
-      options.repository.recordActivity(profile.profile_id, occurredAt);
+      recordActivity(profile.profile_id, occurredAt);
 
       return state;
     } catch (error) {
@@ -262,6 +321,35 @@ export function createBrowserRuntime(options: BrowserRuntimeOptions): BrowserRun
     }
   }
 
+  async function stopProfile(
+    profile: BrowserProfile,
+    reason: StopReason,
+    options_: { recordActivity: boolean }
+  ): Promise<BrowserRuntimeState> {
+    const running = runningInstances.get(profile.profile_id);
+
+    options.repository.markStopping(profile.profile_id);
+    if (options_.recordActivity) {
+      recordActivity(profile.profile_id);
+    }
+
+    await clientConnections.disconnect(profile.profile_id, reason);
+
+    if (running) {
+      runningInstances.delete(profile.profile_id);
+      await running.handle.close();
+      await wait(stopGraceMs);
+
+      if (!(await running.handle.hasExited())) {
+        await running.handle.kill();
+      }
+    }
+
+    options.repository.markStopped(profile.profile_id, reason, nowIso(now));
+
+    return { cdp_port: running?.cdpPort ?? -1, profile_id: profile.profile_id, status: "stopped" };
+  }
+
   function superviseUnexpectedExit(profileId: string, handle: BrowserProcessHandle): void {
     void handle
       .exited()
@@ -275,6 +363,11 @@ export function createBrowserRuntime(options: BrowserRuntimeOptions): BrowserRun
         options.repository.markStopped(profileId, "crash", nowIso(now));
       })
       .catch(() => undefined);
+  }
+
+  function recordActivity(profileId: string, occurredAt = nowIso(now)): void {
+    lastActivityMs.set(profileId, monotonicNow());
+    options.repository.recordActivity(profileId, occurredAt);
   }
 }
 

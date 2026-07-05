@@ -1,10 +1,11 @@
-import type { BrowserRuntimeCdpSession } from "./browser-runtime";
+import type { BrowserRuntimeCdpSession, BrowserRuntimeCdpSessionMetadata } from "./browser-runtime";
 
 type CdpWebSocketMessage = string | Bun.BufferSource;
 
 export interface CdpWebSocketData {
   pendingMessages?: CdpWebSocketMessage[];
   profileId: string;
+  requestUserAgent?: string;
   session?: BrowserRuntimeCdpSession;
   targetUrl: string;
   upstream?: CdpBrowserSocket;
@@ -25,7 +26,10 @@ export interface CdpWebSocketFactory {
 }
 
 export interface CdpSessionObserver {
-  openCdpSession(profileId: string): BrowserRuntimeCdpSession;
+  openCdpSession(
+    profileId: string,
+    metadata?: BrowserRuntimeCdpSessionMetadata
+  ): BrowserRuntimeCdpSession;
 }
 
 export interface CdpWebSocketHandlerOptions {
@@ -60,7 +64,10 @@ export function createCdpWebSocketHandler(
       ws.data.pendingMessages = [...(ws.data.pendingMessages ?? []), message];
     },
     open(ws): void {
-      ws.data.session = options.cdpSessions?.openCdpSession(ws.data.profileId);
+      ws.data.session = options.cdpSessions?.openCdpSession(ws.data.profileId, {
+        remoteAddress: ws.remoteAddress,
+        userAgent: ws.data.requestUserAgent
+      });
       const upstream = factory.connect(ws.data.targetUrl);
       ws.data.upstream = upstream;
 
