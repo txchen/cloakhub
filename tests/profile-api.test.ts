@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 
 import { createApp } from "../src/app";
+import type { BrowserRuntime, BrowserRuntimeState } from "../src/browser-runtime";
 import type { CloakHubConfig } from "../src/config";
 import { createProfileService } from "../src/profile-service";
 import { openProfileRepository } from "../src/profile-repository";
@@ -31,6 +32,10 @@ describe("Browser Profile admin API", () => {
     expect(html).toContain('id="create-profile-form"');
     expect(html).toContain('class="profile-update-form"');
     expect(html).toContain('class="profile-delete-button"');
+    expect(html).toContain('class="profile-lifecycle-button" data-action="start"');
+    expect(html).toContain('class="profile-lifecycle-button" data-action="stop"');
+    expect(html).toContain('class="profile-lifecycle-button" data-action="restart"');
+    expect(html).toContain("This may disconnect active CDP sessions or viewers.");
     expect(html).toContain('name="proxy"');
     expect(html).toContain('name="fingerprint_seed"');
     expect(html).toContain('name="timezone"');
@@ -242,9 +247,51 @@ describe("Browser Profile admin API", () => {
       }
     });
   });
+
+  test("starts, stops, and restarts Browser Instances through the admin API", async () => {
+    const browserRuntime = fakeBrowserRuntime();
+    const { app } = await tempApp({}, browserRuntime);
+    await app.fetch(
+      jsonRequest("http://cloakhub.test/api/profiles", "POST", {
+        headless: true,
+        profile_id: "work"
+      })
+    );
+
+    const started = await app.fetch(
+      new Request("http://cloakhub.test/api/profiles/work/start", { method: "POST" })
+    );
+    const stopped = await app.fetch(
+      new Request("http://cloakhub.test/api/profiles/work/stop", { method: "POST" })
+    );
+    const restarted = await app.fetch(
+      new Request("http://cloakhub.test/api/profiles/work/restart", { method: "POST" })
+    );
+
+    expect(await started.json()).toEqual({ profile_id: "work", status: "running" });
+    expect(await stopped.json()).toEqual({ profile_id: "work", status: "stopped" });
+    expect(await restarted.json()).toEqual({ profile_id: "work", status: "running" });
+    expect(browserRuntime.calls).toEqual(["start:work", "stop:work:manual stop", "restart:work"]);
+  });
+
+  test("cookie-authenticated UI actions start Browser Instances without bearer auth", async () => {
+    const browserRuntime = fakeBrowserRuntime();
+    const { app } = await tempApp({ authToken: "admin-token" }, browserRuntime);
+    const cookie = "cloakhub_auth=admin-token";
+
+    const response = await app.fetch(
+      new Request("http://cloakhub.test/ui/profiles/work/start", {
+        headers: { cookie },
+        method: "POST"
+      })
+    );
+
+    expect(response.status).toBe(200);
+    expect(browserRuntime.calls).toEqual(["start:work"]);
+  });
 });
 
-async function tempApp(overrides: Partial<CloakHubConfig> = {}) {
+async function tempApp(overrides: Partial<CloakHubConfig> = {}, browserRuntime?: BrowserRuntime) {
   const dataRoot = await mkdtemp(join(tmpdir(), "cloakhub-profile-api-"));
   cleanupPaths.push(dataRoot);
   const repository = openProfileRepository(dataRoot);
@@ -260,7 +307,33 @@ async function tempApp(overrides: Partial<CloakHubConfig> = {}) {
     ...overrides
   };
 
-  return { app: createApp(config, { profileService }), dataRoot, repository };
+  return { app: createApp(config, { browserRuntime, profileService }), dataRoot, repository };
+}
+
+function fakeBrowserRuntime(): BrowserRuntime & { calls: string[] } {
+  const calls: string[] = [];
+  const state = (profileId: string, status: BrowserRuntimeState["status"]): BrowserRuntimeState => ({
+    cdp_port: status === "running" ? 5100 : -1,
+    profile_id: profileId,
+    status
+  });
+
+  return {
+    calls,
+    cleanupOwnedProcessesOnStartup: async () => undefined,
+    restart: async (profileId) => {
+      calls.push(`restart:${profileId}`);
+      return state(profileId, "running");
+    },
+    start: async (profileId) => {
+      calls.push(`start:${profileId}`);
+      return state(profileId, "running");
+    },
+    stop: async (profileId, reason = "manual stop") => {
+      calls.push(`stop:${profileId}:${reason}`);
+      return state(profileId, "stopped");
+    }
+  };
 }
 
 function jsonRequest(url: string, method: string, body: unknown, cookie?: string): Request {

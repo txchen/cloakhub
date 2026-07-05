@@ -1,5 +1,7 @@
 import { createApp } from "./app";
 import { resolveBrowserBin } from "./browser-bin";
+import { createBunBrowserProcessLauncher } from "./browser-process-launcher";
+import { createBrowserRuntime } from "./browser-runtime";
 import { loadConfigFromEnv } from "./config";
 import { ensureDataRoot } from "./data-root";
 import { openProfileRepository } from "./profile-repository";
@@ -16,8 +18,15 @@ async function main(): Promise<void> {
       dataRoot: config.dataRoot,
       repository: profileRepository
     });
+    const browserRuntime = createBrowserRuntime({
+      browserBin: browserBin.path,
+      dataRoot: config.dataRoot,
+      launcher: createBunBrowserProcessLauncher({ dataRoot: config.dataRoot }),
+      repository: profileRepository
+    });
+    await browserRuntime.cleanupOwnedProcessesOnStartup();
 
-    const app = createApp({ ...config, browserBin: browserBin.path }, { profileService });
+    const app = createApp({ ...config, browserBin: browserBin.path }, { browserRuntime, profileService });
     Bun.serve({
       fetch: app.fetch,
       hostname: config.host,

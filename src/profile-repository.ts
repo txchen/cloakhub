@@ -8,6 +8,7 @@ import {
   type CreateProfileInput,
   type LaunchProfileFields,
   type ProfileTag,
+  type StopReason,
   type UpdateProfileInput
 } from "./profile";
 
@@ -17,6 +18,13 @@ export interface ProfileRepository {
   delete(profileId: string): void;
   get(profileId: string): BrowserProfile | undefined;
   list(): BrowserProfile[];
+  markAllStopped(reason: StopReason, occurredAt: string): void;
+  markFailed(profileId: string, error: string, occurredAt: string): void;
+  markLaunchFailed(profileId: string, error: string, occurredAt: string): void;
+  markRunning(profileId: string, occurredAt: string): void;
+  markStarting(profileId: string): void;
+  markStopped(profileId: string, reason: StopReason, occurredAt: string): void;
+  markStopping(profileId: string): void;
   migrate(): void;
   recordActivity(profileId: string, occurredAt: string): void;
   recordDeleteError(profileId: string, error: string): void;
@@ -49,6 +57,11 @@ class SqliteProfileRepository implements ProfileRepository {
         instance_status TEXT NOT NULL DEFAULT 'stopped',
         last_activity_at TEXT,
         last_delete_error TEXT,
+        last_launch_error TEXT,
+        last_launch_failed_at TEXT,
+        last_started_at TEXT,
+        last_stop_reason TEXT,
+        last_stopped_at TEXT,
         launch_profile_json TEXT NOT NULL DEFAULT '{}',
         tags_json TEXT NOT NULL DEFAULT '[]',
         created_at TEXT NOT NULL,
@@ -61,6 +74,11 @@ class SqliteProfileRepository implements ProfileRepository {
     this.ensureColumn("profiles", "launch_profile_json", "TEXT NOT NULL DEFAULT '{}'");
     this.ensureColumn("profiles", "tags_json", "TEXT NOT NULL DEFAULT '[]'");
     this.ensureColumn("profiles", "last_activity_at", "TEXT");
+    this.ensureColumn("profiles", "last_launch_error", "TEXT");
+    this.ensureColumn("profiles", "last_launch_failed_at", "TEXT");
+    this.ensureColumn("profiles", "last_started_at", "TEXT");
+    this.ensureColumn("profiles", "last_stop_reason", "TEXT");
+    this.ensureColumn("profiles", "last_stopped_at", "TEXT");
   }
 
   create(input: CreateProfileInput): BrowserProfile {
@@ -75,6 +93,11 @@ class SqliteProfileRepository implements ProfileRepository {
           instance_status,
           last_activity_at,
           last_delete_error,
+          last_launch_error,
+          last_launch_failed_at,
+          last_started_at,
+          last_stop_reason,
+          last_stopped_at,
           launch_profile_json,
           tags_json,
           created_at,
@@ -85,6 +108,11 @@ class SqliteProfileRepository implements ProfileRepository {
           $display_name,
           $notes,
           'stopped',
+          NULL,
+          NULL,
+          NULL,
+          NULL,
+          NULL,
           NULL,
           NULL,
           $launch_profile_json,
@@ -176,6 +204,114 @@ class SqliteProfileRepository implements ProfileRepository {
       });
   }
 
+  markStarting(profileId: string): void {
+    this.setInstanceStatus(profileId, "starting");
+  }
+
+  markRunning(profileId: string, occurredAt: string): void {
+    this.db
+      .query(
+        `
+        UPDATE profiles
+        SET instance_status = 'running',
+            last_started_at = $last_started_at,
+            updated_at = $updated_at
+        WHERE profile_id = $profile_id
+      `
+      )
+      .run({
+        $last_started_at: occurredAt,
+        $profile_id: profileId,
+        $updated_at: nowIso()
+      });
+  }
+
+  markStopping(profileId: string): void {
+    this.setInstanceStatus(profileId, "stopping");
+  }
+
+  markStopped(profileId: string, reason: StopReason, occurredAt: string): void {
+    this.db
+      .query(
+        `
+        UPDATE profiles
+        SET instance_status = 'stopped',
+            last_stopped_at = $last_stopped_at,
+            last_stop_reason = $last_stop_reason,
+            updated_at = $updated_at
+        WHERE profile_id = $profile_id
+      `
+      )
+      .run({
+        $last_stop_reason: reason,
+        $last_stopped_at: occurredAt,
+        $profile_id: profileId,
+        $updated_at: nowIso()
+      });
+  }
+
+  markAllStopped(reason: StopReason, occurredAt: string): void {
+    this.db
+      .query(
+        `
+        UPDATE profiles
+        SET instance_status = 'stopped',
+            last_stopped_at = $last_stopped_at,
+            last_stop_reason = $last_stop_reason,
+            updated_at = $updated_at
+        WHERE instance_status <> 'stopped'
+      `
+      )
+      .run({
+        $last_stop_reason: reason,
+        $last_stopped_at: occurredAt,
+        $updated_at: nowIso()
+      });
+  }
+
+  markFailed(profileId: string, error: string, occurredAt: string): void {
+    this.db
+      .query(
+        `
+        UPDATE profiles
+        SET instance_status = 'failed',
+            last_launch_error = $last_launch_error,
+            last_launch_failed_at = $last_launch_failed_at,
+            updated_at = $updated_at
+        WHERE profile_id = $profile_id
+      `
+      )
+      .run({
+        $last_launch_error: error,
+        $last_launch_failed_at: occurredAt,
+        $profile_id: profileId,
+        $updated_at: nowIso()
+      });
+  }
+
+  markLaunchFailed(profileId: string, error: string, occurredAt: string): void {
+    this.db
+      .query(
+        `
+        UPDATE profiles
+        SET instance_status = 'failed',
+            last_launch_error = $last_launch_error,
+            last_launch_failed_at = $last_launch_failed_at,
+            last_stop_reason = 'launch failure',
+            last_stopped_at = $last_stopped_at,
+            updated_at = $updated_at
+        WHERE profile_id = $profile_id
+      `
+      )
+      .run({
+        $last_launch_error: error,
+        $last_launch_failed_at: occurredAt,
+        $last_stopped_at: occurredAt,
+        $profile_id: profileId,
+        $updated_at: nowIso()
+      });
+  }
+
   recordActivity(profileId: string, occurredAt: string): void {
     this.db
       .query(
@@ -208,6 +344,23 @@ class SqliteProfileRepository implements ProfileRepository {
     if (!columns.some((column) => column.name === columnName)) {
       this.db.exec(`ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${definition}`);
     }
+  }
+
+  private setInstanceStatus(profileId: string, status: BrowserProfile["instance_status"]): void {
+    this.db
+      .query(
+        `
+        UPDATE profiles
+        SET instance_status = $instance_status,
+            updated_at = $updated_at
+        WHERE profile_id = $profile_id
+      `
+      )
+      .run({
+        $instance_status: status,
+        $profile_id: profileId,
+        $updated_at: nowIso()
+      });
   }
 }
 

@@ -1,0 +1,110 @@
+import { afterEach, describe, expect, test } from "bun:test";
+import { mkdtemp, readdir, readFile, rm } from "node:fs/promises";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
+
+import { createBunBrowserProcessLauncher } from "../src/browser-process-launcher";
+
+const cleanupPaths: string[] = [];
+
+afterEach(async () => {
+  await Promise.all(cleanupPaths.splice(0).map((path) => rm(path, { force: true, recursive: true })));
+});
+
+describe("BunBrowserProcessLauncher", () => {
+  test("launches CloakBrowser with private CDP, persistent user-data, and ownership markers", async () => {
+    const dataRoot = await tempDataRoot();
+    const spawn = fakeSpawn();
+    const launcher = createBunBrowserProcessLauncher({ dataRoot, spawn: spawn.fn });
+
+    await launcher.launch({
+      browserBin: "/opt/cloakbrowser/cloakbrowser",
+      cdpPort: 5100,
+      customLaunchArgs: ["--lang=en-US"],
+      headless: true,
+      profileId: "work",
+      userDataDir: join(dataRoot, "profiles", "work")
+    });
+
+    expect(spawn.commands[0]).toEqual([
+      "/opt/cloakbrowser/cloakbrowser",
+      `--user-data-dir=${join(dataRoot, "profiles", "work")}`,
+      "--remote-debugging-address=127.0.0.1",
+      "--remote-debugging-port=5100",
+      "--no-first-run",
+      "--no-default-browser-check",
+      "--headless=new",
+      "--lang=en-US"
+    ]);
+    expect(spawn.options[0]).toMatchObject({
+      detached: true,
+      stderr: "ignore",
+      stdin: "ignore",
+      stdout: "ignore"
+    });
+    expect(await readFile(join(dataRoot, "runtime", "work", "browser.pid"), "utf8")).toBe("1001\n");
+    expect(JSON.parse(await readFile(join(dataRoot, "runtime", "work", "launch.json"), "utf8"))).toEqual({
+      profile_id: "work",
+      user_data_dir: join(dataRoot, "profiles", "work")
+    });
+    expect(await launcher.ownedProfileIds()).toEqual(["work"]);
+  });
+
+  test("discovers and cleans up only profiles with ownership markers", async () => {
+    const dataRoot = await tempDataRoot();
+    const waits: number[] = [];
+    const launcher = createBunBrowserProcessLauncher({
+      dataRoot,
+      spawn: fakeSpawn().fn,
+      wait: async (milliseconds) => {
+        waits.push(milliseconds);
+      }
+    });
+
+    await launcher.launch({
+      browserBin: "/opt/cloakbrowser/cloakbrowser",
+      cdpPort: 5100,
+      customLaunchArgs: [],
+      headless: true,
+      profileId: "work",
+      userDataDir: join(dataRoot, "profiles", "work")
+    });
+
+    await launcher.cleanupOwnedProcesses(await launcher.ownedProfileIds());
+
+    expect(waits).toEqual([1500]);
+    await expect(readdir(join(dataRoot, "runtime"))).resolves.toEqual([]);
+  });
+});
+
+function fakeSpawn(): {
+  commands: string[][];
+  fn: typeof Bun.spawn;
+  options: Array<Record<string, unknown>>;
+} {
+  const commands: string[][] = [];
+  const options: Array<Record<string, unknown>> = [];
+  let nextPid = 1001;
+
+  return {
+    commands,
+    options,
+    fn: ((command: string[], spawnOptions: Record<string, unknown>) => {
+      commands.push(command);
+      options.push(spawnOptions);
+      return {
+        exitCode: null,
+        exited: new Promise<number>(() => undefined),
+        kill: () => undefined,
+        pid: nextPid++,
+        unref: () => undefined
+      };
+    }) as typeof Bun.spawn
+  };
+}
+
+async function tempDataRoot(): Promise<string> {
+  const dataRoot = await mkdtemp(join(tmpdir(), "cloakhub-browser-launcher-"));
+  cleanupPaths.push(dataRoot);
+  return dataRoot;
+}

@@ -1,6 +1,13 @@
 export const PROFILE_ID_PATTERN = /^[a-z][a-z0-9_]*$/;
 
-export type InstanceStatus = "stopped";
+export type InstanceStatus = "failed" | "running" | "starting" | "stopped" | "stopping";
+export type StopReason =
+  | "capacity preemption"
+  | "crash"
+  | "idle timeout"
+  | "launch failure"
+  | "manual stop"
+  | "restart";
 export type ColorScheme = "light" | "dark" | "system";
 
 export interface ProfileTag {
@@ -42,6 +49,11 @@ export interface BrowserProfile extends LaunchProfileFields {
   instance_status: InstanceStatus;
   last_activity_at: string | null;
   last_delete_error: string | null;
+  last_launch_error: string | null;
+  last_launch_failed_at: string | null;
+  last_started_at: string | null;
+  last_stop_reason: StopReason | null;
+  last_stopped_at: string | null;
   notes: string;
   profile_id: string;
   sleep_policy_status: ResolvedSleepPolicy;

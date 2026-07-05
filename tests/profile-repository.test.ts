@@ -110,6 +110,37 @@ describe("ProfileRepository", () => {
 
     second.close();
   });
+
+  test("persists Browser Instance lifecycle history", async () => {
+    const dataRoot = await tempDataRoot();
+    const first = openProfileRepository(dataRoot);
+    first.migrate();
+    first.create({ profile_id: "work" });
+    first.create({ profile_id: "personal" });
+    first.markFailed("work", "boom", "2026-01-01T00:00:00.000Z");
+    first.markRunning("work", "2026-01-01T00:01:00.000Z");
+    first.markRunning("personal", "2026-01-01T00:02:00.000Z");
+    first.markAllStopped("restart", "2026-01-01T00:03:00.000Z");
+    first.close();
+
+    const second = openProfileRepository(dataRoot);
+    second.migrate();
+
+    expect(second.get("work")).toMatchObject({
+      instance_status: "stopped",
+      last_launch_error: "boom",
+      last_launch_failed_at: "2026-01-01T00:00:00.000Z",
+      last_started_at: "2026-01-01T00:01:00.000Z",
+      last_stop_reason: "restart",
+      last_stopped_at: "2026-01-01T00:03:00.000Z"
+    });
+    expect(second.get("personal")).toMatchObject({
+      instance_status: "stopped",
+      last_stop_reason: "restart"
+    });
+
+    second.close();
+  });
 });
 
 async function tempDataRoot(): Promise<string> {

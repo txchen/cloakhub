@@ -1,5 +1,11 @@
 import type { CloakHubConfig } from "./config";
 import {
+  BrowserProfileNotFoundError,
+  UnsupportedBrowserProfileError,
+  type BrowserRuntime,
+  type BrowserRuntimeState
+} from "./browser-runtime";
+import {
   adminLoginResponse,
   isAdminApiAuthorized,
   isUiAuthorized,
@@ -20,6 +26,7 @@ export interface CloakHubApp {
 }
 
 export interface CloakHubServices {
+  browserRuntime?: BrowserRuntime;
   profileService?: ProfileService;
 }
 
@@ -44,6 +51,11 @@ export function createApp(config: CloakHubConfig, services: CloakHubServices = {
         return unauthorizedResponse();
       }
 
+      const lifecycleResponse = await lifecycleApiResponse(request, url, services.browserRuntime);
+      if (lifecycleResponse) {
+        return lifecycleResponse;
+      }
+
       const profileResponse = await profileApiResponse(request, url, services.profileService);
       if (profileResponse) {
         return profileResponse;
@@ -60,6 +72,49 @@ export function createApp(config: CloakHubConfig, services: CloakHubServices = {
 
       return textResponse("Not found", 404);
     }
+  };
+}
+
+async function lifecycleApiResponse(
+  request: Request,
+  url: URL,
+  browserRuntime: BrowserRuntime | undefined
+): Promise<Response | undefined> {
+  const match = /^\/(?:api|ui)\/profiles\/([^/]+)\/(start|stop|restart)$/.exec(url.pathname);
+  if (!match) {
+    return undefined;
+  }
+
+  if (!browserRuntime) {
+    return textResponse("Not found", 404);
+  }
+
+  if (request.method !== "POST") {
+    return textResponse("Method not allowed", 405, { Allow: "POST" });
+  }
+
+  const profileId = match[1]!;
+  const action = match[2]!;
+
+  try {
+    if (action === "start") {
+      return jsonResponse(lifecycleResponseState(await browserRuntime.start(profileId)));
+    }
+
+    if (action === "stop") {
+      return jsonResponse(lifecycleResponseState(await browserRuntime.stop(profileId, "manual stop")));
+    }
+
+    return jsonResponse(lifecycleResponseState(await browserRuntime.restart(profileId)));
+  } catch (error) {
+    return lifecycleErrorResponse(error);
+  }
+}
+
+function lifecycleResponseState(state: BrowserRuntimeState): Omit<BrowserRuntimeState, "cdp_port"> {
+  return {
+    profile_id: state.profile_id,
+    status: state.status
   };
 }
 
@@ -150,6 +205,18 @@ function profileErrorResponse(error: unknown): Response {
   throw error;
 }
 
+function lifecycleErrorResponse(error: unknown): Response {
+  if (error instanceof BrowserProfileNotFoundError) {
+    return errorResponse(error.message, 404);
+  }
+
+  if (error instanceof UnsupportedBrowserProfileError) {
+    return errorResponse(error.message, 400);
+  }
+
+  return errorResponse(error instanceof Error ? error.message : String(error), 500);
+}
+
 function errorResponse(error: string, status: number): Response {
   return jsonResponse({ error }, status);
 }
@@ -212,7 +279,7 @@ function isCdpRoute(url: URL): boolean {
 }
 
 function isUiProfileActionRoute(url: URL): boolean {
-  return /^\/ui\/profiles(?:\/[^/]+)?$/.test(url.pathname);
+  return /^\/ui\/profiles(?:\/[^/]+(?:\/(?:start|stop|restart))?)?$/.test(url.pathname);
 }
 
 function renderLoginShell(): string {
@@ -358,6 +425,15 @@ function renderShell(config: CloakHubConfig, profiles: BrowserProfile[] = []): s
                 <span>${escapeHtml(profile.notes)}</span>
                 <span>${escapeHtml(profile.tags.map((tag) => tag.name).join(", "))}</span>
                 <span>${escapeHtml(profile.proxy)}</span>
+                <button class="profile-lifecycle-button" data-action="start" data-profile-id="${escapeHtml(profile.profile_id)}" type="button">
+                  Start
+                </button>
+                <button class="profile-lifecycle-button" data-action="stop" data-profile-id="${escapeHtml(profile.profile_id)}" type="button">
+                  Stop
+                </button>
+                <button class="profile-lifecycle-button" data-action="restart" data-profile-id="${escapeHtml(profile.profile_id)}" type="button">
+                  Restart
+                </button>
                 <button class="profile-delete-button" data-profile-id="${escapeHtml(profile.profile_id)}" type="button">
                   Delete
                 </button>
@@ -682,6 +758,28 @@ function renderShell(config: CloakHubConfig, profiles: BrowserProfile[] = []): s
           const response = await fetch("/ui/profiles/" + encodeURIComponent(profileId), {
             method: "DELETE"
           });
+
+          if (response.ok) {
+            location.reload();
+          }
+        });
+      });
+
+      document.querySelectorAll(".profile-lifecycle-button").forEach((button) => {
+        button.addEventListener("click", async (event) => {
+          const profileId = event.currentTarget.dataset.profileId;
+          const action = event.currentTarget.dataset.action;
+          if (
+            (action === "stop" || action === "restart") &&
+            !confirm("This may disconnect active CDP sessions or viewers. Continue?")
+          ) {
+            return;
+          }
+
+          const response = await fetch(
+            "/ui/profiles/" + encodeURIComponent(profileId) + "/" + encodeURIComponent(action),
+            { method: "POST" }
+          );
 
           if (response.ok) {
             location.reload();
