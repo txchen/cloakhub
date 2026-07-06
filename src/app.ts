@@ -1,3 +1,5 @@
+import { join } from "node:path";
+
 import type { CloakHubConfig } from "./config";
 import { CdpUnauthorizedError, parseCdpRoute, type CdpGateway } from "./cdp-gateway";
 import type { CdpWebSocketData } from "./cdp-websocket-proxy";
@@ -35,6 +37,7 @@ type PresentedBrowserProfile = Omit<BrowserProfile, "cdp_token"> & {
   cdp_sessions: BrowserRuntimeCdpSessionObservation[];
   last_manual_input_at: string | null;
   manual_viewer_count: number;
+  profile_data_dir: string;
   resource_usage: OwnedProcessResourceUsage;
   sleep_status: string;
 };
@@ -625,6 +628,7 @@ async function profileResponseProfiles(
   return profiles.map((profile) =>
     presentProfileWithResourceUsage(
       profile,
+      config.dataRoot,
       resourceUsageByProfileId.get(profile.profile_id),
       browserRuntime,
       isUiProfileActionRoute(url)
@@ -643,6 +647,7 @@ async function profileResponseProfile(
   ]);
   return presentProfileWithResourceUsage(
     profile,
+    config.dataRoot,
     resourceUsageByProfileId.get(profile.profile_id),
     browserRuntime,
     isUiProfileActionRoute(url)
@@ -651,6 +656,7 @@ async function profileResponseProfile(
 
 function presentProfile(
   profile: BrowserProfile,
+  dataRoot: string,
   browserRuntime: BrowserRuntime | undefined,
   redactSecrets = false
 ): PresentedBrowserProfile {
@@ -664,6 +670,7 @@ function presentProfile(
     cdp_sessions: browserRuntime?.cdpSessionObservations(profile.profile_id) ?? [],
     last_manual_input_at: browserRuntime?.lastManualInputAt(profile.profile_id) ?? null,
     manual_viewer_count: browserRuntime?.activeManualViewerCount(profile.profile_id) ?? 0,
+    profile_data_dir: profileDataDir(dataRoot, profile.profile_id),
     resource_usage: { owned_process_count: 0, rss_bytes: null },
     sleep_status: ""
   };
@@ -675,11 +682,12 @@ function presentProfile(
 
 function presentProfileWithResourceUsage(
   profile: BrowserProfile,
+  dataRoot: string,
   resourceUsage: OwnedProcessResourceUsage | undefined,
   browserRuntime: BrowserRuntime | undefined,
   redactSecrets = false
 ): PresentedBrowserProfile {
-  const presented = presentProfile(profile, browserRuntime, redactSecrets);
+  const presented = presentProfile(profile, dataRoot, browserRuntime, redactSecrets);
   const withResourceUsage = {
     ...presented,
     resource_usage: resourceUsage ?? { owned_process_count: 0, rss_bytes: null }
@@ -704,6 +712,7 @@ async function dashboardProfiles(
   return sorted.map((profile) =>
     presentProfileWithResourceUsage(
       redactDashboardProfile(profile),
+      config.dataRoot,
       resourceUsageByProfileId.get(profile.profile_id),
       browserRuntime,
       true
@@ -728,6 +737,10 @@ function redactDashboardProfile(profile: BrowserProfile): BrowserProfile {
       ? redactProfileSecrets(profile.last_launch_error, profile.cdp_token ? [profile.cdp_token] : [])
       : null
   };
+}
+
+function profileDataDir(dataRoot: string, profileId: string): string {
+  return join(dataRoot, "profiles", profileId);
 }
 
 function healthResponse(request: Request): Response {
@@ -1178,13 +1191,13 @@ function renderShell(
 
       .manager-shell {
         display: grid;
-        grid-template-columns: minmax(220px, var(--sidebar-width)) 6px minmax(0, 1fr);
+        grid-template-columns: minmax(220px, var(--sidebar-width)) 3px minmax(0, 1fr);
         height: calc(100vh - 44px);
         min-height: 0;
       }
 
       .manager-shell.sidebar-collapsed {
-        grid-template-columns: 0 6px minmax(0, 1fr);
+        grid-template-columns: 0 3px minmax(0, 1fr);
       }
 
       .profile-sidebar {
@@ -1676,7 +1689,7 @@ function renderShell(
       .sidebar-resizer {
         background: #dde3ea;
         cursor: col-resize;
-        min-width: 6px;
+        min-width: 3px;
         position: relative;
       }
 
@@ -1684,7 +1697,7 @@ function renderShell(
         background: #a9b5c1;
         border-radius: 999px;
         content: "";
-        inset: 42% 2px;
+        inset: 42% 1px;
         opacity: 0;
         position: absolute;
         transition: opacity 120ms ease;
@@ -2734,8 +2747,8 @@ function renderProfileDetails(profile: PresentedBrowserProfile): string {
                     <dd>${sleepPolicyBadge(profile)}</dd>
                   </div>
                   <div>
-                    <dt>CDP Token</dt>
-                    <dd>${profile.cdp_token_configured ? "configured" : "open"}</dd>
+                    <dt>Data Directory</dt>
+                    <dd><code>${escapeHtml(profile.profile_data_dir)}</code></dd>
                   </div>
                 </dl>
                 ${renderCdpSessions(profile)}

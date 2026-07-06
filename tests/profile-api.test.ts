@@ -580,7 +580,7 @@ describe("Browser Profile admin API", () => {
       expect(html).toContain('id="sidebar-resizer"');
       expect(html).toContain('id="toggle-sidebar"');
       expect(html).toContain('id="show-sidebar"');
-      expect(html).toContain('grid-template-columns: minmax(220px, var(--sidebar-width)) 6px minmax(0, 1fr)');
+      expect(html).toContain('grid-template-columns: minmax(220px, var(--sidebar-width)) 3px minmax(0, 1fr)');
       expect(html).not.toContain('name="q"');
       expect(html).not.toContain('name="sort"');
       expect(html).toContain("Instance Status");
@@ -599,6 +599,9 @@ describe("Browser Profile admin API", () => {
       expect(html).toContain("launch failure");
       expect(html).toContain("Last Launch Error");
       expect(html).toContain("launch failed for ***");
+      expect(html).toContain("Data Directory");
+      expect(html).toContain(join(dataRoot, "profiles", "work"));
+      expect(html).not.toContain("<dt>CDP Token</dt>");
       expect(html).toContain("manual-viewer-button");
       expect(html).toContain('id="viewer-frame"');
       expect(html).not.toContain('target="_blank"');
