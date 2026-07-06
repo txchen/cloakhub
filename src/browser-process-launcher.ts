@@ -53,7 +53,7 @@ export function createBunBrowserProcessLauncher(
           ...process.env,
           ...(command.display ? { DISPLAY: command.display } : {})
         }),
-        stderr: "ignore",
+        stderr: "inherit",
         stdin: "ignore",
         stdout: "ignore"
       }) as BrowserSubprocess;
@@ -124,6 +124,7 @@ function browserCommand(command: BrowserLaunchCommand): string[] {
     `--user-data-dir=${command.userDataDir}`,
     "--remote-debugging-address=127.0.0.1",
     `--remote-debugging-port=${command.cdpPort}`,
+    "--no-sandbox",
     "--no-first-run",
     "--no-default-browser-check",
     "--window-position=0,0",

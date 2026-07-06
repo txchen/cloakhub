@@ -92,7 +92,7 @@ export function createKasmVncDisplayRuntime(
       const subprocess = spawn(displayCommand(options.xvncBin, command), {
         detached: true,
         env: ownedProcessEnv(options.dataRoot, command.profileId),
-        stderr: "ignore",
+        stderr: "inherit",
         stdin: "ignore",
         stdout: "ignore"
       }) as DisplaySubprocess;

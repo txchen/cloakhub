@@ -39,6 +39,7 @@ describe("BunBrowserProcessLauncher", () => {
       `--user-data-dir=${join(dataRoot, "profiles", "work")}`,
       "--remote-debugging-address=127.0.0.1",
       "--remote-debugging-port=5100",
+      "--no-sandbox",
       "--no-first-run",
       "--no-default-browser-check",
       "--window-position=0,0",
@@ -63,7 +64,7 @@ describe("BunBrowserProcessLauncher", () => {
         CLOAKHUB_DATA_ROOT: dataRoot,
         CLOAKHUB_PROFILE_ID: "work"
       },
-      stderr: "ignore",
+      stderr: "inherit",
       stdin: "ignore",
       stdout: "ignore"
     });

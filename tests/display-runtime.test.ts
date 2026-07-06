@@ -65,7 +65,7 @@ describe("KasmVncDisplayRuntime", () => {
         CLOAKHUB_DATA_ROOT: dataRoot,
         CLOAKHUB_PROFILE_ID: "work"
       },
-      stderr: "ignore",
+      stderr: "inherit",
       stdin: "ignore",
       stdout: "ignore"
     });
