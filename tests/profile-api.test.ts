@@ -946,6 +946,7 @@ function fakeBrowserRuntime(options: {
       calls.push(`restart:${profileId}`);
       return state(profileId, "running");
     },
+    shutdown: async () => undefined,
     start: async (profileId) => {
       calls.push(`start:${profileId}`);
       if (options.startError) {

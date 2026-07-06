@@ -7,7 +7,8 @@ export type StopReason =
   | "idle timeout"
   | "launch failure"
   | "manual stop"
-  | "restart";
+  | "restart"
+  | "shutdown";
 export type ColorScheme = "light" | "dark" | "system";
 
 export type SleepPolicy =

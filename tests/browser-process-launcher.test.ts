@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 
@@ -109,6 +109,37 @@ describe("BunBrowserProcessLauncher", () => {
     expect(spawn.options[0]?.env).toMatchObject({ DISPLAY: ":100" });
   });
 
+  test("removes stale Chromium singleton locks before launching", async () => {
+    const dataRoot = await tempDataRoot();
+    const userDataDir = join(dataRoot, "profiles", "work");
+    const launcher = createBunBrowserProcessLauncher({ dataRoot, spawn: fakeSpawn().fn });
+
+    await mkdir(userDataDir, { recursive: true });
+    await writeFile(join(userDataDir, "SingletonLock"), "50bec6ed9e28-19");
+    await writeFile(join(userDataDir, "SingletonSocket"), "stale socket marker");
+    await writeFile(join(userDataDir, "SingletonCookie"), "stale cookie marker");
+
+    await launcher.launch({
+      browserBin: "/opt/cloakbrowser/cloakbrowser",
+      cdpPort: 5100,
+      customLaunchArgs: [],
+      fingerprintSeed: "",
+      gpuRenderer: "",
+      gpuVendor: "",
+      hardwareConcurrency: 4,
+      headless: false,
+      platform: "linux",
+      profileId: "work",
+      screenHeight: 900,
+      screenWidth: 1600,
+      userAgent: "",
+      userDataDir
+    });
+
+    await expect(Bun.file(join(userDataDir, "SingletonLock")).exists()).resolves.toBe(false);
+    await expect(Bun.file(join(userDataDir, "SingletonSocket")).exists()).resolves.toBe(false);
+    await expect(Bun.file(join(userDataDir, "SingletonCookie")).exists()).resolves.toBe(false);
+  });
 });
 
 function fakeSpawn(): {

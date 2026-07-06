@@ -158,6 +158,59 @@ describe("BrowserRuntime", () => {
     expect(clientConnections.disconnects).toEqual([{ profileId: "work", reason: "manual stop" }]);
   });
 
+  test("shutdown closes running Browser Instances and cleans remaining Owned Processes", async () => {
+    const repository = fakeRepository(
+      profile({ profile_id: "headless" }),
+      profile({ headless: false, profile_id: "headed" }),
+      profile({ profile_id: "stopped" })
+    );
+    const clientConnections = fakeClientConnections();
+    const displayRuntime = fakeDisplayRuntime();
+    const launcher = fakeLauncher({ exitsAfterGracefulClose: false });
+    const ownedProcesses = fakeOwnedProcesses(["headless", "headed"]);
+    const waits: number[] = [];
+    const runtime = runtimeFixture({
+      clientConnections,
+      displayRuntime,
+      launcher,
+      ownedProcesses,
+      repository,
+      wait: async (milliseconds) => {
+        waits.push(milliseconds);
+      }
+    });
+    await runtime.start("headless");
+    await runtime.start("headed");
+    const cdpSession = runtime.openCdpSession("headless");
+    runtime.openManualViewerSession("headed");
+
+    await runtime.shutdown();
+    cdpSession.close();
+
+    expect(clientConnections.disconnects).toEqual([
+      { profileId: "headless", reason: "shutdown" },
+      { profileId: "headed", reason: "shutdown" }
+    ]);
+    expect(launcher.handles.map((handle) => ({ closed: handle.closed, killed: handle.killed }))).toEqual([
+      { closed: true, killed: true },
+      { closed: true, killed: true }
+    ]);
+    expect(displayRuntime.handles[0]).toMatchObject({ closed: true, killed: false });
+    expect(waits).toEqual([1500, 1500]);
+    expect(runtime.activeCdpSessionCount("headless")).toBe(0);
+    expect(runtime.activeManualViewerCount("headed")).toBe(0);
+    expect(ownedProcesses.cleanupCalls).toEqual([{ kinds: undefined, profileIds: undefined }]);
+    expect(repository.get("headless")).toMatchObject({
+      instance_status: "stopped",
+      last_stop_reason: "shutdown"
+    });
+    expect(repository.get("headed")).toMatchObject({
+      instance_status: "stopped",
+      last_stop_reason: "shutdown"
+    });
+    expect(repository.get("stopped")?.last_stop_reason).toBeNull();
+  });
+
   test("CDP discovery and websocket sessions record Instance Activity", async () => {
     const repository = fakeRepository(profile({ profile_id: "work" }));
     const nowValues = [
@@ -889,14 +942,21 @@ function fakeLauncher(options: {
   };
 }
 
-function fakeOwnedProcesses(profileIds: string[]): OwnedProcessRegistry & { cleanedProfileIds: string[] } {
+function fakeOwnedProcesses(profileIds: string[]): OwnedProcessRegistry & {
+  cleanedProfileIds: string[];
+  cleanupCalls: Array<{ kinds?: string[]; profileIds?: string[] }>;
+} {
   const cleanedProfileIds: string[] = [];
+  const cleanupCalls: Array<{ kinds?: string[]; profileIds?: string[] }> = [];
 
   return {
     cleanedProfileIds,
-    cleanupOwnedProcesses: async () => {
-      cleanedProfileIds.push(...profileIds);
-      return profileIds;
+    cleanupCalls,
+    cleanupOwnedProcesses: async (targetProfileIds, options) => {
+      cleanupCalls.push({ kinds: options?.kinds, profileIds: targetProfileIds });
+      const cleaned = targetProfileIds ?? profileIds;
+      cleanedProfileIds.push(...cleaned);
+      return cleaned;
     },
     env: (_profileId, baseEnv = process.env) => baseEnv,
     ownedProfileIds: async () => profileIds,

@@ -1,4 +1,5 @@
-import { mkdir } from "node:fs/promises";
+import { mkdir, rm } from "node:fs/promises";
+import { join } from "node:path";
 
 import type {
   BrowserLaunchCommand,
@@ -32,6 +33,8 @@ export function createBunBrowserProcessLauncher(
   return {
     async launch(command: BrowserLaunchCommand): Promise<BrowserProcessHandle> {
       await mkdir(command.userDataDir, { recursive: true });
+      await ownedProcesses.cleanupOwnedProcesses([command.profileId], { kinds: ["browser"] });
+      await removeStaleChromiumSingletonLocks(command.userDataDir);
 
       const subprocess = spawn(browserCommand(command), {
         detached: true,
@@ -65,6 +68,14 @@ export function createBunBrowserProcessLauncher(
       return new OwnedSubprocessHandle(subprocess);
     }
   };
+}
+
+async function removeStaleChromiumSingletonLocks(userDataDir: string): Promise<void> {
+  await Promise.all(
+    ["SingletonLock", "SingletonSocket", "SingletonCookie"].map((entry) =>
+      rm(join(userDataDir, entry), { force: true, recursive: true })
+    )
+  );
 }
 
 function browserCommand(command: BrowserLaunchCommand): string[] {

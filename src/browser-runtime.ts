@@ -146,6 +146,7 @@ export interface BrowserRuntime {
   openManualViewerSession(profileId: string): BrowserRuntimeManualViewer;
   recordCdpDiscovery(profileId: string): void;
   restart(profileId: string): Promise<BrowserRuntimeState>;
+  shutdown(): Promise<void>;
   spinDownIdleInstances(): Promise<IdleSpinDownResult[]>;
   start(profileId: string): Promise<BrowserRuntimeState>;
   stop(profileId: string, reason?: StopReason): Promise<BrowserRuntimeState>;
@@ -382,6 +383,27 @@ export function createBrowserRuntime(options: BrowserRuntimeOptions): BrowserRun
       return this.start(profileId);
     },
 
+    async shutdown(): Promise<void> {
+      const stopResults = await Promise.allSettled(
+        Array.from(runningInstances.keys()).map(async (profileId) => {
+          const profile = options.repository.get(profileId);
+          if (!profile) {
+            return;
+          }
+
+          await stopProfile(profile, "shutdown", { recordActivity: false });
+        })
+      );
+
+      await ownedProcesses.cleanupOwnedProcesses();
+      options.repository.markAllStopped("shutdown", nowIso(now));
+
+      const rejected = stopResults.find((result) => result.status === "rejected");
+      if (rejected) {
+        throw rejected.reason;
+      }
+    },
+
     async start(profileId: string): Promise<BrowserRuntimeState> {
       const profile = requireProfile(options.repository, profileId);
       const running = runningInstances.get(profile.profile_id);
@@ -575,6 +597,7 @@ export function createBrowserRuntime(options: BrowserRuntimeOptions): BrowserRun
     if (running) {
       runningInstances.delete(profile.profile_id);
       capacity.release(profile.profile_id);
+      activeCdpSessions.delete(profile.profile_id);
       activeManualViewers.delete(profile.profile_id);
       await running.handle.close();
       await running.displayHandle?.close();

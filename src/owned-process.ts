@@ -267,8 +267,10 @@ async function ownedProcessPids(
     pids.add(pid);
   }
 
-  for (const pid of await ownedProcessPidsFromProc(dataRoot, profileId)) {
-    pids.add(pid);
+  if (!kinds) {
+    for (const pid of await ownedProcessPidsFromProc(dataRoot, profileId)) {
+      pids.add(pid);
+    }
   }
 
   return [...pids];

@@ -257,6 +257,7 @@ function fakeRuntime(options: { startError?: Error } = {}): BrowserRuntime & { c
       calls.push(`restart:${profileId}`);
       return state;
     },
+    shutdown: async () => undefined,
     start: async (profileId) => {
       calls.push(`start:${profileId}`);
       if (options.startError) {
