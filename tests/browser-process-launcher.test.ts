@@ -1,9 +1,10 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { mkdtemp, readdir, readFile, rm } from "node:fs/promises";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 
 import { createBunBrowserProcessLauncher } from "../src/browser-process-launcher";
+import { createOwnedProcessRegistry } from "../src/owned-process";
 
 const cleanupPaths: string[] = [];
 
@@ -73,7 +74,7 @@ describe("BunBrowserProcessLauncher", () => {
       profile_id: "work",
       user_data_dir: join(dataRoot, "profiles", "work")
     });
-    expect(await launcher.ownedProfileIds()).toEqual(["work"]);
+    expect(await createOwnedProcessRegistry({ dataRoot }).ownedProfileIds({ kinds: ["browser"] })).toEqual(["work"]);
   });
 
   test("launches headed CloakBrowser with display environment and without headless flag", async () => {
@@ -108,40 +109,6 @@ describe("BunBrowserProcessLauncher", () => {
     expect(spawn.options[0]?.env).toMatchObject({ DISPLAY: ":100" });
   });
 
-
-  test("discovers and cleans up only profiles with ownership markers", async () => {
-    const dataRoot = await tempDataRoot();
-    const waits: number[] = [];
-    const launcher = createBunBrowserProcessLauncher({
-      dataRoot,
-      spawn: fakeSpawn().fn,
-      wait: async (milliseconds) => {
-        waits.push(milliseconds);
-      }
-    });
-
-    await launcher.launch({
-      browserBin: "/opt/cloakbrowser/cloakbrowser",
-      cdpPort: 5100,
-      customLaunchArgs: [],
-      fingerprintSeed: "",
-      gpuRenderer: "",
-      gpuVendor: "",
-      hardwareConcurrency: 4,
-      headless: true,
-      platform: "linux",
-      profileId: "work",
-      screenHeight: 1080,
-      screenWidth: 1920,
-      userAgent: "",
-      userDataDir: join(dataRoot, "profiles", "work")
-    });
-
-    await launcher.cleanupOwnedProcesses(await launcher.ownedProfileIds());
-
-    expect(waits).toEqual([1500]);
-    await expect(readdir(join(dataRoot, "runtime"))).resolves.toEqual([]);
-  });
 });
 
 function fakeSpawn(): {

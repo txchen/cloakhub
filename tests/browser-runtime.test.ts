@@ -13,6 +13,7 @@ import {
   type BrowserReadinessProbe,
   type BrowserRuntimeState
 } from "../src/browser-runtime";
+import type { OwnedProcessRegistry } from "../src/owned-process";
 
 describe("BrowserRuntime", () => {
   test("starts a headless Browser Instance with persistent user-data and private CDP endpoint", async () => {
@@ -753,12 +754,12 @@ describe("BrowserRuntime", () => {
       profile({ instance_status: "running", profile_id: "work" }),
       profile({ instance_status: "running", profile_id: "stray" })
     );
-    const launcher = fakeLauncher({ ownedProfileIds: ["work"] });
-    const runtime = runtimeFixture({ launcher, repository });
+    const ownedProcesses = fakeOwnedProcesses(["work"]);
+    const runtime = runtimeFixture({ ownedProcesses, repository });
 
     await runtime.cleanupOwnedProcessesOnStartup();
 
-    expect(launcher.cleanedProfileIds).toEqual(["work"]);
+    expect(ownedProcesses.cleanedProfileIds).toEqual(["work"]);
     expect(repository.get("work")).toMatchObject({
       instance_status: "stopped",
       last_stop_reason: "restart"
@@ -779,6 +780,7 @@ function runtimeFixture(options: {
   maxRunningInstances?: number;
   monotonicNow?: () => number;
   now?: () => Date;
+  ownedProcesses?: OwnedProcessRegistry;
   readinessProbe?: BrowserReadinessProbe;
   repository: ProfileRepository;
   wait?: (milliseconds: number) => Promise<void>;
@@ -794,6 +796,7 @@ function runtimeFixture(options: {
     maxRunningInstances: options.maxRunningInstances,
     monotonicNow: options.monotonicNow,
     now: options.now,
+    ownedProcesses: options.ownedProcesses,
     readinessProbe: options.readinessProbe ?? fakeReadinessProbe(),
     repository: options.repository,
     wait: options.wait ?? (async () => undefined)
@@ -835,7 +838,6 @@ function fakeDisplayRuntime(): BrowserDisplayRuntime & {
   return {
     handles,
     starts,
-    cleanupOwnedProcesses: async () => undefined,
     start: async (command) => {
       starts.push(command);
       const handle = new FakeBrowserHandle(true);
@@ -862,23 +864,16 @@ function fakeLauncher(options: {
   beforeLaunchResolves?: () => Promise<void>;
   exitsAfterGracefulClose?: boolean;
   launchError?: Error;
-  ownedProfileIds?: string[];
 } = {}): BrowserProcessLauncher & {
-  cleanedProfileIds: string[];
   handles: FakeBrowserHandle[];
   launches: unknown[];
 } {
   const handles: FakeBrowserHandle[] = [];
-  const cleanedProfileIds: string[] = [];
   const launches: unknown[] = [];
 
   return {
-    cleanedProfileIds,
     handles,
     launches,
-    cleanupOwnedProcesses: async (profileIds) => {
-      cleanedProfileIds.push(...profileIds);
-    },
     launch: async (command) => {
       await options.beforeLaunchResolves?.();
 
@@ -890,8 +885,25 @@ function fakeLauncher(options: {
       const handle = new FakeBrowserHandle(options.exitsAfterGracefulClose ?? true);
       handles.push(handle);
       return handle;
+    }
+  };
+}
+
+function fakeOwnedProcesses(profileIds: string[]): OwnedProcessRegistry & { cleanedProfileIds: string[] } {
+  const cleanedProfileIds: string[] = [];
+
+  return {
+    cleanedProfileIds,
+    cleanupOwnedProcesses: async () => {
+      cleanedProfileIds.push(...profileIds);
+      return profileIds;
     },
-    ownedProfileIds: async () => options.ownedProfileIds ?? []
+    env: (_profileId, baseEnv = process.env) => baseEnv,
+    ownedProfileIds: async () => profileIds,
+    removeRuntimeProfile: async () => undefined,
+    runtimeProfilePath: (profileId) => `/data/runtime/${profileId}`,
+    writeJson: async () => undefined,
+    writePid: async () => undefined
   };
 }
 

@@ -2,13 +2,15 @@ import { join } from "node:path";
 import { connect as connectTcp } from "node:net";
 
 import {
-  DEFAULT_MAX_RUNNING_INSTANCES,
-  INTERNAL_CDP_PORT_RANGE,
-  INTERNAL_DISPLAY_NUMBER_RANGE,
-  INTERNAL_VNC_PORT_RANGE
-} from "./config";
+  CapacityUnavailableError,
+  createRuntimeCapacity,
+  type RuntimeCapacityRunningInstance
+} from "./runtime-capacity";
+import { createOwnedProcessRegistry, type OwnedProcessRegistry } from "./owned-process";
 import { validateCustomLaunchArgs, type BrowserProfile, type StopReason } from "./profile";
 import type { ProfileRepository } from "./profile-repository";
+
+export { CapacityUnavailableError };
 
 export interface BrowserLaunchCommand {
   browserBin: string;
@@ -36,9 +38,7 @@ export interface BrowserProcessHandle {
 }
 
 export interface BrowserProcessLauncher {
-  cleanupOwnedProcesses(profileIds: string[]): Promise<void>;
   launch(command: BrowserLaunchCommand): Promise<BrowserProcessHandle>;
-  ownedProfileIds(): Promise<string[]>;
 }
 
 export interface BrowserDisplayRuntimeCommand {
@@ -50,7 +50,6 @@ export interface BrowserDisplayRuntimeCommand {
 }
 
 export interface BrowserDisplayRuntime {
-  cleanupOwnedProcesses(profileIds: string[]): Promise<void>;
   start(command: BrowserDisplayRuntimeCommand): Promise<BrowserProcessHandle>;
 }
 
@@ -79,6 +78,7 @@ export interface BrowserRuntimeOptions {
   maxRunningInstances?: number;
   monotonicNow?: () => number;
   now?: () => Date;
+  ownedProcesses?: OwnedProcessRegistry;
   readinessProbe?: BrowserReadinessProbe;
   repository: ProfileRepository;
   stopGraceMs?: number;
@@ -161,13 +161,6 @@ interface RunningInstance {
   vncPort?: number;
 }
 
-interface ReservedInstanceResources {
-  cdpPort: number;
-  display?: string;
-  displayNumber?: number;
-  vncPort?: number;
-}
-
 interface ActiveCdpSession extends BrowserRuntimeCdpSessionMetadata {
   id: number;
   startedAtMs: number;
@@ -182,7 +175,6 @@ const DEFAULT_STOP_GRACE_MS = 1500;
 const DEFAULT_READY_TIMEOUT_MS = 5000;
 const DEFAULT_READY_POLL_MS = 100;
 const MANUAL_INPUT_ACTIVITY_THROTTLE_MS = 5000;
-const CAPACITY_MANUAL_INPUT_PROTECTION_MS = 60_000;
 const noopClientConnections: BrowserClientConnections = {
   disconnect: async () => undefined
 };
@@ -239,23 +231,26 @@ export function createBrowserRuntime(options: BrowserRuntimeOptions): BrowserRun
   const lastActivityMs = new Map<string, number>();
   const lastManualInputActivityMs = new Map<string, number>();
   const lastManualInputObservedMs = new Map<string, number>();
-  let capacityReservationQueue = Promise.resolve();
   const launchAttempts = new Map<string, Promise<BrowserRuntimeState>>();
-  const launchReservations = new Map<string, ReservedInstanceResources>();
   const runningInstances = new Map<string, RunningInstance>();
   const clientConnections = options.clientConnections ?? noopClientConnections;
   const now = options.now ?? (() => new Date());
+  const monotonicNow = options.monotonicNow ?? (() => performance.now());
+  const ownedProcesses = options.ownedProcesses ?? createOwnedProcessRegistry({ dataRoot: options.dataRoot });
   const manualReadinessProbe = options.manualReadinessProbe ?? vncReadinessProbe;
-  const maxRunningInstances = options.maxRunningInstances ?? DEFAULT_MAX_RUNNING_INSTANCES;
+  const capacity = createRuntimeCapacity({
+    cdpPortStart: options.cdpPortStart,
+    displayNumberStart: options.displayNumberStart,
+    maxRunningInstances: options.maxRunningInstances,
+    monotonicNow,
+    now,
+    vncPortStart: options.vncPortStart
+  });
   const readinessProbe = options.readinessProbe ?? cdpReadinessProbe;
   const stopGraceMs = options.stopGraceMs ?? DEFAULT_STOP_GRACE_MS;
   const wait = options.wait ?? Bun.sleep;
-  const monotonicNow = options.monotonicNow ?? (() => performance.now());
-  let nextCdpPort = options.cdpPortStart ?? INTERNAL_CDP_PORT_RANGE.start;
   let nextCdpSessionId = 1;
-  let nextDisplayNumber = options.displayNumberStart ?? INTERNAL_DISPLAY_NUMBER_RANGE.start;
   let nextManualViewerId = 1;
-  let nextVncPort = options.vncPortStart ?? INTERNAL_VNC_PORT_RANGE.start;
 
   return {
     activeCdpSessionCount(profileId: string): number {
@@ -280,9 +275,7 @@ export function createBrowserRuntime(options: BrowserRuntimeOptions): BrowserRun
     },
 
     async cleanupOwnedProcessesOnStartup(): Promise<void> {
-      const ownedProfileIds = await options.launcher.ownedProfileIds();
-      await options.launcher.cleanupOwnedProcesses(ownedProfileIds);
-      await options.displayRuntime?.cleanupOwnedProcesses(ownedProfileIds);
+      await ownedProcesses.cleanupOwnedProcesses();
       options.repository.markAllStopped("restart", nowIso(now));
     },
 
@@ -462,10 +455,13 @@ export function createBrowserRuntime(options: BrowserRuntimeOptions): BrowserRun
   };
 
   async function launchProfile(profile: BrowserProfile): Promise<BrowserRuntimeState> {
-    const reservation =
-      reservedInstanceCount() >= maxRunningInstances
-        ? await reserveCapacityWithPreemption(profile)
-        : reserveCapacity(profile);
+    const reservationResult = capacity.reserve(profile, {
+      preempt: async (candidate) => {
+        await stopProfile(candidate, "capacity preemption", { recordActivity: false });
+      },
+      runningInstances: capacityRunningInstances
+    });
+    const reservation = isPromiseLike(reservationResult) ? await reservationResult : reservationResult;
     const { cdpPort, display, displayNumber, vncPort } = reservation;
     options.repository.markStarting(profile.profile_id);
 
@@ -536,83 +532,11 @@ export function createBrowserRuntime(options: BrowserRuntimeOptions): BrowserRun
 
       return state;
     } catch (error) {
-      launchReservations.delete(profile.profile_id);
+      capacity.release(profile.profile_id);
       runningInstances.delete(profile.profile_id);
       options.repository.markLaunchFailed(profile.profile_id, errorMessage(error), nowIso(now));
       throw error;
     }
-  }
-
-  function reserveCapacity(profile: BrowserProfile): ReservedInstanceResources {
-    const reservation = reserveResourcesFor(profile);
-    launchReservations.set(profile.profile_id, reservation);
-    return reservation;
-  }
-
-  async function reserveCapacityWithPreemption(profile: BrowserProfile): Promise<ReservedInstanceResources> {
-    const reservationAttempt = capacityReservationQueue.then(async () => {
-      if (reservedInstanceCount() >= maxRunningInstances) {
-        await ensureCapacityFor(profile.profile_id);
-      }
-
-      if (reservedInstanceCount() >= maxRunningInstances) {
-        throw new CapacityUnavailableError();
-      }
-
-      return reserveCapacity(profile);
-    });
-    capacityReservationQueue = reservationAttempt.then(
-      () => undefined,
-      () => undefined
-    );
-    return reservationAttempt;
-  }
-
-  async function ensureCapacityFor(requestedProfileId: string): Promise<void> {
-    const candidate = capacityPreemptionCandidate(requestedProfileId);
-    if (!candidate) {
-      throw new CapacityUnavailableError();
-    }
-
-    await stopProfile(candidate, "capacity preemption", { recordActivity: false });
-  }
-
-  function capacityPreemptionCandidate(requestedProfileId: string): BrowserProfile | undefined {
-    return Array.from(runningInstances.keys())
-      .filter((profileId) => profileId !== requestedProfileId)
-      .map((profileId) => options.repository.get(profileId))
-      .filter((profile): profile is BrowserProfile => Boolean(profile))
-      .filter((profile) => isCapacityPreemptionEligible(profile))
-      .sort((left, right) => capacityActivityTimestamp(left) - capacityActivityTimestamp(right))[0];
-  }
-
-  function isCapacityPreemptionEligible(profile: BrowserProfile): boolean {
-    if (activeCdpSessions.get(profile.profile_id)?.length) {
-      return false;
-    }
-
-    const lastManualInput = lastManualInputObservedMs.get(profile.profile_id);
-    if (lastManualInput !== undefined) {
-      return monotonicNow() - lastManualInput >= CAPACITY_MANUAL_INPUT_PROTECTION_MS;
-    }
-
-    const persistedLastManualInput = timestampMs(profile.last_manual_input_at);
-    return (
-      persistedLastManualInput === undefined ||
-      now().getTime() - persistedLastManualInput >= CAPACITY_MANUAL_INPUT_PROTECTION_MS
-    );
-  }
-
-  function capacityActivityTimestamp(profile: BrowserProfile): number {
-    const observed = Math.max(
-      lastActivityMs.get(profile.profile_id) ?? Number.NEGATIVE_INFINITY,
-      lastManualInputObservedMs.get(profile.profile_id) ?? Number.NEGATIVE_INFINITY
-    );
-    if (Number.isFinite(observed)) {
-      return observed;
-    }
-
-    return Math.max(activityTimestamp(profile), timestampMs(profile.last_manual_input_at) ?? 0);
   }
 
   async function stopLaunchedProcess(
@@ -650,7 +574,7 @@ export function createBrowserRuntime(options: BrowserRuntimeOptions): BrowserRun
 
     if (running) {
       runningInstances.delete(profile.profile_id);
-      launchReservations.delete(profile.profile_id);
+      capacity.release(profile.profile_id);
       activeManualViewers.delete(profile.profile_id);
       await running.handle.close();
       await running.displayHandle?.close();
@@ -680,7 +604,7 @@ export function createBrowserRuntime(options: BrowserRuntimeOptions): BrowserRun
         }
 
         runningInstances.delete(profileId);
-        launchReservations.delete(profileId);
+        capacity.release(profileId);
         options.repository.markStopped(profileId, "crash", nowIso(now));
       })
       .catch(() => undefined);
@@ -705,57 +629,36 @@ export function createBrowserRuntime(options: BrowserRuntimeOptions): BrowserRun
     options.repository.recordManualInput(profileId, occurredAt);
   }
 
-  function reservedInstanceCount(): number {
-    return new Set([...runningInstances.keys(), ...launchReservations.keys()]).size;
-  }
+  function capacityRunningInstances(): RuntimeCapacityRunningInstance[] {
+    return Array.from(runningInstances.entries())
+      .flatMap(([profileId, running]) => {
+        const profile = options.repository.get(profileId);
+        if (!profile) {
+          return [];
+        }
 
-  function reserveResourcesFor(profile: BrowserProfile): ReservedInstanceResources {
-    const cdpPort = nextAvailableNumber(
-      INTERNAL_CDP_PORT_RANGE,
-      usedCdpPorts(),
-      nextCdpPort
-    );
-    nextCdpPort = nextNumberAfter(cdpPort, INTERNAL_CDP_PORT_RANGE);
+        const snapshot: RuntimeCapacityRunningInstance = {
+          activeCdpSessionCount: activeCdpSessions.get(profileId)?.length ?? 0,
+          cdpPort: running.cdpPort,
+          profile
+        };
+        if (running.displayNumber !== undefined) {
+          snapshot.displayNumber = running.displayNumber;
+        }
+        const lastActivity = lastActivityMs.get(profileId);
+        if (lastActivity !== undefined) {
+          snapshot.lastActivityMs = lastActivity;
+        }
+        const lastManualInput = lastManualInputObservedMs.get(profileId);
+        if (lastManualInput !== undefined) {
+          snapshot.lastManualInputObservedMs = lastManualInput;
+        }
+        if (running.vncPort !== undefined) {
+          snapshot.vncPort = running.vncPort;
+        }
 
-    if (profile.headless) {
-      return { cdpPort };
-    }
-
-    const displayNumber = nextAvailableNumber(
-      INTERNAL_DISPLAY_NUMBER_RANGE,
-      usedDisplayNumbers(),
-      nextDisplayNumber
-    );
-    const vncPort = nextAvailableNumber(INTERNAL_VNC_PORT_RANGE, usedVncPorts(), nextVncPort);
-    nextDisplayNumber = nextNumberAfter(displayNumber, INTERNAL_DISPLAY_NUMBER_RANGE);
-    nextVncPort = nextNumberAfter(vncPort, INTERNAL_VNC_PORT_RANGE);
-
-    return { cdpPort, display: `:${displayNumber}`, displayNumber, vncPort };
-  }
-
-  function usedCdpPorts(): Set<number> {
-    return new Set([
-      ...Array.from(runningInstances.values()).map((running) => running.cdpPort),
-      ...Array.from(launchReservations.values()).map((reservation) => reservation.cdpPort)
-    ]);
-  }
-
-  function usedDisplayNumbers(): Set<number> {
-    return new Set(
-      [
-        ...Array.from(runningInstances.values()).map((running) => running.displayNumber),
-        ...Array.from(launchReservations.values()).map((reservation) => reservation.displayNumber)
-      ].filter((value): value is number => value !== undefined)
-    );
-  }
-
-  function usedVncPorts(): Set<number> {
-    return new Set(
-      [
-        ...Array.from(runningInstances.values()).map((running) => running.vncPort),
-        ...Array.from(launchReservations.values()).map((reservation) => reservation.vncPort)
-      ].filter((value): value is number => value !== undefined)
-    );
+        return [snapshot];
+      });
   }
 
   function runningState(profileId: string, running: RunningInstance): BrowserRuntimeState {
@@ -766,15 +669,6 @@ export function createBrowserRuntime(options: BrowserRuntimeOptions): BrowserRun
       status: "running",
       ...(running.vncPort ? { vnc_port: running.vncPort } : {})
     };
-  }
-}
-
-export class CapacityUnavailableError extends Error {
-  retryable = true;
-
-  constructor() {
-    super("Running Instance capacity is full; retry after another Browser Instance stops");
-    this.name = "CapacityUnavailableError";
   }
 }
 
@@ -831,36 +725,6 @@ function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-function activityTimestamp(profile: BrowserProfile): number {
-  return timestampMs(profile.last_activity_at) ?? 0;
-}
-
-function timestampMs(value: string | null | undefined): number | undefined {
-  if (!value) {
-    return undefined;
-  }
-
-  const parsed = Date.parse(value);
-  return Number.isNaN(parsed) ? undefined : parsed;
-}
-
-function nextAvailableNumber(
-  range: { endInclusive: number; start: number },
-  used: Set<number>,
-  preferred: number
-): number {
-  let candidate = preferred >= range.start && preferred <= range.endInclusive ? preferred : range.start;
-  for (let checked = 0; checked < range.endInclusive - range.start + 1; checked += 1) {
-    if (!used.has(candidate)) {
-      return candidate;
-    }
-
-    candidate = nextNumberAfter(candidate, range);
-  }
-
-  throw new CapacityUnavailableError();
-}
-
-function nextNumberAfter(value: number, range: { endInclusive: number; start: number }): number {
-  return value >= range.endInclusive ? range.start : value + 1;
+function isPromiseLike<Value>(value: Promise<Value> | Value): value is Promise<Value> {
+  return typeof value === "object" && value !== null && "then" in value;
 }
