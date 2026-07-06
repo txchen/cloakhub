@@ -34,6 +34,8 @@ describe("Docker-first packaging", () => {
     expect(readme).toContain("docker pull ghcr.io/txchen/cloakhub:latest");
     expect(readme).toContain("docker run --rm");
     expect(readme).toContain("image: ghcr.io/txchen/cloakhub:latest");
+    expect(readme).toContain("restart: unless-stopped");
+    expect(readme).toContain("shm_size: 2gb");
     expect(readme).toContain('"7788:7788"');
     expect(readme).toContain("CLOAKHUB_HOST: 0.0.0.0");
     expect(readme).toContain("CLOAKHUB_DATA_DIR: /data");

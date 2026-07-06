@@ -79,6 +79,8 @@ Equivalent Docker Compose service:
 services:
   cloakhub:
     image: ghcr.io/txchen/cloakhub:latest
+    restart: unless-stopped
+    shm_size: 2gb
     environment:
       CLOAKHUB_DATA_DIR: /data
       CLOAKHUB_HOST: 0.0.0.0
