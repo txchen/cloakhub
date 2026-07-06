@@ -21,10 +21,16 @@ describe("BunBrowserProcessLauncher", () => {
       browserBin: "/opt/cloakbrowser/cloakbrowser",
       cdpPort: 5100,
       customLaunchArgs: ["--lang=en-US"],
+      fingerprintSeed: "12345",
+      gpuRenderer: "ANGLE Metal Renderer",
+      gpuVendor: "Apple Inc.",
+      hardwareConcurrency: 8,
       headless: true,
+      platform: "macos",
       profileId: "work",
       screenHeight: 1080,
       screenWidth: 1920,
+      userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
       userDataDir: join(dataRoot, "profiles", "work")
     });
 
@@ -37,6 +43,16 @@ describe("BunBrowserProcessLauncher", () => {
       "--no-default-browser-check",
       "--window-position=0,0",
       "--window-size=1920,1080",
+      "--disable-infobars",
+      "--test-type",
+      "--fingerprint=12345",
+      "--fingerprint-platform=macos",
+      "--fingerprint-gpu-vendor=Apple Inc.",
+      "--fingerprint-gpu-renderer=ANGLE Metal Renderer",
+      "--fingerprint-hardware-concurrency=8",
+      "--fingerprint-screen-width=1920",
+      "--fingerprint-screen-height=1080",
+      "--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
       "--headless=new",
       "--lang=en-US"
     ]);
@@ -68,11 +84,17 @@ describe("BunBrowserProcessLauncher", () => {
       browserBin: "/opt/cloakbrowser/cloakbrowser",
       cdpPort: 5100,
       customLaunchArgs: [],
+      fingerprintSeed: "",
+      gpuRenderer: "",
+      gpuVendor: "",
+      hardwareConcurrency: 4,
       display: ":100",
       headless: false,
+      platform: "linux",
       profileId: "work",
       screenHeight: 900,
       screenWidth: 1600,
+      userAgent: "",
       userDataDir: join(dataRoot, "profiles", "work")
     });
 
@@ -101,10 +123,16 @@ describe("BunBrowserProcessLauncher", () => {
       browserBin: "/opt/cloakbrowser/cloakbrowser",
       cdpPort: 5100,
       customLaunchArgs: [],
+      fingerprintSeed: "",
+      gpuRenderer: "",
+      gpuVendor: "",
+      hardwareConcurrency: 4,
       headless: true,
+      platform: "linux",
       profileId: "work",
       screenHeight: 1080,
       screenWidth: 1920,
+      userAgent: "",
       userDataDir: join(dataRoot, "profiles", "work")
     });
 

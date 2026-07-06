@@ -33,8 +33,14 @@ describe("Browser Profile admin API", () => {
 
     const response = await app.fetch(new Request("http://cloakhub.test/"));
     const html = await response.text();
+    const apiProfile = await (await app.fetch(new Request("http://cloakhub.test/api/profiles/work"))).json();
 
     expect(response.status).toBe(200);
+    expect(apiProfile).toMatchObject({
+      platform: "macos",
+      screen_height: 768,
+      screen_width: 1366
+    });
     expect(html).toContain('class="manager-shell"');
     expect(html).toContain('class="profile-sidebar"');
     expect(html).toContain('id="sidebar-resizer"');
@@ -67,9 +73,16 @@ describe("Browser Profile admin API", () => {
     expect(html).toContain('name="timezone"');
     expect(html).toContain('name="locale"');
     expect(html).toContain('name="geoip"');
-    expect(html).toContain('name="platform"');
+    expect(html).toContain('<select id="create-platform" name="platform">');
+    expect(html).toContain('<option value="linux">linux</option>');
+    expect(html).toContain('<option value="macos" selected>macos</option>');
+    expect(html).toContain('<option value="windows">windows</option>');
+    expect(html).toContain('<select name="platform">');
     expect(html).toContain('name="screen_width"');
+    expect(html).toContain('value="1366" aria-label="Screen width"');
     expect(html).toContain('name="screen_height"');
+    expect(html).toContain('value="768" aria-label="Screen height"');
+    expect(html).toContain('<dd id="create-summary-screen">1366 x 768</dd>');
     expect(html).toContain('name="gpu_vendor"');
     expect(html).toContain('name="gpu_renderer"');
     expect(html).toContain('name="hardware_concurrency"');
@@ -616,6 +629,7 @@ describe("Browser Profile admin API", () => {
 
     dashboard.run();
     expect(dashboard.intervalMs).toEqual([2500]);
+    expect(dashboard.createSummaryScreenText).toBe("1366 x 768");
 
     await dashboard.toggleSidebarButton.click();
     expect(dashboard.managerShellClasses).toContain("sidebar-collapsed");
@@ -915,8 +929,8 @@ function dashboardScriptHarness(html: string) {
   const createLocaleInput = fakeDashboardElement();
   const createProfileIdInput = fakeDashboardElement();
   const createProxyInput = fakeDashboardElement();
-  const createScreenHeightInput = fakeDashboardElement({}, "", "1080");
-  const createScreenWidthInput = fakeDashboardElement({}, "", "1920");
+  const createScreenHeightInput = fakeDashboardElement({}, "", "768");
+  const createScreenWidthInput = fakeDashboardElement({}, "", "1366");
   const createSummaryId = fakeDashboardElement();
   const createSummaryMode = fakeDashboardElement();
   const createSummaryName = fakeDashboardElement();
@@ -1171,6 +1185,9 @@ function dashboardScriptHarness(html: string) {
     },
     get reloads() {
       return reloads;
+    },
+    get createSummaryScreenText() {
+      return createSummaryScreen.textContent;
     },
     get viewerSources() {
       return viewerSources.length > 0 ? viewerSources : viewerFrame.src ? [viewerFrame.src] : [];

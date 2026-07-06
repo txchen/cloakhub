@@ -15,10 +15,16 @@ export interface BrowserLaunchCommand {
   cdpPort: number;
   customLaunchArgs: string[];
   display?: string;
+  fingerprintSeed: string;
+  gpuRenderer: string;
+  gpuVendor: string;
+  hardwareConcurrency: number;
   headless: boolean;
+  platform: string;
   profileId: string;
   screenHeight: number;
   screenWidth: number;
+  userAgent: string;
   userDataDir: string;
 }
 
@@ -487,10 +493,16 @@ export function createBrowserRuntime(options: BrowserRuntimeOptions): BrowserRun
         cdpPort,
         customLaunchArgs: profile.custom_launch_args,
         display,
+        fingerprintSeed: profile.fingerprint_seed,
+        gpuRenderer: profile.gpu_renderer,
+        gpuVendor: profile.gpu_vendor,
+        hardwareConcurrency: profile.hardware_concurrency,
         headless: profile.headless,
+        platform: profile.platform,
         profileId: profile.profile_id,
         screenHeight: profile.screen_height,
         screenWidth: profile.screen_width,
+        userAgent: profile.user_agent,
         userDataDir: join(options.dataRoot, "profiles", profile.profile_id)
       });
 

@@ -2074,7 +2074,7 @@ function renderShell(
         createSummaryProxy.textContent = createProxyInput?.value || "No proxy";
         createSummaryRegion.textContent = timezone + " / " + locale;
         createSummaryScreen.textContent =
-          (createScreenWidthInput?.value || "1920") + " x " + (createScreenHeightInput?.value || "1080");
+          (createScreenWidthInput?.value || "1366") + " x " + (createScreenHeightInput?.value || "768");
       }
 
       function setSidebarCollapsed(collapsed) {
@@ -2453,14 +2453,18 @@ function renderCreateProfileForm(): string {
                   </label>
                   <label class="form-field">
                     <span class="field-title">Platform</span>
-                    <input id="create-platform" name="platform" value="linux" autocomplete="off">
+                    <select id="create-platform" name="platform">
+                      <option value="linux">linux</option>
+                      <option value="macos" selected>macos</option>
+                      <option value="windows">windows</option>
+                    </select>
                     <span class="field-hint">Fingerprint platform value.</span>
                   </label>
                   <label class="form-field">
                     <span class="field-title">Screen</span>
                     <span class="inline-fields">
-                      <input id="create-screen-width" name="screen_width" type="number" min="100" max="10000" value="1920" aria-label="Screen width">
-                      <input id="create-screen-height" name="screen_height" type="number" min="100" max="10000" value="1080" aria-label="Screen height">
+                      <input id="create-screen-width" name="screen_width" type="number" min="100" max="10000" value="1366" aria-label="Screen width">
+                      <input id="create-screen-height" name="screen_height" type="number" min="100" max="10000" value="768" aria-label="Screen height">
                     </span>
                     <span class="field-hint">Virtual display width and height in pixels.</span>
                   </label>
@@ -2545,7 +2549,7 @@ function renderCreateProfileForm(): string {
                 </div>
                 <div>
                   <dt>Screen</dt>
-                  <dd id="create-summary-screen">1920 x 1080</dd>
+                  <dd id="create-summary-screen">1366 x 768</dd>
                 </div>
               </dl>
             </aside>
@@ -2592,8 +2596,12 @@ function renderLaunchProfileInputs(profile?: BrowserProfile | PresentedBrowserPr
         </label>
         <label>
           Platform
-          <input name="platform" value="${escapeHtml(profile?.platform ?? "")}">
-          <span class="field-hint">Fingerprint platform value; linux is the default.</span>
+          <select name="platform">
+            ${selectOption("linux", profile?.platform ?? "")}
+            ${selectOption("macos", profile?.platform ?? "", "macos")}
+            ${selectOption("windows", profile?.platform ?? "")}
+          </select>
+          <span class="field-hint">Fingerprint platform value; macos is the default.</span>
         </label>
         <label>
           Screen Width

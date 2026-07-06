@@ -25,6 +25,14 @@ describe("Browser Profile validation", () => {
     });
   });
 
+  test("defaults new Browser Profiles to compact desktop resolution", () => {
+    expect(normalizeCreateProfileInput({ profile_id: "work" })).toMatchObject({
+      platform: "macos",
+      screen_height: 768,
+      screen_width: 1366
+    });
+  });
+
   test("accepts the supported launch/profile field set", () => {
     expect(
       normalizeCreateProfileInput({

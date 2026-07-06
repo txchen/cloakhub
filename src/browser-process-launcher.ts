@@ -128,10 +128,28 @@ function browserCommand(command: BrowserLaunchCommand): string[] {
     "--no-default-browser-check",
     "--window-position=0,0",
     `--window-size=${command.screenWidth},${command.screenHeight}`,
+    ...fingerprintArgs(command),
     ...(!command.headless ? ["--disable-gpu", "--disable-dev-shm-usage", "--use-gl=swiftshader"] : []),
     ...(command.headless ? ["--headless=new"] : []),
     ...command.customLaunchArgs
   ];
+}
+
+function fingerprintArgs(command: BrowserLaunchCommand): string[] {
+  return [
+    "--disable-infobars",
+    "--test-type",
+    command.fingerprintSeed ? `--fingerprint=${command.fingerprintSeed}` : undefined,
+    command.platform ? `--fingerprint-platform=${command.platform}` : undefined,
+    command.gpuVendor ? `--fingerprint-gpu-vendor=${command.gpuVendor}` : undefined,
+    command.gpuRenderer ? `--fingerprint-gpu-renderer=${command.gpuRenderer}` : undefined,
+    Number.isInteger(command.hardwareConcurrency)
+      ? `--fingerprint-hardware-concurrency=${command.hardwareConcurrency}`
+      : undefined,
+    `--fingerprint-screen-width=${command.screenWidth}`,
+    `--fingerprint-screen-height=${command.screenHeight}`,
+    command.userAgent ? `--user-agent=${command.userAgent}` : undefined
+  ].filter((arg): arg is string => arg !== undefined);
 }
 
 async function writeOwnershipFiles(

@@ -39,6 +39,37 @@ describe("BrowserRuntime", () => {
     expect(repository.get("work")?.last_activity_at).toBeTruthy();
   });
 
+  test("passes macOS fingerprint settings to CloakBrowser launch", async () => {
+    const repository = fakeRepository(
+      profile({
+        fingerprint_seed: "54321",
+        gpu_renderer: "ANGLE Metal Renderer",
+        gpu_vendor: "Apple Inc.",
+        hardware_concurrency: 8,
+        platform: "macos",
+        profile_id: "work",
+        screen_height: 768,
+        screen_width: 1366,
+        user_agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"
+      })
+    );
+    const launcher = fakeLauncher();
+    const runtime = runtimeFixture({ launcher, repository });
+
+    await runtime.start("work");
+
+    expect(launcher.launches[0]).toMatchObject({
+      fingerprintSeed: "54321",
+      gpuRenderer: "ANGLE Metal Renderer",
+      gpuVendor: "Apple Inc.",
+      hardwareConcurrency: 8,
+      platform: "macos",
+      screenHeight: 768,
+      screenWidth: 1366,
+      userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"
+    });
+  });
+
   test("starts a headed Browser Instance with a private display runtime and VNC endpoint", async () => {
     const repository = fakeRepository(profile({ headless: false, profile_id: "work" }));
     const displayRuntime = fakeDisplayRuntime();
