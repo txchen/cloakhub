@@ -87,6 +87,20 @@ describe("Browser Profile validation", () => {
     expect(() =>
       normalizeCreateProfileInput({
         profile_id: "work",
+        custom_launch_args: ["--remote-debugging-pipe"]
+      })
+    ).toThrow("custom_launch_args cannot include CloakHub-owned flag --remote-debugging-pipe");
+
+    expect(() =>
+      normalizeCreateProfileInput({
+        profile_id: "work",
+        custom_launch_args: ["--window-size=800,800"]
+      })
+    ).toThrow("custom_launch_args cannot include CloakHub-owned flag --window-size");
+
+    expect(() =>
+      normalizeCreateProfileInput({
+        profile_id: "work",
         tags: [{ color: "blue", name: "client" }]
       })
     ).toThrow("tag color must be a hex color");

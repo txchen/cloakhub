@@ -1,5 +1,5 @@
 import { constants } from "node:fs";
-import { access, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { access, mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { delimiter, join } from "node:path";
 
 import type {
@@ -65,10 +65,17 @@ export function createKasmVncDisplayRuntime(
     async cleanupOwnedProcesses(profileIds: string[]): Promise<void> {
       await Promise.all(
         profileIds.map(async (profileId) => {
-          const pid = await readOwnedPid(options.dataRoot, profileId);
-          if (pid !== undefined) {
+          const pids = await ownedDisplayPids(options.dataRoot, profileId);
+          if (pids.length === 0) {
+            return;
+          }
+
+          for (const pid of pids) {
             signalProcessGroup(pid, "SIGTERM");
-            await wait(stopGraceMs);
+          }
+
+          await wait(stopGraceMs);
+          for (const pid of await ownedDisplayPids(options.dataRoot, profileId)) {
             signalProcessGroup(pid, "SIGKILL");
           }
         })
@@ -80,6 +87,7 @@ export function createKasmVncDisplayRuntime(
         throw new MissingDisplayRuntimeError();
       }
 
+      await cleanupOwnedDisplayProcesses(options.dataRoot, command.profileId, wait, stopGraceMs);
       await mkdir(runtimeProfilePath(options.dataRoot, command.profileId), { recursive: true });
       const subprocess = spawn(displayCommand(options.xvncBin, command), {
         detached: true,
@@ -101,6 +109,74 @@ export function createKasmVncDisplayRuntime(
       return new KasmVncProcessHandle(subprocess);
     }
   };
+}
+
+async function cleanupOwnedDisplayProcesses(
+  dataRoot: string,
+  profileId: string,
+  wait: (milliseconds: number) => Promise<void>,
+  stopGraceMs: number
+): Promise<void> {
+  const pids = await ownedDisplayPids(dataRoot, profileId);
+  if (pids.length === 0) {
+    return;
+  }
+
+  for (const pid of pids) {
+    signalProcessGroup(pid, "SIGTERM");
+  }
+
+  await wait(stopGraceMs);
+  for (const pid of await ownedDisplayPids(dataRoot, profileId)) {
+    signalProcessGroup(pid, "SIGKILL");
+  }
+}
+
+async function ownedDisplayPids(dataRoot: string, profileId: string): Promise<number[]> {
+  const pids = new Set<number>();
+  const pidFileValue = await readOwnedPid(dataRoot, profileId);
+  if (pidFileValue !== undefined) {
+    pids.add(pidFileValue);
+  }
+
+  for (const pid of await ownedDisplayPidsFromProc(dataRoot, profileId)) {
+    pids.add(pid);
+  }
+
+  return [...pids];
+}
+
+async function ownedDisplayPidsFromProc(dataRoot: string, profileId: string): Promise<number[]> {
+  let entries: string[];
+  try {
+    entries = await readdir("/proc");
+  } catch {
+    return [];
+  }
+
+  const pids = await Promise.all(
+    entries
+      .map((entry) => Number(entry))
+      .filter((pid) => Number.isInteger(pid) && pid > 0)
+      .map(async (pid) => ((await isOwnedDisplayProcess(pid, dataRoot, profileId)) ? pid : undefined))
+  );
+  return pids.filter((pid): pid is number => pid !== undefined);
+}
+
+async function isOwnedDisplayProcess(pid: number, dataRoot: string, profileId: string): Promise<boolean> {
+  try {
+    const [cmdline, environ] = await Promise.all([
+      readFile(`/proc/${pid}/cmdline`, "utf8"),
+      readFile(`/proc/${pid}/environ`, "utf8")
+    ]);
+    return (
+      (cmdline.includes("Xvnc") || cmdline.includes("Xkasmvnc")) &&
+      environ.split("\0").includes(`CLOAKHUB_DATA_ROOT=${dataRoot}`) &&
+      environ.split("\0").includes(`CLOAKHUB_PROFILE_ID=${profileId}`)
+    );
+  } catch {
+    return false;
+  }
 }
 
 class KasmVncProcessHandle implements BrowserProcessHandle {
@@ -127,13 +203,19 @@ function displayCommand(xvncBin: string, command: BrowserDisplayRuntimeCommand):
   return [
     xvncBin,
     `:${command.displayNumber}`,
+    "-ac",
     "-localhost",
     "-rfbport",
     String(command.vncPort),
     "-geometry",
     `${command.screenWidth}x${command.screenHeight}`,
     "-SecurityTypes",
-    "None"
+    "None",
+    "-DisableBasicAuth",
+    "1",
+    "-noWebsocket",
+    "-publicIP",
+    "127.0.0.1"
   ];
 }
 

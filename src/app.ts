@@ -161,14 +161,34 @@ async function noVncAssetResponseForRequest(request: Request, url: URL): Promise
     return textResponse("Not found", 404);
   }
 
-  const asset = Bun.file(new URL(`../node_modules/@novnc/novnc/${assetPath}`, import.meta.url));
+  const asset = await noVncAsset(assetPath);
   if (!(await asset.exists())) {
     return textResponse("Not found", 404);
   }
 
   return new Response(asset, {
-    headers: { "content-type": "text/javascript; charset=utf-8" }
+    headers: {
+      "cache-control": "no-store",
+      "content-type": "text/javascript; charset=utf-8"
+    }
   });
+}
+
+async function noVncAsset(assetPath: string): Promise<ReturnType<typeof Bun.file>> {
+  const candidates = [
+    process.env.CLOAKHUB_NOVNC_WEB_ROOT
+      ? Bun.file(`${process.env.CLOAKHUB_NOVNC_WEB_ROOT.replace(/\/$/, "")}/${assetPath}`)
+      : undefined,
+    Bun.file(new URL(`../node_modules/@novnc/novnc/${assetPath}`, import.meta.url))
+  ].filter((candidate): candidate is ReturnType<typeof Bun.file> => candidate !== undefined);
+
+  for (const candidate of candidates) {
+    if (await candidate.exists()) {
+      return candidate;
+    }
+  }
+
+  return candidates[candidates.length - 1]!;
 }
 
 async function manualClipboardResponse(
@@ -892,75 +912,116 @@ function renderManualViewer(viewer: BrowserRuntimeManualViewerState): string {
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>CloakHub Viewer - ${escapeHtml(viewer.profile_id)}</title>
     <style>
+      html,
       body {
         background: #111418;
         color: #f4f7fb;
         font-family:
           Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        height: 100%;
         margin: 0;
-      }
-
-      header {
-        align-items: center;
-        background: #1d252c;
-        border-bottom: 1px solid #303a44;
-        display: flex;
-        min-height: 52px;
-        padding: 0 18px;
-      }
-
-      h1 {
-        font-size: 1rem;
-        margin: 0;
+        overflow: hidden;
       }
 
       main {
-        align-items: center;
-        display: grid;
-        min-height: calc(100vh - 52px);
-        place-items: center;
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
       }
 
       #manual-viewer {
         background: #050607;
-        border: 1px solid #303a44;
-        height: min(72vh, 720px);
-        position: relative;
-        width: min(96vw, 1280px);
+        border: 0;
+        height: 100vh;
+        inset: 0;
+        overflow: hidden;
+        position: fixed;
+        width: 100vw;
       }
 
-      #manual-viewer canvas {
-        display: block;
+      #manual-viewer > div {
         height: 100%;
         width: 100%;
       }
 
       #viewer-status {
-        bottom: 12px;
-        color: #9fb0c2;
-        font-size: 0.9rem;
-        left: 12px;
+        background: rgb(5 6 7 / 0.68);
+        border: 1px solid rgb(255 255 255 / 0.14);
+        border-radius: 999px;
+        bottom: 10px;
+        color: #d7e0ea;
+        font-size: 0.7rem;
+        font-weight: 650;
+        left: 10px;
+        letter-spacing: 0;
+        line-height: 1;
+        padding: 5px 8px;
+        pointer-events: none;
         position: absolute;
+        z-index: 2;
+      }
+
+      #paste-button {
+        background: rgb(245 247 250 / 0.92);
+        border: 1px solid rgb(5 6 7 / 0.18);
+        border-radius: 5px;
+        color: #101418;
+        cursor: pointer;
+        font-size: 0.72rem;
+        font-weight: 700;
+        line-height: 1;
+        padding: 6px 9px;
+        position: absolute;
+        right: 10px;
+        top: 10px;
+        z-index: 2;
+      }
+
+      #paste-button:focus-visible {
+        outline: 2px solid #4f8cff;
+        outline-offset: 2px;
       }
     </style>
   </head>
   <body>
-    <header>
-      <h1>${escapeHtml(viewer.profile_id)}</h1>
-    </header>
     <main>
       <div id="manual-viewer" data-vnc-websocket-url="${escapeHtml(viewer.vnc_ws_path)}">
-        <canvas aria-hidden="true"></canvas>
+        <button id="paste-button" type="button">Paste</button>
         <span id="viewer-status">Connecting</span>
       </div>
     </main>
     <script type="module">
-      import RFB from "/assets/novnc/core/rfb.js";
+      import RFB from "/assets/novnc/core/rfb.js?v=stock-1";
 
       const viewer = document.getElementById("manual-viewer");
+      const pasteButton = document.getElementById("paste-button");
       const status = document.getElementById("viewer-status");
       const protocol = location.protocol === "https:" ? "wss:" : "ws:";
       let rfb;
+      async function pasteText(text) {
+        if (!text) {
+          return;
+        }
+
+        rfb.clipboardPasteFrom(text);
+        await fetch("/ui/profiles/${encodeURIComponent(viewer.profile_id)}/clipboard", {
+          body: JSON.stringify({ text }),
+          headers: { "content-type": "application/json" },
+          method: "POST"
+        }).catch(() => undefined);
+        rfb.focus();
+        rfb.sendKey(0xffe3, "ControlLeft", true);
+        rfb.sendKey(0x0076, "KeyV", true);
+        rfb.sendKey(0x0076, "KeyV", false);
+        rfb.sendKey(0xffe3, "ControlLeft", false);
+      }
+
+      pasteButton.addEventListener("click", async () => {
+        const clipboardText = await navigator.clipboard?.readText().catch(() => "");
+        const text = clipboardText || window.prompt("Paste text to send to the browser") || "";
+        await pasteText(text);
+      });
+
       document.addEventListener("keydown", async (event) => {
         if (!viewer.contains(event.target)) {
           return;
@@ -978,21 +1039,16 @@ function renderManualViewer(viewer: BrowserRuntimeManualViewerState): string {
           return;
         }
 
-        await fetch("/ui/profiles/${encodeURIComponent(viewer.profile_id)}/clipboard", {
-          body: JSON.stringify({ text }),
-          headers: { "content-type": "application/json" },
-          method: "POST"
-        });
-        rfb.sendKey(0xffe3, "ControlLeft", true);
-        rfb.sendKey(0x0076, "KeyV", true);
-        rfb.sendKey(0x0076, "KeyV", false);
-        rfb.sendKey(0xffe3, "ControlLeft", false);
+        await pasteText(text);
       }, true);
-      rfb = new RFB(viewer, protocol + "//" + location.host + viewer.dataset.vncWebsocketUrl);
+      rfb = new RFB(viewer, protocol + "//" + location.host + viewer.dataset.vncWebsocketUrl, { wsProtocols: [] });
       rfb.scaleViewport = true;
       rfb.resizeSession = false;
       rfb.addEventListener("connect", () => {
         status.textContent = "Connected";
+        window.setTimeout(() => {
+          status.hidden = true;
+        }, 1200);
         window.opener?.postMessage(
           {
             profile_id: "${escapeHtml(viewer.profile_id)}",
@@ -1002,6 +1058,7 @@ function renderManualViewer(viewer: BrowserRuntimeManualViewerState): string {
         );
       });
       rfb.addEventListener("disconnect", () => {
+        status.hidden = false;
         status.textContent = "Disconnected";
       });
       rfb.addEventListener("clipboard", (event) => {

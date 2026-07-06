@@ -126,6 +126,9 @@ function browserCommand(command: BrowserLaunchCommand): string[] {
     `--remote-debugging-port=${command.cdpPort}`,
     "--no-first-run",
     "--no-default-browser-check",
+    "--window-position=0,0",
+    `--window-size=${command.screenWidth},${command.screenHeight}`,
+    ...(!command.headless ? ["--disable-gpu", "--disable-dev-shm-usage", "--use-gl=swiftshader"] : []),
     ...(command.headless ? ["--headless=new"] : []),
     ...command.customLaunchArgs
   ];

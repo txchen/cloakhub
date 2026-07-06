@@ -23,6 +23,8 @@ describe("BunBrowserProcessLauncher", () => {
       customLaunchArgs: ["--lang=en-US"],
       headless: true,
       profileId: "work",
+      screenHeight: 1080,
+      screenWidth: 1920,
       userDataDir: join(dataRoot, "profiles", "work")
     });
 
@@ -33,9 +35,12 @@ describe("BunBrowserProcessLauncher", () => {
       "--remote-debugging-port=5100",
       "--no-first-run",
       "--no-default-browser-check",
+      "--window-position=0,0",
+      "--window-size=1920,1080",
       "--headless=new",
       "--lang=en-US"
     ]);
+    expect(spawn.commands[0]).not.toContain("--disable-gpu");
     expect(spawn.options[0]).toMatchObject({
       detached: true,
       env: {
@@ -66,10 +71,17 @@ describe("BunBrowserProcessLauncher", () => {
       display: ":100",
       headless: false,
       profileId: "work",
+      screenHeight: 900,
+      screenWidth: 1600,
       userDataDir: join(dataRoot, "profiles", "work")
     });
 
     expect(spawn.commands[0]).not.toContain("--headless=new");
+    expect(spawn.commands[0]).toContain("--window-position=0,0");
+    expect(spawn.commands[0]).toContain("--window-size=1600,900");
+    expect(spawn.commands[0]).toContain("--disable-gpu");
+    expect(spawn.commands[0]).toContain("--disable-dev-shm-usage");
+    expect(spawn.commands[0]).toContain("--use-gl=swiftshader");
     expect(spawn.options[0]?.env).toMatchObject({ DISPLAY: ":100" });
   });
 
@@ -91,6 +103,8 @@ describe("BunBrowserProcessLauncher", () => {
       customLaunchArgs: [],
       headless: true,
       profileId: "work",
+      screenHeight: 1080,
+      screenWidth: 1920,
       userDataDir: join(dataRoot, "profiles", "work")
     });
 

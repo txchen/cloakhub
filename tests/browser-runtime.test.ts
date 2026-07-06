@@ -30,6 +30,8 @@ describe("BrowserRuntime", () => {
       headless: true,
       profileId: "work",
       customLaunchArgs: [],
+      screenHeight: 1080,
+      screenWidth: 1920,
       userDataDir: "/data/profiles/work"
     });
     expect(repository.get("work")?.instance_status).toBe("running");
@@ -64,7 +66,9 @@ describe("BrowserRuntime", () => {
     expect(launcher.launches[0]).toMatchObject({
       display: ":100",
       headless: false,
-      profileId: "work"
+      profileId: "work",
+      screenHeight: 1080,
+      screenWidth: 1920
     });
   });
 
@@ -615,6 +619,27 @@ describe("BrowserRuntime", () => {
     expect(repository.get("work")).toMatchObject({
       instance_status: "failed",
       last_launch_error: "not ready",
+      last_stop_reason: "launch failure"
+    });
+  });
+
+  test("start rejects stored CloakHub-owned CDP launch flags before launching a process", async () => {
+    const repository = fakeRepository(
+      profile({ custom_launch_args: ["--remote-debugging-pipe"], profile_id: "work" })
+    );
+    const launcher = fakeLauncher();
+    const readinessProbe = fakeReadinessProbe();
+    const runtime = runtimeFixture({ launcher, readinessProbe, repository });
+
+    await expect(runtime.start("work")).rejects.toThrow(
+      "custom_launch_args cannot include CloakHub-owned flag --remote-debugging-pipe"
+    );
+
+    expect(launcher.launches).toEqual([]);
+    expect(readinessProbe.readyStates).toEqual([]);
+    expect(repository.get("work")).toMatchObject({
+      instance_status: "failed",
+      last_launch_error: "custom_launch_args cannot include CloakHub-owned flag --remote-debugging-pipe",
       last_stop_reason: "launch failure"
     });
   });

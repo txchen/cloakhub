@@ -7,7 +7,7 @@ import {
   INTERNAL_DISPLAY_NUMBER_RANGE,
   INTERNAL_VNC_PORT_RANGE
 } from "./config";
-import type { BrowserProfile, StopReason } from "./profile";
+import { validateCustomLaunchArgs, type BrowserProfile, type StopReason } from "./profile";
 import type { ProfileRepository } from "./profile-repository";
 
 export interface BrowserLaunchCommand {
@@ -17,6 +17,8 @@ export interface BrowserLaunchCommand {
   display?: string;
   headless: boolean;
   profileId: string;
+  screenHeight: number;
+  screenWidth: number;
   userDataDir: string;
 }
 
@@ -464,6 +466,7 @@ export function createBrowserRuntime(options: BrowserRuntimeOptions): BrowserRun
     try {
       let handle: BrowserProcessHandle | undefined;
       let displayHandle: BrowserProcessHandle | undefined;
+      validateCustomLaunchArgs(profile.custom_launch_args);
 
       if (!profile.headless) {
         if (!options.displayRuntime || displayNumber === undefined || vncPort === undefined) {
@@ -486,6 +489,8 @@ export function createBrowserRuntime(options: BrowserRuntimeOptions): BrowserRun
         display,
         headless: profile.headless,
         profileId: profile.profile_id,
+        screenHeight: profile.screen_height,
+        screenWidth: profile.screen_width,
         userDataDir: join(options.dataRoot, "profiles", profile.profile_id)
       });
 

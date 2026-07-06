@@ -27,11 +27,13 @@ const RFB_CLIENT_FRAMEBUFFER_UPDATE_REQUEST = 3;
 const RFB_CLIENT_KEY_EVENT = 4;
 const RFB_CLIENT_POINTER_EVENT = 5;
 const RFB_CLIENT_CUT_TEXT = 6;
+const RFB_CLIENT_KASMVNC_BINARY_CLIPBOARD = 180;
 const RFB_SERVER_FRAMEBUFFER_UPDATE = 0;
 const RFB_SERVER_SET_COLOR_MAP_ENTRIES = 1;
 const RFB_SERVER_BELL = 2;
 const RFB_SERVER_CUT_TEXT = 3;
 const KASMVNC_BINARY_CLIPBOARD = 180;
+const PSEUDO_ENCODING_EXTENDED_CLIPBOARD = -1063131698;
 
 const FIXED_CLIENT_MESSAGE_LENGTHS = new Map<number, number>([
   [RFB_CLIENT_SET_PIXEL_FORMAT, 20],
@@ -54,8 +56,11 @@ const ALLOWED_ENCODINGS = new Set<number>([
   5,
   7,
   16,
+  -313,
+  -312,
   -239,
   -224,
+  PSEUDO_ENCODING_EXTENDED_CLIPBOARD,
   ...integerRange(-32, -23),
   ...integerRange(-256, -247)
 ]);
@@ -95,6 +100,11 @@ export function filterRfbClientMessages(data: Buffer): RfbClientFrameResult {
         chunks.push(data.subarray(offset, offset + messageLength));
         manualInput = manualInput || messageType === RFB_CLIENT_KEY_EVENT || messageType === RFB_CLIENT_CUT_TEXT;
       }
+    } else if (EXTENSION_MESSAGE_LENGTHS.has(messageType)) {
+      chunks.push(data.subarray(offset, offset + messageLength));
+    } else if (messageType === RFB_CLIENT_KASMVNC_BINARY_CLIPBOARD) {
+      chunks.push(data.subarray(offset, offset + messageLength));
+      manualInput = true;
     }
 
     offset += messageLength;
@@ -151,6 +161,10 @@ export function rfbClientMessageLength(data: Buffer, offset: number): number | u
 
   if (messageType === RFB_CLIENT_CUT_TEXT && remaining >= 8) {
     return 8 + data.readUInt32BE(offset + 4);
+  }
+
+  if (messageType === RFB_CLIENT_KASMVNC_BINARY_CLIPBOARD) {
+    return kasmVncClientClipboardMessageLength(data, offset);
   }
 
   return EXTENSION_MESSAGE_LENGTHS.get(messageType);
@@ -250,6 +264,37 @@ function isStandardClientMessage(messageType: number): boolean {
 function kasmVncClipboardMessageLength(data: Buffer, offset: number): number | undefined {
   const clipboard = readKasmVncClipboard(data, offset, { stopAtPotentialNextServerMessage: true });
   return clipboard.complete ? clipboard.endOffset - offset : undefined;
+}
+
+function kasmVncClientClipboardMessageLength(data: Buffer, offset: number): number | undefined {
+  if (data.length - offset < 2) {
+    return undefined;
+  }
+
+  const entryCount = data[offset + 1]!;
+  let cursor = offset + 2;
+  for (let index = 0; index < entryCount; index += 1) {
+    if (cursor + 1 > data.length) {
+      return undefined;
+    }
+
+    const mimeLength = data[cursor]!;
+    cursor += 1;
+    if (cursor + mimeLength + 4 > data.length) {
+      return undefined;
+    }
+
+    cursor += mimeLength;
+    const entryLength = data.readUInt32BE(cursor);
+    cursor += 4;
+    if (cursor + entryLength > data.length) {
+      return undefined;
+    }
+
+    cursor += entryLength;
+  }
+
+  return cursor - offset;
 }
 
 function readKasmVncClipboard(

@@ -32,6 +32,7 @@ describe("RFB compatibility proxy", () => {
     expect(rfbClientMessageLength(makeFramebufferUpdateRequest(), 0)).toBe(10);
     expect(rfbClientMessageLength(makeSetEncodings([0, 1, 2]), 0)).toBe(16);
     expect(rfbClientMessageLength(makeClientCutText("hello"), 0)).toBe(13);
+    expect(rfbClientMessageLength(makeKasmVncClientClipboard("hello"), 0)).toBe(22);
     expect(rfbClientMessageLength(makeExtension150(), 0)).toBe(10);
     expect(rfbClientMessageLength(Buffer.from([99]), 0)).toBeUndefined();
   });
@@ -44,11 +45,21 @@ describe("RFB compatibility proxy", () => {
   });
 
   test("rewrites SetEncodings to allowed KasmVNC-safe encodings", () => {
-    const result = rewriteSetEncodings(makeSetEncodings([0, 1, -260, -307]), 0, 20);
+    const result = rewriteSetEncodings(makeSetEncodings([0, 1, -260, -307, -312, -313, -1063131698]), 0, 32);
 
-    expect(result.readUInt16BE(2)).toBe(2);
+    expect(result.readUInt16BE(2)).toBe(5);
     expect(result.readInt32BE(4)).toBe(0);
     expect(result.readInt32BE(8)).toBe(1);
+    expect(result.readInt32BE(12)).toBe(-312);
+    expect(result.readInt32BE(16)).toBe(-313);
+    expect(result.readInt32BE(20)).toBe(-1063131698);
+  });
+
+  test("forwards KasmVNC/noVNC extension client messages without counting manual input", () => {
+    const result = filterRfbClientMessages(Buffer.concat([makeEnableContinuousUpdates(), makeFence()]));
+
+    expect(result.manualInput).toBe(false);
+    expect(result.data).toEqual(Buffer.concat([makeEnableContinuousUpdates(), makeFence()]));
   });
 
   test("rewrites standard pointer events to KasmVNC extended pointer format", () => {
@@ -63,7 +74,7 @@ describe("RFB compatibility proxy", () => {
     expect(result.readInt16BE(9)).toBe(0);
   });
 
-  test("filters batched client frames, strips extensions, rewrites pointer events, and detects manual input", () => {
+  test("filters batched client frames, forwards extensions, rewrites pointer events, and detects manual input", () => {
     const frame = Buffer.concat([
       makeKeyEvent(),
       makeExtension150(),
@@ -74,10 +85,11 @@ describe("RFB compatibility proxy", () => {
     const result = filterRfbClientMessages(frame);
 
     expect(result.manualInput).toBe(true);
-    expect(result.data).toHaveLength(29);
+    expect(result.data).toHaveLength(39);
     expect(result.data[0]).toBe(4);
-    expect(result.data[8]).toBe(5);
-    expect(result.data[19]).toBe(6);
+    expect(result.data[8]).toBe(150);
+    expect(result.data[18]).toBe(5);
+    expect(result.data[29]).toBe(6);
   });
 
   test("detects keyboard, pointer movement, wheel, and clipboard paste as Manual Input independently", () => {
@@ -85,6 +97,10 @@ describe("RFB compatibility proxy", () => {
     expect(filterRfbClientMessages(makePointerEvent({ mask: 0, x: 50, y: 75 })).manualInput).toBe(true);
     expect(filterRfbClientMessages(makePointerEvent({ mask: 8, x: 50, y: 75 })).manualInput).toBe(true);
     expect(filterRfbClientMessages(makeClientCutText("pasted")).manualInput).toBe(true);
+    expect(filterRfbClientMessages(makeKasmVncClientClipboard("pasted")).manualInput).toBe(true);
+    expect(filterRfbClientMessages(makeKasmVncClientClipboard("pasted")).data).toEqual(
+      makeKasmVncClientClipboard("pasted")
+    );
   });
 
   test("does not classify passive framebuffer requests and SetEncodings as manual input", () => {
@@ -174,6 +190,21 @@ function makeSetEncodings(encodings: number[]): Buffer {
   return buffer;
 }
 
+function makeEnableContinuousUpdates(): Buffer {
+  const message = Buffer.alloc(10);
+  message[0] = 150;
+  message[1] = 1;
+  message.writeUInt16BE(1920, 6);
+  message.writeUInt16BE(1080, 8);
+  return message;
+}
+
+function makeFence(): Buffer {
+  const message = Buffer.alloc(10);
+  message[0] = 248;
+  return message;
+}
+
 function makeClientCutText(text: string): Buffer {
   const textBytes = Buffer.from(text, "latin1");
   const buffer = Buffer.alloc(8 + textBytes.length);
@@ -204,4 +235,17 @@ function makeKasmVncClipboard(entries: Array<{ mime: string; text: string }>): B
     chunks.push(header, text);
   }
   return Buffer.concat(chunks);
+}
+
+function makeKasmVncClientClipboard(text: string): Buffer {
+  const mime = Buffer.from("text/plain", "utf8");
+  const data = Buffer.from(text, "utf8");
+  const buffer = Buffer.alloc(2 + 1 + mime.length + 4 + data.length);
+  buffer[0] = 180;
+  buffer[1] = 1;
+  buffer[2] = mime.length;
+  mime.copy(buffer, 3);
+  buffer.writeUInt32BE(data.length, 3 + mime.length);
+  data.copy(buffer, 3 + mime.length + 4);
+  return buffer;
 }

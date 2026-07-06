@@ -54,7 +54,7 @@ describe("real CloakBrowser runtime integration", () => {
     );
 
     expect(viewerResponse.status).toBe(200);
-    expect(viewerHtml).toContain('import RFB from "/assets/novnc/core/rfb.js"');
+    expect(viewerHtml).toContain('import RFB from "/assets/novnc/core/rfb.js?v=stock-1"');
     expect(assetResponse.status).toBe(200);
     expect(websocketResponse).toBeUndefined();
     expect(upgradeServer.upgrades).toEqual([

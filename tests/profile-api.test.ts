@@ -388,9 +388,22 @@ describe("Browser Profile admin API", () => {
     expect(response.status).toBe(200);
     expect(browserRuntime.calls).toEqual(["viewer:work"]);
     expect(html).toContain('id="manual-viewer"');
+    expect(html).toContain('id="paste-button"');
     expect(html).toContain('data-vnc-websocket-url="/ui/profiles/work/vnc"');
-    expect(html).toContain('import RFB from "/assets/novnc/core/rfb.js"');
+    expect(html).toContain('import RFB from "/assets/novnc/core/rfb.js?v=stock-1"');
     expect(html).toContain("/ui/profiles/work/clipboard");
+    expect(html).toContain("rfb.clipboardPasteFrom(text)");
+    expect(html).toContain("{ wsProtocols: [] }");
+    expect(html).toContain('window.prompt("Paste text to send to the browser")');
+    expect(html).not.toContain("<header");
+    expect(html).not.toContain('<canvas aria-hidden="true">');
+    expect(html).not.toContain("#manual-viewer canvas");
+    expect(html).toContain("#manual-viewer > div");
+    expect(html).toContain("position: fixed;");
+    expect(html).toContain("height: 100vh;");
+    expect(html).toContain("width: 100vw;");
+    expect(html).toContain("border-radius: 999px;");
+    expect(html).toContain("status.hidden = true");
   });
 
   test("serves noVNC browser modules for the manual viewer", async () => {
@@ -400,6 +413,7 @@ describe("Browser Profile admin API", () => {
 
     expect(response.status).toBe(200);
     expect(response.headers.get("content-type")).toContain("text/javascript");
+    expect(response.headers.get("cache-control")).toBe("no-store");
     expect(await response.text()).toContain("class RFB");
   });
 

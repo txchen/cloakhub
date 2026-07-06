@@ -119,7 +119,10 @@ export const DEFAULT_LAUNCH_PROFILE_FIELDS: LaunchProfileFields = {
 const CLOAKHUB_OWNED_LAUNCH_FLAGS = [
   "--user-data-dir",
   "--remote-debugging-port",
-  "--remote-debugging-address"
+  "--remote-debugging-address",
+  "--remote-debugging-pipe",
+  "--window-position",
+  "--window-size"
 ];
 
 export function validateProfileId(value: unknown): ProfileIdValidationResult {
@@ -477,6 +480,11 @@ function optionalLaunchArgs(value: unknown): string[] | undefined {
     throw new ProfileValidationError("custom_launch_args must be an array of strings");
   }
 
+  validateCustomLaunchArgs(value);
+  return value;
+}
+
+export function validateCustomLaunchArgs(value: string[]): void {
   for (const arg of value) {
     const ownedFlag = CLOAKHUB_OWNED_LAUNCH_FLAGS.find((flag) => arg === flag || arg.startsWith(`${flag}=`));
     if (ownedFlag) {
@@ -485,8 +493,6 @@ function optionalLaunchArgs(value: unknown): string[] | undefined {
       );
     }
   }
-
-  return value;
 }
 
 function optionalTags(value: unknown): ProfileTag[] | undefined {

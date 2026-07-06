@@ -33,7 +33,7 @@ describe("VncWebSocketProxy", () => {
       Buffer.from("RFB 003.008\n"),
       Buffer.from([1]),
       Buffer.from([1]),
-      makeKasmPointerEvent()
+      Buffer.concat([makeExtension150(), makeKasmPointerEvent()])
     ]);
     expect(ws.sent).toEqual([makeServerCutText("hello")]);
     expect(manualViewers.events).toEqual(["open:work", "input:work", "close:work"]);
