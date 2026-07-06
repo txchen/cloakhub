@@ -1,6 +1,55 @@
 # CloakHub
 
-CloakHub is a Bun backend for managing persistent CloakBrowser profiles and on-demand browser runtimes.
+CloakHub is a Linux-focused, Docker-first manager for persistent CloakBrowser profiles and
+on-demand browser runtimes. It keeps the useful parts of CloakBrowser Manager - profile
+configuration, a live browser viewer, and CDP automation - but is designed for long-running
+servers where idle browser processes should not stay alive forever.
+
+CloakBrowser Manager provides an all-in-one UI for creating, launching, viewing, and automating
+isolated CloakBrowser profiles. CloakHub is aimed at operators who need the same persistent
+browser identities, but also want predictable resource control: instances can spin down when
+they are idle, wake automatically when CDP or manual viewing resumes, and respect a configured
+running-instance limit.
+
+## Why CloakHub
+
+- **Persistent profiles, disposable runtimes**: profile metadata and browser user-data survive,
+  while browser, display, VNC, clipboard, and CDP support processes can be stopped and recreated.
+- **Transparent Recovery**: stable profile-level CDP and viewer URLs can start a stopped Browser
+  Instance on demand, so clients do not need a separate "launch first" step.
+- **Resource-aware lifecycle**: idle Browser Instances spin down after their Sleep Policy window,
+  and capacity pressure can preempt viewer-only or inactive instances.
+- **Automation visibility**: open CDP sessions, manual viewer counts, last activity, stop reasons,
+  and approximate owned-process resource usage are surfaced through the UI/API.
+- **Bun-first runtime**: the backend directly supervises CloakBrowser, KasmVNC, ports, process
+  groups, and cleanup without a Python backend service.
+- **Docker-first packaging**: the published image includes the CloakBrowser Binary and KasmVNC, so
+  normal deployments do not download the browser at runtime.
+
+## CloakHub vs CloakBrowser Manager
+
+| Area | CloakBrowser Manager | CloakHub |
+| --- | --- | --- |
+| Primary goal | All-in-one profile manager with launch, viewer, and CDP access. | Server-oriented profile manager with resource-efficient Browser Instance lifecycle. |
+| Runtime model | Profiles are launched and stopped explicitly. | Stopped profiles can wake automatically from stable CDP or viewer endpoints. |
+| Idle behavior | Running browsers remain live until explicitly stopped. | Idle Browser Instances can spin down while preserving profile data. |
+| Capacity control | Runtime capacity is mostly an operator concern. | `CLOAKHUB_MAX_RUNNING_INSTANCES` limits live instances and can trigger capacity preemption. |
+| CDP access | CDP is proxied through the manager for running profiles. | CDP is proxied through CloakHub, uses stable profile URLs, and can be protected per profile with a CDP Token. |
+| Process cleanup | Optimized for a single-purpose container. | Cleanup targets CloakHub-owned processes by profile-specific ownership markers. |
+| Stack | FastAPI backend plus React/Vite frontend. | Bun backend with a lightweight Bun-served UI. |
+| Docker image | Builds a Manager application image. | Uses a registry-first image with bundled CloakBrowser Binary and KasmVNC. |
+
+## Features
+
+- Browser Profile CRUD with CloakBrowser-compatible launch settings, fingerprint settings, proxy,
+  locale/timezone, platform, screen, GPU, hardware concurrency, user agent, tags, notes, custom
+  launch args, headless mode, clipboard preference, and Sleep Policy.
+- Stable profile-level CDP endpoints under `/api/profiles/{profile_id}/cdp`.
+- Manual headed viewing through the CloakHub UI and a noVNC-compatible KasmVNC proxy.
+- Per-profile CDP Token create, copy, regenerate, and revoke actions.
+- Lifecycle history for starts, stops, crashes, launch failures, idle timeouts, and capacity
+  preemption.
+- Docker and non-Docker Linux operation, with configurable Data Root and browser binary discovery.
 
 ## Run
 
