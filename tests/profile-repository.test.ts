@@ -69,7 +69,6 @@ describe("ProfileRepository", () => {
       proxy: "http://user:secret@proxy.example:8080",
       screen_height: 1080,
       screen_width: 1920,
-      tags: [{ color: "#1f6feb", name: "client" }],
       timezone: "America/Los_Angeles",
       user_agent: "Mozilla/5.0"
     });
@@ -79,8 +78,7 @@ describe("ProfileRepository", () => {
       color_scheme: "dark",
       custom_launch_args: ["--disable-webgl"],
       fingerprint_seed: "seed-1",
-      proxy: "http://user:secret@proxy.example:8080",
-      tags: [{ color: "#1f6feb", name: "client" }]
+      proxy: "http://user:secret@proxy.example:8080"
     });
 
     repository.close();

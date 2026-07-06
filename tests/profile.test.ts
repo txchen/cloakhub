@@ -54,7 +54,6 @@ describe("Browser Profile validation", () => {
         screen_height: 1080,
         screen_width: 1920,
         sleep_policy: { mode: "minutes", minutes: 45 },
-        tags: [{ color: "#1f6feb", name: "client" }],
         timezone: "America/Los_Angeles",
         user_agent: "Mozilla/5.0"
       })
@@ -63,12 +62,11 @@ describe("Browser Profile validation", () => {
       custom_launch_args: ["--disable-webgl"],
       profile_id: "work",
       proxy: "http://user:secret@proxy.example:8080",
-      sleep_policy: { mode: "minutes", minutes: 45 },
-      tags: [{ color: "#1f6feb", name: "client" }]
+      sleep_policy: { mode: "minutes", minutes: 45 }
     });
   });
 
-  test("rejects invalid proxy, screen dimensions, tag colors, and CloakHub-owned launch flags", () => {
+  test("rejects invalid proxy, screen dimensions, and CloakHub-owned launch flags", () => {
     expect(() =>
       normalizeCreateProfileInput({ profile_id: "work", proxy: "http://proxy.example" })
     ).toThrow("proxy must include a hostname and port");
@@ -105,13 +103,6 @@ describe("Browser Profile validation", () => {
         custom_launch_args: ["--window-size=800,800"]
       })
     ).toThrow("custom_launch_args cannot include CloakHub-owned flag --window-size");
-
-    expect(() =>
-      normalizeCreateProfileInput({
-        profile_id: "work",
-        tags: [{ color: "blue", name: "client" }]
-      })
-    ).toThrow("tag color must be a hex color");
 
     expect(() =>
       normalizeCreateProfileInput({

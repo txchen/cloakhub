@@ -32,6 +32,8 @@ describe("CloakHub HTTP app", () => {
     expect(anonymousResponse.status).toBe(401);
     expect(html).toContain("<title>CloakHub Login</title>");
     expect(html).toContain("/api/auth/login");
+    expect(html).toContain("--bg: #efe5d8;");
+    expect(html).toContain("--panel: #faf3ea;");
   });
 
   test("UI cookie authentication works independently from admin API bearer auth", async () => {

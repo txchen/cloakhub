@@ -7,7 +7,6 @@ import {
   type BrowserProfile,
   type CreateProfileInput,
   type LaunchProfileFields,
-  type ProfileTag,
   type StopReason,
   type UpdateProfileInput
 } from "./profile";
@@ -67,7 +66,6 @@ class SqliteProfileRepository implements ProfileRepository {
         last_stop_reason TEXT,
         last_stopped_at TEXT,
         launch_profile_json TEXT NOT NULL DEFAULT '{}',
-        tags_json TEXT NOT NULL DEFAULT '[]',
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL
       );
@@ -77,7 +75,6 @@ class SqliteProfileRepository implements ProfileRepository {
     `);
     this.ensureColumn("profiles", "cdp_token", "TEXT");
     this.ensureColumn("profiles", "launch_profile_json", "TEXT NOT NULL DEFAULT '{}'");
-    this.ensureColumn("profiles", "tags_json", "TEXT NOT NULL DEFAULT '[]'");
     this.ensureColumn("profiles", "last_activity_at", "TEXT");
     this.ensureColumn("profiles", "last_launch_error", "TEXT");
     this.ensureColumn("profiles", "last_launch_failed_at", "TEXT");
@@ -107,7 +104,6 @@ class SqliteProfileRepository implements ProfileRepository {
           last_stop_reason,
           last_stopped_at,
           launch_profile_json,
-          tags_json,
           created_at,
           updated_at
         )
@@ -126,7 +122,6 @@ class SqliteProfileRepository implements ProfileRepository {
           NULL,
           NULL,
           $launch_profile_json,
-          $tags_json,
           $created_at,
           $updated_at
         )
@@ -138,7 +133,6 @@ class SqliteProfileRepository implements ProfileRepository {
         $launch_profile_json: JSON.stringify(launchProfileFields({ ...DEFAULT_LAUNCH_PROFILE_FIELDS, ...input })),
         $notes: input.notes ?? "",
         $profile_id: input.profile_id,
-        $tags_json: JSON.stringify(input.tags ?? []),
         $updated_at: now
       });
 
@@ -171,7 +165,6 @@ class SqliteProfileRepository implements ProfileRepository {
     }
 
     const nextLaunchProfile = launchProfileFields({ ...existing, ...input });
-    const nextTags = input.tags ?? existing.tags;
 
     this.db
       .query(
@@ -180,7 +173,6 @@ class SqliteProfileRepository implements ProfileRepository {
         SET display_name = $display_name,
             notes = $notes,
             launch_profile_json = $launch_profile_json,
-            tags_json = $tags_json,
             updated_at = $updated_at
         WHERE profile_id = $profile_id
       `
@@ -190,7 +182,6 @@ class SqliteProfileRepository implements ProfileRepository {
         $launch_profile_json: JSON.stringify(nextLaunchProfile),
         $notes: input.notes ?? existing.notes,
         $profile_id: profileId,
-        $tags_json: JSON.stringify(nextTags),
         $updated_at: nowIso()
       });
 
@@ -421,7 +412,6 @@ function rowToProfile(row: ProfileRow): BrowserProfile {
     row.launch_profile_json,
     DEFAULT_LAUNCH_PROFILE_FIELDS
   );
-  const tags = parseJson<ProfileTag[]>(row.tags_json, []);
 
   const { launch_profile_json: _launchProfileJson, tags_json: _tagsJson, ...profileRow } = row;
   const sleepPolicy = launchProfile.sleep_policy ?? DEFAULT_LAUNCH_PROFILE_FIELDS.sleep_policy;
@@ -432,12 +422,11 @@ function rowToProfile(row: ProfileRow): BrowserProfile {
     ...DEFAULT_LAUNCH_PROFILE_FIELDS,
     ...launchProfile,
     sleep_policy: sleepPolicy,
-    sleep_policy_status: resolveSleepPolicy(sleepPolicy),
-    tags
+    sleep_policy_status: resolveSleepPolicy(sleepPolicy)
   };
 }
 
-function launchProfileFields(input: LaunchProfileFields): Omit<LaunchProfileFields, "tags"> {
+function launchProfileFields(input: LaunchProfileFields): LaunchProfileFields {
   return {
     clipboard_sync: input.clipboard_sync,
     color_scheme: input.color_scheme,

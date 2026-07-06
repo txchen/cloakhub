@@ -10,11 +10,6 @@ export type StopReason =
   | "restart";
 export type ColorScheme = "light" | "dark" | "system";
 
-export interface ProfileTag {
-  color?: string;
-  name: string;
-}
-
 export type SleepPolicy =
   | { mode: "default" }
   | { mode: "minutes"; minutes: number }
@@ -38,7 +33,6 @@ export interface LaunchProfileFields {
   screen_height: number;
   screen_width: number;
   sleep_policy: SleepPolicy;
-  tags: ProfileTag[];
   timezone: string;
   user_agent: string;
 }
@@ -111,7 +105,6 @@ export const DEFAULT_LAUNCH_PROFILE_FIELDS: LaunchProfileFields = {
   screen_height: 768,
   screen_width: 1366,
   sleep_policy: { mode: "default" },
-  tags: [],
   timezone: "",
   user_agent: ""
 };
@@ -263,7 +256,6 @@ function normalizeLaunchProfileFields(
       optionalInteger(input.screen_height, "screen_height", 100, 10000) ?? defaults.screen_height,
     screen_width: optionalInteger(input.screen_width, "screen_width", 100, 10000) ?? defaults.screen_width,
     sleep_policy: optionalSleepPolicy(input.sleep_policy) ?? defaults.sleep_policy,
-    tags: optionalTags(input.tags) ?? defaults.tags,
     timezone: optionalString(input.timezone, "timezone") ?? defaults.timezone,
     user_agent: optionalString(input.user_agent, "user_agent") ?? defaults.user_agent
   };
@@ -293,7 +285,6 @@ function normalizePartialLaunchProfileFields(input: Record<string, unknown>): Pa
   assignIfPresent(fields, "screen_height", optionalInteger(input.screen_height, "screen_height", 100, 10000));
   assignIfPresent(fields, "screen_width", optionalInteger(input.screen_width, "screen_width", 100, 10000));
   assignIfPresent(fields, "sleep_policy", optionalSleepPolicy(input.sleep_policy));
-  assignIfPresent(fields, "tags", optionalTags(input.tags));
   assignIfPresent(fields, "timezone", optionalString(input.timezone, "timezone"));
   assignIfPresent(fields, "user_agent", optionalString(input.user_agent, "user_agent"));
 
@@ -493,31 +484,6 @@ export function validateCustomLaunchArgs(value: string[]): void {
       );
     }
   }
-}
-
-function optionalTags(value: unknown): ProfileTag[] | undefined {
-  if (value === undefined) {
-    return undefined;
-  }
-
-  if (!Array.isArray(value)) {
-    throw new ProfileValidationError("tags must be an array");
-  }
-
-  return value.map((tag) => {
-    if (!isRecord(tag) || typeof tag.name !== "string" || tag.name.trim() === "") {
-      throw new ProfileValidationError("tag name must be a non-empty string");
-    }
-
-    if (tag.color !== undefined && (typeof tag.color !== "string" || !/^#[0-9a-fA-F]{6}$/.test(tag.color))) {
-      throw new ProfileValidationError("tag color must be a hex color");
-    }
-
-    return {
-      ...(tag.color === undefined ? {} : { color: tag.color }),
-      name: tag.name
-    };
-  });
 }
 
 function randomFingerprintSeed(): string {

@@ -1071,7 +1071,6 @@ function profile(overrides: Partial<BrowserProfile>): BrowserProfile {
     screen_width: 1920,
     sleep_policy: { mode: "default" },
     sleep_policy_status: { blocks_sleep: false, effective_minutes: 30, mode: "default" },
-    tags: [],
     timezone: "",
     updated_at: "2026-01-01T00:00:00.000Z",
     user_agent: "",

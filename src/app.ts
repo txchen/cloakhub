@@ -795,11 +795,11 @@ function renderLoginShell(): string {
     <style>
       :root {
         color-scheme: light;
-        --bg: #f6f7f8;
+        --bg: #efe5d8;
         --border: #d7dbdf;
         --ink: #1d252c;
         --muted: #60707d;
-        --panel: #ffffff;
+        --panel: #faf3ea;
         --accent: #1f6feb;
       }
 
@@ -851,6 +851,7 @@ function renderLoginShell(): string {
       }
 
       input {
+        background: var(--panel);
         border: 1px solid var(--border);
         margin-bottom: 12px;
         padding: 8px 10px;
@@ -1049,13 +1050,14 @@ function renderManualViewer(viewer: BrowserRuntimeManualViewerState): string {
         window.setTimeout(() => {
           status.hidden = true;
         }, 1200);
-        window.opener?.postMessage(
-          {
-            profile_id: "${escapeHtml(viewer.profile_id)}",
-            type: "cloakhub-viewer-connected"
-          },
-          location.origin
-        );
+        const connectedMessage = {
+          profile_id: "${escapeHtml(viewer.profile_id)}",
+          type: "cloakhub-viewer-connected"
+        };
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage(connectedMessage, location.origin);
+        }
+        window.opener?.postMessage(connectedMessage, location.origin);
       });
       rfb.addEventListener("disconnect", () => {
         status.hidden = false;
@@ -1096,68 +1098,8 @@ function renderShell(
   const profileItems =
     profiles.length === 0
       ? `<div class="empty">No Browser Profiles registered</div>`
-      : profiles
-          .map(
-            (profile) => `<article class="profile-item" data-profile-id="${escapeHtml(profile.profile_id)}">
-              <div class="profile-summary">
-                <div class="profile-title">
-                  <strong>${escapeHtml(profile.display_name)}</strong>
-                  <code>${escapeHtml(profile.profile_id)}</code>
-                </div>
-                <span class="instance-pill ${escapeHtml(profile.instance_status)}">${escapeHtml(profile.instance_status)}</span>
-              </div>
-              <div class="profile-facts">
-                <span>Instance Status: ${escapeHtml(profile.instance_status)}</span>
-                <span>CDP Sessions: ${profile.cdp_session_count}</span>
-                <span>Viewers: ${profile.manual_viewer_count}</span>
-                <span>Last Manual Input: ${escapeHtml(profile.last_manual_input_at ?? "none")}</span>
-                <span>Last Activity: ${escapeHtml(profile.last_activity_at ?? "none")}</span>
-                <span>${escapeHtml(profile.sleep_status)}</span>
-                <span>${escapeHtml(resourceUsageLabel(profile.resource_usage))}</span>
-                <span>Owned Processes: ${profile.resource_usage.owned_process_count}</span>
-                <span>Last Stop Reason: ${escapeHtml(profile.last_stop_reason ?? "none")}</span>
-                <span>Last Launch Error: ${escapeHtml(profile.last_launch_error ?? "none")}</span>
-                ${renderCdpSessions(profile)}
-              </div>
-              <div class="profile-tags">
-                ${sleepPolicyBadge(profile)}
-                ${profile.tags.map((tag) => `<span class="tag">${escapeHtml(tag.name)}</span>`).join("")}
-                ${profile.proxy ? `<span class="proxy">${escapeHtml(profile.proxy)}</span>` : ""}
-                ${profile.notes ? `<span>${escapeHtml(profile.notes)}</span>` : ""}
-              </div>
-              <div class="profile-actions">
-                ${renderManualViewerControls(profile)}
-                <button class="profile-lifecycle-button" data-action="start" data-cdp-session-count="${profile.cdp_session_count}" data-manual-viewer-count="${profile.manual_viewer_count}" data-profile-id="${escapeHtml(profile.profile_id)}" type="button">Start</button>
-                <button class="profile-lifecycle-button" data-action="stop" data-cdp-session-count="${profile.cdp_session_count}" data-manual-viewer-count="${profile.manual_viewer_count}" data-profile-id="${escapeHtml(profile.profile_id)}" type="button">Stop</button>
-                <button class="profile-lifecycle-button" data-action="restart" data-cdp-session-count="${profile.cdp_session_count}" data-manual-viewer-count="${profile.manual_viewer_count}" data-profile-id="${escapeHtml(profile.profile_id)}" type="button">Restart</button>
-              </div>
-              <div class="profile-security">
-                ${renderCdpTokenControls(profile)}
-              </div>
-              <details class="profile-edit">
-                <summary>Edit profile</summary>
-                <form class="profile-update-form" data-profile-id="${escapeHtml(profile.profile_id)}">
-                  <label>
-                    Display Name
-                    <input name="display_name" value="${escapeHtml(profile.display_name)}">
-                    <span class="field-hint">Shown in the profile list; changing it does not alter automation URLs.</span>
-                  </label>
-                  <label>
-                    Notes
-                    <input name="notes" value="${escapeHtml(profile.notes)}">
-                    <span class="field-hint">Private operator notes for this Browser Profile.</span>
-                  </label>
-                  ${renderLaunchProfileInputs(profile)}
-                  <div class="form-actions">
-                    <button type="submit">Save</button>
-                    <button class="profile-delete-button" data-profile-id="${escapeHtml(profile.profile_id)}" type="button">Delete</button>
-                  </div>
-                  ${profile.last_delete_error ? `<span class="form-error">${escapeHtml(profile.last_delete_error)}</span>` : ""}
-                </form>
-              </details>
-            </article>`
-          )
-          .join("");
+      : profiles.map((profile) => renderProfileListItem(profile)).join("");
+  const profileEditDialogs = profiles.map((profile) => renderEditProfileDialog(profile)).join("");
 
   return `<!doctype html>
 <html lang="en">
@@ -1169,12 +1111,12 @@ function renderShell(
       :root {
         color-scheme: light;
         --sidebar-width: 292px;
-        --bg: #eef1f4;
+        --bg: #efe5d8;
         --border: #cfd7df;
         --ink: #17202a;
         --muted: #657584;
-        --panel: #ffffff;
-        --panel-strong: #f8fafb;
+        --panel: #faf3ea;
+        --panel-strong: #f3e7d8;
         --success: #0f8f5f;
         --accent: #2463eb;
         --warning: #b7791f;
@@ -1203,15 +1145,15 @@ function renderShell(
         background: var(--panel);
         border-bottom: 1px solid var(--border);
         display: flex;
-        gap: 18px;
-        min-height: 58px;
-        padding: 0 18px;
+        gap: 12px;
+        min-height: 44px;
+        padding: 0 12px;
       }
 
       .header-meta {
         align-items: center;
         display: flex;
-        gap: 10px;
+        gap: 8px;
         margin-left: auto;
       }
 
@@ -1221,15 +1163,15 @@ function renderShell(
         border-radius: 6px;
         color: white;
         display: inline-flex;
-        font-size: 0.78rem;
+        font-size: 0.7rem;
         font-weight: 700;
-        height: 32px;
+        height: 26px;
         justify-content: center;
-        width: 32px;
+        width: 26px;
       }
 
       h1 {
-        font-size: 1.05rem;
+        font-size: 0.94rem;
         line-height: 1.2;
         margin: 0;
       }
@@ -1237,7 +1179,7 @@ function renderShell(
       .manager-shell {
         display: grid;
         grid-template-columns: minmax(220px, var(--sidebar-width)) 6px minmax(0, 1fr);
-        height: calc(100vh - 58px);
+        height: calc(100vh - 44px);
         min-height: 0;
       }
 
@@ -1248,6 +1190,7 @@ function renderShell(
       .profile-sidebar {
         background: var(--panel);
         border-right: 1px solid var(--border);
+        container-type: inline-size;
         display: grid;
         grid-template-rows: auto minmax(0, 1fr);
         min-height: 0;
@@ -1269,7 +1212,7 @@ function renderShell(
       #show-sidebar {
         align-items: center;
         display: inline-flex;
-        min-height: 28px;
+        min-height: 24px;
       }
 
       #show-sidebar[hidden] {
@@ -1279,17 +1222,24 @@ function renderShell(
       .sidebar-head {
         border-bottom: 1px solid var(--border);
         min-width: 220px;
-        padding: 10px 12px;
+        padding: 6px 8px;
       }
 
       .sidebar-actions {
         align-items: center;
         display: flex;
-        gap: 6px;
+        gap: 4px;
+      }
+
+      .sidebar-head button,
+      #show-sidebar {
+        font-size: 0.72rem;
+        min-height: 24px;
+        padding: 0 7px;
       }
 
       h2 {
-        font-size: 0.88rem;
+        font-size: 0.8rem;
         margin: 0;
       }
 
@@ -1328,7 +1278,7 @@ function renderShell(
       input,
       select,
       textarea {
-        background: #ffffff;
+        background: var(--panel);
         border: 1px solid var(--border);
         color: var(--ink);
         padding: 7px 9px;
@@ -1408,13 +1358,18 @@ function renderShell(
         border: 1px solid var(--border);
         border-radius: 8px;
         display: grid;
-        gap: 8px;
-        padding: 9px;
+        min-height: 52px;
+        padding: 7px;
+        position: relative;
+      }
+
+      .profile-item.selected {
+        background: #eef6ff;
+        border-color: var(--accent);
+        box-shadow: inset 3px 0 0 var(--accent);
       }
 
       .profile-summary,
-      .profile-actions,
-      .profile-tags,
       .form-actions {
         align-items: center;
         display: flex;
@@ -1424,6 +1379,19 @@ function renderShell(
 
       .profile-summary {
         justify-content: space-between;
+      }
+
+      .profile-row {
+        align-items: start;
+        display: grid;
+        gap: 6px;
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .profile-main {
+        display: grid;
+        gap: 4px;
+        min-width: 0;
       }
 
       .profile-title {
@@ -1441,26 +1409,160 @@ function renderShell(
         overflow-wrap: anywhere;
       }
 
+      .profile-meta {
+        color: var(--muted);
+        display: flex;
+        flex-wrap: wrap;
+        font-size: 0.72rem;
+        gap: 4px 8px;
+        line-height: 1.25;
+      }
+
+      .profile-meta span:not(:last-child)::after {
+        color: #9aa7b2;
+        content: "|";
+        margin-left: 8px;
+      }
+
+      .profile-row-actions {
+        align-items: center;
+        display: flex;
+        gap: 3px;
+        justify-content: flex-start;
+      }
+
+      .profile-primary-action {
+        align-items: center;
+        display: inline-flex;
+        font-size: 0.72rem;
+        height: 26px;
+        justify-content: center;
+        line-height: 1;
+        min-height: 26px;
+        min-width: 26px;
+        padding: 0;
+        width: 26px;
+      }
+
+      .manual-viewer-button.profile-primary-action {
+        background: #e8edf3;
+        border: 1px solid var(--border);
+        color: var(--ink);
+      }
+
+      .profile-item.selected .manual-viewer-button.profile-primary-action {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: white;
+      }
+
+      .icon-button {
+        align-items: center;
+        background: #e8edf3;
+        border: 1px solid var(--border);
+        color: var(--ink);
+        display: inline-flex;
+        font-size: 0.72rem;
+        height: 26px;
+        justify-content: center;
+        line-height: 1;
+        min-height: 26px;
+        min-width: 26px;
+        padding: 0;
+        text-align: center;
+        width: 26px;
+      }
+
+      .profile-popover {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        box-shadow: 0 18px 48px rgb(15 23 42 / 0.18);
+        color: var(--ink);
+        gap: 10px;
+        left: min(calc(var(--sidebar-width) + 18px), calc(100vw - 372px));
+        margin: 0;
+        max-height: calc(100vh - 96px);
+        overflow: auto;
+        padding: 12px;
+        position: fixed;
+        top: 74px;
+        width: min(340px, calc(100vw - 24px));
+      }
+
+      .profile-popover:not(:popover-open) {
+        display: none;
+      }
+
+      .profile-popover:popover-open {
+        display: grid;
+      }
+
+      .profile-detail-section {
+        display: grid;
+        gap: 10px;
+      }
+
+      .profile-detail-section h3 {
+        font-size: 0.88rem;
+        margin: 0;
+      }
+
+      .profile-detail-list {
+        display: grid;
+        gap: 8px;
+        margin: 0;
+      }
+
+      .profile-detail-list div {
+        display: grid;
+        gap: 2px;
+      }
+
+      .profile-detail-list dt {
+        color: var(--muted);
+        font-size: 0.68rem;
+        font-weight: 800;
+        text-transform: uppercase;
+      }
+
+      .profile-detail-list dd {
+        font-size: 0.78rem;
+        margin: 0;
+        overflow-wrap: anywhere;
+      }
+
+      .profile-menu-popover {
+        min-width: 240px;
+      }
+
+      .profile-menu-section {
+        border-bottom: 1px solid var(--border);
+        display: grid;
+        gap: 6px;
+        padding-bottom: 10px;
+      }
+
+      .profile-menu-section:last-child {
+        border-bottom: 0;
+        padding-bottom: 0;
+      }
+
+      .menu-item {
+        background: #e8edf3;
+        color: var(--ink);
+        justify-content: flex-start;
+        text-align: left;
+        width: 100%;
+      }
+
       code {
         color: var(--muted);
         font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
         font-size: 0.72rem;
       }
 
-      .profile-facts {
-        color: var(--muted);
-        display: grid;
-        font-size: 0.75rem;
-        gap: 3px;
-      }
-
-      .profile-facts ul {
-        margin: 4px 0 0;
-        padding-left: 18px;
-      }
-
       .sleep-policy-badge,
-      .tag,
       .proxy,
       .instance-pill {
         border-radius: 999px;
@@ -1480,11 +1582,6 @@ function renderShell(
         background: #fff1d6;
         border: 1px solid var(--warning);
         color: #754c0b;
-      }
-
-      .tag {
-        background: #e8f5ee;
-        color: #12613f;
       }
 
       .proxy {
@@ -1538,6 +1635,12 @@ function renderShell(
         margin: 6px 0;
       }
 
+      .cdp-token-button.copied {
+        background: #e5f7ed;
+        border-color: #a8dfbf;
+        color: #12613f;
+      }
+
       .cdp-token-warning {
         color: #754c0b;
         display: block;
@@ -1549,20 +1652,25 @@ function renderShell(
         font-size: 0.75rem;
       }
 
-      .profile-edit {
-        border-top: 1px solid var(--border);
-        padding-top: 8px;
-      }
-
-      .profile-edit summary {
-        color: var(--muted);
-        cursor: pointer;
-        font-size: 0.76rem;
-        font-weight: 700;
-      }
-
       .profile-update-form {
         margin-top: 8px;
+      }
+
+      @container (max-width: 260px) {
+        .profile-summary {
+          align-items: flex-start;
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) auto;
+          width: 100%;
+        }
+
+        .profile-meta {
+          gap: 3px 6px;
+        }
+
+        .profile-meta span:not(:last-child)::after {
+          margin-left: 6px;
+        }
       }
 
       .sidebar-resizer {
@@ -1594,8 +1702,44 @@ function renderShell(
       .viewer-pane {
         background: #11161d;
         display: grid;
-        grid-template-rows: minmax(0, 1fr);
+        grid-template-rows: auto minmax(0, 1fr);
         min-width: 0;
+      }
+
+      .viewer-status {
+        align-items: center;
+        background: var(--panel);
+        border-bottom: 1px solid var(--border);
+        color: var(--ink);
+        display: flex;
+        gap: 10px;
+        min-height: 44px;
+        min-width: 0;
+        padding: 8px 12px;
+      }
+
+      .viewer-status-label {
+        color: var(--muted);
+        font-size: 0.72rem;
+        font-weight: 800;
+        text-transform: uppercase;
+      }
+
+      .viewer-status-name {
+        font-size: 0.9rem;
+        font-weight: 800;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .viewer-status-id {
+        margin-left: auto;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
 
       .sr-only {
@@ -1929,6 +2073,13 @@ function renderShell(
           border-top: 1px solid var(--border);
         }
 
+        .profile-popover {
+          left: 12px;
+          right: 12px;
+          top: 74px;
+          width: auto;
+        }
+
         .form-fields {
           grid-template-columns: 1fr;
         }
@@ -1965,7 +2116,11 @@ function renderShell(
       </aside>
       <div class="sidebar-resizer" id="sidebar-resizer" role="separator" aria-orientation="vertical" aria-label="Resize profile sidebar"></div>
       <section class="viewer-pane" aria-labelledby="viewer-heading">
-        <h2 class="sr-only" id="viewer-heading">Manual VNC viewer</h2>
+        <div class="viewer-status" aria-live="polite">
+          <span class="viewer-status-label">Viewer</span>
+          <h2 class="viewer-status-name" id="viewer-heading">No profile selected</h2>
+          <code class="viewer-status-id" id="viewer-profile-id">Choose a profile</code>
+        </div>
         <div class="viewer-frame-wrap">
           <iframe id="viewer-frame" title="CloakHub VNC Viewer"></iframe>
           <div class="viewer-placeholder">No active viewer</div>
@@ -1978,6 +2133,7 @@ function renderShell(
         </div>
         ${renderCreateProfileForm()}
       </dialog>
+      ${profileEditDialogs}
     </main>
       <script>
       const createProfileModal = document.getElementById("create-profile-modal");
@@ -1994,14 +2150,15 @@ function renderShell(
       const createSummaryProxy = document.getElementById("create-summary-proxy");
       const createSummaryRegion = document.getElementById("create-summary-region");
       const createSummaryScreen = document.getElementById("create-summary-screen");
-      const createTabButtons = Array.from(document.querySelectorAll(".create-tab-button"));
-      const createTabPanels = Array.from(document.querySelectorAll(".create-tab-panel"));
+      const profileForms = Array.from(document.querySelectorAll(".profile-form"));
       const createTimezoneInput = document.getElementById("create-timezone");
       const managerShell = document.querySelector(".manager-shell");
       const resizer = document.getElementById("sidebar-resizer");
       const showSidebarButton = document.getElementById("show-sidebar");
       const toggleSidebarButton = document.getElementById("toggle-sidebar");
       const viewerFrame = document.getElementById("viewer-frame");
+      const viewerHeading = document.getElementById("viewer-heading");
+      const viewerProfileId = document.getElementById("viewer-profile-id");
       const savedSidebarWidth = Number(localStorage.getItem("cloakhub.sidebarWidth"));
       const savedSidebarCollapsed = localStorage.getItem("cloakhub.sidebarCollapsed") === "true";
 
@@ -2014,11 +2171,106 @@ function renderShell(
         location.reload();
       }
 
-      async function refreshDashboard() {
-        await fetch("/ui/profiles").catch(() => undefined);
+      async function copyTextToClipboard(text) {
+        if (navigator.clipboard?.writeText) {
+          try {
+            await navigator.clipboard.writeText(text);
+            return true;
+          } catch (_) {
+            // Use the selection-based fallback below when clipboard permission is blocked.
+          }
+        }
+
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        textarea.setAttribute("readonly", "");
+        textarea.style.position = "fixed";
+        textarea.style.top = "-1000px";
+        textarea.style.left = "-1000px";
+        document.body.appendChild(textarea);
+        textarea.select();
+        try {
+          return document.execCommand("copy");
+        } catch (_) {
+          return false;
+        } finally {
+          textarea.remove();
+        }
       }
 
-      setInterval(refreshDashboard, 2500);
+      function showCopyFeedback(button) {
+        if (!button) {
+          return;
+        }
+
+        const originalLabel = button.dataset.copyOriginalLabel || button.textContent;
+        button.dataset.copyOriginalLabel = originalLabel;
+        button.textContent = "Copied";
+        button.classList.add("copied");
+        window.clearTimeout?.(button.copyFeedbackTimeout);
+        button.copyFeedbackTimeout = window.setTimeout?.(() => {
+          button.textContent = button.dataset.copyOriginalLabel || originalLabel;
+          button.classList.remove("copied");
+        }, 1400);
+      }
+
+      async function copyCdpUrl(cdpUrl, button) {
+        if (!(await copyTextToClipboard(cdpUrl))) {
+          window.alert?.("Unable to copy CDP URL. Open profile info and copy it manually.");
+          return;
+        }
+
+        showCopyFeedback(button);
+      }
+
+      function clientStatusLabel(cdpSessionCount, manualViewerCount) {
+        const parts = [];
+        if (cdpSessionCount > 0) {
+          parts.push(cdpSessionCount + " CDP");
+        }
+        if (manualViewerCount > 0) {
+          parts.push(manualViewerCount + " viewer");
+        }
+        return parts.join(" / ");
+      }
+
+      function updateProfileViewerPresence(profileId, minimumManualViewerCount) {
+        let manualViewerCount = minimumManualViewerCount;
+        document.querySelectorAll("[data-profile-manual-viewer-count]").forEach((countNode) => {
+          if (countNode.dataset.profileId === profileId) {
+            manualViewerCount = Math.max(Number(countNode.textContent ?? 0), minimumManualViewerCount);
+            countNode.textContent = String(manualViewerCount);
+          }
+        });
+
+        document.querySelectorAll("[data-profile-client-status]").forEach((statusNode) => {
+          if (statusNode.dataset.profileId !== profileId) {
+            return;
+          }
+
+          statusNode.dataset.manualViewerCount = String(manualViewerCount);
+          const label = clientStatusLabel(
+            Number(statusNode.dataset.cdpSessionCount ?? 0),
+            manualViewerCount
+          );
+          statusNode.textContent = label;
+          if (statusNode.parentElement) {
+            statusNode.parentElement.hidden = label === "";
+          }
+        });
+
+        document.querySelectorAll("[data-manual-viewer-count]").forEach((actionNode) => {
+          if (actionNode.dataset.profileId === profileId) {
+            actionNode.dataset.manualViewerCount = String(manualViewerCount);
+          }
+        });
+      }
+
+      function closeProfilePopovers() {
+        document.querySelectorAll(".profile-popover:popover-open").forEach((popover) => {
+          popover.hidePopover?.();
+        });
+      }
 
       let createProfileIdEdited = false;
 
@@ -2036,14 +2288,18 @@ function renderShell(
         updateCreateProfileSummary();
       });
 
-      createTabButtons.forEach((button) => {
-        button.addEventListener("click", (event) => {
-          const tab = event.currentTarget.dataset.createTab;
-          createTabButtons.forEach((tabButton) => {
-            tabButton.classList.toggle("active", tabButton.dataset.createTab === tab);
-          });
-          createTabPanels.forEach((panel) => {
-            panel.hidden = panel.dataset.createPanel !== tab;
+      profileForms.forEach((form) => {
+        const tabButtons = Array.from(form.querySelectorAll(".profile-tab-button"));
+        const tabPanels = Array.from(form.querySelectorAll(".profile-tab-panel"));
+        tabButtons.forEach((button) => {
+          button.addEventListener("click", (event) => {
+            const tab = event.currentTarget.dataset.profileTab;
+            tabButtons.forEach((tabButton) => {
+              tabButton.classList.toggle("active", tabButton.dataset.profileTab === tab);
+            });
+            tabPanels.forEach((panel) => {
+              panel.hidden = panel.dataset.profilePanel !== tab;
+            });
           });
         });
       });
@@ -2070,7 +2326,7 @@ function renderShell(
         createSummaryName.textContent = createDisplayNameInput?.value || "Untitled profile";
         createSummaryId.textContent = createProfileIdInput?.value || "Required";
         createSummaryMode.textContent =
-          createHeadlessSelect?.value === "true" ? "Headless CDP only" : "VNC/manual browser";
+          createHeadlessSelect?.value === "true" ? "Automation only" : "Browser viewer";
         createSummaryProxy.textContent = createProxyInput?.value || "No proxy";
         createSummaryRegion.textContent = timezone + " / " + locale;
         createSummaryScreen.textContent =
@@ -2137,13 +2393,31 @@ function renderShell(
         });
       }
 
-      window.addEventListener("message", (event) => {
-        if (
-          event.origin === location.origin &&
-          event.data?.type === "cloakhub-viewer-connected"
-        ) {
-          refreshDashboard();
-        }
+      document.querySelectorAll(".profile-edit-button").forEach((button) => {
+        button.addEventListener("click", (event) => {
+          closeProfilePopovers();
+          const profileId = event.currentTarget.dataset.profileId;
+          const editProfileModal = document.getElementById("edit-profile-" + profileId + "-modal");
+          if (typeof editProfileModal?.showModal === "function") {
+            editProfileModal.showModal();
+            return;
+          }
+
+          editProfileModal?.setAttribute("open", "");
+        });
+      });
+
+      document.querySelectorAll(".profile-edit-close").forEach((button) => {
+        button.addEventListener("click", (event) => {
+          const profileId = event.currentTarget.dataset.profileId;
+          const editProfileModal = document.getElementById("edit-profile-" + profileId + "-modal");
+          if (typeof editProfileModal?.close === "function") {
+            editProfileModal.close();
+            return;
+          }
+
+          editProfileModal?.removeAttribute("open");
+        });
       });
 
       document.getElementById("create-profile-form").addEventListener("submit", async (event) => {
@@ -2193,8 +2467,33 @@ function renderShell(
         button.addEventListener("click", (event) => {
           event.preventDefault();
           const profileId = event.currentTarget.dataset.profileId;
+          const profileName = event.currentTarget.dataset.profileName || profileId;
           viewerFrame.src = "/ui/profiles/" + encodeURIComponent(profileId) + "/viewer";
+          viewerFrame.title = "CloakHub viewer for " + profileName;
+          viewerHeading.textContent = profileName;
+          viewerProfileId.textContent = profileId;
+          document.querySelectorAll(".profile-item").forEach((profileItem) => {
+            const selected = profileItem.dataset.profileId === profileId;
+            profileItem.classList.toggle("selected", selected);
+            if (selected) {
+              profileItem.setAttribute("aria-current", "true");
+            } else {
+              profileItem.removeAttribute("aria-current");
+            }
+          });
         });
+      });
+
+      window.addEventListener("message", (event) => {
+        if (
+          event.origin !== location.origin ||
+          event.data?.type !== "cloakhub-viewer-connected" ||
+          typeof event.data.profile_id !== "string"
+        ) {
+          return;
+        }
+
+        updateProfileViewerPresence(event.data.profile_id, 1);
       });
 
       document.querySelectorAll(".profile-lifecycle-button").forEach((button) => {
@@ -2244,12 +2543,7 @@ function renderShell(
               "/api/profiles/" +
               encodeURIComponent(profileId) +
               "/cdp/json/version";
-            await navigator.clipboard.writeText(cdpUrl);
-            reloadDashboard();
-            return;
-          }
-
-          if (action === "copy-url" && !confirm("Token-bearing CDP URLs can leak access. Continue?")) {
+            await copyCdpUrl(cdpUrl, event.currentTarget);
             return;
           }
 
@@ -2266,8 +2560,7 @@ function renderShell(
               encodeURIComponent(profileId) +
               "/cdp/json/version?token=" +
               encodeURIComponent(body.cdp_token);
-            await navigator.clipboard.writeText(cdpUrl);
-            reloadDashboard();
+            await copyCdpUrl(cdpUrl, event.currentTarget);
             return;
           }
 
@@ -2309,10 +2602,6 @@ function renderShell(
             .filter(Boolean);
         }
 
-        if (values.tags_json !== undefined) {
-          values.tags = values.tags_json === "" ? [] : JSON.parse(values.tags_json);
-        }
-
         if (values.sleep_policy_mode) {
           values.sleep_policy = { mode: values.sleep_policy_mode };
           if (values.sleep_policy_mode === "minutes") {
@@ -2322,7 +2611,6 @@ function renderShell(
 
         delete values.sleep_policy_mode;
         delete values.sleep_policy_minutes;
-        delete values.tags_json;
         return values;
       }
 
@@ -2339,187 +2627,357 @@ function renderShell(
 </html>`;
 }
 
+function renderProfileListItem(profile: PresentedBrowserProfile): string {
+  const profileId = escapeHtml(profile.profile_id);
+  const profileInfoPopoverId = `${profileId}-profile-info`;
+  const profileMenuPopoverId = `${profileId}-profile-menu`;
+  const activeClients = compactClientStatus(profile);
+
+  return `<article class="profile-item" data-profile-id="${profileId}">
+              <div class="profile-row">
+                <div class="profile-main">
+                  <div class="profile-summary">
+                    <div class="profile-title">
+                      <strong>${escapeHtml(profile.display_name)}</strong>
+                      <code>${profileId}</code>
+                    </div>
+                    <span class="instance-pill ${escapeHtml(profile.instance_status)}">${escapeHtml(profile.instance_status)}</span>
+                  </div>
+                  <div class="profile-meta" aria-label="Profile quick facts"${activeClients ? "" : " hidden"}><span data-profile-client-status data-profile-id="${profileId}" data-cdp-session-count="${profile.cdp_session_count}" data-manual-viewer-count="${profile.manual_viewer_count}">${escapeHtml(activeClients)}</span></div>
+                </div>
+                <div class="profile-row-actions">
+                  ${renderPrimaryProfileAction(profile)}
+                  <button class="profile-info icon-button" popovertarget="${profileInfoPopoverId}" title="Profile info" aria-label="Profile details for ${profileId}" type="button">ℹ️</button>
+                  <button class="profile-menu icon-button" popovertarget="${profileMenuPopoverId}" title="Profile actions" aria-label="Profile actions for ${profileId}" type="button">...</button>
+                  <div class="profile-popover profile-info-popover" id="${profileInfoPopoverId}" popover>
+                    ${renderProfileDetails(profile)}
+                  </div>
+                  <div class="profile-popover profile-menu-popover" id="${profileMenuPopoverId}" popover>
+                    ${renderProfileActionMenu(profile)}
+                  </div>
+                </div>
+              </div>
+            </article>`;
+}
+
+function compactClientStatus(profile: PresentedBrowserProfile): string {
+  const clients = [
+    profile.cdp_session_count > 0 ? `${profile.cdp_session_count} CDP` : "",
+    profile.manual_viewer_count > 0 ? `${profile.manual_viewer_count} viewer` : ""
+  ].filter(Boolean);
+
+  return clients.join(" / ");
+}
+
+function renderPrimaryProfileAction(profile: PresentedBrowserProfile): string {
+  if (!profile.headless) {
+    return `<button class="manual-viewer-button profile-primary-action" data-profile-id="${escapeHtml(profile.profile_id)}" data-profile-name="${escapeHtml(profile.display_name)}" title="View profile" aria-label="View profile ${escapeHtml(profile.profile_id)}" type="button">🖥️</button>`;
+  }
+
+  return `<button class="profile-lifecycle-button profile-primary-action" data-action="start" data-cdp-session-count="${profile.cdp_session_count}" data-manual-viewer-count="${profile.manual_viewer_count}" data-profile-id="${escapeHtml(profile.profile_id)}" title="Start profile" aria-label="Start profile ${escapeHtml(profile.profile_id)}" type="button">▶</button>`;
+}
+
+function renderProfileDetails(profile: PresentedBrowserProfile): string {
+  return `<section class="profile-detail-section" aria-label="Profile details">
+                <h3>${escapeHtml(profile.display_name)}</h3>
+                <dl class="profile-detail-list">
+                  <div>
+                    <dt>Instance Status</dt>
+                    <dd>${escapeHtml(profile.instance_status)}</dd>
+                  </div>
+                  <div>
+                    <dt>CDP Sessions</dt>
+                    <dd>${profile.cdp_session_count}</dd>
+                  </div>
+                  <div>
+                    <dt>Viewers</dt>
+                    <dd data-profile-manual-viewer-count data-profile-id="${escapeHtml(profile.profile_id)}">${profile.manual_viewer_count}</dd>
+                  </div>
+                  <div>
+                    <dt>Last Manual Input</dt>
+                    <dd>${escapeHtml(profile.last_manual_input_at ?? "none")}</dd>
+                  </div>
+                  <div>
+                    <dt>Last Activity</dt>
+                    <dd>${escapeHtml(profile.last_activity_at ?? "none")}</dd>
+                  </div>
+                  <div>
+                    <dt>Sleep</dt>
+                    <dd>${escapeHtml(profile.sleep_status)}</dd>
+                  </div>
+                  <div>
+                    <dt>Resource Usage</dt>
+                    <dd>${escapeHtml(resourceUsageLabel(profile.resource_usage))}</dd>
+                  </div>
+                  <div>
+                    <dt>Owned Processes</dt>
+                    <dd>${profile.resource_usage.owned_process_count}</dd>
+                  </div>
+                  <div>
+                    <dt>Last Stop Reason</dt>
+                    <dd>${escapeHtml(profile.last_stop_reason ?? "none")}</dd>
+                  </div>
+                  <div>
+                    <dt>Last Launch Error</dt>
+                    <dd>${escapeHtml(profile.last_launch_error ?? "none")}</dd>
+                  </div>
+                  <div>
+                    <dt>Proxy</dt>
+                    <dd>${escapeHtml(profile.proxy || "none")}</dd>
+                  </div>
+                  <div>
+                    <dt>Notes</dt>
+                    <dd>${escapeHtml(profile.notes || "none")}</dd>
+                  </div>
+                  <div>
+                    <dt>Sleep Policy</dt>
+                    <dd>${sleepPolicyBadge(profile)}</dd>
+                  </div>
+                  <div>
+                    <dt>CDP Token</dt>
+                    <dd>${profile.cdp_token_configured ? "configured" : "open"}</dd>
+                  </div>
+                </dl>
+                ${renderCdpSessions(profile)}
+              </section>`;
+}
+
+function renderProfileActionMenu(profile: PresentedBrowserProfile): string {
+  const profileId = escapeHtml(profile.profile_id);
+  const clientCounts = `data-cdp-session-count="${profile.cdp_session_count}" data-manual-viewer-count="${profile.manual_viewer_count}"`;
+
+  return `<div class="profile-menu-section">
+                <button class="menu-item profile-lifecycle-button" data-action="start" ${clientCounts} data-profile-id="${profileId}" type="button">Start</button>
+                <button class="menu-item profile-lifecycle-button" data-action="stop" ${clientCounts} data-profile-id="${profileId}" type="button">Stop</button>
+                <button class="menu-item profile-lifecycle-button" data-action="restart" ${clientCounts} data-profile-id="${profileId}" type="button">Restart</button>
+                <button class="menu-item profile-edit-button" data-profile-id="${profileId}" type="button">Edit</button>
+              </div>
+              <div class="profile-menu-section profile-security">
+                ${renderCdpTokenControls(profile)}
+              </div>`;
+}
+
+function renderEditProfileDialog(profile: PresentedBrowserProfile): string {
+  const profileId = escapeHtml(profile.profile_id);
+
+  return `<dialog class="profile-edit-modal" id="edit-profile-${profileId}-modal">
+        <div class="modal-head">
+          <h2>Edit Profile</h2>
+          <button class="secondary profile-edit-close" data-profile-id="${profileId}" type="button">Close</button>
+        </div>
+        ${renderProfileForm({ mode: "edit", profile })}
+      </dialog>`;
+}
+
 function renderCreateProfileForm(): string {
-  return `<form class="create-profile-form" id="create-profile-form">
+  return renderProfileForm({ mode: "create" });
+}
+
+function renderProfileForm(options: {
+  mode: "create";
+  profile?: undefined;
+} | {
+  mode: "edit";
+  profile: PresentedBrowserProfile;
+}): string {
+  const profile = options.profile;
+  const isEdit = options.mode === "edit";
+  const editProfile = options.mode === "edit" ? options.profile : undefined;
+  const prefix = editProfile ? `edit-${editProfile.profile_id}` : "create";
+  const formId = editProfile ? `edit-profile-${editProfile.profile_id}-form` : "create-profile-form";
+  const formClasses = `profile-form create-profile-form${isEdit ? " profile-update-form" : ""}`;
+  const dataProfile = editProfile ? ` data-profile-id="${escapeHtml(editProfile.profile_id)}"` : "";
+  const submitLabel = isEdit ? "Save Changes" : "Create Profile";
+  const cancelButton = editProfile
+    ? `<button class="secondary profile-edit-close" data-profile-id="${escapeHtml(editProfile.profile_id)}" type="button">Cancel</button>`
+    : `<button class="secondary" id="cancel-create-profile" type="button">Cancel</button>`;
+  const deleteButton = editProfile
+    ? `<button class="profile-delete-button" data-profile-id="${escapeHtml(editProfile.profile_id)}" type="button">Delete</button>`
+    : "";
+  const displayName = profile?.display_name ?? "";
+  const profileId = profile?.profile_id ?? "";
+  const notes = profile?.notes ?? "";
+  const proxyPlaceholder = editProfile?.proxy ? ` placeholder="${escapeHtml(editProfile.proxy)}"` : ` placeholder="http://user:pass@host:port"`;
+  const launchArgs = profile?.custom_launch_args.join("\n") ?? "";
+  const sleepPolicyMode = profile?.sleep_policy.mode ?? "default";
+  const sleepPolicyMinutes = profile?.sleep_policy.mode === "minutes" ? profile.sleep_policy.minutes : "";
+
+  return `<form class="${formClasses}" id="${escapeHtml(formId)}"${dataProfile}>
+          ${isEdit ? `<input name="_include_empty" type="hidden" value="true">` : ""}
           <div class="create-profile-body create-profile-grid">
             <nav class="create-profile-tabs" aria-label="Create profile sections">
-              <button class="create-tab-button active" data-create-tab="basic" type="button">Basic</button>
-              <button class="create-tab-button" data-create-tab="browser" type="button">Browser</button>
-              <button class="create-tab-button" data-create-tab="fingerprint" type="button">Fingerprint</button>
-              <button class="create-tab-button" data-create-tab="advanced" type="button">Advanced</button>
+              <button class="create-tab-button profile-tab-button active" data-profile-tab="basic" type="button">Basic</button>
+              <button class="create-tab-button profile-tab-button" data-profile-tab="browser" type="button">Browser</button>
+              <button class="create-tab-button profile-tab-button" data-profile-tab="fingerprint" type="button">Fingerprint</button>
+              <button class="create-tab-button profile-tab-button" data-profile-tab="advanced" type="button">Advanced</button>
             </nav>
             <div class="create-profile-panels">
-              <section class="form-section create-tab-panel" data-create-panel="basic" aria-labelledby="create-profile-basic">
+              <section class="form-section create-tab-panel profile-tab-panel" data-profile-panel="basic" aria-labelledby="${escapeHtml(prefix)}-profile-basic">
                 <div class="form-section-head">
-                  <h3 id="create-profile-basic">Basic information</h3>
-                  <p>Create the profile identity, network route, and operator notes.</p>
+                  <h3 id="${escapeHtml(prefix)}-profile-basic">Basic information</h3>
+                  <p>Profile identity, network route, and operator notes.</p>
                 </div>
                 <div class="form-fields">
                   <label class="form-field">
                     <span class="field-title">Profile Name</span>
-                    <input id="create-display-name" name="display_name" placeholder="Client A - US desktop" autocomplete="off">
+                    <input ${isEdit ? "" : `id="create-display-name"`} name="display_name" value="${escapeHtml(displayName)}" placeholder="Client A - US desktop" autocomplete="off">
                     <span class="field-hint">Shown in the profile list.</span>
                   </label>
                   <label class="form-field">
                     <span class="field-title">Profile ID</span>
-                    <input id="create-profile-id" name="profile_id" pattern="^[a-z][a-z0-9_]*$" placeholder="client_a_us" required autocomplete="off">
+                    <input ${isEdit ? `value="${escapeHtml(profileId)}" disabled` : `id="create-profile-id"`} name="profile_id" pattern="^[a-z][a-z0-9_]*$" placeholder="client_a_us" ${isEdit ? "" : "required"} autocomplete="off">
                     <span class="field-hint">Lower-case letters, numbers, and underscores. This becomes the immutable URL and directory name.</span>
                   </label>
                   <label class="form-field">
                     <span class="field-title">Proxy</span>
-                    <input id="create-proxy" name="proxy" placeholder="http://user:pass@host:port">
+                    <input ${isEdit ? "" : `id="create-proxy"`} name="proxy"${proxyPlaceholder}>
                     <span class="field-hint">Supports scheme URLs, host:port, or host:port:user:pass.</span>
                   </label>
                   <label class="form-field">
                     <span class="field-title">Notes</span>
-                    <input name="notes" placeholder="Owner, purpose, login context, or reminders">
+                    <input name="notes" value="${escapeHtml(notes)}" placeholder="Owner, purpose, login context, or reminders">
                     <span class="field-hint">Private operator context; not sent to CloakBrowser.</span>
                   </label>
                 </div>
               </section>
 
-              <section class="form-section create-tab-panel" data-create-panel="browser" aria-labelledby="create-profile-browser" hidden>
+              <section class="form-section create-tab-panel profile-tab-panel" data-profile-panel="browser" aria-labelledby="${escapeHtml(prefix)}-profile-browser" hidden>
                 <div class="form-section-head">
-                  <h3 id="create-profile-browser">Browser settings</h3>
+                  <h3 id="${escapeHtml(prefix)}-profile-browser">Browser settings</h3>
                   <p>Choose whether this profile is manual-viewer first or CDP-only.</p>
                 </div>
                 <div class="form-fields">
                   <label class="form-field">
                     <span class="field-title">Mode</span>
-                    <select id="create-headless" name="headless">
-                      <option value="false" selected>VNC/manual browser</option>
-                      <option value="true">Headless CDP only</option>
+                    <select ${isEdit ? "" : `id="create-headless"`} name="headless">
+                      ${selectOption("false", String(profile?.headless ?? false), "false", "Browser viewer")}
+                      ${selectOption("true", String(profile?.headless ?? false), "", "Automation only")}
                     </select>
                     <span class="field-hint">Manual browser exposes the right-side VNC viewer.</span>
                   </label>
                   <label class="form-field">
                     <span class="field-title">Clipboard Sync</span>
                     <select name="clipboard_sync">
-                      <option value="true" selected>Enabled</option>
-                      <option value="false">Disabled</option>
+                      ${selectOption("true", String(profile?.clipboard_sync ?? true), "true", "Enabled")}
+                      ${selectOption("false", String(profile?.clipboard_sync ?? true), "", "Disabled")}
                     </select>
                     <span class="field-hint">Allows manual paste and VNC clipboard transfer.</span>
                   </label>
                   <label class="form-field">
                     <span class="field-title">Humanize</span>
                     <select name="humanize">
-                      <option value="false" selected>Disabled</option>
-                      <option value="true">Enabled</option>
+                      ${selectOption("false", String(profile?.humanize ?? false), "false", "Disabled")}
+                      ${selectOption("true", String(profile?.humanize ?? false), "", "Enabled")}
                     </select>
                     <span class="field-hint">Enables CloakBrowser humanization behavior when supported.</span>
                   </label>
                   <label class="form-field">
                     <span class="field-title">Human Preset</span>
-                    <input name="human_preset" placeholder="Optional preset name">
+                    <input name="human_preset" value="${escapeHtml(profile?.human_preset ?? "")}" placeholder="Optional preset name">
                     <span class="field-hint">Leave blank unless you maintain named presets.</span>
                   </label>
                   <label class="form-field">
                     <span class="field-title">Sleep Policy</span>
                     <select name="sleep_policy_mode">
-                      <option value="default" selected>Global default</option>
-                      <option value="minutes">Custom minutes</option>
-                      <option value="never">Never sleep</option>
+                      ${selectOption("default", sleepPolicyMode, "default", "Global default")}
+                      ${selectOption("minutes", sleepPolicyMode, "", "Custom minutes")}
+                      ${selectOption("never", sleepPolicyMode, "", "Never sleep")}
                     </select>
                     <span class="field-hint">Automatic spin-down for idle Browser Instances.</span>
                   </label>
                   <label class="form-field">
                     <span class="field-title">Sleep Minutes</span>
-                    <input name="sleep_policy_minutes" type="number" min="1" max="1440" placeholder="30">
+                    <input name="sleep_policy_minutes" type="number" min="1" max="1440" value="${sleepPolicyMinutes}" placeholder="30">
                     <span class="field-hint">Used only with Custom minutes.</span>
                   </label>
                 </div>
               </section>
 
-              <section class="form-section create-tab-panel" data-create-panel="fingerprint" aria-labelledby="create-profile-fingerprint" hidden>
+              <section class="form-section create-tab-panel profile-tab-panel" data-profile-panel="fingerprint" aria-labelledby="${escapeHtml(prefix)}-profile-fingerprint" hidden>
                 <div class="form-section-head">
-                  <h3 id="create-profile-fingerprint">Fingerprint</h3>
+                  <h3 id="${escapeHtml(prefix)}-profile-fingerprint">Fingerprint</h3>
                   <p>Set regional, platform, display, and CPU signals.</p>
                 </div>
                 <div class="form-fields">
                   <label class="form-field">
                     <span class="field-title">Timezone</span>
-                    <input id="create-timezone" name="timezone" placeholder="America/Los_Angeles" autocomplete="off">
+                    <input ${isEdit ? "" : `id="create-timezone"`} name="timezone" value="${escapeHtml(profile?.timezone ?? "")}" placeholder="America/Los_Angeles" autocomplete="off">
                     <span class="field-hint">Blank keeps CloakBrowser defaults.</span>
                   </label>
                   <label class="form-field">
                     <span class="field-title">Locale</span>
-                    <input id="create-locale" name="locale" placeholder="en-US" autocomplete="off">
+                    <input ${isEdit ? "" : `id="create-locale"`} name="locale" value="${escapeHtml(profile?.locale ?? "")}" placeholder="en-US" autocomplete="off">
                     <span class="field-hint">Browser language and locale signal.</span>
                   </label>
                   <label class="form-field">
                     <span class="field-title">GeoIP</span>
-                    <input name="geoip" placeholder="Optional CloakBrowser GeoIP hint">
+                    <input name="geoip" value="${escapeHtml(profile?.geoip ?? "")}" placeholder="Optional CloakBrowser GeoIP hint">
                     <span class="field-hint">Use only when overriding automatic proxy-based behavior.</span>
                   </label>
                   <label class="form-field">
                     <span class="field-title">Platform</span>
-                    <select id="create-platform" name="platform">
-                      <option value="linux">linux</option>
-                      <option value="macos" selected>macos</option>
-                      <option value="windows">windows</option>
+                    <select ${isEdit ? "" : `id="create-platform"`} name="platform">
+                      ${selectOption("linux", profile?.platform ?? "")}
+                      ${selectOption("macos", profile?.platform ?? "", "macos")}
+                      ${selectOption("windows", profile?.platform ?? "")}
                     </select>
                     <span class="field-hint">Fingerprint platform value.</span>
                   </label>
                   <label class="form-field">
                     <span class="field-title">Screen</span>
                     <span class="inline-fields">
-                      <input id="create-screen-width" name="screen_width" type="number" min="100" max="10000" value="1366" aria-label="Screen width">
-                      <input id="create-screen-height" name="screen_height" type="number" min="100" max="10000" value="768" aria-label="Screen height">
+                      <input ${isEdit ? "" : `id="create-screen-width"`} name="screen_width" type="number" min="100" max="10000" value="${profile?.screen_width ?? 1366}" aria-label="Screen width">
+                      <input ${isEdit ? "" : `id="create-screen-height"`} name="screen_height" type="number" min="100" max="10000" value="${profile?.screen_height ?? 768}" aria-label="Screen height">
                     </span>
                     <span class="field-hint">Virtual display width and height in pixels.</span>
                   </label>
                   <label class="form-field">
                     <span class="field-title">CPU Threads</span>
-                    <input name="hardware_concurrency" type="number" min="1" max="256" value="4">
+                    <input name="hardware_concurrency" type="number" min="1" max="256" value="${profile?.hardware_concurrency ?? 4}">
                     <span class="field-hint">Hardware concurrency exposed to pages.</span>
                   </label>
                   <label class="form-field">
                     <span class="field-title">Color Scheme</span>
                     <select name="color_scheme">
-                      <option value="system" selected>System</option>
-                      <option value="light">Light</option>
-                      <option value="dark">Dark</option>
+                      ${selectOption("system", profile?.color_scheme ?? "", "system", "System")}
+                      ${selectOption("light", profile?.color_scheme ?? "", "", "Light")}
+                      ${selectOption("dark", profile?.color_scheme ?? "", "", "Dark")}
                     </select>
                     <span class="field-hint">Preferred color scheme exposed to websites.</span>
                   </label>
                 </div>
               </section>
 
-              <section class="form-section create-tab-panel" data-create-panel="advanced" aria-labelledby="create-profile-advanced" hidden>
+              <section class="form-section create-tab-panel profile-tab-panel" data-profile-panel="advanced" aria-labelledby="${escapeHtml(prefix)}-profile-advanced" hidden>
                 <div class="form-section-head">
-                  <h3 id="create-profile-advanced">Advanced fingerprint and launch settings</h3>
+                  <h3 id="${escapeHtml(prefix)}-profile-advanced">Advanced fingerprint and launch settings</h3>
                   <p>Only set these when a profile needs exact fingerprint or launch overrides.</p>
                 </div>
                 <div class="form-fields">
                   <label class="form-field">
                     <span class="field-title">Fingerprint Seed</span>
-                    <input name="fingerprint_seed" placeholder="Auto-generated if blank">
+                    <input name="fingerprint_seed" value="${escapeHtml(profile?.fingerprint_seed ?? "")}" placeholder="Auto-generated if blank">
                     <span class="field-hint">Stable random seed generated by default.</span>
                   </label>
                   <label class="form-field">
                     <span class="field-title">User Agent</span>
-                    <input name="user_agent" placeholder="Optional full user agent override">
+                    <input name="user_agent" value="${escapeHtml(profile?.user_agent ?? "")}" placeholder="Optional full user agent override">
                     <span class="field-hint">Blank keeps CloakBrowser defaults.</span>
                   </label>
                   <label class="form-field">
                     <span class="field-title">GPU Vendor</span>
-                    <input name="gpu_vendor" placeholder="Optional vendor override">
+                    <input name="gpu_vendor" value="${escapeHtml(profile?.gpu_vendor ?? "")}" placeholder="Optional vendor override">
                     <span class="field-hint">Advanced fingerprint override.</span>
                   </label>
                   <label class="form-field">
                     <span class="field-title">GPU Renderer</span>
-                    <input name="gpu_renderer" placeholder="Optional renderer override">
+                    <input name="gpu_renderer" value="${escapeHtml(profile?.gpu_renderer ?? "")}" placeholder="Optional renderer override">
                     <span class="field-hint">Advanced fingerprint override.</span>
                   </label>
                   <label class="form-field">
                     <span class="field-title">Launch Args</span>
-                    <textarea name="custom_launch_args" placeholder="--flag=value"></textarea>
+                    <textarea name="custom_launch_args" placeholder="--flag=value">${escapeHtml(launchArgs)}</textarea>
                     <span class="field-hint">One browser flag per line. CloakHub-owned data-dir and CDP flags are rejected.</span>
-                  </label>
-                  <label class="form-field">
-                    <span class="field-title">Tags JSON</span>
-                    <textarea name="tags_json" placeholder='[{"name":"client","color":"#2463eb"}]'></textarea>
-                    <span class="field-hint">Optional JSON array for grouping profiles.</span>
                   </label>
                 </div>
               </section>
@@ -2529,172 +2987,37 @@ function renderCreateProfileForm(): string {
               <dl class="summary-list">
                 <div>
                   <dt>Name</dt>
-                  <dd id="create-summary-name">Untitled profile</dd>
+                  <dd ${isEdit ? "" : `id="create-summary-name"`}>${escapeHtml(displayName || "Untitled profile")}</dd>
                 </div>
                 <div>
                   <dt>Profile ID</dt>
-                  <dd id="create-summary-id">Required</dd>
+                  <dd ${isEdit ? "" : `id="create-summary-id"`}>${escapeHtml(profileId || "Required")}</dd>
                 </div>
                 <div>
                   <dt>Mode</dt>
-                  <dd id="create-summary-mode">VNC/manual browser</dd>
+                  <dd ${isEdit ? "" : `id="create-summary-mode"`}>${profile?.headless ? "Automation only" : "Browser viewer"}</dd>
                 </div>
                 <div>
                   <dt>Proxy</dt>
-                  <dd id="create-summary-proxy">No proxy</dd>
+                  <dd ${isEdit ? "" : `id="create-summary-proxy"`}>${escapeHtml(profile?.proxy || "No proxy")}</dd>
                 </div>
                 <div>
                   <dt>Region</dt>
-                  <dd id="create-summary-region">Default timezone / locale</dd>
+                  <dd ${isEdit ? "" : `id="create-summary-region"`}>${escapeHtml(profile ? `${profile.timezone || "Default timezone"} / ${profile.locale || "default locale"}` : "Default timezone / locale")}</dd>
                 </div>
                 <div>
                   <dt>Screen</dt>
-                  <dd id="create-summary-screen">1366 x 768</dd>
+                  <dd ${isEdit ? "" : `id="create-summary-screen"`}>${profile?.screen_width ?? 1366} x ${profile?.screen_height ?? 768}</dd>
                 </div>
               </dl>
             </aside>
           </div>
           <div class="modal-actions">
-            <button class="secondary" id="cancel-create-profile" type="button">Cancel</button>
-            <button type="submit">Create Profile</button>
+            ${deleteButton}
+            ${cancelButton}
+            <button type="submit">${submitLabel}</button>
           </div>
         </form>`;
-}
-
-function renderLaunchProfileInputs(profile?: BrowserProfile | PresentedBrowserProfile): string {
-  const tagsJson = profile ? JSON.stringify(profile.tags) : "";
-  const launchArgs = profile?.custom_launch_args.join("\n") ?? "";
-  const sleepPolicyMode = profile?.sleep_policy.mode ?? "default";
-  const sleepPolicyMinutes = profile?.sleep_policy.mode === "minutes" ? profile.sleep_policy.minutes : "";
-
-  return `
-        ${profile ? `<input name="_include_empty" type="hidden" value="true">` : ""}
-        <label>
-          Fingerprint Seed
-          <input name="fingerprint_seed" value="${escapeHtml(profile?.fingerprint_seed ?? "")}">
-          <span class="field-hint">Leave blank to generate a stable random fingerprint seed.</span>
-        </label>
-        <label>
-          Proxy
-          <input name="proxy" ${profile ? `placeholder="${escapeHtml(profile.proxy)}"` : ""}>
-          <span class="field-hint">Optional proxy as scheme://user:pass@host:port, host:port, or host:port:user:pass.</span>
-        </label>
-        <label>
-          Timezone
-          <input name="timezone" value="${escapeHtml(profile?.timezone ?? "")}">
-          <span class="field-hint">IANA timezone such as America/Los_Angeles; blank keeps CloakBrowser defaults.</span>
-        </label>
-        <label>
-          Locale
-          <input name="locale" value="${escapeHtml(profile?.locale ?? "")}">
-          <span class="field-hint">Browser locale such as en-US or fr-FR.</span>
-        </label>
-        <label>
-          GeoIP
-          <input name="geoip" value="${escapeHtml(profile?.geoip ?? "")}">
-          <span class="field-hint">Optional GeoIP hint supported by CloakBrowser.</span>
-        </label>
-        <label>
-          Platform
-          <select name="platform">
-            ${selectOption("linux", profile?.platform ?? "")}
-            ${selectOption("macos", profile?.platform ?? "", "macos")}
-            ${selectOption("windows", profile?.platform ?? "")}
-          </select>
-          <span class="field-hint">Fingerprint platform value; macos is the default.</span>
-        </label>
-        <label>
-          Screen Width
-          <input name="screen_width" type="number" min="100" max="10000" value="${profile?.screen_width ?? ""}">
-          <span class="field-hint">Virtual display width in pixels.</span>
-        </label>
-        <label>
-          Screen Height
-          <input name="screen_height" type="number" min="100" max="10000" value="${profile?.screen_height ?? ""}">
-          <span class="field-hint">Virtual display height in pixels.</span>
-        </label>
-        <label>
-          GPU Vendor
-          <input name="gpu_vendor" value="${escapeHtml(profile?.gpu_vendor ?? "")}">
-          <span class="field-hint">Optional fingerprint GPU vendor override.</span>
-        </label>
-        <label>
-          GPU Renderer
-          <input name="gpu_renderer" value="${escapeHtml(profile?.gpu_renderer ?? "")}">
-          <span class="field-hint">Optional fingerprint GPU renderer override.</span>
-        </label>
-        <label>
-          Hardware Concurrency
-          <input name="hardware_concurrency" type="number" min="1" max="256" value="${profile?.hardware_concurrency ?? ""}">
-          <span class="field-hint">CPU thread count exposed to pages.</span>
-        </label>
-        <label>
-          User Agent
-          <input name="user_agent" value="${escapeHtml(profile?.user_agent ?? "")}">
-          <span class="field-hint">Optional full user agent override; blank keeps CloakBrowser defaults.</span>
-        </label>
-        <label>
-          Color Scheme
-          <select name="color_scheme">
-            ${selectOption("system", profile?.color_scheme ?? "", "system")}
-            ${selectOption("light", profile?.color_scheme ?? "")}
-            ${selectOption("dark", profile?.color_scheme ?? "")}
-          </select>
-          <span class="field-hint">Preferred color scheme exposed to websites.</span>
-        </label>
-        <label>
-          Humanize
-          <select name="humanize">
-            ${selectOption("false", String(profile?.humanize ?? false))}
-            ${selectOption("true", String(profile?.humanize ?? false))}
-          </select>
-          <span class="field-hint">Enables CloakBrowser humanization behavior when supported.</span>
-        </label>
-        <label>
-          Human Preset
-          <input name="human_preset" value="${escapeHtml(profile?.human_preset ?? "")}">
-          <span class="field-hint">Optional named humanization preset.</span>
-        </label>
-        <label>
-          Headless
-          <select name="headless">
-            ${selectOption("false", String(profile?.headless ?? false))}
-            ${selectOption("true", String(profile?.headless ?? false))}
-          </select>
-          <span class="field-hint">Headless profiles support CDP but do not expose a manual VNC viewer.</span>
-        </label>
-        <label>
-          Clipboard Sync
-          <select name="clipboard_sync">
-            ${selectOption("true", String(profile?.clipboard_sync ?? true))}
-            ${selectOption("false", String(profile?.clipboard_sync ?? true))}
-          </select>
-          <span class="field-hint">Allows manual paste and VNC clipboard transfer for this profile.</span>
-        </label>
-        <label>
-          Sleep Policy
-          <select name="sleep_policy_mode">
-            ${selectOption("default", sleepPolicyMode)}
-            ${selectOption("minutes", sleepPolicyMode)}
-            ${selectOption("never", sleepPolicyMode)}
-          </select>
-          <span class="field-hint">Controls automatic spin-down for idle Browser Instances.</span>
-        </label>
-        <label>
-          Sleep Policy Minutes
-          <input name="sleep_policy_minutes" type="number" min="1" max="1440" value="${sleepPolicyMinutes}">
-          <span class="field-hint">Used only when Sleep Policy is minutes.</span>
-        </label>
-        <label>
-          Launch Args
-          <textarea name="custom_launch_args">${escapeHtml(launchArgs)}</textarea>
-          <span class="field-hint">One browser flag per line. CloakHub-owned data-dir and CDP flags are rejected.</span>
-        </label>
-        <label>
-          Tags JSON
-          <textarea name="tags_json">${escapeHtml(tagsJson)}</textarea>
-          <span class="field-hint">JSON array like [{"name":"client","color":"#2463eb"}].</span>
-        </label>`;
 }
 
 function sleepPolicyLabel(profile: BrowserProfile | PresentedBrowserProfile): string {
@@ -2809,9 +3132,9 @@ function sleepPolicyBadge(profile: BrowserProfile | PresentedBrowserProfile): st
   return `<span class="sleep-policy-badge ${escapeHtml(className)}">${escapeHtml(sleepPolicyLabel(profile))}</span>`;
 }
 
-function selectOption(value: string, selectedValue: string, defaultValue = ""): string {
+function selectOption(value: string, selectedValue: string, defaultValue = "", label = value): string {
   const selected = selectedValue === value || (!selectedValue && defaultValue === value) ? " selected" : "";
-  return `<option value="${escapeHtml(value)}"${selected}>${escapeHtml(value)}</option>`;
+  return `<option value="${escapeHtml(value)}"${selected}>${escapeHtml(label)}</option>`;
 }
 
 function escapeHtml(value: string): string {
