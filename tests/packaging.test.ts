@@ -47,6 +47,19 @@ describe("Docker-first packaging", () => {
     expect(readme).not.toContain("docker compose up --build");
   });
 
+  test("ARM64 Compose deployment is persistent and authenticated", async () => {
+    const compose = await Bun.file("compose.arm64.yml").text();
+
+    expect(compose).toContain("image: ghcr.io/txchen/cloakhub:latest");
+    expect(compose).toContain("platform: linux/arm64");
+    expect(compose).toContain("pull_policy: always");
+    expect(compose).toContain("restart: unless-stopped");
+    expect(compose).toContain("shm_size: 2gb");
+    expect(compose).toContain('CLOAKHUB_AUTH_TOKEN: "${CLOAKHUB_AUTH_TOKEN:?');
+    expect(compose).toContain('"${CLOAKHUB_BIND_ADDRESS:-127.0.0.1}:7788:7788"');
+    expect(compose).toContain("./data:/data");
+  });
+
   test("real runtime integration tests are opt-in for normal CI", async () => {
     const packageJson = await Bun.file("package.json").json();
     const integrationTest = await Bun.file("tests/real-runtime.integration.test.ts").text();
