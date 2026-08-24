@@ -8,6 +8,8 @@ describe("Docker-first packaging", () => {
     expect(dockerfile).toContain("ARG CLOAKBROWSER_VERSION=0.5.8");
     expect(dockerfile).toContain("FROM cloakhq/cloakbrowser:${CLOAKBROWSER_VERSION}");
     expect(dockerfile).not.toContain("FROM cloakhq/cloakbrowser:latest");
+    expect(dockerfile).toMatch(/^ARG TARGETARCH$/m);
+    expect(dockerfile).not.toMatch(/^ARG TARGETARCH=/m);
   });
 
   test("Dockerfile exposes port 7788 and uses /data without runtime downloads", async () => {

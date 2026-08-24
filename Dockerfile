@@ -4,7 +4,7 @@ FROM oven/bun:1.3.14-debian AS bun
 
 FROM cloakhq/cloakbrowser:${CLOAKBROWSER_VERSION}
 
-ARG TARGETARCH=amd64
+ARG TARGETARCH
 
 WORKDIR /app
 
