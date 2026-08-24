@@ -253,6 +253,7 @@ function fakeRuntime(options: { startError?: Error } = {}): BrowserRuntime & { c
     recordCdpDiscovery: (profileId) => {
       calls.push(`discovery:${profileId}`);
     },
+    readManualClipboard: async () => "",
     restart: async (profileId) => {
       calls.push(`restart:${profileId}`);
       return state;

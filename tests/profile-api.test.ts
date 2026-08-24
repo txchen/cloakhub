@@ -437,6 +437,9 @@ describe("Browser Profile admin API", () => {
     expect(html).toContain('import RFB from "/assets/novnc/core/rfb.js?v=stock-1"');
     expect(html).toContain("/ui/profiles/work/clipboard");
     expect(html).toContain("rfb.clipboardPasteFrom(text)");
+    expect(html).toContain("async function pollClipboard()");
+    expect(html).toContain('method: "GET"');
+    expect(html).toContain("window.setTimeout(pollClipboard, 1000)");
     expect(html).toContain("{ wsProtocols: [] }");
     expect(html).toContain('window.prompt("Paste text to send to the browser")');
     expect(html).not.toContain("<header");
@@ -583,7 +586,7 @@ describe("Browser Profile admin API", () => {
       expect(html).toContain('id="refresh-profiles"');
       expect(html).toContain('id="status-sync"');
       expect(html).toContain('data-profile-context-menu=');
-      expect(html).toContain('role="menu"');
+      expect(html).toContain('popover="manual" role="menu"');
       expect(html).toContain('data-profile-instance-status');
       expect(html).toContain('grid-template-columns: minmax(220px, var(--sidebar-width)) 3px minmax(0, 1fr)');
       expect(html).not.toContain('name="q"');
@@ -792,6 +795,21 @@ describe("Browser Profile admin API", () => {
     expect(browserRuntime.calls).toEqual(["clipboard:work:pasted"]);
   });
 
+  test("manual clipboard endpoint reads copied browser text through the Browser Runtime", async () => {
+    const browserRuntime = fakeBrowserRuntime({ manualClipboardText: "copied from browser" });
+    const { app } = await tempApp({ authToken: "admin-token" }, browserRuntime);
+
+    const response = await app.fetch(
+      new Request("http://cloakhub.test/ui/profiles/work/clipboard", {
+        headers: { cookie: "cloakhub_auth=admin-token" }
+      })
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ text: "copied from browser" });
+    expect(browserRuntime.calls).toEqual(["read-clipboard:work"]);
+  });
+
   test("headless profiles show viewer unavailable without changing headless mode", async () => {
     const browserRuntime = fakeBrowserRuntime({ viewerError: new UnsupportedManualViewerProfileError("work") });
     const { app, repository } = await tempApp({}, browserRuntime);
@@ -919,9 +937,10 @@ function fakeBrowserRuntime(options: {
   activeCdpSessionCount?: number;
   activeManualViewerCount?: number;
   lastManualInputAt?: string | null;
+  manualClipboardText?: string;
   startError?: Error;
   viewerError?: Error;
-} = {}): BrowserRuntime & { calls: string[] } {
+} = {}): BrowserRuntime & { calls: string[]; readManualClipboard(profileId: string): Promise<string> } {
   const calls: string[] = [];
   const state = (profileId: string, status: BrowserRuntimeState["status"]): BrowserRuntimeState => ({
     cdp_port: status === "running" ? 5100 : -1,
@@ -968,6 +987,10 @@ function fakeBrowserRuntime(options: {
       recordInput: () => undefined
     }),
     recordCdpDiscovery: () => undefined,
+    readManualClipboard: async (profileId) => {
+      calls.push(`read-clipboard:${profileId}`);
+      return options.manualClipboardText ?? "";
+    },
     restart: async (profileId) => {
       calls.push(`restart:${profileId}`);
       return state(profileId, "running");

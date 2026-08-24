@@ -3,6 +3,7 @@ import { resolveBrowserBin } from "./browser-bin";
 import { createBunBrowserProcessLauncher } from "./browser-process-launcher";
 import { createBrowserRuntime, type BrowserRuntime } from "./browser-runtime";
 import { createCdpGateway, createProfileCdpAccessPolicy } from "./cdp-gateway";
+import { createCdpClipboardReader } from "./cdp-clipboard-reader";
 import { createCdpWebSocketHandler, type CdpWebSocketData } from "./cdp-websocket-proxy";
 import { createXclipClipboardWriter } from "./clipboard-writer";
 import { loadConfigFromEnv } from "./config";
@@ -32,6 +33,7 @@ export async function startCloakHubServer(): Promise<CloakHubServerHandle> {
   });
   const browserRuntime = createBrowserRuntime({
     browserBin: browserBin.path,
+    clipboardReader: createCdpClipboardReader(),
     clipboardWriter: createXclipClipboardWriter(),
     dataRoot: config.dataRoot,
     displayRuntime: createKasmVncDisplayRuntime({

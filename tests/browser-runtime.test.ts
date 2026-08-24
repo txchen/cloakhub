@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 
 import type { BrowserProfile } from "../src/profile";
 import type { ProfileRepository } from "../src/profile-repository";
+import type { CdpClipboardReader } from "../src/cdp-clipboard-reader";
 import {
   CapacityUnavailableError,
   createBrowserRuntime,
@@ -350,6 +351,16 @@ describe("BrowserRuntime", () => {
 
     expect(clipboardWriter.writes).toEqual([{ display: ":100", text: "pasted text" }]);
     expect(runtime.lastManualInputAt("work")).toBeNull();
+  });
+
+  test("manual clipboard reads through the running browser CDP port", async () => {
+    const repository = fakeRepository(profile({ headless: false, profile_id: "work" }));
+    const clipboardReader = fakeClipboardReader("copied text");
+    const runtime = runtimeFixture({ clipboardReader, displayRuntime: fakeDisplayRuntime(), repository });
+    await runtime.start("work");
+
+    await expect(runtime.readManualClipboard("work")).resolves.toBe("copied text");
+    expect(clipboardReader.ports).toEqual([5100]);
   });
 
   test("open CDP Sessions block idle Spin-down indefinitely", async () => {
@@ -826,6 +837,7 @@ describe("BrowserRuntime", () => {
 
 function runtimeFixture(options: {
   clientConnections?: BrowserClientConnections;
+  clipboardReader?: CdpClipboardReader;
   clipboardWriter?: Parameters<typeof createBrowserRuntime>[0]["clipboardWriter"];
   displayRuntime?: BrowserDisplayRuntime;
   launcher?: BrowserProcessLauncher;
@@ -840,6 +852,7 @@ function runtimeFixture(options: {
 }) {
   return createBrowserRuntime({
     browserBin: "/opt/cloakbrowser/cloakbrowser",
+    clipboardReader: options.clipboardReader,
     clipboardWriter: options.clipboardWriter,
     clientConnections: options.clientConnections,
     dataRoot: "/data",
@@ -854,6 +867,17 @@ function runtimeFixture(options: {
     repository: options.repository,
     wait: options.wait ?? (async () => undefined)
   });
+}
+
+function fakeClipboardReader(text: string): CdpClipboardReader & { ports: number[] } {
+  const ports: number[] = [];
+  return {
+    ports,
+    readText: async (port) => {
+      ports.push(port);
+      return text;
+    }
+  };
 }
 
 function fakeClipboardWriter(): {

@@ -211,8 +211,17 @@ async function manualClipboardResponse(
     return textResponse("Not found", 404);
   }
 
+  if (request.method === "GET") {
+    try {
+      const text = await browserRuntime.readManualClipboard(match[1]!);
+      return jsonResponse({ text: text.slice(0, 1_048_576) });
+    } catch (error) {
+      return manualViewerJsonErrorResponse(error);
+    }
+  }
+
   if (request.method !== "POST") {
-    return textResponse("Method not allowed", 405, { Allow: "POST" });
+    return textResponse("Method not allowed", 405, { Allow: "GET, POST" });
   }
 
   let body: unknown;
@@ -985,7 +994,16 @@ function renderManualViewer(viewer: BrowserRuntimeManualViewerState): string {
         z-index: 2;
       }
 
-      #paste-button {
+      #clipboard-controls {
+        display: flex;
+        gap: 6px;
+        position: absolute;
+        right: 10px;
+        top: 10px;
+        z-index: 2;
+      }
+
+      #clipboard-controls button {
         background: rgb(245 247 250 / 0.92);
         border: 1px solid rgb(5 6 7 / 0.18);
         border-radius: 5px;
@@ -995,13 +1013,9 @@ function renderManualViewer(viewer: BrowserRuntimeManualViewerState): string {
         font-weight: 700;
         line-height: 1;
         padding: 6px 9px;
-        position: absolute;
-        right: 10px;
-        top: 10px;
-        z-index: 2;
       }
 
-      #paste-button:focus-visible {
+      #clipboard-controls button:focus-visible {
         outline: 2px solid #4f8cff;
         outline-offset: 2px;
       }
@@ -1010,7 +1024,10 @@ function renderManualViewer(viewer: BrowserRuntimeManualViewerState): string {
   <body>
     <main>
       <div id="manual-viewer" data-vnc-websocket-url="${escapeHtml(viewer.vnc_ws_path)}">
-        <button id="paste-button" type="button">Paste</button>
+        <div id="clipboard-controls">
+          <button id="copy-button" type="button" hidden>Copy out</button>
+          <button id="paste-button" type="button">Paste</button>
+        </div>
         <span id="viewer-status">Connecting</span>
       </div>
     </main>
@@ -1018,10 +1035,73 @@ function renderManualViewer(viewer: BrowserRuntimeManualViewerState): string {
       import RFB from "/assets/novnc/core/rfb.js?v=stock-1";
 
       const viewer = document.getElementById("manual-viewer");
+      const copyButton = document.getElementById("copy-button");
       const pasteButton = document.getElementById("paste-button");
       const status = document.getElementById("viewer-status");
       const protocol = location.protocol === "https:" ? "wss:" : "ws:";
+      let clipboardPolling = false;
+      let clipboardPollTimer;
+      let lastClipboardText = "";
+      let pendingClipboardText = "";
       let rfb;
+
+      async function writeHostClipboard(text, allowLegacyCopy = false) {
+        if (!text) {
+          return false;
+        }
+        try {
+          await navigator.clipboard.writeText(text);
+          return true;
+        } catch {
+          if (!allowLegacyCopy) {
+            return false;
+          }
+        }
+
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        textarea.setAttribute("readonly", "");
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        document.body.append(textarea);
+        textarea.select();
+        const copied = document.execCommand("copy");
+        textarea.remove();
+        return copied;
+      }
+
+      async function offerHostClipboard(text) {
+        if (!text || text === lastClipboardText) {
+          return;
+        }
+        lastClipboardText = text;
+        pendingClipboardText = text;
+        if (await writeHostClipboard(text)) {
+          pendingClipboardText = "";
+          copyButton.hidden = true;
+          return;
+        }
+        copyButton.hidden = false;
+      }
+
+      async function pollClipboard() {
+        try {
+          const response = await fetch("/ui/profiles/${encodeURIComponent(viewer.profile_id)}/clipboard", {
+            method: "GET"
+          });
+          if (response.ok) {
+            const payload = await response.json();
+            await offerHostClipboard(typeof payload.text === "string" ? payload.text : "");
+          }
+        } catch {
+          // The VNC session status remains the source of truth for connection errors.
+        } finally {
+          if (clipboardPolling) {
+            clipboardPollTimer = window.setTimeout(pollClipboard, 1000);
+          }
+        }
+      }
+
       async function pasteText(text) {
         if (!text) {
           return;
@@ -1044,6 +1124,14 @@ function renderManualViewer(viewer: BrowserRuntimeManualViewerState): string {
         const clipboardText = await navigator.clipboard?.readText().catch(() => "");
         const text = clipboardText || window.prompt("Paste text to send to the browser") || "";
         await pasteText(text);
+      });
+
+      copyButton.addEventListener("click", async () => {
+        if (await writeHostClipboard(pendingClipboardText || lastClipboardText, true)) {
+          pendingClipboardText = "";
+          copyButton.hidden = true;
+        }
+        rfb.focus();
       });
 
       document.addEventListener("keydown", async (event) => {
@@ -1081,15 +1169,24 @@ function renderManualViewer(viewer: BrowserRuntimeManualViewerState): string {
           window.parent.postMessage(connectedMessage, location.origin);
         }
         window.opener?.postMessage(connectedMessage, location.origin);
+        clipboardPolling = true;
+        window.clearTimeout(clipboardPollTimer);
+        void pollClipboard();
       });
       rfb.addEventListener("disconnect", () => {
+        clipboardPolling = false;
+        window.clearTimeout(clipboardPollTimer);
         status.hidden = false;
         status.textContent = "Disconnected";
       });
       rfb.addEventListener("clipboard", (event) => {
         if (event.detail?.text) {
-          navigator.clipboard?.writeText(event.detail.text).catch(() => undefined);
+          void offerHostClipboard(event.detail.text);
         }
+      });
+      window.addEventListener("beforeunload", () => {
+        clipboardPolling = false;
+        window.clearTimeout(clipboardPollTimer);
       });
     </script>
   </body>
@@ -2608,6 +2705,18 @@ function renderShell(
         });
       }
 
+      document.addEventListener("pointerdown", (event) => {
+        document.querySelectorAll(".profile-menu-popover:popover-open").forEach((menu) => {
+          const trigger = Array.from(document.querySelectorAll("[popovertarget]")).find(
+            (candidate) => candidate.getAttribute("popovertarget") === menu.id
+          );
+          if (!menu.contains(event.target) && !trigger?.contains(event.target)) {
+            menu.classList.remove("context-positioned");
+            menu.hidePopover?.();
+          }
+        });
+      });
+
       function openProfileContextMenu(profileItem, clientX, clientY) {
         const menu = document.getElementById(profileItem.dataset.profileContextMenu);
         if (!menu) {
@@ -2655,6 +2764,11 @@ function renderShell(
           menu.querySelector("[role='menuitem']:not(:disabled)")?.focus();
         });
         menu.addEventListener("keydown", (event) => {
+          if (event.key === "Escape") {
+            event.preventDefault();
+            menu.hidePopover?.();
+            return;
+          }
           if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) {
             return;
           }
@@ -3071,7 +3185,7 @@ function renderProfileListItem(profile: PresentedBrowserProfile): string {
                   <div class="profile-popover profile-info-popover" id="${profileInfoPopoverId}" popover>
                     ${renderProfileDetails(profile)}
                   </div>
-                  <div class="profile-popover profile-menu-popover" id="${profileMenuPopoverId}" popover role="menu" aria-label="Actions for ${profileId}">
+                  <div class="profile-popover profile-menu-popover" id="${profileMenuPopoverId}" popover="manual" role="menu" aria-label="Actions for ${profileId}">
                     <div class="profile-menu-head"><strong data-profile-display-name data-profile-id="${profileId}">${escapeHtml(profile.display_name)}</strong><span>Profile actions</span></div>
                     ${renderProfileActionMenu(profile)}
                   </div>

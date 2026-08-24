@@ -1,6 +1,7 @@
 import { join } from "node:path";
 import { connect as connectTcp } from "node:net";
 
+import type { CdpClipboardReader } from "./cdp-clipboard-reader";
 import {
   CapacityUnavailableError,
   createRuntimeCapacity,
@@ -67,6 +68,7 @@ export interface BrowserManualReadinessProbe {
 
 export interface BrowserRuntimeOptions {
   browserBin: string;
+  clipboardReader?: CdpClipboardReader;
   clipboardWriter?: BrowserClipboardWriter;
   cdpPortStart?: number;
   clientConnections?: BrowserClientConnections;
@@ -145,6 +147,7 @@ export interface BrowserRuntime {
   openManualViewer(profileId: string): Promise<BrowserRuntimeManualViewerState>;
   openManualViewerSession(profileId: string): BrowserRuntimeManualViewer;
   recordCdpDiscovery(profileId: string): void;
+  readManualClipboard(profileId: string): Promise<string>;
   restart(profileId: string): Promise<BrowserRuntimeState>;
   shutdown(): Promise<void>;
   spinDownIdleInstances(): Promise<IdleSpinDownResult[]>;
@@ -375,6 +378,23 @@ export function createBrowserRuntime(options: BrowserRuntimeOptions): BrowserRun
     recordCdpDiscovery(profileId: string): void {
       requireProfile(options.repository, profileId);
       recordActivity(profileId);
+    },
+
+    async readManualClipboard(profileId: string): Promise<string> {
+      const profile = requireProfile(options.repository, profileId);
+      if (profile.headless) {
+        throw new UnsupportedManualViewerProfileError(profile.profile_id);
+      }
+
+      const running = runningInstances.get(profile.profile_id);
+      if (!running) {
+        throw new Error(`Browser Profile "${profile.profile_id}" is not running`);
+      }
+      if (!options.clipboardReader) {
+        throw new Error("Manual clipboard reader is unavailable");
+      }
+
+      return options.clipboardReader.readText(running.cdpPort);
     },
 
     async restart(profileId: string): Promise<BrowserRuntimeState> {
