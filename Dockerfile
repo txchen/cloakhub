@@ -1,6 +1,8 @@
+ARG CLOAKBROWSER_VERSION=0.5.8
+
 FROM oven/bun:1.3.14-debian AS bun
 
-FROM cloakhq/cloakbrowser:latest
+FROM cloakhq/cloakbrowser:${CLOAKBROWSER_VERSION}
 
 ARG TARGETARCH=amd64
 

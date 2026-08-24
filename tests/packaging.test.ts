@@ -5,7 +5,9 @@ describe("Docker-first packaging", () => {
     const dockerfile = await Bun.file("Dockerfile").text();
 
     expect(dockerfile).toContain("FROM oven/bun:1.3.14-debian AS bun");
-    expect(dockerfile).toContain("FROM cloakhq/cloakbrowser:latest");
+    expect(dockerfile).toContain("ARG CLOAKBROWSER_VERSION=0.5.8");
+    expect(dockerfile).toContain("FROM cloakhq/cloakbrowser:${CLOAKBROWSER_VERSION}");
+    expect(dockerfile).not.toContain("FROM cloakhq/cloakbrowser:latest");
   });
 
   test("Dockerfile exposes port 7788 and uses /data without runtime downloads", async () => {
@@ -58,8 +60,10 @@ describe("Docker-first packaging", () => {
       "registry: ghcr.io",
       "packages: write",
       "docker/login-action@v3",
+      "docker/setup-qemu-action@v3",
       "docker/metadata-action@v5",
       "docker/build-push-action@v6",
+      "platforms: linux/amd64,linux/arm64",
       "images: ghcr.io/${{ github.repository }}",
       "push: ${{ github.event_name != 'pull_request' }}",
       "pull_request:",
