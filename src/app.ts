@@ -994,16 +994,7 @@ function renderManualViewer(viewer: BrowserRuntimeManualViewerState): string {
         z-index: 2;
       }
 
-      #clipboard-controls {
-        display: flex;
-        gap: 6px;
-        position: absolute;
-        right: 10px;
-        top: 10px;
-        z-index: 2;
-      }
-
-      #clipboard-controls button {
+      .clipboard-button {
         background: rgb(245 247 250 / 0.92);
         border: 1px solid rgb(5 6 7 / 0.18);
         border-radius: 5px;
@@ -1013,9 +1004,20 @@ function renderManualViewer(viewer: BrowserRuntimeManualViewerState): string {
         font-weight: 700;
         line-height: 1;
         padding: 6px 9px;
+        position: fixed;
+        top: 10px;
+        z-index: 2;
       }
 
-      #clipboard-controls button:focus-visible {
+      #copy-button {
+        right: 68px;
+      }
+
+      #paste-button {
+        right: 10px;
+      }
+
+      .clipboard-button:focus-visible {
         outline: 2px solid #4f8cff;
         outline-offset: 2px;
       }
@@ -1024,12 +1026,10 @@ function renderManualViewer(viewer: BrowserRuntimeManualViewerState): string {
   <body>
     <main>
       <div id="manual-viewer" data-vnc-websocket-url="${escapeHtml(viewer.vnc_ws_path)}">
-        <div id="clipboard-controls">
-          <button id="copy-button" type="button" hidden>Copy out</button>
-          <button id="paste-button" type="button">Paste</button>
-        </div>
         <span id="viewer-status">Connecting</span>
       </div>
+      <button class="clipboard-button" id="copy-button" type="button" hidden>Copy out</button>
+      <button class="clipboard-button" id="paste-button" type="button">Paste</button>
     </main>
     <script type="module">
       import RFB from "/assets/novnc/core/rfb.js?v=stock-1";

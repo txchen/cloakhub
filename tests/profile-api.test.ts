@@ -432,7 +432,11 @@ describe("Browser Profile admin API", () => {
     expect(response.status).toBe(200);
     expect(browserRuntime.calls).toEqual(["viewer:work"]);
     expect(html).toContain('id="manual-viewer"');
+    expect(html).toContain('id="copy-button"');
     expect(html).toContain('id="paste-button"');
+    expect(html).not.toMatch(
+      /<div id="manual-viewer"[^>]*>\s*<div[^>]*id="clipboard-controls"/
+    );
     expect(html).toContain('data-vnc-websocket-url="/ui/profiles/work/vnc"');
     expect(html).toContain('import RFB from "/assets/novnc/core/rfb.js?v=stock-1"');
     expect(html).toContain("/ui/profiles/work/clipboard");
