@@ -67,11 +67,15 @@ describe("Browser Profile admin API", () => {
     expect(html).toContain("profile-update-form");
     expect(html).toContain("profile-info");
     expect(html).toContain("profile-menu");
+    expect(html).not.toContain('class="profile-menu icon-button"');
     expect(html).toContain('aria-label="View profile work"');
     expect(html).toContain('data-profile-name="Work"');
     expect(html).toContain(">Open</button>");
-    expect(html).toContain(">ℹ️</button>");
+    expect(html).toContain('class="profile-info icon-button"');
     expect(html).toContain('class="viewer-status"');
+    expect(html).toContain('class="viewer-tools"');
+    expect(html).toContain('id="viewer-paste-button"');
+    expect(html).toContain('id="viewer-copy-button"');
     expect(html).toContain("No profile selected");
     expect(html).toContain("popovertarget");
     expect(html).toContain("popover");
@@ -432,8 +436,8 @@ describe("Browser Profile admin API", () => {
     expect(response.status).toBe(200);
     expect(browserRuntime.calls).toEqual(["viewer:work"]);
     expect(html).toContain('id="manual-viewer"');
-    expect(html).toContain('id="copy-button"');
-    expect(html).toContain('id="paste-button"');
+    expect(html).not.toContain('id="viewer-copy-button"');
+    expect(html).not.toContain('id="viewer-paste-button"');
     expect(html).not.toMatch(
       /<div id="manual-viewer"[^>]*>\s*<div[^>]*id="clipboard-controls"/
     );
@@ -441,11 +445,13 @@ describe("Browser Profile admin API", () => {
     expect(html).toContain('import RFB from "/assets/novnc/core/rfb.js?v=stock-1"');
     expect(html).toContain("/ui/profiles/work/clipboard");
     expect(html).toContain("rfb.clipboardPasteFrom(text)");
+    expect(html).toContain('postViewerMessage("cloakhub-viewer-clipboard"');
+    expect(html).toContain('event.data?.type !== "cloakhub-viewer-paste"');
     expect(html).toContain("async function pollClipboard()");
     expect(html).toContain('method: "GET"');
     expect(html).toContain("window.setTimeout(pollClipboard, 1000)");
     expect(html).toContain("{ wsProtocols: [] }");
-    expect(html).toContain('window.prompt("Paste text to send to the browser")');
+    expect(html).not.toContain('window.prompt("Paste text to send to the browser")');
     expect(html).not.toContain("<header");
     expect(html).not.toContain('<canvas aria-hidden="true">');
     expect(html).not.toContain("#manual-viewer canvas");
@@ -766,6 +772,36 @@ describe("Browser Profile admin API", () => {
     expect(changedDashboard.reloads).toBe(0);
   });
 
+  test("opening a stopped profile updates status and uses Viewer toolbar clipboard controls", async () => {
+    const { app } = await tempApp();
+    await app.fetch(jsonRequest("http://cloakhub.test/api/profiles", "POST", { profile_id: "work" }));
+    const html = await (await app.fetch(new Request("http://cloakhub.test/"))).text();
+    const dashboard = dashboardScriptHarness(html, { pasteClipboardText: "paste from host" });
+
+    dashboard.run();
+    expect(dashboard.instanceStatusText).toBe("stopped");
+
+    await dashboard.viewerButton.click();
+    expect(dashboard.instanceStatusText).toBe("starting");
+    expect(dashboard.viewerPasteButton.disabled).toBe(true);
+
+    dashboard.postViewerConnected();
+    expect(dashboard.instanceStatusText).toBe("running");
+    expect(dashboard.viewerPasteButton.disabled).toBe(false);
+
+    dashboard.postViewerClipboard("copy from browser");
+    await Bun.sleep(0);
+    expect(dashboard.viewerCopyButton.disabled).toBe(false);
+    expect(dashboard.clipboardWrites).toContain("copy from browser");
+
+    await dashboard.viewerPasteButton.click();
+    expect(dashboard.viewerFrameMessages).toContainEqual({
+      profile_id: "work",
+      text: "paste from host",
+      type: "cloakhub-viewer-paste"
+    });
+  });
+
   test("dashboard falls back when token-bearing CDP URL clipboard write is blocked", async () => {
     const { app } = await tempApp({}, undefined, { cdpTokenGenerator: sequenceTokens("profile-token") });
     await app.fetch(jsonRequest("http://cloakhub.test/api/profiles", "POST", { profile_id: "work" }));
@@ -1049,7 +1085,7 @@ function sequenceTokens(...tokens: string[]): () => string {
 
 function dashboardScriptHarness(
   html: string,
-  options: { rejectClipboardWrite?: boolean; statusProfiles?: unknown[] } = {}
+  options: { pasteClipboardText?: string; rejectClipboardWrite?: boolean; statusProfiles?: unknown[] } = {}
 ) {
   const script = /<script>([\s\S]*)<\/script>/.exec(html)?.[1];
   if (!script) {
@@ -1145,9 +1181,21 @@ function dashboardScriptHarness(
   const manualViewerCount = fakeDashboardElement({ profileId: "work" });
   manualViewerCount.textContent = "0";
   const viewerButton = fakeDashboardElement({ profileId: "work", profileName: "Work" });
-  const viewerFrame = { src: "" };
+  const viewerFrameMessages: unknown[] = [];
+  const viewerFrame = {
+    contentWindow: {
+      postMessage: (message: unknown) => viewerFrameMessages.push(message)
+    },
+    focus: () => undefined,
+    src: ""
+  };
+  const viewerConnectionState = fakeDashboardElement();
+  const viewerCopyButton = fakeDashboardElement();
   const viewerHeading = fakeDashboardElement();
+  const viewerPasteButton = fakeDashboardElement();
   const viewerProfileId = fakeDashboardElement();
+  viewerCopyButton.disabled = true;
+  viewerPasteButton.disabled = true;
   const fetches: Array<{ method: string; path: string }> = [];
   const clipboardWrites: string[] = [];
   const confirmMessages: string[] = [];
@@ -1157,7 +1205,7 @@ function dashboardScriptHarness(
   const viewerSources: string[] = [];
   let selectedCopyText = "";
   let messageHandler:
-    | ((event: { data?: { profile_id?: string; type?: string }; origin: string }) => void)
+    | ((event: { data?: { profile_id?: string; text?: string; type?: string }; origin: string }) => void)
     | undefined;
   let reloads = 0;
 
@@ -1302,8 +1350,20 @@ function dashboardScriptHarness(
         return viewerFrame;
       }
 
+      if (id === "viewer-connection-state") {
+        return viewerConnectionState;
+      }
+
+      if (id === "viewer-copy-button") {
+        return viewerCopyButton;
+      }
+
       if (id === "viewer-heading") {
         return viewerHeading;
+      }
+
+      if (id === "viewer-paste-button") {
+        return viewerPasteButton;
       }
 
       if (id === "viewer-profile-id") {
@@ -1441,6 +1501,7 @@ function dashboardScriptHarness(
   };
   const navigator = {
     clipboard: {
+      readText: async () => options.pasteClipboardText ?? "",
       writeText: async (value: string) => {
         if (options.rejectClipboardWrite) {
           throw new Error("clipboard blocked");
@@ -1460,18 +1521,19 @@ function dashboardScriptHarness(
   const window: {
     addEventListener: (
       eventName: string,
-      handler: (event: { data?: { profile_id?: string; type?: string }; origin: string }) => void
+      handler: (event: { data?: { profile_id?: string; text?: string; type?: string }; origin: string }) => void
     ) => void;
     clearTimeout: () => void;
     innerHeight: number;
     innerWidth: number;
     open: (url: string) => object;
+    prompt: () => string;
     removeEventListener: () => void;
     setTimeout: () => number;
   } = {
     addEventListener: (
       eventName: string,
-      handler: (event: { data?: { profile_id?: string; type?: string }; origin: string }) => void
+      handler: (event: { data?: { profile_id?: string; text?: string; type?: string }; origin: string }) => void
     ) => {
       if (eventName === "message") {
         messageHandler = handler;
@@ -1483,6 +1545,7 @@ function dashboardScriptHarness(
       openedUrls.push(url);
       return {};
     },
+    prompt: () => "",
     removeEventListener: () => undefined,
     clearTimeout: () => undefined,
     setTimeout: () => 1
@@ -1520,6 +1583,12 @@ function dashboardScriptHarness(
         origin: "http://cloakhub.test"
       });
     },
+    postViewerClipboard: (text: string) => {
+      messageHandler?.({
+        data: { profile_id: "work", text, type: "cloakhub-viewer-clipboard" },
+        origin: "http://cloakhub.test"
+      });
+    },
     get reloads() {
       return reloads;
     },
@@ -1551,6 +1620,11 @@ function dashboardScriptHarness(
     get viewerHeadingText() {
       return viewerHeading.textContent;
     },
+    viewerCopyButton,
+    get viewerFrameMessages() {
+      return viewerFrameMessages;
+    },
+    viewerPasteButton,
     get viewerProfileIdText() {
       return viewerProfileId.textContent;
     },

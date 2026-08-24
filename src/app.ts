@@ -79,6 +79,18 @@ export function createApp(config: CloakHubConfig, services: CloakHubServices = {
       return adminLoginResponse(request, config.authToken);
     }
 
+    if (url.pathname === "/favicon.svg") {
+      if (request.method !== "GET" && request.method !== "HEAD") {
+        return textResponse("Method not allowed", 405, { Allow: "GET, HEAD" });
+      }
+      return new Response(request.method === "HEAD" ? null : Bun.file(new URL("./favicon.svg", import.meta.url)), {
+        headers: {
+          "cache-control": "public, max-age=86400",
+          "content-type": "image/svg+xml; charset=utf-8"
+        }
+      });
+    }
+
     const noVncAssetResponse = await noVncAssetResponseForRequest(request, url);
     if (noVncAssetResponse) {
       return noVncAssetResponse;
@@ -823,6 +835,7 @@ function renderLoginShell(): string {
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <title>CloakHub Login</title>
     <style>
       :root {
@@ -855,9 +868,10 @@ function renderLoginShell(): string {
       main {
         background: var(--panel);
         border: 1px solid var(--border);
-        border-radius: 8px;
+        border-radius: 14px;
+        box-shadow: 0 22px 70px rgb(29 37 44 / 0.14);
         max-width: 380px;
-        padding: 22px;
+        padding: 26px;
         width: 100%;
       }
 
@@ -876,7 +890,7 @@ function renderLoginShell(): string {
 
       input,
       button {
-        border-radius: 6px;
+        border-radius: 8px;
         font: inherit;
         min-height: 40px;
         width: 100%;
@@ -884,17 +898,29 @@ function renderLoginShell(): string {
 
       input {
         background: var(--panel);
-        border: 1px solid var(--border);
+        border: 1px solid #c8d1d7;
+        box-shadow: inset 0 1px 2px rgb(29 37 44 / 0.04);
         margin-bottom: 12px;
         padding: 8px 10px;
       }
 
+      input:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgb(31 111 235 / 0.14);
+        outline: none;
+      }
+
       button {
         background: var(--accent);
-        border: 0;
+        border: 1px solid #185fc9;
+        box-shadow: 0 1px 2px rgb(29 37 44 / 0.12);
         color: white;
         cursor: pointer;
         font-weight: 700;
+      }
+
+      button:hover {
+        filter: brightness(0.97);
       }
 
       .error {
@@ -943,6 +969,7 @@ function renderManualViewer(viewer: BrowserRuntimeManualViewerState): string {
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <title>CloakHub Viewer - ${escapeHtml(viewer.profile_id)}</title>
     <style>
       html,
@@ -994,33 +1021,6 @@ function renderManualViewer(viewer: BrowserRuntimeManualViewerState): string {
         z-index: 2;
       }
 
-      .clipboard-button {
-        background: rgb(245 247 250 / 0.92);
-        border: 1px solid rgb(5 6 7 / 0.18);
-        border-radius: 5px;
-        color: #101418;
-        cursor: pointer;
-        font-size: 0.72rem;
-        font-weight: 700;
-        line-height: 1;
-        padding: 6px 9px;
-        position: fixed;
-        top: 10px;
-        z-index: 2;
-      }
-
-      #copy-button {
-        right: 68px;
-      }
-
-      #paste-button {
-        right: 10px;
-      }
-
-      .clipboard-button:focus-visible {
-        outline: 2px solid #4f8cff;
-        outline-offset: 2px;
-      }
     </style>
   </head>
   <body>
@@ -1028,60 +1028,36 @@ function renderManualViewer(viewer: BrowserRuntimeManualViewerState): string {
       <div id="manual-viewer" data-vnc-websocket-url="${escapeHtml(viewer.vnc_ws_path)}">
         <span id="viewer-status">Connecting</span>
       </div>
-      <button class="clipboard-button" id="copy-button" type="button" hidden>Copy out</button>
-      <button class="clipboard-button" id="paste-button" type="button">Paste</button>
     </main>
     <script type="module">
       import RFB from "/assets/novnc/core/rfb.js?v=stock-1";
 
       const viewer = document.getElementById("manual-viewer");
-      const copyButton = document.getElementById("copy-button");
-      const pasteButton = document.getElementById("paste-button");
       const status = document.getElementById("viewer-status");
       const protocol = location.protocol === "https:" ? "wss:" : "ws:";
       let clipboardPolling = false;
       let clipboardPollTimer;
       let lastClipboardText = "";
-      let pendingClipboardText = "";
       let rfb;
 
-      async function writeHostClipboard(text, allowLegacyCopy = false) {
-        if (!text) {
-          return false;
+      function postViewerMessage(type, detail = {}) {
+        const message = {
+          ...detail,
+          profile_id: "${escapeHtml(viewer.profile_id)}",
+          type
+        };
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage(message, location.origin);
         }
-        try {
-          await navigator.clipboard.writeText(text);
-          return true;
-        } catch {
-          if (!allowLegacyCopy) {
-            return false;
-          }
-        }
-
-        const textarea = document.createElement("textarea");
-        textarea.value = text;
-        textarea.setAttribute("readonly", "");
-        textarea.style.position = "fixed";
-        textarea.style.opacity = "0";
-        document.body.append(textarea);
-        textarea.select();
-        const copied = document.execCommand("copy");
-        textarea.remove();
-        return copied;
+        window.opener?.postMessage(message, location.origin);
       }
 
-      async function offerHostClipboard(text) {
+      function offerHostClipboard(text) {
         if (!text || text === lastClipboardText) {
           return;
         }
         lastClipboardText = text;
-        pendingClipboardText = text;
-        if (await writeHostClipboard(text)) {
-          pendingClipboardText = "";
-          copyButton.hidden = true;
-          return;
-        }
-        copyButton.hidden = false;
+        postViewerMessage("cloakhub-viewer-clipboard", { text });
       }
 
       async function pollClipboard() {
@@ -1091,7 +1067,7 @@ function renderManualViewer(viewer: BrowserRuntimeManualViewerState): string {
           });
           if (response.ok) {
             const payload = await response.json();
-            await offerHostClipboard(typeof payload.text === "string" ? payload.text : "");
+            offerHostClipboard(typeof payload.text === "string" ? payload.text : "");
           }
         } catch {
           // The VNC session status remains the source of truth for connection errors.
@@ -1120,18 +1096,16 @@ function renderManualViewer(viewer: BrowserRuntimeManualViewerState): string {
         rfb.sendKey(0xffe3, "ControlLeft", false);
       }
 
-      pasteButton.addEventListener("click", async () => {
-        const clipboardText = await navigator.clipboard?.readText().catch(() => "");
-        const text = clipboardText || window.prompt("Paste text to send to the browser") || "";
-        await pasteText(text);
-      });
-
-      copyButton.addEventListener("click", async () => {
-        if (await writeHostClipboard(pendingClipboardText || lastClipboardText, true)) {
-          pendingClipboardText = "";
-          copyButton.hidden = true;
+      window.addEventListener("message", (event) => {
+        if (
+          event.origin !== location.origin ||
+          event.data?.type !== "cloakhub-viewer-paste" ||
+          event.data.profile_id !== "${escapeHtml(viewer.profile_id)}" ||
+          typeof event.data.text !== "string"
+        ) {
+          return;
         }
-        rfb.focus();
+        void pasteText(event.data.text);
       });
 
       document.addEventListener("keydown", async (event) => {
@@ -1161,14 +1135,7 @@ function renderManualViewer(viewer: BrowserRuntimeManualViewerState): string {
         window.setTimeout(() => {
           status.hidden = true;
         }, 1200);
-        const connectedMessage = {
-          profile_id: "${escapeHtml(viewer.profile_id)}",
-          type: "cloakhub-viewer-connected"
-        };
-        if (window.parent && window.parent !== window) {
-          window.parent.postMessage(connectedMessage, location.origin);
-        }
-        window.opener?.postMessage(connectedMessage, location.origin);
+        postViewerMessage("cloakhub-viewer-connected");
         clipboardPolling = true;
         window.clearTimeout(clipboardPollTimer);
         void pollClipboard();
@@ -1178,10 +1145,11 @@ function renderManualViewer(viewer: BrowserRuntimeManualViewerState): string {
         window.clearTimeout(clipboardPollTimer);
         status.hidden = false;
         status.textContent = "Disconnected";
+        postViewerMessage("cloakhub-viewer-disconnected");
       });
       rfb.addEventListener("clipboard", (event) => {
         if (event.detail?.text) {
-          void offerHostClipboard(event.detail.text);
+          offerHostClipboard(event.detail.text);
         }
       });
       window.addEventListener("beforeunload", () => {
@@ -1199,6 +1167,7 @@ function renderManualViewerUnavailable(message: string): string {
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <title>CloakHub Viewer Unavailable</title>
   </head>
   <body>
@@ -1226,6 +1195,7 @@ function renderShell(
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <title>CloakHub</title>
     <style>
       :root {
@@ -1396,7 +1366,7 @@ function renderShell(
       button,
       select,
       textarea {
-        border-radius: 6px;
+        border-radius: 8px;
         font: inherit;
         min-height: 34px;
       }
@@ -1405,10 +1375,26 @@ function renderShell(
       select,
       textarea {
         background: var(--panel);
-        border: 1px solid var(--border);
+        border: 1px solid #c8d1dc;
+        box-shadow: inset 0 1px 2px rgb(23 33 43 / 0.04);
         color: var(--ink);
-        padding: 7px 9px;
+        padding: 7px 10px;
+        transition: border-color 120ms ease, box-shadow 120ms ease;
         width: 100%;
+      }
+
+      input:hover,
+      select:hover,
+      textarea:hover {
+        border-color: #aab7c5;
+      }
+
+      input:focus,
+      select:focus,
+      textarea:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgb(31 100 229 / 0.14);
+        outline: none;
       }
 
       textarea {
@@ -1418,7 +1404,8 @@ function renderShell(
 
       button {
         background: var(--accent);
-        border: 0;
+        border: 1px solid #1a58cb;
+        box-shadow: 0 1px 2px rgb(23 33 43 / 0.12);
         color: white;
         cursor: pointer;
         font-size: 0.78rem;
@@ -1429,6 +1416,12 @@ function renderShell(
 
       button:hover:not(:disabled) {
         filter: brightness(0.97);
+        box-shadow: 0 2px 5px rgb(23 33 43 / 0.14);
+      }
+
+      button:active:not(:disabled) {
+        box-shadow: 0 1px 2px rgb(23 33 43 / 0.1);
+        transform: translateY(1px);
       }
 
       button:focus-visible,
@@ -1438,8 +1431,15 @@ function renderShell(
       }
 
       button.secondary {
-        background: #e8edf3;
+        background: #fff;
+        border-color: #c8d1dc;
+        box-shadow: 0 1px 2px rgb(23 33 43 / 0.06);
         color: var(--ink);
+      }
+
+      button.secondary:hover:not(:disabled) {
+        background: #f4f7fa;
+        border-color: #aab7c5;
       }
 
       .profile-delete-button {
@@ -1454,7 +1454,7 @@ function renderShell(
 
       button:disabled {
         cursor: not-allowed;
-        opacity: 0.6;
+        opacity: 0.48;
       }
 
       .status {
@@ -1491,7 +1491,7 @@ function renderShell(
       }
 
       .profile-item {
-        background: var(--panel-strong);
+        background: var(--panel);
         border: 1px solid var(--border);
         border-radius: 10px;
         display: grid;
@@ -1504,8 +1504,7 @@ function renderShell(
       .profile-item:hover {
         background: #fff;
         border-color: var(--border-strong);
-        box-shadow: 0 5px 18px rgb(23 33 43 / 0.08);
-        transform: translateY(-1px);
+        box-shadow: 0 4px 14px rgb(23 33 43 / 0.07);
       }
 
       .profile-item.selected {
@@ -1590,8 +1589,9 @@ function renderShell(
       }
 
       .manual-viewer-button.profile-primary-action {
-        background: #e8edf3;
-        border: 1px solid var(--border);
+        background: #fff;
+        border: 1px solid #c8d1dc;
+        box-shadow: 0 1px 2px rgb(23 33 43 / 0.06);
         color: var(--ink);
       }
 
@@ -1603,8 +1603,9 @@ function renderShell(
 
       .icon-button {
         align-items: center;
-        background: #e8edf3;
-        border: 1px solid var(--border);
+        background: #fff;
+        border: 1px solid #c8d1dc;
+        box-shadow: 0 1px 2px rgb(23 33 43 / 0.06);
         color: var(--ink);
         display: inline-flex;
         font-size: 0.72rem;
@@ -1616,6 +1617,16 @@ function renderShell(
         padding: 0;
         text-align: center;
         width: 26px;
+      }
+
+      .icon-button svg {
+        fill: none;
+        height: 16px;
+        stroke: currentColor;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-width: 1.7;
+        width: 16px;
       }
 
       .profile-popover {
@@ -1718,6 +1729,8 @@ function renderShell(
 
       .menu-item {
         background: transparent;
+        border-color: transparent;
+        box-shadow: none;
         color: var(--ink);
         justify-content: flex-start;
         text-align: left;
@@ -1970,11 +1983,48 @@ function renderShell(
       }
 
       .viewer-status-id {
-        margin-left: auto;
         min-width: 0;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+      }
+
+      .viewer-tools {
+        align-items: center;
+        display: flex;
+        gap: 6px;
+        margin-left: auto;
+      }
+
+      .viewer-connection-state {
+        align-items: center;
+        color: var(--muted);
+        display: inline-flex;
+        font-size: 0.7rem;
+        gap: 6px;
+        white-space: nowrap;
+      }
+
+      .viewer-connection-state::before {
+        background: #9aa7b2;
+        border-radius: 50%;
+        content: "";
+        height: 6px;
+        width: 6px;
+      }
+
+      .viewer-connection-state.connected::before {
+        background: var(--success);
+      }
+
+      .viewer-tool-button {
+        min-height: 28px;
+        padding: 0 10px;
+      }
+
+      #viewer-copy-button.attention {
+        border-color: #d69e2e;
+        box-shadow: 0 0 0 3px rgb(214 158 46 / 0.14);
       }
 
       .sr-only {
@@ -2016,7 +2066,7 @@ function renderShell(
       dialog {
         background: var(--panel);
         border: 1px solid var(--border);
-        border-radius: 8px;
+        border-radius: 12px;
         box-shadow: 0 24px 80px rgb(15 23 42 / 0.24);
         max-height: min(860px, calc(100vh - 32px));
         max-width: min(1100px, calc(100vw - 32px));
@@ -2287,6 +2337,14 @@ function renderShell(
           min-height: 60vh;
         }
 
+        .viewer-status {
+          flex-wrap: wrap;
+        }
+
+        .viewer-tools {
+          margin-left: auto;
+        }
+
         .create-profile-body {
           grid-template-columns: 1fr;
         }
@@ -2359,6 +2417,11 @@ function renderShell(
           <span class="viewer-status-label">Viewer</span>
           <h2 class="viewer-status-name" id="viewer-heading">No profile selected</h2>
           <code class="viewer-status-id" id="viewer-profile-id">Choose a profile</code>
+          <div class="viewer-tools">
+            <span class="viewer-connection-state" id="viewer-connection-state">Idle</span>
+            <button class="secondary viewer-tool-button" id="viewer-paste-button" type="button" disabled>Paste</button>
+            <button class="secondary viewer-tool-button" id="viewer-copy-button" type="button" disabled>Copy out</button>
+          </div>
         </div>
         <div class="viewer-frame-wrap">
           <iframe id="viewer-frame" title="CloakHub VNC Viewer"></iframe>
@@ -2401,7 +2464,12 @@ function renderShell(
       const toggleSidebarButton = document.getElementById("toggle-sidebar");
       const viewerFrame = document.getElementById("viewer-frame");
       const viewerHeading = document.getElementById("viewer-heading");
+      const viewerConnectionState = document.getElementById("viewer-connection-state");
+      const viewerCopyButton = document.getElementById("viewer-copy-button");
+      const viewerPasteButton = document.getElementById("viewer-paste-button");
       const viewerProfileId = document.getElementById("viewer-profile-id");
+      let activeViewerProfileId = "";
+      let viewerClipboardText = "";
       const savedSidebarWidth = Number(localStorage.getItem("cloakhub.sidebarWidth"));
       const savedSidebarCollapsed = localStorage.getItem("cloakhub.sidebarCollapsed") === "true";
 
@@ -2986,6 +3054,17 @@ function renderShell(
           event.preventDefault();
           const profileId = event.currentTarget.dataset.profileId;
           const profileName = event.currentTarget.dataset.profileName || profileId;
+          activeViewerProfileId = profileId;
+          viewerClipboardText = "";
+          viewerConnectionState.textContent = "Connecting";
+          viewerConnectionState.classList.remove("connected");
+          viewerCopyButton.disabled = true;
+          viewerCopyButton.classList.remove("attention");
+          viewerPasteButton.disabled = true;
+          const card = profileNodes(".profile-item", profileId)[0];
+          if (card?.dataset.profileStatus === "stopped" || card?.dataset.profileStatus === "failed") {
+            updateProfileStatus(profileId, "starting");
+          }
           viewerFrame.src = "/ui/profiles/" + encodeURIComponent(profileId) + "/viewer";
           viewerFrame.title = "CloakHub viewer for " + profileName;
           viewerHeading.textContent = profileName;
@@ -3005,13 +3084,72 @@ function renderShell(
       window.addEventListener("message", (event) => {
         if (
           event.origin !== location.origin ||
-          event.data?.type !== "cloakhub-viewer-connected" ||
-          typeof event.data.profile_id !== "string"
+          typeof event.data?.profile_id !== "string" ||
+          event.data.profile_id !== activeViewerProfileId
         ) {
           return;
         }
 
-        updateProfileViewerPresence(event.data.profile_id, 1);
+        if (event.data.type === "cloakhub-viewer-connected") {
+          updateProfileStatus(event.data.profile_id, "running");
+          updateProfileViewerPresence(event.data.profile_id, 1);
+          viewerConnectionState.textContent = "Connected";
+          viewerConnectionState.classList.add("connected");
+          viewerPasteButton.disabled = false;
+          return;
+        }
+
+        if (event.data.type === "cloakhub-viewer-disconnected") {
+          viewerConnectionState.textContent = "Disconnected";
+          viewerConnectionState.classList.remove("connected");
+          viewerPasteButton.disabled = true;
+          void syncProfiles();
+          return;
+        }
+
+        if (event.data.type === "cloakhub-viewer-clipboard" && typeof event.data.text === "string") {
+          viewerClipboardText = event.data.text;
+          viewerCopyButton.disabled = !viewerClipboardText;
+          if (viewerClipboardText) {
+            void copyTextToClipboard(viewerClipboardText).then((copied) => {
+              if (copied) {
+                showCopyFeedback(viewerCopyButton);
+              } else {
+                viewerCopyButton.classList.add("attention");
+              }
+            });
+          }
+        }
+      });
+
+      viewerPasteButton.addEventListener("click", async () => {
+        const clipboardText = await navigator.clipboard?.readText?.().catch(() => "");
+        const text = clipboardText || window.prompt("Paste text to send to the browser") || "";
+        if (!text || !activeViewerProfileId) {
+          return;
+        }
+        viewerFrame.contentWindow?.postMessage(
+          {
+            profile_id: activeViewerProfileId,
+            text,
+            type: "cloakhub-viewer-paste"
+          },
+          location.origin
+        );
+        viewerFrame.focus?.();
+      });
+
+      viewerCopyButton.addEventListener("click", async () => {
+        if (!viewerClipboardText) {
+          return;
+        }
+        if (await copyTextToClipboard(viewerClipboardText)) {
+          viewerCopyButton.classList.remove("attention");
+          showCopyFeedback(viewerCopyButton);
+          viewerFrame.focus?.();
+          return;
+        }
+        showToast("Clipboard access was blocked by this browser.", "error");
       });
 
       document.querySelectorAll(".profile-lifecycle-button").forEach((button) => {
@@ -3180,8 +3318,9 @@ function renderProfileListItem(profile: PresentedBrowserProfile): string {
                 </div>
                 <div class="profile-row-actions">
                   ${renderPrimaryProfileAction(profile)}
-                  <button class="profile-info icon-button" popovertarget="${profileInfoPopoverId}" title="Profile info" aria-label="Profile details for ${profileId}" type="button">ℹ️</button>
-                  <button class="profile-menu icon-button" popovertarget="${profileMenuPopoverId}" title="Profile actions" aria-label="Profile actions for ${profileId}" type="button">...</button>
+                  <button class="profile-info icon-button" popovertarget="${profileInfoPopoverId}" title="Profile info" aria-label="Profile details for ${profileId}" type="button">
+                    <svg aria-hidden="true" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7.25"></circle><path d="M10 8.5v5M10 6.2h.01"></path></svg>
+                  </button>
                   <div class="profile-popover profile-info-popover" id="${profileInfoPopoverId}" popover>
                     ${renderProfileDetails(profile)}
                   </div>

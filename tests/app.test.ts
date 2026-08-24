@@ -13,6 +13,18 @@ const config: CloakHubConfig = {
 };
 
 describe("CloakHub HTTP app", () => {
+  test("serves and links a favicon", async () => {
+    const app = createApp(config);
+
+    const faviconResponse = await app.fetch(new Request("http://cloakhub.test/favicon.svg"));
+    const shellHtml = await (await app.fetch(new Request("http://cloakhub.test/"))).text();
+
+    expect(faviconResponse.status).toBe(200);
+    expect(faviconResponse.headers.get("content-type")).toBe("image/svg+xml; charset=utf-8");
+    expect(await faviconResponse.text()).toContain("<svg");
+    expect(shellHtml).toContain('<link rel="icon" href="/favicon.svg" type="image/svg+xml">');
+  });
+
   test("serves non-sensitive health without auth", async () => {
     const app = createApp({ ...config, authToken: "admin-token" });
 
