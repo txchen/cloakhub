@@ -17,6 +17,7 @@ import { createCdpWebSocketHandler, type CdpWebSocketData } from "../src/cdp-web
 import { createKasmVncDisplayRuntime, resolveKasmVncBin } from "../src/display-runtime";
 import { openProfileRepository } from "../src/profile-repository";
 import { createProfileService, type ProfileService } from "../src/profile-service";
+import { createKasmVncWebSocketFactory } from "../src/vnc-websocket-proxy";
 
 const RUN_REAL_RUNTIME_TESTS = process.env.CLOAKHUB_RUN_REAL_RUNTIME_TESTS === "true";
 const realRuntimeTest = RUN_REAL_RUNTIME_TESTS ? test : test.skip;
@@ -60,6 +61,20 @@ describe("real CloakBrowser runtime integration", () => {
     expect(upgradeServer.upgrades).toEqual([
       { profileId: "headed", targetHost: "127.0.0.1", targetPort: viewer.vnc_port }
     ]);
+    const upstream = createKasmVncWebSocketFactory().connect("127.0.0.1", viewer.vnc_port);
+    const rfbBanner = await new Promise<string>((resolve, reject) => {
+      const timeout = setTimeout(() => reject(new Error("Timed out waiting for KasmVNC RFB banner")), 5000);
+      upstream.onerror = () => {
+        clearTimeout(timeout);
+        reject(new Error("KasmVNC upstream websocket failed to open"));
+      };
+      upstream.ondata = (data) => {
+        clearTimeout(timeout);
+        resolve(data.toString("ascii"));
+      };
+    });
+    expect(rfbBanner).toBe("RFB 003.008\n");
+    upstream.close();
     await fixture.runtime.stop("headed", "manual stop");
   });
 

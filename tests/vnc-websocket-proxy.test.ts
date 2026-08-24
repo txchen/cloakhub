@@ -1,7 +1,9 @@
 import { describe, expect, test } from "bun:test";
 
 import {
+  createKasmVncWebSocketFactory,
   createVncWebSocketHandler,
+  type KasmVncClientWebSocket,
   type VncSocket,
   type VncSocketFactory,
   type VncWebSocketData
@@ -24,8 +26,7 @@ describe("VncWebSocketProxy", () => {
     handler.message?.(ws, Buffer.from([1]));
     handler.message?.(ws, Buffer.concat([makeExtension150(), makePointerEvent()]));
     const clipboard = makeKasmVncClipboard("hello");
-    factory.sockets[0]?.ondata?.(clipboard.subarray(0, 12));
-    factory.sockets[0]?.ondata?.(clipboard.subarray(12));
+    factory.sockets[0]?.ondata?.(clipboard);
     handler.close?.(ws, 1000, "done");
 
     expect(factory.connections).toEqual([{ host: "127.0.0.1", port: 5900 }]);
@@ -59,7 +60,7 @@ describe("VncWebSocketProxy", () => {
     expect(manualViewers.events).toEqual(["open:work", "open:work", "close:work", "close:work"]);
   });
 
-  test("translates coalesced server messages before sending them to the Manual Client", () => {
+  test("translates a server clipboard WebSocket message before sending it to the Manual Client", () => {
     const factory = fakeVncSocketFactory();
     const handler = createVncWebSocketHandler({ factory });
     const ws = fakeServerWebSocket({
@@ -69,9 +70,56 @@ describe("VncWebSocketProxy", () => {
     });
 
     handler.open?.(ws);
-    factory.sockets[0]?.ondata?.(Buffer.concat([Buffer.from([2]), makeKasmVncClipboard("hello")]));
+    factory.sockets[0]?.ondata?.(Buffer.from([2]));
+    factory.sockets[0]?.ondata?.(makeKasmVncClipboard("hello"));
 
-    expect(ws.sent).toEqual([Buffer.concat([Buffer.from([2]), makeServerCutText("hello")])]);
+    expect(ws.sent).toEqual([Buffer.from([2]), makeServerCutText("hello")]);
+  });
+
+  test("connects to KasmVNC websockify and queues writes until the upstream socket opens", () => {
+    const clients: Array<KasmVncClientWebSocket & { sent: Buffer[]; url: string }> = [];
+    const connectOptions: unknown[] = [];
+    const factory = createKasmVncWebSocketFactory((url, options) => {
+      connectOptions.push(options);
+      const client: KasmVncClientWebSocket & { sent: Buffer[]; url: string } = {
+        binaryType: "blob",
+        close: () => undefined,
+        onclose: null,
+        onerror: null,
+        onmessage: null,
+        onopen: null,
+        send(data) {
+          this.sent.push(Buffer.from(data));
+        },
+        sent: [],
+        url
+      };
+      clients.push(client);
+      return client;
+    });
+    const socket = factory.connect("127.0.0.1", 5900);
+    const received: Buffer[] = [];
+    socket.ondata = (data) => received.push(data);
+
+    socket.write(Buffer.from("RFB 003.008\n"));
+    expect(clients[0]?.url).toBe("ws://127.0.0.1:5900/websockify");
+    expect(connectOptions).toEqual([
+      {
+        headers: {
+          Origin: "http://127.0.0.1:5900",
+          "Sec-WebSocket-Origin": "http://127.0.0.1:5900"
+        },
+        protocols: ["binary"]
+      }
+    ]);
+    expect(clients[0]?.sent).toEqual([]);
+
+    clients[0]?.onopen?.();
+    clients[0]?.onmessage?.({ data: Uint8Array.from([180, 0, 0]).buffer });
+
+    expect(clients[0]?.binaryType).toBe("arraybuffer");
+    expect(clients[0]?.sent).toEqual([Buffer.from("RFB 003.008\n")]);
+    expect(received).toEqual([Buffer.from([180, 0, 0])]);
   });
 });
 

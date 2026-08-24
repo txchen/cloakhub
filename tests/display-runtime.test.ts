@@ -46,18 +46,23 @@ describe("KasmVncDisplayRuntime", () => {
       "/usr/bin/Xvnc",
       ":100",
       "-ac",
-      "-localhost",
-      "-rfbport",
+      "-websocketPort",
       "5900",
+      "-rfbport",
+      "-1",
       "-geometry",
       "1920x1080",
+      "-depth",
+      "24",
       "-SecurityTypes",
       "None",
       "-DisableBasicAuth",
       "1",
-      "-noWebsocket",
-      "-publicIP",
-      "127.0.0.1"
+      "-interface",
+      "127.0.0.1",
+      "-AlwaysShared",
+      "-httpd",
+      "/usr/share/kasmvnc/www"
     ]);
     expect(spawn.options[0]).toMatchObject({
       detached: true,

@@ -98,18 +98,23 @@ function displayCommand(xvncBin: string, command: BrowserDisplayRuntimeCommand):
     xvncBin,
     `:${command.displayNumber}`,
     "-ac",
-    "-localhost",
-    "-rfbport",
+    "-websocketPort",
     String(command.vncPort),
+    "-rfbport",
+    "-1",
     "-geometry",
     `${command.screenWidth}x${command.screenHeight}`,
+    "-depth",
+    "24",
     "-SecurityTypes",
     "None",
     "-DisableBasicAuth",
     "1",
-    "-noWebsocket",
-    "-publicIP",
-    "127.0.0.1"
+    "-interface",
+    "127.0.0.1",
+    "-AlwaysShared",
+    "-httpd",
+    "/usr/share/kasmvnc/www"
   ];
 }
 
