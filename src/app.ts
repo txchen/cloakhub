@@ -34,11 +34,14 @@ import { ownedProcessResourceUsageByProfile, type OwnedProcessResourceUsage } fr
 type PresentedBrowserProfile = Omit<BrowserProfile, "cdp_token"> & {
   cdp_token_configured: boolean;
   cdp_session_count: number;
+  cdp_session_labels: string[];
   cdp_sessions: BrowserRuntimeCdpSessionObservation[];
   last_manual_input_at: string | null;
   manual_viewer_count: number;
   profile_data_dir: string;
   resource_usage: OwnedProcessResourceUsage;
+  resource_usage_label: string;
+  sleep_policy_label: string;
   sleep_status: string;
 };
 
@@ -663,19 +666,25 @@ function presentProfile(
   const { cdp_token: _cdpToken, ...profileWithoutToken } = redactSecrets
     ? redactProfileSecretsFromProfile(profile)
     : profile;
+  const cdpSessions = browserRuntime?.cdpSessionObservations(profile.profile_id) ?? [];
   const presented = {
     ...profileWithoutToken,
     cdp_token_configured: Boolean(profile.cdp_token),
     cdp_session_count: browserRuntime?.activeCdpSessionCount(profile.profile_id) ?? 0,
-    cdp_sessions: browserRuntime?.cdpSessionObservations(profile.profile_id) ?? [],
+    cdp_session_labels: cdpSessions.map(cdpSessionLabel),
+    cdp_sessions: cdpSessions,
     last_manual_input_at: browserRuntime?.lastManualInputAt(profile.profile_id) ?? null,
     manual_viewer_count: browserRuntime?.activeManualViewerCount(profile.profile_id) ?? 0,
     profile_data_dir: profileDataDir(dataRoot, profile.profile_id),
     resource_usage: { owned_process_count: 0, rss_bytes: null },
+    resource_usage_label: "",
+    sleep_policy_label: "",
     sleep_status: ""
   };
   return {
     ...presented,
+    resource_usage_label: resourceUsageLabel(presented.resource_usage),
+    sleep_policy_label: sleepPolicyLabel(presented),
     sleep_status: sleepStatusLabel(presented)
   };
 }
@@ -694,6 +703,7 @@ function presentProfileWithResourceUsage(
   };
   return {
     ...withResourceUsage,
+    resource_usage_label: resourceUsageLabel(withResourceUsage.resource_usage),
     sleep_status: sleepStatusLabel(withResourceUsage)
   };
 }
@@ -1123,17 +1133,20 @@ function renderShell(
     <style>
       :root {
         color-scheme: light;
-        --sidebar-width: 292px;
-        --bg: #efe5d8;
-        --border: #cfd7df;
-        --ink: #17202a;
-        --muted: #657584;
-        --panel: #faf3ea;
-        --panel-strong: #f3e7d8;
-        --success: #0f8f5f;
-        --accent: #2463eb;
+        --sidebar-width: 320px;
+        --bg: #e8edf3;
+        --border: #d4dce5;
+        --border-strong: #b7c3d0;
+        --ink: #17212b;
+        --muted: #687786;
+        --panel: #ffffff;
+        --panel-strong: #f7f9fb;
+        --success: #07845a;
+        --accent: #1f64e5;
+        --accent-soft: #eaf2ff;
         --warning: #b7791f;
         --danger: #b42318;
+        --shadow: 0 10px 30px rgb(23 33 43 / 0.1);
       }
 
       * {
@@ -1159,8 +1172,11 @@ function renderShell(
         border-bottom: 1px solid var(--border);
         display: flex;
         gap: 12px;
-        min-height: 44px;
-        padding: 0 12px;
+        box-shadow: 0 1px 0 rgb(23 33 43 / 0.03);
+        min-height: 48px;
+        padding: 0 14px;
+        position: relative;
+        z-index: 20;
       }
 
       .header-meta {
@@ -1192,7 +1208,7 @@ function renderShell(
       .manager-shell {
         display: grid;
         grid-template-columns: minmax(220px, var(--sidebar-width)) 3px minmax(0, 1fr);
-        height: calc(100vh - 44px);
+        height: calc(100vh - 48px);
         min-height: 0;
       }
 
@@ -1311,6 +1327,17 @@ function renderShell(
         font-size: 0.78rem;
         font-weight: 700;
         padding: 0 10px;
+        transition: background 120ms ease, border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
+      }
+
+      button:hover:not(:disabled) {
+        filter: brightness(0.97);
+      }
+
+      button:focus-visible,
+      .profile-item:focus-visible {
+        outline: 3px solid rgb(31 100 229 / 0.24);
+        outline-offset: 2px;
       }
 
       button.secondary {
@@ -1360,7 +1387,7 @@ function renderShell(
       .profile-list {
         display: grid;
         align-content: start;
-        gap: 8px;
+        gap: 7px;
         min-height: 0;
         overflow: auto;
         padding: 8px;
@@ -1369,17 +1396,25 @@ function renderShell(
       .profile-item {
         background: var(--panel-strong);
         border: 1px solid var(--border);
-        border-radius: 8px;
+        border-radius: 10px;
         display: grid;
-        min-height: 52px;
-        padding: 7px;
+        min-height: 70px;
+        padding: 10px;
         position: relative;
+        transition: background 120ms ease, border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
+      }
+
+      .profile-item:hover {
+        background: #fff;
+        border-color: var(--border-strong);
+        box-shadow: 0 5px 18px rgb(23 33 43 / 0.08);
+        transform: translateY(-1px);
       }
 
       .profile-item.selected {
-        background: #eef6ff;
+        background: var(--accent-soft);
         border-color: var(--accent);
-        box-shadow: inset 3px 0 0 var(--accent);
+        box-shadow: inset 3px 0 0 var(--accent), 0 5px 18px rgb(31 100 229 / 0.1);
       }
 
       .profile-summary,
@@ -1395,10 +1430,10 @@ function renderShell(
       }
 
       .profile-row {
-        align-items: start;
+        align-items: center;
         display: grid;
-        gap: 6px;
-        grid-template-columns: minmax(0, 1fr);
+        gap: 10px;
+        grid-template-columns: minmax(0, 1fr) auto;
       }
 
       .profile-main {
@@ -1414,7 +1449,7 @@ function renderShell(
       }
 
       .profile-title strong {
-        font-size: 0.86rem;
+        font-size: 0.9rem;
       }
 
       .profile-title strong,
@@ -1426,22 +1461,22 @@ function renderShell(
         color: var(--muted);
         display: flex;
         flex-wrap: wrap;
-        font-size: 0.72rem;
+        font-size: 0.7rem;
         gap: 4px 8px;
         line-height: 1.25;
       }
 
-      .profile-meta span:not(:last-child)::after {
+      .profile-meta span:not([hidden]) + span:not([hidden])::before {
         color: #9aa7b2;
         content: "|";
-        margin-left: 8px;
+        margin-right: 8px;
       }
 
       .profile-row-actions {
         align-items: center;
         display: flex;
         gap: 3px;
-        justify-content: flex-start;
+        justify-content: flex-end;
       }
 
       .profile-primary-action {
@@ -1452,9 +1487,9 @@ function renderShell(
         justify-content: center;
         line-height: 1;
         min-height: 26px;
-        min-width: 26px;
-        padding: 0;
-        width: 26px;
+        min-width: 48px;
+        padding: 0 9px;
+        width: auto;
       }
 
       .manual-viewer-button.profile-primary-action {
@@ -1490,7 +1525,7 @@ function renderShell(
         background: var(--panel);
         border: 1px solid var(--border);
         border-radius: 8px;
-        box-shadow: 0 18px 48px rgb(15 23 42 / 0.18);
+        box-shadow: var(--shadow);
         color: var(--ink);
         gap: 10px;
         left: min(calc(var(--sidebar-width) + 18px), calc(100vw - 372px));
@@ -1509,6 +1544,12 @@ function renderShell(
 
       .profile-popover:popover-open {
         display: grid;
+      }
+
+      .profile-popover.context-positioned {
+        left: var(--context-menu-left);
+        right: auto;
+        top: var(--context-menu-top);
       }
 
       .profile-detail-section {
@@ -1547,6 +1588,23 @@ function renderShell(
 
       .profile-menu-popover {
         min-width: 240px;
+        width: min(260px, calc(100vw - 24px));
+      }
+
+      .profile-menu-head {
+        border-bottom: 1px solid var(--border);
+        display: grid;
+        gap: 2px;
+        padding: 2px 2px 10px;
+      }
+
+      .profile-menu-head strong {
+        font-size: 0.82rem;
+      }
+
+      .profile-menu-head span {
+        color: var(--muted);
+        font-size: 0.7rem;
       }
 
       .profile-menu-section {
@@ -1562,11 +1620,15 @@ function renderShell(
       }
 
       .menu-item {
-        background: #e8edf3;
+        background: transparent;
         color: var(--ink);
         justify-content: flex-start;
         text-align: left;
         width: 100%;
+      }
+
+      .menu-item:hover:not(:disabled) {
+        background: #eef3f8;
       }
 
       code {
@@ -1618,6 +1680,69 @@ function renderShell(
       .instance-pill.stopping {
         background: #fff1d6;
         color: #754c0b;
+      }
+
+      .instance-pill.starting::before,
+      .instance-pill.stopping::before {
+        animation: status-pulse 1s ease-in-out infinite;
+        background: currentColor;
+        border-radius: 50%;
+        content: "";
+        display: inline-block;
+        height: 6px;
+        margin-right: 5px;
+        width: 6px;
+      }
+
+      @keyframes status-pulse {
+        50% { opacity: 0.25; }
+      }
+
+      .sync-cluster {
+        align-items: center;
+        color: var(--muted);
+        display: flex;
+        font-size: 0.72rem;
+        gap: 6px;
+      }
+
+      #refresh-profiles {
+        font-size: 1rem;
+        min-height: 28px;
+        min-width: 28px;
+        padding: 0;
+      }
+
+      #refresh-profiles.syncing {
+        animation: refresh-spin 700ms linear infinite;
+      }
+
+      @keyframes refresh-spin {
+        to { transform: rotate(360deg); }
+      }
+
+      .toast-region {
+        bottom: 16px;
+        display: grid;
+        gap: 8px;
+        pointer-events: none;
+        position: fixed;
+        right: 16px;
+        width: min(360px, calc(100vw - 32px));
+        z-index: 100;
+      }
+
+      .toast {
+        background: #17212b;
+        border-radius: 8px;
+        box-shadow: var(--shadow);
+        color: #fff;
+        font-size: 0.8rem;
+        padding: 10px 12px;
+      }
+
+      .toast.error {
+        background: var(--danger);
       }
 
       .instance-pill.stopped {
@@ -1681,8 +1806,8 @@ function renderShell(
           gap: 3px 6px;
         }
 
-        .profile-meta span:not(:last-child)::after {
-          margin-left: 6px;
+        .profile-meta span:not([hidden]) + span:not([hidden])::before {
+          margin-right: 6px;
         }
       }
 
@@ -2110,6 +2235,10 @@ function renderShell(
       <h1>CloakHub</h1>
       <div class="header-meta">
         <span class="status">Service online</span>
+        <div class="sync-cluster" aria-live="polite">
+          <button class="secondary" id="refresh-profiles" title="Refresh profile status" aria-label="Refresh profile status" type="button">↻</button>
+          <span id="status-sync">Live status</span>
+        </div>
         <span class="limit">Running Instance Limit: ${config.maxRunningInstances}</span>
         <button class="secondary" id="show-sidebar" type="button" hidden>Profiles</button>
       </div>
@@ -2148,6 +2277,7 @@ function renderShell(
       </dialog>
       ${profileEditDialogs}
     </main>
+    <div class="toast-region" id="toast-region" aria-live="polite" aria-atomic="true"></div>
       <script>
       const createProfileModal = document.getElementById("create-profile-modal");
       const createDisplayNameInput = document.getElementById("create-display-name");
@@ -2167,7 +2297,10 @@ function renderShell(
       const createTimezoneInput = document.getElementById("create-timezone");
       const managerShell = document.querySelector(".manager-shell");
       const resizer = document.getElementById("sidebar-resizer");
+      const refreshProfilesButton = document.getElementById("refresh-profiles");
       const showSidebarButton = document.getElementById("show-sidebar");
+      const statusSync = document.getElementById("status-sync");
+      const toastRegion = document.getElementById("toast-region");
       const toggleSidebarButton = document.getElementById("toggle-sidebar");
       const viewerFrame = document.getElementById("viewer-frame");
       const viewerHeading = document.getElementById("viewer-heading");
@@ -2183,6 +2316,214 @@ function renderShell(
       function reloadDashboard() {
         location.reload();
       }
+
+      function showToast(message, tone = "default") {
+        const toast = document.createElement("div");
+        toast.className = "toast" + (tone === "error" ? " error" : "");
+        toast.textContent = message;
+        toastRegion?.appendChild(toast);
+        window.setTimeout?.(() => toast.remove(), 3200);
+      }
+
+      function profileNodes(selector, profileId) {
+        return Array.from(document.querySelectorAll(selector)).filter(
+          (node) => node.dataset.profileId === profileId
+        );
+      }
+
+      const instanceStatuses = ["running", "stopped", "starting", "stopping", "failed"];
+
+      function updateLifecycleAvailability(profileId, status) {
+        profileNodes(".profile-lifecycle-button", profileId).forEach((button) => {
+          const action = button.dataset.action;
+          button.disabled =
+            status === "starting" ||
+            status === "stopping" ||
+            (action === "start" && status === "running") ||
+            (action === "stop" && status === "stopped");
+        });
+      }
+
+      function updateProfileStatus(profileId, status) {
+        const safeStatus = instanceStatuses.includes(status) ? status : "failed";
+        profileNodes("[data-profile-instance-status]", profileId).forEach((node) => {
+          node.textContent = safeStatus;
+          if (node.classList.contains("instance-pill")) {
+            node.classList.remove(...instanceStatuses);
+            node.classList.add(safeStatus);
+          }
+        });
+        profileNodes(".profile-item", profileId).forEach((card) => {
+          card.dataset.profileStatus = safeStatus;
+          if (safeStatus === "starting" || safeStatus === "stopping") {
+            card.setAttribute("aria-busy", "true");
+          } else {
+            card.removeAttribute("aria-busy");
+          }
+        });
+        updateLifecycleAvailability(profileId, safeStatus);
+      }
+
+      function updateProfileClientCounts(profileId, cdpSessionCount, manualViewerCount) {
+        profileNodes("[data-profile-manual-viewer-count]", profileId).forEach((node) => {
+          node.textContent = String(manualViewerCount);
+        });
+        profileNodes("[data-profile-client-status]", profileId).forEach((node) => {
+          node.dataset.cdpSessionCount = String(cdpSessionCount);
+          node.dataset.manualViewerCount = String(manualViewerCount);
+          const label = clientStatusLabel(cdpSessionCount, manualViewerCount);
+          node.textContent = label;
+          node.hidden = label === "";
+        });
+        profileNodes("[data-cdp-session-count]", profileId).forEach((node) => {
+          node.dataset.cdpSessionCount = String(cdpSessionCount);
+          node.dataset.manualViewerCount = String(manualViewerCount);
+        });
+      }
+
+      function updateProfileText(selector, profileId, value) {
+        profileNodes(selector, profileId).forEach((node) => {
+          node.textContent = String(value ?? "none");
+        });
+      }
+
+      function applyProfileState(profile) {
+        updateProfileStatus(profile.profile_id, profile.instance_status);
+        updateProfileClientCounts(
+          profile.profile_id,
+          Number(profile.cdp_session_count ?? 0),
+          Number(profile.manual_viewer_count ?? 0)
+        );
+        updateProfileText("[data-profile-display-name]", profile.profile_id, profile.display_name);
+        updateProfileText(
+          "[data-profile-cdp-session-count-detail]",
+          profile.profile_id,
+          Number(profile.cdp_session_count ?? 0)
+        );
+        updateProfileText(
+          "[data-profile-last-manual-input]",
+          profile.profile_id,
+          profile.last_manual_input_at
+        );
+        updateProfileText("[data-profile-last-activity]", profile.profile_id, profile.last_activity_at);
+        updateProfileText("[data-profile-sleep-status]", profile.profile_id, profile.sleep_status);
+        updateProfileText(
+          "[data-profile-resource-usage]",
+          profile.profile_id,
+          profile.resource_usage_label
+        );
+        updateProfileText(
+          "[data-profile-owned-process-count]",
+          profile.profile_id,
+          Number(profile.resource_usage?.owned_process_count ?? 0)
+        );
+        updateProfileText(
+          "[data-profile-last-stop-reason]",
+          profile.profile_id,
+          profile.last_stop_reason
+        );
+        updateProfileText(
+          "[data-profile-last-launch-error]",
+          profile.profile_id,
+          profile.last_launch_error
+        );
+        updateProfileText("[data-profile-proxy]", profile.profile_id, profile.proxy || "none");
+        updateProfileText("[data-profile-notes]", profile.profile_id, profile.notes || "none");
+        profileNodes("[data-profile-sleep-policy]", profile.profile_id).forEach((node) => {
+          const badge = node.querySelector(".sleep-policy-badge");
+          if (badge) {
+            badge.textContent = profile.sleep_policy_label;
+            badge.className =
+              "sleep-policy-badge " +
+              (profile.sleep_policy_status.mode === "never"
+                ? "never-sleep"
+                : profile.sleep_policy_status.mode);
+          }
+        });
+        profileNodes("[data-profile-cdp-sessions]", profile.profile_id).forEach((node) => {
+          node.replaceChildren();
+          if (!profile.cdp_session_labels?.length) {
+            return;
+          }
+          const list = document.createElement("ul");
+          profile.cdp_session_labels.forEach((label) => {
+            const item = document.createElement("li");
+            item.textContent = label;
+            list.appendChild(item);
+          });
+          node.appendChild(list);
+        });
+      }
+
+      let profileSyncInFlight = false;
+      async function syncProfiles(options = {}) {
+        if (profileSyncInFlight || document.visibilityState === "hidden") {
+          return;
+        }
+
+        profileSyncInFlight = true;
+        refreshProfilesButton?.classList.add("syncing");
+        statusSync.textContent = "Syncing…";
+        try {
+          const response = await fetch("/ui/profiles", {
+            headers: { accept: "application/json" }
+          });
+          if (!response.ok) {
+            throw new Error("Status request failed (" + response.status + ")");
+          }
+
+          const profiles = await response.json();
+          if (!Array.isArray(profiles)) {
+            throw new Error("Status response was invalid");
+          }
+          const cards = Array.from(document.querySelectorAll(".profile-item"));
+          const profilesById = new Map(profiles.map((profile) => [profile.profile_id, profile]));
+          const structureChanged =
+            cards.length !== profiles.length ||
+            cards.some(
+              (card) => {
+                const profile = profilesById.get(card.dataset.profileId);
+                return (
+                  !profile ||
+                  card.dataset.profileHeadless !== String(profile.headless) ||
+                  card.dataset.profileCdpProtected !== String(profile.cdp_token_configured)
+                );
+              }
+            );
+          profiles.forEach(applyProfileState);
+          if (structureChanged) {
+            statusSync.textContent = "Profile list changed · reload when ready";
+            if (options.announce) {
+              showToast("Profiles changed in another session. Reload when ready.");
+            }
+          } else {
+            statusSync.textContent = "Updated " + new Date().toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+              second: "2-digit"
+            });
+          }
+          if (options.announce && !structureChanged) {
+            showToast("Profile status updated");
+          }
+        } catch (error) {
+          statusSync.textContent = "Sync unavailable";
+          if (options.announce) {
+            showToast(error instanceof Error ? error.message : String(error), "error");
+          }
+        } finally {
+          profileSyncInFlight = false;
+          refreshProfilesButton?.classList.remove("syncing");
+        }
+      }
+
+      refreshProfilesButton?.addEventListener("click", () => syncProfiles({ announce: true }));
+      setInterval(() => syncProfiles(), 10_000);
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState !== "hidden") {
+          syncProfiles();
+        }
+      });
 
       async function copyTextToClipboard(text) {
         if (navigator.clipboard?.writeText) {
@@ -2249,41 +2590,91 @@ function renderShell(
 
       function updateProfileViewerPresence(profileId, minimumManualViewerCount) {
         let manualViewerCount = minimumManualViewerCount;
-        document.querySelectorAll("[data-profile-manual-viewer-count]").forEach((countNode) => {
-          if (countNode.dataset.profileId === profileId) {
-            manualViewerCount = Math.max(Number(countNode.textContent ?? 0), minimumManualViewerCount);
-            countNode.textContent = String(manualViewerCount);
-          }
+        profileNodes("[data-profile-manual-viewer-count]", profileId).forEach((countNode) => {
+          manualViewerCount = Math.max(Number(countNode.textContent ?? 0), minimumManualViewerCount);
         });
-
-        document.querySelectorAll("[data-profile-client-status]").forEach((statusNode) => {
-          if (statusNode.dataset.profileId !== profileId) {
-            return;
-          }
-
-          statusNode.dataset.manualViewerCount = String(manualViewerCount);
-          const label = clientStatusLabel(
-            Number(statusNode.dataset.cdpSessionCount ?? 0),
-            manualViewerCount
-          );
-          statusNode.textContent = label;
-          if (statusNode.parentElement) {
-            statusNode.parentElement.hidden = label === "";
-          }
-        });
-
-        document.querySelectorAll("[data-manual-viewer-count]").forEach((actionNode) => {
-          if (actionNode.dataset.profileId === profileId) {
-            actionNode.dataset.manualViewerCount = String(manualViewerCount);
-          }
-        });
+        const clientStatus = profileNodes("[data-profile-client-status]", profileId)[0];
+        updateProfileClientCounts(
+          profileId,
+          Number(clientStatus?.dataset.cdpSessionCount ?? 0),
+          manualViewerCount
+        );
       }
 
       function closeProfilePopovers() {
         document.querySelectorAll(".profile-popover:popover-open").forEach((popover) => {
+          popover.classList.remove("context-positioned");
           popover.hidePopover?.();
         });
       }
+
+      function openProfileContextMenu(profileItem, clientX, clientY) {
+        const menu = document.getElementById(profileItem.dataset.profileContextMenu);
+        if (!menu) {
+          return;
+        }
+
+        closeProfilePopovers();
+        menu.style.setProperty("--context-menu-left", Math.max(8, clientX) + "px");
+        menu.style.setProperty("--context-menu-top", Math.max(8, clientY) + "px");
+        menu.classList.add("context-positioned");
+        if (typeof menu.showPopover === "function") {
+          menu.showPopover();
+        } else {
+          menu.setAttribute("open", "");
+        }
+        const bounds = menu.getBoundingClientRect();
+        const left = Math.min(Math.max(8, clientX), Math.max(8, window.innerWidth - bounds.width - 8));
+        const top = Math.min(Math.max(8, clientY), Math.max(8, window.innerHeight - bounds.height - 8));
+        menu.style.setProperty("--context-menu-left", left + "px");
+        menu.style.setProperty("--context-menu-top", top + "px");
+        menu.querySelector?.("[role='menuitem']:not(:disabled)")?.focus?.();
+      }
+
+      document.querySelectorAll(".profile-item").forEach((profileItem) => {
+        updateLifecycleAvailability(profileItem.dataset.profileId, profileItem.dataset.profileStatus);
+        profileItem.addEventListener("contextmenu", (event) => {
+          event.preventDefault();
+          openProfileContextMenu(profileItem, event.clientX, event.clientY);
+        });
+        profileItem.addEventListener("keydown", (event) => {
+          if (event.key === "ContextMenu" || (event.shiftKey && event.key === "F10")) {
+            event.preventDefault();
+            const bounds = profileItem.getBoundingClientRect();
+            openProfileContextMenu(profileItem, bounds.left + 24, bounds.top + 24);
+          }
+        });
+      });
+
+      document.querySelectorAll(".profile-menu-popover").forEach((menu) => {
+        menu.addEventListener("toggle", (event) => {
+          if (event.newState === "closed") {
+            menu.classList.remove("context-positioned");
+            return;
+          }
+          menu.querySelector("[role='menuitem']:not(:disabled)")?.focus();
+        });
+        menu.addEventListener("keydown", (event) => {
+          if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) {
+            return;
+          }
+          const items = Array.from(menu.querySelectorAll("[role='menuitem']:not(:disabled)"));
+          if (items.length === 0) {
+            return;
+          }
+          event.preventDefault();
+          const currentIndex = items.indexOf(document.activeElement);
+          const nextIndex =
+            event.key === "Home"
+              ? 0
+              : event.key === "End"
+                ? items.length - 1
+                : event.key === "ArrowUp"
+                  ? (currentIndex - 1 + items.length) % items.length
+                  : (currentIndex + 1) % items.length;
+          items[nextIndex].focus();
+        });
+      });
 
       let createProfileIdEdited = false;
 
@@ -2524,13 +2915,25 @@ function renderShell(
             return;
           }
 
-          const response = await fetch(
-            "/ui/profiles/" + encodeURIComponent(profileId) + "/" + encodeURIComponent(action),
-            { method: "POST" }
-          );
+          closeProfilePopovers();
+          const card = profileNodes(".profile-item", profileId)[0];
+          const previousStatus = card?.dataset.profileStatus || "stopped";
+          updateProfileStatus(profileId, action === "stop" ? "stopping" : "starting");
+          try {
+            const response = await fetch(
+              "/ui/profiles/" + encodeURIComponent(profileId) + "/" + encodeURIComponent(action),
+              { method: "POST" }
+            );
+            const body = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(body.error || "Profile action failed (" + response.status + ")");
+            }
 
-          if (response.ok) {
-            reloadDashboard();
+            updateProfileStatus(profileId, body.status);
+            showToast(profileId + " is " + body.status);
+          } catch (error) {
+            updateProfileStatus(profileId, previousStatus);
+            showToast(error instanceof Error ? error.message : String(error), "error");
           }
         });
       });
@@ -2646,17 +3049,20 @@ function renderProfileListItem(profile: PresentedBrowserProfile): string {
   const profileMenuPopoverId = `${profileId}-profile-menu`;
   const activeClients = compactClientStatus(profile);
 
-  return `<article class="profile-item" data-profile-id="${profileId}">
+  return `<article class="profile-item" data-profile-context-menu="${profileMenuPopoverId}" data-profile-id="${profileId}" data-profile-status="${escapeHtml(profile.instance_status)}" data-profile-headless="${profile.headless}" data-profile-cdp-protected="${profile.cdp_token_configured}" tabindex="0">
               <div class="profile-row">
                 <div class="profile-main">
                   <div class="profile-summary">
                     <div class="profile-title">
-                      <strong>${escapeHtml(profile.display_name)}</strong>
+                      <strong data-profile-display-name data-profile-id="${profileId}">${escapeHtml(profile.display_name)}</strong>
                       <code>${profileId}</code>
                     </div>
-                    <span class="instance-pill ${escapeHtml(profile.instance_status)}">${escapeHtml(profile.instance_status)}</span>
+                    <span class="instance-pill ${escapeHtml(profile.instance_status)}" data-profile-instance-status data-profile-id="${profileId}">${escapeHtml(profile.instance_status)}</span>
                   </div>
-                  <div class="profile-meta" aria-label="Profile quick facts"${activeClients ? "" : " hidden"}><span data-profile-client-status data-profile-id="${profileId}" data-cdp-session-count="${profile.cdp_session_count}" data-manual-viewer-count="${profile.manual_viewer_count}">${escapeHtml(activeClients)}</span></div>
+                  <div class="profile-meta" aria-label="Profile quick facts">
+                    <span>${profile.headless ? "Automation" : "Browser viewer"}</span>
+                    <span data-profile-client-status data-profile-id="${profileId}" data-cdp-session-count="${profile.cdp_session_count}" data-manual-viewer-count="${profile.manual_viewer_count}"${activeClients ? "" : " hidden"}>${escapeHtml(activeClients)}</span>
+                  </div>
                 </div>
                 <div class="profile-row-actions">
                   ${renderPrimaryProfileAction(profile)}
@@ -2665,7 +3071,8 @@ function renderProfileListItem(profile: PresentedBrowserProfile): string {
                   <div class="profile-popover profile-info-popover" id="${profileInfoPopoverId}" popover>
                     ${renderProfileDetails(profile)}
                   </div>
-                  <div class="profile-popover profile-menu-popover" id="${profileMenuPopoverId}" popover>
+                  <div class="profile-popover profile-menu-popover" id="${profileMenuPopoverId}" popover role="menu" aria-label="Actions for ${profileId}">
+                    <div class="profile-menu-head"><strong data-profile-display-name data-profile-id="${profileId}">${escapeHtml(profile.display_name)}</strong><span>Profile actions</span></div>
                     ${renderProfileActionMenu(profile)}
                   </div>
                 </div>
@@ -2684,23 +3091,23 @@ function compactClientStatus(profile: PresentedBrowserProfile): string {
 
 function renderPrimaryProfileAction(profile: PresentedBrowserProfile): string {
   if (!profile.headless) {
-    return `<button class="manual-viewer-button profile-primary-action" data-profile-id="${escapeHtml(profile.profile_id)}" data-profile-name="${escapeHtml(profile.display_name)}" title="View profile" aria-label="View profile ${escapeHtml(profile.profile_id)}" type="button">🖥️</button>`;
+    return `<button class="manual-viewer-button profile-primary-action" data-profile-id="${escapeHtml(profile.profile_id)}" data-profile-name="${escapeHtml(profile.display_name)}" title="View profile" aria-label="View profile ${escapeHtml(profile.profile_id)}" type="button">Open</button>`;
   }
 
-  return `<button class="profile-lifecycle-button profile-primary-action" data-action="start" data-cdp-session-count="${profile.cdp_session_count}" data-manual-viewer-count="${profile.manual_viewer_count}" data-profile-id="${escapeHtml(profile.profile_id)}" title="Start profile" aria-label="Start profile ${escapeHtml(profile.profile_id)}" type="button">▶</button>`;
+  return `<button class="profile-lifecycle-button profile-primary-action" data-action="start" data-cdp-session-count="${profile.cdp_session_count}" data-manual-viewer-count="${profile.manual_viewer_count}" data-profile-id="${escapeHtml(profile.profile_id)}" title="Start profile" aria-label="Start profile ${escapeHtml(profile.profile_id)}" type="button">Start</button>`;
 }
 
 function renderProfileDetails(profile: PresentedBrowserProfile): string {
   return `<section class="profile-detail-section" aria-label="Profile details">
-                <h3>${escapeHtml(profile.display_name)}</h3>
+                <h3 data-profile-display-name data-profile-id="${escapeHtml(profile.profile_id)}">${escapeHtml(profile.display_name)}</h3>
                 <dl class="profile-detail-list">
                   <div>
                     <dt>Instance Status</dt>
-                    <dd>${escapeHtml(profile.instance_status)}</dd>
+                    <dd data-profile-instance-status data-profile-id="${escapeHtml(profile.profile_id)}">${escapeHtml(profile.instance_status)}</dd>
                   </div>
                   <div>
                     <dt>CDP Sessions</dt>
-                    <dd>${profile.cdp_session_count}</dd>
+                    <dd data-profile-cdp-session-count-detail data-profile-id="${escapeHtml(profile.profile_id)}">${profile.cdp_session_count}</dd>
                   </div>
                   <div>
                     <dt>Viewers</dt>
@@ -2708,43 +3115,43 @@ function renderProfileDetails(profile: PresentedBrowserProfile): string {
                   </div>
                   <div>
                     <dt>Last Manual Input</dt>
-                    <dd>${escapeHtml(profile.last_manual_input_at ?? "none")}</dd>
+                    <dd data-profile-last-manual-input data-profile-id="${escapeHtml(profile.profile_id)}">${escapeHtml(profile.last_manual_input_at ?? "none")}</dd>
                   </div>
                   <div>
                     <dt>Last Activity</dt>
-                    <dd>${escapeHtml(profile.last_activity_at ?? "none")}</dd>
+                    <dd data-profile-last-activity data-profile-id="${escapeHtml(profile.profile_id)}">${escapeHtml(profile.last_activity_at ?? "none")}</dd>
                   </div>
                   <div>
                     <dt>Sleep</dt>
-                    <dd>${escapeHtml(profile.sleep_status)}</dd>
+                    <dd data-profile-sleep-status data-profile-id="${escapeHtml(profile.profile_id)}">${escapeHtml(profile.sleep_status)}</dd>
                   </div>
                   <div>
                     <dt>Resource Usage</dt>
-                    <dd>${escapeHtml(resourceUsageLabel(profile.resource_usage))}</dd>
+                    <dd data-profile-resource-usage data-profile-id="${escapeHtml(profile.profile_id)}">${escapeHtml(profile.resource_usage_label)}</dd>
                   </div>
                   <div>
                     <dt>Owned Processes</dt>
-                    <dd>${profile.resource_usage.owned_process_count}</dd>
+                    <dd data-profile-owned-process-count data-profile-id="${escapeHtml(profile.profile_id)}">${profile.resource_usage.owned_process_count}</dd>
                   </div>
                   <div>
                     <dt>Last Stop Reason</dt>
-                    <dd>${escapeHtml(profile.last_stop_reason ?? "none")}</dd>
+                    <dd data-profile-last-stop-reason data-profile-id="${escapeHtml(profile.profile_id)}">${escapeHtml(profile.last_stop_reason ?? "none")}</dd>
                   </div>
                   <div>
                     <dt>Last Launch Error</dt>
-                    <dd>${escapeHtml(profile.last_launch_error ?? "none")}</dd>
+                    <dd data-profile-last-launch-error data-profile-id="${escapeHtml(profile.profile_id)}">${escapeHtml(profile.last_launch_error ?? "none")}</dd>
                   </div>
                   <div>
                     <dt>Proxy</dt>
-                    <dd>${escapeHtml(profile.proxy || "none")}</dd>
+                    <dd data-profile-proxy data-profile-id="${escapeHtml(profile.profile_id)}">${escapeHtml(profile.proxy || "none")}</dd>
                   </div>
                   <div>
                     <dt>Notes</dt>
-                    <dd>${escapeHtml(profile.notes || "none")}</dd>
+                    <dd data-profile-notes data-profile-id="${escapeHtml(profile.profile_id)}">${escapeHtml(profile.notes || "none")}</dd>
                   </div>
                   <div>
                     <dt>Sleep Policy</dt>
-                    <dd>${sleepPolicyBadge(profile)}</dd>
+                    <dd data-profile-sleep-policy data-profile-id="${escapeHtml(profile.profile_id)}">${sleepPolicyBadge(profile)}</dd>
                   </div>
                   <div>
                     <dt>Data Directory</dt>
@@ -2760,10 +3167,10 @@ function renderProfileActionMenu(profile: PresentedBrowserProfile): string {
   const clientCounts = `data-cdp-session-count="${profile.cdp_session_count}" data-manual-viewer-count="${profile.manual_viewer_count}"`;
 
   return `<div class="profile-menu-section">
-                <button class="menu-item profile-lifecycle-button" data-action="start" ${clientCounts} data-profile-id="${profileId}" type="button">Start</button>
-                <button class="menu-item profile-lifecycle-button" data-action="stop" ${clientCounts} data-profile-id="${profileId}" type="button">Stop</button>
-                <button class="menu-item profile-lifecycle-button" data-action="restart" ${clientCounts} data-profile-id="${profileId}" type="button">Restart</button>
-                <button class="menu-item profile-edit-button" data-profile-id="${profileId}" type="button">Edit</button>
+                <button class="menu-item profile-lifecycle-button" data-action="start" ${clientCounts} data-profile-id="${profileId}" role="menuitem" type="button">Start</button>
+                <button class="menu-item profile-lifecycle-button" data-action="stop" ${clientCounts} data-profile-id="${profileId}" role="menuitem" type="button">Stop</button>
+                <button class="menu-item profile-lifecycle-button" data-action="restart" ${clientCounts} data-profile-id="${profileId}" role="menuitem" type="button">Restart</button>
+                <button class="menu-item profile-edit-button" data-profile-id="${profileId}" role="menuitem" type="button">Edit settings</button>
               </div>
               <div class="profile-menu-section profile-security">
                 ${renderCdpTokenControls(profile)}
@@ -3086,17 +3493,14 @@ function formatBytes(bytes: number): string {
 }
 
 function renderCdpSessions(profile: PresentedBrowserProfile): string {
-  if (profile.cdp_sessions.length === 0) {
-    return "";
-  }
+  const items = profile.cdp_session_labels
+    .map((label) => `<li>${escapeHtml(label)}</li>`)
+    .join("");
+  return `<div data-profile-cdp-sessions data-profile-id="${escapeHtml(profile.profile_id)}">${items ? `<ul>${items}</ul>` : ""}</div>`;
+}
 
-  return `<ul>${profile.cdp_sessions
-    .map(
-      (session) => `<li>${escapeHtml(formatDuration(session.duration_ms))} ${escapeHtml(
-        session.remote_address ?? "unknown"
-      )} ${escapeHtml(session.user_agent ?? "")}</li>`
-    )
-    .join("")}</ul>`;
+function cdpSessionLabel(session: BrowserRuntimeCdpSessionObservation): string {
+  return `${formatDuration(session.duration_ms)} ${session.remote_address ?? "unknown"} ${session.user_agent ?? ""}`.trim();
 }
 
 function renderCdpTokenControls(profile: PresentedBrowserProfile): string {
@@ -3105,8 +3509,8 @@ function renderCdpTokenControls(profile: PresentedBrowserProfile): string {
     return `
                 <span class="cdp-token-status open">CDP access is open because no CDP Token exists.</span>
                 <div class="cdp-token-actions">
-                  <button class="cdp-token-button" data-action="copy-open-url" data-profile-id="${profileId}" type="button">Copy open CDP URL</button>
-                  <button class="cdp-token-button" data-action="create" data-profile-id="${profileId}" type="button">Create CDP Token</button>
+                  <button class="cdp-token-button" data-action="copy-open-url" data-profile-id="${profileId}" role="menuitem" type="button">Copy open CDP URL</button>
+                  <button class="cdp-token-button" data-action="create" data-profile-id="${profileId}" role="menuitem" type="button">Create CDP Token</button>
                 </div>`;
   }
 
@@ -3114,9 +3518,9 @@ function renderCdpTokenControls(profile: PresentedBrowserProfile): string {
                 <span class="cdp-token-status protected">CDP Token is configured.</span>
                 <span class="cdp-token-warning">Token-bearing CDP URLs can leak access. Copy only for trusted CDP Clients.</span>
                 <div class="cdp-token-actions">
-                  <button class="cdp-token-button" data-action="copy-url" data-profile-id="${profileId}" type="button">Copy token-bearing CDP URL</button>
-                  <button class="cdp-token-button" data-action="regenerate" data-profile-id="${profileId}" type="button">Regenerate CDP Token</button>
-                  <button class="cdp-token-button" data-action="revoke" data-profile-id="${profileId}" type="button">Revoke CDP Token</button>
+                  <button class="cdp-token-button" data-action="copy-url" data-profile-id="${profileId}" role="menuitem" type="button">Copy token-bearing CDP URL</button>
+                  <button class="cdp-token-button" data-action="regenerate" data-profile-id="${profileId}" role="menuitem" type="button">Regenerate CDP Token</button>
+                  <button class="cdp-token-button" data-action="revoke" data-profile-id="${profileId}" role="menuitem" type="button">Revoke CDP Token</button>
                 </div>`;
 }
 

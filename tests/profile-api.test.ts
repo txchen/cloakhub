@@ -44,16 +44,16 @@ describe("Browser Profile admin API", () => {
     expect(html).toContain('class="manager-shell"');
     expect(html).toContain('class="profile-sidebar"');
     expect(html).toContain("min-height: 44px;");
-    expect(html).toContain("height: calc(100vh - 44px);");
+    expect(html).toContain("height: calc(100vh - 48px);");
     expect(html).toContain("padding: 6px 8px;");
     expect(html).toContain(".sidebar-head button,");
     expect(html).toContain('id="sidebar-resizer"');
     expect(html).toContain('id="toggle-sidebar"');
     expect(html).toContain('id="show-sidebar"');
     expect(html).toContain('class="viewer-pane"');
-    expect(html).toContain("--bg: #efe5d8;");
-    expect(html).toContain("--panel: #faf3ea;");
-    expect(html).toContain("--panel-strong: #f3e7d8;");
+    expect(html).toContain("--bg: #e8edf3;");
+    expect(html).toContain("--panel: #ffffff;");
+    expect(html).toContain("--panel-strong: #f7f9fb;");
     expect(html).not.toContain("--panel: #fbfdff;");
     expect(html).not.toContain("--bg: #dfeaf2;");
     expect(html).toContain('id="create-profile-modal"');
@@ -69,7 +69,7 @@ describe("Browser Profile admin API", () => {
     expect(html).toContain("profile-menu");
     expect(html).toContain('aria-label="View profile work"');
     expect(html).toContain('data-profile-name="Work"');
-    expect(html).toContain(">🖥️</button>");
+    expect(html).toContain(">Open</button>");
     expect(html).toContain(">ℹ️</button>");
     expect(html).toContain('class="viewer-status"');
     expect(html).toContain("No profile selected");
@@ -77,7 +77,7 @@ describe("Browser Profile admin API", () => {
     expect(html).toContain("popover");
     expect(html).toContain("container-type: inline-size");
     expect(html).toContain("@container (max-width: 260px)");
-    expect(html).toContain("grid-template-columns: minmax(0, 1fr);");
+    expect(html).toContain("grid-template-columns: minmax(0, 1fr) auto;");
     expect(html).toContain("justify-content: flex-start;");
     expect(html).not.toContain("gap: 8px;\n        grid-template-columns: minmax(0, 1fr) auto;");
     expect(html).toContain("height: 26px");
@@ -580,6 +580,11 @@ describe("Browser Profile admin API", () => {
       expect(html).toContain('id="sidebar-resizer"');
       expect(html).toContain('id="toggle-sidebar"');
       expect(html).toContain('id="show-sidebar"');
+      expect(html).toContain('id="refresh-profiles"');
+      expect(html).toContain('id="status-sync"');
+      expect(html).toContain('data-profile-context-menu=');
+      expect(html).toContain('role="menu"');
+      expect(html).toContain('data-profile-instance-status');
       expect(html).toContain('grid-template-columns: minmax(220px, var(--sidebar-width)) 3px minmax(0, 1fr)');
       expect(html).not.toContain('name="q"');
       expect(html).not.toContain('name="sort"');
@@ -657,7 +662,7 @@ describe("Browser Profile admin API", () => {
     expect(byProfileId).toContain("Archive");
   });
 
-  test("dashboard script avoids idle polling, reloads after actions, and warns only for active Explicit Stop", async () => {
+  test("dashboard provides context actions, synchronizes status, and warns only for active Explicit Stop", async () => {
     const { app } = await tempApp({}, undefined, { cdpTokenGenerator: sequenceTokens("profile-token") });
     await app.fetch(jsonRequest("http://cloakhub.test/api/profiles", "POST", { profile_id: "work" }));
     await app.fetch(new Request("http://cloakhub.test/ui/profiles/work/cdp-token", { method: "POST" }));
@@ -666,18 +671,31 @@ describe("Browser Profile admin API", () => {
     const dashboard = dashboardScriptHarness(html);
 
     dashboard.run();
-    expect(dashboard.intervalMs).toEqual([]);
+    expect(dashboard.intervalMs).toEqual([10_000]);
     expect(dashboard.createSummaryScreenText).toBe("1366 x 768");
+
+    dashboard.profileItem.contextmenu({ clientX: 900, clientY: 700 });
+    expect(dashboard.contextMenuOpen).toBe(true);
+    expect(dashboard.contextMenuPosition).toEqual({ left: "756px", top: "512px" });
+
+    await dashboard.refreshProfilesButton.click();
+    expect(dashboard.fetches.at(-1)).toEqual({
+      method: "GET",
+      path: "/ui/profiles"
+    });
+    expect(dashboard.instanceStatusText).toBe("running");
+    expect(dashboard.syncStatusText).toContain("Updated");
 
     await dashboard.toggleSidebarButton.click();
     expect(dashboard.managerShellClasses).toContain("sidebar-collapsed");
     await dashboard.showSidebarButton.click();
     expect(dashboard.managerShellClasses).not.toContain("sidebar-collapsed");
 
+    const fetchCountBeforeStop = dashboard.fetches.length;
     dashboard.confirmResults.push(false);
     await dashboard.stopButton.click();
     expect(dashboard.confirmMessages).toEqual(["This may disconnect active CDP sessions or viewers. Continue?"]);
-    expect(dashboard.fetches).toEqual([]);
+    expect(dashboard.fetches).toHaveLength(fetchCountBeforeStop);
 
     dashboard.confirmResults.push(true);
     await dashboard.stopButton.click();
@@ -685,7 +703,8 @@ describe("Browser Profile admin API", () => {
       method: "POST",
       path: "/ui/profiles/work/stop"
     });
-    expect(dashboard.reloads).toBe(1);
+    expect(dashboard.instanceStatusText).toBe("stopped");
+    expect(dashboard.reloads).toBe(0);
 
     await dashboard.restartButton.click();
     expect(dashboard.confirmMessages).toHaveLength(2);
@@ -693,7 +712,8 @@ describe("Browser Profile admin API", () => {
       method: "POST",
       path: "/ui/profiles/work/restart"
     });
-    expect(dashboard.reloads).toBe(2);
+    expect(dashboard.instanceStatusText).toBe("running");
+    expect(dashboard.reloads).toBe(0);
 
     const fetchesBeforeOpenCopy = dashboard.fetches.length;
     await dashboard.copyOpenButton.click();
@@ -703,7 +723,7 @@ describe("Browser Profile admin API", () => {
     expect(dashboard.copyOpenButton.textContent).toBe("Copied");
     expect(dashboard.copyOpenButton.classes).toContain("copied");
     expect(dashboard.fetches).toHaveLength(fetchesBeforeOpenCopy);
-    expect(dashboard.reloads).toBe(2);
+    expect(dashboard.reloads).toBe(0);
 
     await dashboard.copyTokenButton.click();
     expect(dashboard.clipboardWrites).toEqual([
@@ -713,7 +733,7 @@ describe("Browser Profile admin API", () => {
     expect(dashboard.copyTokenButton.textContent).toBe("Copied");
     expect(dashboard.copyTokenButton.classes).toContain("copied");
     expect(dashboard.confirmMessages).toHaveLength(2);
-    expect(dashboard.reloads).toBe(2);
+    expect(dashboard.reloads).toBe(0);
 
     await dashboard.viewerButton.click();
     expect(dashboard.viewerSources).toEqual(["/ui/profiles/work/viewer"]);
@@ -721,16 +741,22 @@ describe("Browser Profile admin API", () => {
     expect(dashboard.viewerProfileIdText).toBe("work");
     expect(dashboard.profileItemClasses).toContain("selected");
     expect(dashboard.openedUrls).toEqual([]);
-    expect(dashboard.reloads).toBe(2);
+    expect(dashboard.reloads).toBe(0);
 
     const fetchCount = dashboard.fetches.length;
     dashboard.postViewerConnected();
     expect(dashboard.manualViewerCountText).toBe("1");
-    expect(dashboard.clientStatusText).toBe("1 viewer");
+    expect(dashboard.clientStatusText).toBe("1 CDP / 1 viewer");
     expect(dashboard.clientStatusHidden).toBe(false);
     expect(dashboard.stopButtonManualViewerCount).toBe("1");
-    expect(dashboard.reloads).toBe(2);
+    expect(dashboard.reloads).toBe(0);
     expect(dashboard.fetches).toHaveLength(fetchCount);
+
+    const changedDashboard = dashboardScriptHarness(html, { statusProfiles: [] });
+    changedDashboard.run();
+    await changedDashboard.refreshProfilesButton.click();
+    expect(changedDashboard.syncStatusText).toContain("Profile list changed");
+    expect(changedDashboard.reloads).toBe(0);
   });
 
   test("dashboard falls back when token-bearing CDP URL clipboard write is blocked", async () => {
@@ -994,7 +1020,10 @@ function sequenceTokens(...tokens: string[]): () => string {
   return () => tokens[index++] ?? tokens.at(-1) ?? "profile-token";
 }
 
-function dashboardScriptHarness(html: string, options: { rejectClipboardWrite?: boolean } = {}) {
+function dashboardScriptHarness(
+  html: string,
+  options: { rejectClipboardWrite?: boolean; statusProfiles?: unknown[] } = {}
+) {
   const script = /<script>([\s\S]*)<\/script>/.exec(html)?.[1];
   if (!script) {
     throw new Error("dashboard script not found");
@@ -1044,7 +1073,10 @@ function dashboardScriptHarness(html: string, options: { rejectClipboardWrite?: 
   const cancelCreateButton = fakeDashboardElement();
   const managerShell = fakeDashboardElement();
   const resizer = fakeDashboardElement();
+  const refreshProfilesButton = fakeDashboardElement();
   const showSidebarButton = fakeDashboardElement();
+  const statusSync = fakeDashboardElement();
+  const toastRegion = fakeDashboardElement();
   const toggleSidebarButton = fakeDashboardElement();
   const stopButton = fakeDashboardElement({
     action: "stop",
@@ -1062,7 +1094,19 @@ function dashboardScriptHarness(html: string, options: { rejectClipboardWrite?: 
   copyOpenButton.textContent = "Copy open CDP URL";
   const copyTokenButton = fakeDashboardElement({ action: "copy-url", profileId: "work" });
   copyTokenButton.textContent = "Copy token-bearing CDP URL";
-  const profileItem = fakeDashboardElement({ profileId: "work" });
+  const contextMenu = fakeDashboardElement();
+  contextMenu.getBoundingClientRect = () => ({ height: 200, left: 0, top: 0, width: 260 });
+  const profileItem = fakeDashboardElement({
+    profileContextMenu: "work-profile-menu",
+    profileHeadless: "false",
+    profileId: "work",
+    profileStatus: "stopped",
+    profileCdpProtected: "true"
+  });
+  const instanceStatus = fakeDashboardElement({ profileId: "work" });
+  instanceStatus.textContent = "stopped";
+  instanceStatus.classList.add("instance-pill");
+  instanceStatus.classList.add("stopped");
   const clientStatusContainer = fakeDashboardElement();
   const clientStatus = fakeDashboardElement({
     cdpSessionCount: "0",
@@ -1095,6 +1139,10 @@ function dashboardScriptHarness(html: string, options: { rejectClipboardWrite?: 
       appendChild: () => undefined
     },
     createElement: (tagName: string) => {
+      if (tagName === "div") {
+        return fakeDashboardElement();
+      }
+
       if (tagName !== "textarea") {
         throw new Error(`unexpected created element ${tagName}`);
       }
@@ -1199,8 +1247,24 @@ function dashboardScriptHarness(html: string, options: { rejectClipboardWrite?: 
         return resizer;
       }
 
+      if (id === "refresh-profiles") {
+        return refreshProfilesButton;
+      }
+
       if (id === "show-sidebar") {
         return showSidebarButton;
+      }
+
+      if (id === "status-sync") {
+        return statusSync;
+      }
+
+      if (id === "toast-region") {
+        return toastRegion;
+      }
+
+      if (id === "work-profile-menu") {
+        return contextMenu;
       }
 
       if (id === "toggle-sidebar") {
@@ -1258,6 +1322,32 @@ function dashboardScriptHarness(html: string, options: { rejectClipboardWrite?: 
         return [profileItem];
       }
 
+      if (selector === ".profile-menu-popover") {
+        return [contextMenu];
+      }
+
+      if (selector === "[data-profile-instance-status]") {
+        return [instanceStatus];
+      }
+
+      if (
+        selector === "[data-profile-display-name]" ||
+        selector === "[data-profile-cdp-session-count-detail]" ||
+        selector === "[data-profile-last-manual-input]" ||
+        selector === "[data-profile-last-activity]" ||
+        selector === "[data-profile-sleep-status]" ||
+        selector === "[data-profile-resource-usage]" ||
+        selector === "[data-profile-owned-process-count]" ||
+        selector === "[data-profile-last-stop-reason]" ||
+        selector === "[data-profile-last-launch-error]" ||
+        selector === "[data-profile-proxy]" ||
+        selector === "[data-profile-notes]" ||
+        selector === "[data-profile-sleep-policy]" ||
+        selector === "[data-profile-cdp-sessions]"
+      ) {
+        return [];
+      }
+
       if (selector === "[data-profile-client-status]") {
         return [clientStatus];
       }
@@ -1270,8 +1360,18 @@ function dashboardScriptHarness(html: string, options: { rejectClipboardWrite?: 
         return [stopButton, restartButton];
       }
 
+      if (selector === "[data-cdp-session-count]") {
+        return [stopButton, restartButton];
+      }
+
+      if (selector === ".profile-popover:popover-open") {
+        return contextMenu.popoverOpen ? [contextMenu] : [];
+      }
+
       throw new Error(`unexpected selector ${selector}`);
-    }
+    },
+    addEventListener: () => undefined,
+    visibilityState: "visible"
   };
   const location = {
     origin: "http://cloakhub.test",
@@ -1280,11 +1380,36 @@ function dashboardScriptHarness(html: string, options: { rejectClipboardWrite?: 
       reloads += 1;
     }
   };
-  const fetch = async (path: string, options: { method?: string } = {}) => {
-    fetches.push({ method: options.method ?? "GET", path });
+  const fetch = async (path: string, requestOptions: { method?: string } = {}) => {
+    fetches.push({ method: requestOptions.method ?? "GET", path });
+    let body: unknown = { cdp_token: "profile-token" };
+    if (path === "/ui/profiles") {
+      body = options.statusProfiles ?? [
+        {
+          cdp_session_count: 1,
+          cdp_session_labels: [],
+          cdp_token_configured: true,
+          display_name: "Work",
+          headless: false,
+          instance_status: "running",
+          manual_viewer_count: 0,
+          profile_id: "work",
+          resource_usage: { owned_process_count: 1, rss_bytes: 1024 },
+          resource_usage_label: "Approx. Resource Usage: 1 KiB RSS",
+          sleep_policy_label: "Sleep Policy: 30 minutes",
+          sleep_policy_status: { mode: "default" },
+          sleep_status: "Running"
+        }
+      ];
+    } else if (path.endsWith("/stop")) {
+      body = { profile_id: "work", status: "stopped" };
+    } else if (path.endsWith("/restart") || path.endsWith("/start")) {
+      body = { profile_id: "work", status: "running" };
+    }
     return {
-      json: async () => ({ cdp_token: "profile-token" }),
-      ok: true
+      json: async () => body,
+      ok: true,
+      status: 200
     };
   };
   const navigator = {
@@ -1311,6 +1436,8 @@ function dashboardScriptHarness(html: string, options: { rejectClipboardWrite?: 
       handler: (event: { data?: { profile_id?: string; type?: string }; origin: string }) => void
     ) => void;
     clearTimeout: () => void;
+    innerHeight: number;
+    innerWidth: number;
     open: (url: string) => object;
     removeEventListener: () => void;
     setTimeout: () => number;
@@ -1323,6 +1450,8 @@ function dashboardScriptHarness(html: string, options: { rejectClipboardWrite?: 
         messageHandler = handler;
       }
     },
+    innerHeight: 720,
+    innerWidth: 1024,
     open: (url: string) => {
       openedUrls.push(url);
       return {};
@@ -1344,6 +1473,15 @@ function dashboardScriptHarness(html: string, options: { rejectClipboardWrite?: 
     get clipboardWrites() {
       return clipboardWrites;
     },
+    get contextMenuOpen() {
+      return contextMenu.popoverOpen;
+    },
+    get contextMenuPosition() {
+      return {
+        left: contextMenu.styleValue("--context-menu-left"),
+        top: contextMenu.styleValue("--context-menu-top")
+      };
+    },
     confirmMessages,
     confirmResults,
     fetches,
@@ -1362,7 +1500,7 @@ function dashboardScriptHarness(html: string, options: { rejectClipboardWrite?: 
       return createSummaryScreen.textContent;
     },
     get clientStatusHidden() {
-      return clientStatusContainer.hidden;
+      return clientStatus.hidden;
     },
     get clientStatusText() {
       return clientStatus.textContent;
@@ -1370,11 +1508,18 @@ function dashboardScriptHarness(html: string, options: { rejectClipboardWrite?: 
     get manualViewerCountText() {
       return manualViewerCount.textContent;
     },
+    get instanceStatusText() {
+      return instanceStatus.textContent;
+    },
+    profileItem,
     get profileItemClasses() {
       return profileItem.classes;
     },
     get stopButtonManualViewerCount() {
       return stopButton.dataset.manualViewerCount;
+    },
+    get syncStatusText() {
+      return statusSync.textContent;
     },
     get viewerHeadingText() {
       return viewerHeading.textContent;
@@ -1386,6 +1531,7 @@ function dashboardScriptHarness(html: string, options: { rejectClipboardWrite?: 
       return viewerSources.length > 0 ? viewerSources : viewerFrame.src ? [viewerFrame.src] : [];
     },
     restartButton,
+    refreshProfilesButton,
     showSidebarButton,
     run: () => {
       const scriptFunction = new Function(
@@ -1414,20 +1560,24 @@ function dashboardScriptHarness(html: string, options: { rejectClipboardWrite?: 
 }
 
 function fakeDashboardElement(dataset: Record<string, string> = {}, href = "", value = "") {
-  const handlers = new Map<string, (event: { currentTarget: unknown; preventDefault: () => void }) => unknown>();
+  const handlers = new Map<string, (event: Record<string, unknown>) => unknown>();
   const classes = new Set<string>();
   const styleValues = new Map<string, string>();
   const element = {
     classes,
+    className: "",
     dataset,
+    disabled: false,
     href,
     hidden: false,
+    popoverOpen: false,
     parentElement: undefined as { hidden: boolean } | undefined,
     style: {
       setProperty: (name: string, value: string) => {
         styleValues.set(name, value);
       }
     },
+    styleValue: (name: string) => styleValues.get(name),
     classList: {
       add: (className: string) => {
         classes.add(className);
@@ -1448,14 +1598,40 @@ function fakeDashboardElement(dataset: Record<string, string> = {}, href = "", v
     },
     addEventListener: (
       eventName: string,
-      handler: (event: { currentTarget: unknown; preventDefault: () => void }) => unknown
+      handler: (event: Record<string, unknown>) => unknown
     ) => {
       handlers.set(eventName, handler);
     },
-    removeAttribute: () => undefined,
+    appendChild: () => undefined,
+    contextmenu: async (event: { clientX: number; clientY: number }) => {
+      await handlers.get("contextmenu")?.({
+        ...event,
+        currentTarget: element,
+        preventDefault: () => undefined
+      });
+    },
+    focus: () => undefined,
+    getBoundingClientRect: () => ({ left: 0, top: 0 }),
+    hidePopover: () => {
+      element.popoverOpen = false;
+    },
+    querySelector: () => undefined,
+    remove: () => undefined,
+    removeAttribute: (name: string) => {
+      if (name === "open") {
+        element.popoverOpen = false;
+      }
+    },
     releasePointerCapture: () => undefined,
-    setAttribute: () => undefined,
+    setAttribute: (name: string) => {
+      if (name === "open") {
+        element.popoverOpen = true;
+      }
+    },
     setPointerCapture: () => undefined,
+    showPopover: () => {
+      element.popoverOpen = true;
+    },
     textContent: "",
     value,
     querySelectorAll: (_selector: string): unknown[] => [],
