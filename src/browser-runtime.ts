@@ -25,6 +25,7 @@ export interface BrowserLaunchCommand {
   headless: boolean;
   platform: string;
   profileId: string;
+  proxy: string;
   screenHeight: number;
   screenWidth: number;
   userAgent: string;
@@ -538,6 +539,7 @@ export function createBrowserRuntime(options: BrowserRuntimeOptions): BrowserRun
         headless: profile.headless,
         platform: profile.platform,
         profileId: profile.profile_id,
+        proxy: profile.proxy,
         screenHeight: profile.screen_height,
         screenWidth: profile.screen_width,
         userAgent: profile.user_agent,

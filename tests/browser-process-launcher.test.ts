@@ -29,6 +29,7 @@ describe("BunBrowserProcessLauncher", () => {
       headless: true,
       platform: "macos",
       profileId: "work",
+      proxy: "http://proxy.example:8080",
       screenHeight: 1080,
       screenWidth: 1920,
       userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
@@ -55,6 +56,7 @@ describe("BunBrowserProcessLauncher", () => {
       "--fingerprint-screen-width=1920",
       "--fingerprint-screen-height=1080",
       "--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
+      "--proxy-server=http://proxy.example:8080",
       "--headless=new",
       "--lang=en-US"
     ]);
@@ -94,6 +96,7 @@ describe("BunBrowserProcessLauncher", () => {
       headless: false,
       platform: "linux",
       profileId: "work",
+      proxy: "",
       screenHeight: 900,
       screenWidth: 1600,
       userAgent: "",
@@ -107,6 +110,53 @@ describe("BunBrowserProcessLauncher", () => {
     expect(spawn.commands[0]).toContain("--disable-dev-shm-usage");
     expect(spawn.commands[0]).toContain("--use-gl=swiftshader");
     expect(spawn.options[0]?.env).toMatchObject({ DISPLAY: ":100" });
+  });
+
+  test("uses a credential-free local relay for authenticated HTTP proxies", async () => {
+    const dataRoot = await tempDataRoot();
+    const spawn = fakeSpawn();
+    const preparedProxies: string[] = [];
+    let relayClosed = false;
+    const launcher = createBunBrowserProcessLauncher({
+      dataRoot,
+      proxyRuntime: {
+        prepare: async (proxyUrl) => {
+          preparedProxies.push(proxyUrl);
+          return {
+            browserUrl: "http://127.0.0.1:43123",
+            close: async () => {
+              relayClosed = true;
+            }
+          };
+        }
+      },
+      spawn: spawn.fn
+    });
+
+    const handle = await launcher.launch({
+      browserBin: "/opt/cloakbrowser/cloakbrowser",
+      cdpPort: 5100,
+      customLaunchArgs: [],
+      fingerprintSeed: "",
+      gpuRenderer: "",
+      gpuVendor: "",
+      hardwareConcurrency: 4,
+      headless: true,
+      platform: "linux",
+      profileId: "work",
+      proxy: "http://user:secret@proxy.example:8080",
+      screenHeight: 900,
+      screenWidth: 1600,
+      userAgent: "",
+      userDataDir: join(dataRoot, "profiles", "work")
+    });
+
+    expect(preparedProxies).toEqual(["http://user:secret@proxy.example:8080"]);
+    expect(spawn.commands[0]).toContain("--proxy-server=http://127.0.0.1:43123");
+    expect(spawn.commands[0]?.join(" ")).not.toContain("secret");
+
+    await handle.kill();
+    expect(relayClosed).toBe(true);
   });
 
   test("removes stale Chromium singleton locks before launching", async () => {
@@ -130,6 +180,7 @@ describe("BunBrowserProcessLauncher", () => {
       headless: false,
       platform: "linux",
       profileId: "work",
+      proxy: "",
       screenHeight: 900,
       screenWidth: 1600,
       userAgent: "",

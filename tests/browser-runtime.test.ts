@@ -72,6 +72,20 @@ describe("BrowserRuntime", () => {
     });
   });
 
+  test("passes the Browser Profile proxy to the process launcher", async () => {
+    const repository = fakeRepository(
+      profile({ profile_id: "work", proxy: "http://user:secret@proxy.example:8080" })
+    );
+    const launcher = fakeLauncher();
+    const runtime = runtimeFixture({ launcher, repository });
+
+    await runtime.start("work");
+
+    expect(launcher.launches[0]).toMatchObject({
+      proxy: "http://user:secret@proxy.example:8080"
+    });
+  });
+
   test("starts a headed Browser Instance with a private display runtime and VNC endpoint", async () => {
     const repository = fakeRepository(profile({ headless: false, profile_id: "work" }));
     const displayRuntime = fakeDisplayRuntime();

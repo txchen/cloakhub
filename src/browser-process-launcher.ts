@@ -11,10 +11,16 @@ import {
   OwnedSubprocessHandle,
   type OwnedProcessRegistry
 } from "./owned-process";
+import {
+  createBrowserProxyRuntime,
+  type BrowserProxyRuntime,
+  type BrowserProxySession
+} from "./proxy-runtime";
 
 export interface BunBrowserProcessLauncherOptions {
   dataRoot: string;
   ownedProcesses?: OwnedProcessRegistry;
+  proxyRuntime?: BrowserProxyRuntime;
   spawn?: typeof Bun.spawn;
 }
 
@@ -29,6 +35,7 @@ export function createBunBrowserProcessLauncher(
   const ownedProcesses =
     options.ownedProcesses ?? createOwnedProcessRegistry({ dataRoot: options.dataRoot });
   const spawn = options.spawn ?? Bun.spawn;
+  const proxyRuntime = options.proxyRuntime ?? createBrowserProxyRuntime();
 
   return {
     async launch(command: BrowserLaunchCommand): Promise<BrowserProcessHandle> {
@@ -36,16 +43,24 @@ export function createBunBrowserProcessLauncher(
       await ownedProcesses.cleanupOwnedProcesses([command.profileId], { kinds: ["browser"] });
       await removeStaleChromiumSingletonLocks(command.userDataDir);
 
-      const subprocess = spawn(browserCommand(command), {
-        detached: true,
-        env: ownedProcesses.env(command.profileId, {
-          ...process.env,
-          ...(command.display ? { DISPLAY: command.display } : {})
-        }),
-        stderr: "inherit",
-        stdin: "ignore",
-        stdout: "ignore"
-      }) as BrowserSubprocess;
+      const proxySession = await proxyRuntime.prepare(command.proxy);
+      let subprocess: BrowserSubprocess;
+      try {
+        subprocess = spawn(browserCommand(command, proxySession.browserUrl), {
+          detached: true,
+          env: ownedProcesses.env(command.profileId, {
+            ...process.env,
+            ...(command.display ? { DISPLAY: command.display } : {})
+          }),
+          stderr: "inherit",
+          stdin: "ignore",
+          stdout: "ignore"
+        }) as BrowserSubprocess;
+      } catch (error) {
+        await proxySession.close();
+        throw error;
+      }
+
       subprocess.unref();
 
       try {
@@ -56,16 +71,21 @@ export function createBunBrowserProcessLauncher(
         });
       } catch (error) {
         await new OwnedSubprocessHandle(subprocess).kill();
+        await proxySession.close();
         throw error;
       }
 
       void subprocess.exited
         .then(async () => {
-          await ownedProcesses.removeRuntimeProfile(command.profileId);
+          try {
+            await proxySession.close();
+          } finally {
+            await ownedProcesses.removeRuntimeProfile(command.profileId);
+          }
         })
         .catch(() => undefined);
 
-      return new OwnedSubprocessHandle(subprocess);
+      return new ProxyBoundBrowserProcessHandle(subprocess, proxySession);
     }
   };
 }
@@ -78,7 +98,7 @@ async function removeStaleChromiumSingletonLocks(userDataDir: string): Promise<v
   );
 }
 
-function browserCommand(command: BrowserLaunchCommand): string[] {
+function browserCommand(command: BrowserLaunchCommand, proxyUrl: string): string[] {
   return [
     command.browserBin,
     `--user-data-dir=${command.userDataDir}`,
@@ -90,10 +110,44 @@ function browserCommand(command: BrowserLaunchCommand): string[] {
     "--window-position=0,0",
     `--window-size=${command.screenWidth},${command.screenHeight}`,
     ...fingerprintArgs(command),
+    ...(proxyUrl ? [`--proxy-server=${proxyUrl}`] : []),
     ...(!command.headless ? ["--disable-gpu", "--disable-dev-shm-usage", "--use-gl=swiftshader"] : []),
     ...(command.headless ? ["--headless=new"] : []),
     ...command.customLaunchArgs
   ];
+}
+
+class ProxyBoundBrowserProcessHandle extends OwnedSubprocessHandle {
+  constructor(
+    subprocess: BrowserSubprocess,
+    private readonly proxySession: BrowserProxySession
+  ) {
+    super(subprocess);
+  }
+
+  override async exited(): Promise<void> {
+    try {
+      await super.exited();
+    } finally {
+      await this.proxySession.close();
+    }
+  }
+
+  override async hasExited(): Promise<boolean> {
+    const exited = await super.hasExited();
+    if (exited) {
+      await this.proxySession.close();
+    }
+    return exited;
+  }
+
+  override async kill(): Promise<void> {
+    try {
+      await super.kill();
+    } finally {
+      await this.proxySession.close();
+    }
+  }
 }
 
 function fingerprintArgs(command: BrowserLaunchCommand): string[] {
