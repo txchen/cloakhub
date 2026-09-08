@@ -33,14 +33,17 @@ export function createBunBrowserProcessLauncher(
   options: BunBrowserProcessLauncherOptions
 ): BrowserProcessLauncher {
   const ownedProcesses =
-    options.ownedProcesses ?? createOwnedProcessRegistry({ dataRoot: options.dataRoot });
+    options.ownedProcesses ??
+    createOwnedProcessRegistry({ dataRoot: options.dataRoot });
   const spawn = options.spawn ?? Bun.spawn;
   const proxyRuntime = options.proxyRuntime ?? createBrowserProxyRuntime();
 
   return {
     async launch(command: BrowserLaunchCommand): Promise<BrowserProcessHandle> {
       await mkdir(command.userDataDir, { recursive: true });
-      await ownedProcesses.cleanupOwnedProcesses([command.profileId], { kinds: ["browser"] });
+      await ownedProcesses.cleanupOwnedProcesses([command.profileId], {
+        kinds: ["browser"]
+      });
       await removeStaleChromiumSingletonLocks(command.userDataDir);
 
       const proxySession = await proxyRuntime.prepare(command.proxy);
@@ -64,7 +67,11 @@ export function createBunBrowserProcessLauncher(
       subprocess.unref();
 
       try {
-        await ownedProcesses.writePid(command.profileId, "browser", subprocess.pid);
+        await ownedProcesses.writePid(
+          command.profileId,
+          "browser",
+          subprocess.pid
+        );
         await ownedProcesses.writeJson(command.profileId, "launch.json", {
           profile_id: command.profileId,
           user_data_dir: command.userDataDir
@@ -77,20 +84,22 @@ export function createBunBrowserProcessLauncher(
 
       void subprocess.exited
         .then(async () => {
-          try {
-            await proxySession.close();
-          } finally {
-            await ownedProcesses.removeRuntimeProfile(command.profileId);
-          }
+          await proxySession.close();
         })
         .catch(() => undefined);
 
-      return new ProxyBoundBrowserProcessHandle(subprocess, proxySession);
+      return new ProxyBoundBrowserProcessHandle(
+        subprocess,
+        proxySession,
+        command.cdpPort
+      );
     }
   };
 }
 
-async function removeStaleChromiumSingletonLocks(userDataDir: string): Promise<void> {
+async function removeStaleChromiumSingletonLocks(
+  userDataDir: string
+): Promise<void> {
   await Promise.all(
     ["SingletonLock", "SingletonSocket", "SingletonCookie"].map((entry) =>
       rm(join(userDataDir, entry), { force: true, recursive: true })
@@ -98,7 +107,10 @@ async function removeStaleChromiumSingletonLocks(userDataDir: string): Promise<v
   );
 }
 
-function browserCommand(command: BrowserLaunchCommand, proxyUrl: string): string[] {
+function browserCommand(
+  command: BrowserLaunchCommand,
+  proxyUrl: string
+): string[] {
   return [
     command.browserBin,
     `--user-data-dir=${command.userDataDir}`,
@@ -106,12 +118,28 @@ function browserCommand(command: BrowserLaunchCommand, proxyUrl: string): string
     `--remote-debugging-port=${command.cdpPort}`,
     "--no-sandbox",
     "--no-first-run",
+    "--restore-last-session",
     "--no-default-browser-check",
     "--window-position=0,0",
     `--window-size=${command.screenWidth},${command.screenHeight}`,
     ...fingerprintArgs(command),
+    ...(command.timezone ? [`--fingerprint-timezone=${command.timezone}`] : []),
+    ...(command.locale
+      ? [
+          `--lang=${command.locale}`,
+          `--accept-lang=${command.locale}`,
+          `--fingerprint-locale=${command.locale}`
+        ]
+      : []),
+    ...(command.colorScheme && command.colorScheme !== "system"
+      ? [
+          `--blink-settings=preferredColorScheme=${command.colorScheme === "dark" ? 0 : 1}`
+        ]
+      : []),
     ...(proxyUrl ? [`--proxy-server=${proxyUrl}`] : []),
-    ...(!command.headless ? ["--disable-gpu", "--disable-dev-shm-usage", "--use-gl=swiftshader"] : []),
+    ...(!command.headless
+      ? ["--disable-gpu", "--disable-dev-shm-usage", "--use-gl=swiftshader"]
+      : []),
     ...(command.headless ? ["--headless=new"] : []),
     ...command.customLaunchArgs
   ];
@@ -120,9 +148,19 @@ function browserCommand(command: BrowserLaunchCommand, proxyUrl: string): string
 class ProxyBoundBrowserProcessHandle extends OwnedSubprocessHandle {
   constructor(
     subprocess: BrowserSubprocess,
-    private readonly proxySession: BrowserProxySession
+    private readonly proxySession: BrowserProxySession,
+    private readonly cdpPort: number
   ) {
     super(subprocess);
+  }
+
+  override async close(): Promise<void> {
+    if (await this.hasExited()) return;
+    try {
+      await closeBrowserOverCdp(this.cdpPort);
+    } catch {
+      await super.close();
+    }
   }
 
   override async exited(): Promise<void> {
@@ -154,10 +192,16 @@ function fingerprintArgs(command: BrowserLaunchCommand): string[] {
   return [
     "--disable-infobars",
     "--test-type",
-    command.fingerprintSeed ? `--fingerprint=${command.fingerprintSeed}` : undefined,
+    command.fingerprintSeed
+      ? `--fingerprint=${command.fingerprintSeed}`
+      : undefined,
     command.platform ? `--fingerprint-platform=${command.platform}` : undefined,
-    command.gpuVendor ? `--fingerprint-gpu-vendor=${command.gpuVendor}` : undefined,
-    command.gpuRenderer ? `--fingerprint-gpu-renderer=${command.gpuRenderer}` : undefined,
+    command.gpuVendor
+      ? `--fingerprint-gpu-vendor=${command.gpuVendor}`
+      : undefined,
+    command.gpuRenderer
+      ? `--fingerprint-gpu-renderer=${command.gpuRenderer}`
+      : undefined,
     Number.isInteger(command.hardwareConcurrency)
       ? `--fingerprint-hardware-concurrency=${command.hardwareConcurrency}`
       : undefined,
@@ -165,4 +209,51 @@ function fingerprintArgs(command: BrowserLaunchCommand): string[] {
     `--fingerprint-screen-height=${command.screenHeight}`,
     command.userAgent ? `--user-agent=${command.userAgent}` : undefined
   ].filter((arg): arg is string => arg !== undefined);
+}
+
+// Browser.close lets Chromium flush cookies and local storage; SIGTERM is only a fallback.
+async function closeBrowserOverCdp(port: number): Promise<void> {
+  const response = await fetch(`http://127.0.0.1:${port}/json/version`, {
+    signal: AbortSignal.timeout(1000)
+  });
+  if (!response.ok)
+    throw new Error("Browser CDP discovery unavailable during stop");
+  const version = (await response.json()) as { webSocketDebuggerUrl: string };
+  const target = new URL(version.webSocketDebuggerUrl);
+  target.hostname = "127.0.0.1";
+  target.port = String(port);
+  await new Promise<void>((resolve, reject) => {
+    const socket = new WebSocket(target);
+    let sent = false;
+    const timeout = setTimeout(
+      () => finish(new Error("Browser close timed out")),
+      1000
+    );
+    function finish(error?: Error) {
+      clearTimeout(timeout);
+      socket.onclose = null;
+      socket.onerror = null;
+      socket.onmessage = null;
+      socket.close();
+      error ? reject(error) : resolve();
+    }
+    socket.onopen = () => {
+      sent = true;
+      socket.send(JSON.stringify({ id: 1, method: "Browser.close" }));
+    };
+    socket.onmessage = (event) => {
+      try {
+        const result = JSON.parse(String(event.data));
+        if (result.id === 1)
+          finish(
+            result.error ? new Error("Browser rejected close") : undefined
+          );
+      } catch {
+        finish(new Error("Invalid browser close response"));
+      }
+    };
+    socket.onclose = () =>
+      finish(sent ? undefined : new Error("Browser close connection failed"));
+    socket.onerror = () => finish(new Error("Browser close connection failed"));
+  });
 }

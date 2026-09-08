@@ -1,9 +1,13 @@
-import { afterAll, describe, expect, test } from "bun:test";
+import { afterAll, describe, expect, test, setDefaultTimeout } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { createApp, type CloakHubUpgradeServer, type CloakHubWebSocketData } from "../src/app";
+import {
+  createApp,
+  type CloakHubUpgradeServer,
+  type CloakHubWebSocketData
+} from "../src/app";
 import { resolveBrowserBin } from "../src/browser-bin";
 import { createBunBrowserProcessLauncher } from "../src/browser-process-launcher";
 import {
@@ -12,21 +16,68 @@ import {
   type BrowserRuntime,
   type BrowserRuntimeCdpSession
 } from "../src/browser-runtime";
-import { createCdpGateway, createProfileCdpAccessPolicy } from "../src/cdp-gateway";
-import { createCdpWebSocketHandler, type CdpWebSocketData } from "../src/cdp-websocket-proxy";
-import { createKasmVncDisplayRuntime, resolveKasmVncBin } from "../src/display-runtime";
+import {
+  createCdpGateway,
+  createProfileCdpAccessPolicy
+} from "../src/cdp-gateway";
+import {
+  createCdpWebSocketHandler,
+  type CdpWebSocketData
+} from "../src/cdp-websocket-proxy";
+import {
+  createKasmVncDisplayRuntime,
+  resolveKasmVncBin
+} from "../src/display-runtime";
 import { openProfileRepository } from "../src/profile-repository";
-import { createProfileService, type ProfileService } from "../src/profile-service";
+import {
+  createProfileService,
+  type ProfileService
+} from "../src/profile-service";
 import { createKasmVncWebSocketFactory } from "../src/vnc-websocket-proxy";
 
-const RUN_REAL_RUNTIME_TESTS = process.env.CLOAKHUB_RUN_REAL_RUNTIME_TESTS === "true";
+setDefaultTimeout(30_000);
+
+const RUN_REAL_RUNTIME_TESTS =
+  process.env.CLOAKHUB_RUN_REAL_RUNTIME_TESTS === "true";
 const realRuntimeTest = RUN_REAL_RUNTIME_TESTS ? test : test.skip;
 const cleanupFixtures: RealRuntimeFixture[] = [];
 
 describe("real CloakBrowser runtime integration", () => {
+  realRuntimeTest(
+    "applies timezone, locale, and website appearance to real pages",
+    async () => {
+      const fixture = await realRuntimeFixture();
+      await fixture.profileService.createProfile({
+        profile_id: "regional",
+        headless: true,
+        timezone: "America/Los_Angeles",
+        locale: "fr-FR",
+        color_scheme: "dark"
+      });
+      const state = await fixture.runtime.start("regional");
+      const session = await cdpSession(
+        state.cdp_port,
+        "data:text/html,<title>Regional settings</title>"
+      );
+      const result = await session.evaluate(
+        "JSON.stringify({ timezone:Intl.DateTimeFormat().resolvedOptions().timeZone, locale:navigator.language, dark:matchMedia('(prefers-color-scheme: dark)').matches })"
+      );
+      expect(JSON.parse(result)).toEqual({
+        timezone: "America/Los_Angeles",
+        locale: "fr-FR",
+        dark: true
+      });
+      session.close();
+      await fixture.runtime.stop("regional");
+    }
+  );
+
   realRuntimeTest("launches a real headless Browser Instance", async () => {
     const fixture = await realRuntimeFixture();
-    await fixture.profileService.createProfile({ headless: true, profile_id: "headless" });
+    await fixture.profileService.createProfile({
+      headless: true,
+      profile_id: "headless"
+    });
 
     const state = await fixture.runtime.start("headless");
 
@@ -35,140 +86,178 @@ describe("real CloakBrowser runtime integration", () => {
     await fixture.runtime.stop("headless", "manual stop");
   });
 
-  realRuntimeTest("launches a headed Browser Instance with KasmVNC/noVNC path", async () => {
-    const fixture = await realRuntimeFixture({ requireDisplay: true });
-    await fixture.profileService.createProfile({ headless: false, profile_id: "headed" });
+  realRuntimeTest(
+    "launches a headed Browser Instance with KasmVNC/noVNC path",
+    async () => {
+      const fixture = await realRuntimeFixture({ requireDisplay: true });
+      await fixture.profileService.createProfile({
+        headless: false,
+        profile_id: "headed"
+      });
 
-    const viewer = await fixture.runtime.openManualViewer("headed");
+      const viewer = await fixture.runtime.openManualViewer("headed");
 
-    expect(viewer.vnc_port).toBeGreaterThan(0);
-    expect(viewer.vnc_ws_path).toBe("/ui/profiles/headed/vnc");
-    const viewerResponse = await fixture.app.fetch(new Request("http://cloakhub.test/ui/profiles/headed/viewer"));
-    const viewerHtml = await viewerResponse.text();
-    const assetResponse = await fixture.app.fetch(new Request("http://cloakhub.test/assets/novnc/core/rfb.js"));
-    const upgradeServer = fakeUpgradeServer();
-    const websocketResponse = await fixture.app.fetch(
-      new Request("http://cloakhub.test/ui/profiles/headed/vnc", {
-        headers: { upgrade: "websocket" }
-      }),
-      upgradeServer
-    );
-
-    expect(viewerResponse.status).toBe(200);
-    expect(viewerHtml).toContain('import RFB from "/assets/novnc/core/rfb.js?v=stock-1"');
-    expect(assetResponse.status).toBe(200);
-    expect(websocketResponse).toBeUndefined();
-    expect(upgradeServer.upgrades).toEqual([
-      { profileId: "headed", targetHost: "127.0.0.1", targetPort: viewer.vnc_port }
-    ]);
-    const upstream = createKasmVncWebSocketFactory().connect("127.0.0.1", viewer.vnc_port);
-    const rfbBanner = await new Promise<string>((resolve, reject) => {
-      const timeout = setTimeout(() => reject(new Error("Timed out waiting for KasmVNC RFB banner")), 5000);
-      upstream.onerror = () => {
-        clearTimeout(timeout);
-        reject(new Error("KasmVNC upstream websocket failed to open"));
-      };
-      upstream.ondata = (data) => {
-        clearTimeout(timeout);
-        resolve(data.toString("ascii"));
-      };
-    });
-    expect(rfbBanner).toBe("RFB 003.008\n");
-    upstream.close();
-    await fixture.runtime.stop("headed", "manual stop");
-  });
-
-  realRuntimeTest("performs CDP Transparent Recovery from discovery", async () => {
-    const fixture = await realRuntimeFixture();
-    await fixture.profileService.createProfile({ headless: true, profile_id: "cdp" });
-    const gateway = createCdpGateway({
-      accessPolicy: createProfileCdpAccessPolicy(fixture.profileService),
-      browserRuntime: fixture.runtime,
-      cdpTokensForRedaction: () => fixture.profileService.cdpTokensForRedaction()
-    });
-
-    const response = await gateway.discoveryResponse(
-      new Request("http://cloakhub.test/api/profiles/cdp/cdp/json/version"),
-      "cdp",
-      "/json/version"
-    );
-
-    expect(response.status).toBe(200);
-    expect(fixture.repository.get("cdp")?.instance_status).toBe("running");
-    await fixture.runtime.stop("cdp", "manual stop");
-  });
-
-  realRuntimeTest("performs CDP Transparent Recovery for stable websocket routes", async () => {
-    const fixture = await realRuntimeFixture();
-    await fixture.profileService.createProfile({ headless: true, profile_id: "ws" });
-    const gateway = createCdpGateway({
-      accessPolicy: createProfileCdpAccessPolicy(fixture.profileService),
-      browserRuntime: fixture.runtime,
-      cdpTokensForRedaction: () => fixture.profileService.cdpTokensForRedaction()
-    });
-    fixture.setCdpGateway(gateway);
-    const server = Bun.serve<CdpWebSocketData>({
-      fetch: (request, server_) => fixture.app.fetch(request, server_),
-      port: 0,
-      websocket: createCdpWebSocketHandler({ cdpSessions: fixture.runtime })
-    });
-
-    try {
-      const result = await cdpWebSocketCommand(
-        `ws://127.0.0.1:${server.port}/api/profiles/ws/cdp`,
-        "Browser.getVersion"
+      expect(viewer.vnc_port).toBeGreaterThan(0);
+      expect(viewer.vnc_ws_path).toBe("/ui/profiles/headed/vnc");
+      const viewerResponse = await fixture.app.fetch(
+        new Request("http://cloakhub.test/ui/profiles/headed/viewer")
+      );
+      const viewerHtml = await viewerResponse.text();
+      const assetResponse = await fixture.app.fetch(
+        new Request("http://cloakhub.test/assets/novnc/core/rfb.js")
+      );
+      const upgradeServer = fakeUpgradeServer();
+      const websocketResponse = await fixture.app.fetch(
+        new Request("http://cloakhub.test/ui/profiles/headed/vnc", {
+          headers: { upgrade: "websocket" }
+        }),
+        upgradeServer
       );
 
-      expect(fixture.repository.get("ws")?.instance_status).toBe("running");
-      expect((result as { product?: string }).product).toContain("Chrome");
-      await fixture.runtime.stop("ws", "manual stop");
-    } finally {
-      server.stop(true);
-    }
-  });
-
-  realRuntimeTest("spins down then recovers while preserving Browser Persistence", async () => {
-    const monotonic = fakeMonotonicClock();
-    const fixture = await realRuntimeFixture({ monotonicNow: monotonic.now });
-    const originServer = Bun.serve({
-      fetch: () => new Response("<!doctype html><title>CloakHub persistence</title>", {
-        headers: { "content-type": "text/html; charset=utf-8" }
-      }),
-      port: 0
-    });
-    const origin = `http://127.0.0.1:${originServer.port}`;
-    await fixture.profileService.createProfile({
-      headless: true,
-      profile_id: "persistent",
-      sleep_policy: { mode: "minutes", minutes: 1 }
-    });
-
-    try {
-      const firstState = await fixture.runtime.start("persistent");
-      const firstCdp = await cdpSession(firstState.cdp_port, origin);
-      await firstCdp.evaluate(
-        "localStorage.setItem('cloakhubPersistence', 'kept'); document.cookie = 'cloakhub_cookie=kept; path=/';"
-      );
-      firstCdp.close();
-
-      monotonic.advance(61_000);
-      expect(await fixture.runtime.spinDownIdleInstances()).toEqual([
-        { profile_id: "persistent", reason: "idle timeout" }
+      expect(viewerResponse.status).toBe(200);
+      expect(viewerHtml).toContain('src="/assets/viewer.js"');
+      expect(assetResponse.status).toBe(200);
+      expect(websocketResponse).toBeUndefined();
+      expect(upgradeServer.upgrades).toEqual([
+        {
+          profileId: "headed",
+          targetHost: "127.0.0.1",
+          targetPort: viewer.vnc_port
+        }
       ]);
-      const secondState = await fixture.runtime.start("persistent");
-      const secondCdp = await cdpSession(secondState.cdp_port, origin);
-      const persisted = await secondCdp.evaluate(
-        "localStorage.getItem('cloakhubPersistence') + '|' + document.cookie"
+      const upstream = createKasmVncWebSocketFactory().connect(
+        "127.0.0.1",
+        viewer.vnc_port
       );
-      secondCdp.close();
-
-      expect(persisted).toContain("kept|");
-      expect(persisted).toContain("cloakhub_cookie=kept");
-      await fixture.runtime.stop("persistent", "manual stop");
-    } finally {
-      originServer.stop(true);
+      const rfbBanner = await new Promise<string>((resolve, reject) => {
+        const timeout = setTimeout(
+          () => reject(new Error("Timed out waiting for KasmVNC RFB banner")),
+          5000
+        );
+        upstream.onerror = () => {
+          clearTimeout(timeout);
+          reject(new Error("KasmVNC upstream websocket failed to open"));
+        };
+        upstream.ondata = (data) => {
+          clearTimeout(timeout);
+          resolve(data.toString("ascii"));
+        };
+      });
+      expect(rfbBanner).toBe("RFB 003.008\n");
+      upstream.close();
+      await fixture.runtime.stop("headed", "manual stop");
     }
-  });
+  );
+
+  realRuntimeTest(
+    "performs CDP Transparent Recovery from discovery",
+    async () => {
+      const fixture = await realRuntimeFixture();
+      await fixture.profileService.createProfile({
+        headless: true,
+        profile_id: "cdp"
+      });
+      const gateway = createCdpGateway({
+        accessPolicy: createProfileCdpAccessPolicy(fixture.profileService),
+        browserRuntime: fixture.runtime,
+        cdpTokensForRedaction: () =>
+          fixture.profileService.cdpTokensForRedaction()
+      });
+
+      const response = await gateway.discoveryResponse(
+        new Request("http://cloakhub.test/api/profiles/cdp/cdp/json/version"),
+        "cdp",
+        "/json/version"
+      );
+
+      expect(response.status).toBe(200);
+      expect(fixture.repository.get("cdp")?.instance_status).toBe("running");
+      await fixture.runtime.stop("cdp", "manual stop");
+    }
+  );
+
+  realRuntimeTest(
+    "performs CDP Transparent Recovery for stable websocket routes",
+    async () => {
+      const fixture = await realRuntimeFixture();
+      await fixture.profileService.createProfile({
+        headless: true,
+        profile_id: "ws"
+      });
+      const gateway = createCdpGateway({
+        accessPolicy: createProfileCdpAccessPolicy(fixture.profileService),
+        browserRuntime: fixture.runtime,
+        cdpTokensForRedaction: () =>
+          fixture.profileService.cdpTokensForRedaction()
+      });
+      fixture.setCdpGateway(gateway);
+      const server = Bun.serve<CdpWebSocketData>({
+        fetch: (request, server_) => fixture.app.fetch(request, server_),
+        port: 0,
+        websocket: createCdpWebSocketHandler({ cdpSessions: fixture.runtime })
+      });
+
+      try {
+        const result = await cdpWebSocketCommand(
+          `ws://127.0.0.1:${server.port}/api/profiles/ws/cdp`,
+          "Browser.getVersion"
+        );
+
+        expect(fixture.repository.get("ws")?.instance_status).toBe("running");
+        expect((result as { product?: string }).product).toContain("Chrome");
+        await fixture.runtime.stop("ws", "manual stop");
+      } finally {
+        server.stop(true);
+      }
+    }
+  );
+
+  realRuntimeTest(
+    "spins down then recovers while preserving Browser Persistence",
+    async () => {
+      const monotonic = fakeMonotonicClock();
+      const fixture = await realRuntimeFixture({ monotonicNow: monotonic.now });
+      const originServer = Bun.serve({
+        fetch: () =>
+          new Response("<!doctype html><title>CloakHub persistence</title>", {
+            headers: { "content-type": "text/html; charset=utf-8" }
+          }),
+        port: 0
+      });
+      const origin = `http://127.0.0.1:${originServer.port}`;
+      await fixture.profileService.createProfile({
+        headless: true,
+        profile_id: "persistent",
+        sleep_policy: { mode: "minutes", minutes: 1 }
+      });
+
+      try {
+        const firstState = await fixture.runtime.start("persistent");
+        const firstCdp = await cdpSession(firstState.cdp_port, origin);
+        await firstCdp.evaluate(
+          "localStorage.setItem('cloakhubPersistence', 'kept'); document.cookie = 'cloakhub_cookie=kept; path=/';"
+        );
+        firstCdp.close();
+
+        monotonic.advance(61_000);
+        expect(await fixture.runtime.spinDownIdleInstances()).toEqual([
+          { profile_id: "persistent", reason: "idle timeout" }
+        ]);
+        const secondState = await fixture.runtime.start("persistent");
+        const secondCdp = await cdpSession(secondState.cdp_port, origin);
+        const persisted = await secondCdp.evaluate(
+          "localStorage.getItem('cloakhubPersistence') + '|' + document.cookie"
+        );
+        secondCdp.close();
+
+        expect(persisted).toContain("kept|");
+        expect(persisted).toContain("cloakhub_cookie=kept");
+        await fixture.runtime.stop("persistent", "manual stop");
+      } finally {
+        originServer.stop(true);
+      }
+    }
+  );
 
   realRuntimeTest("explicit Stop overrides active clients", async () => {
     const activeSessions = new Map<string, BrowserRuntimeCdpSession[]>();
@@ -182,7 +271,10 @@ describe("real CloakBrowser runtime integration", () => {
         }
       }
     });
-    await fixture.profileService.createProfile({ headless: true, profile_id: "active" });
+    await fixture.profileService.createProfile({
+      headless: true,
+      profile_id: "active"
+    });
     await fixture.runtime.start("active");
     const session = fixture.runtime.openCdpSession("active");
     activeSessions.set("active", [session]);
@@ -205,16 +297,20 @@ interface RealRuntimeFixture {
   setCdpGateway: (gateway: ReturnType<typeof createCdpGateway>) => void;
 }
 
-async function realRuntimeFixture(options: {
-  clientConnections?: BrowserClientConnections;
-  monotonicNow?: () => number;
-  requireDisplay?: boolean;
-} = {}): Promise<RealRuntimeFixture> {
+async function realRuntimeFixture(
+  options: {
+    clientConnections?: BrowserClientConnections;
+    monotonicNow?: () => number;
+    requireDisplay?: boolean;
+  } = {}
+): Promise<RealRuntimeFixture> {
   const dataRoot = await mkdtemp(join(tmpdir(), "cloakhub-real-runtime-"));
   const browserBin = await resolveBrowserBin(process.env.CLOAKHUB_BROWSER_BIN);
   const kasmVnc = await resolveKasmVncBin();
   if (options.requireDisplay && !kasmVnc.path) {
-    throw new Error("CLOAKHUB_RUN_REAL_RUNTIME_TESTS requires KasmVNC Xvnc for headed integration tests");
+    throw new Error(
+      "CLOAKHUB_RUN_REAL_RUNTIME_TESTS requires KasmVNC Xvnc for headed integration tests"
+    );
   }
 
   const repository = openProfileRepository(dataRoot);
@@ -244,8 +340,14 @@ async function realRuntimeFixture(options: {
   };
   const app = {
     fetch: (request: Request, server?: CloakHubUpgradeServer) => {
-      const currentApp = createApp(appConfig, { browserRuntime: runtime, cdpGateway, profileService });
-      return server ? currentApp.fetch(request, server) : currentApp.fetch(request);
+      const currentApp = createApp(appConfig, {
+        browserRuntime: runtime,
+        cdpGateway,
+        profileService
+      });
+      return server
+        ? currentApp.fetch(request, server)
+        : currentApp.fetch(request);
     }
   } as ReturnType<typeof createApp>;
   const fixture = {
@@ -269,11 +371,15 @@ afterAll(async () => {
 });
 
 async function cleanupFixture(fixture: RealRuntimeFixture): Promise<void> {
-  await fixture.runtime.cleanupOwnedProcessesOnStartup();
+  await fixture.runtime.shutdown();
+  fixture.repository.close();
   await rm(fixture.dataRoot, { force: true, recursive: true });
 }
 
-function fakeMonotonicClock(): { advance: (milliseconds: number) => void; now: () => number } {
+function fakeMonotonicClock(): {
+  advance: (milliseconds: number) => void;
+  now: () => number;
+} {
   let current = 0;
   return {
     advance: (milliseconds) => {
@@ -294,18 +400,28 @@ function fakeUpgradeServer() {
   };
 }
 
-async function cdpWebSocketCommand(url: string, method: string): Promise<unknown> {
+async function cdpWebSocketCommand(
+  url: string,
+  method: string
+): Promise<unknown> {
   const ws = new WebSocket(url);
   await new Promise<void>((resolve, reject) => {
     ws.addEventListener("open", () => resolve(), { once: true });
-    ws.addEventListener("error", () => reject(new Error("CloakHub CDP websocket failed to open")), {
-      once: true
-    });
+    ws.addEventListener(
+      "error",
+      () => reject(new Error("CloakHub CDP websocket failed to open")),
+      {
+        once: true
+      }
+    );
   });
 
   try {
     const response = new Promise<unknown>((resolve, reject) => {
-      const timeout = setTimeout(() => reject(new Error("Timed out waiting for CDP websocket response")), 5000);
+      const timeout = setTimeout(
+        () => reject(new Error("Timed out waiting for CDP websocket response")),
+        5000
+      );
       ws.addEventListener("message", (event) => {
         const message = JSON.parse(String(event.data));
         if (message.id !== 1) {
@@ -314,7 +430,9 @@ async function cdpWebSocketCommand(url: string, method: string): Promise<unknown
 
         clearTimeout(timeout);
         if (message.error) {
-          reject(new Error(message.error.message ?? "CDP websocket command failed"));
+          reject(
+            new Error(message.error.message ?? "CDP websocket command failed")
+          );
           return;
         }
 
@@ -328,14 +446,20 @@ async function cdpWebSocketCommand(url: string, method: string): Promise<unknown
   }
 }
 
-async function cdpSession(cdpPort: number, url: string): Promise<{
+async function cdpSession(
+  cdpPort: number,
+  url: string
+): Promise<{
   close: () => void;
   evaluate: (expression: string) => Promise<string>;
 }> {
   const target = await cdpTarget(cdpPort);
   const ws = new WebSocket(target.webSocketDebuggerUrl);
   let nextId = 1;
-  const pending = new Map<number, { reject: (error: Error) => void; resolve: (value: unknown) => void }>();
+  const pending = new Map<
+    number,
+    { reject: (error: Error) => void; resolve: (value: unknown) => void }
+  >();
 
   ws.addEventListener("message", (event) => {
     const message = JSON.parse(String(event.data));
@@ -358,7 +482,11 @@ async function cdpSession(cdpPort: number, url: string): Promise<{
   });
   await new Promise<void>((resolve, reject) => {
     ws.addEventListener("open", () => resolve(), { once: true });
-    ws.addEventListener("error", () => reject(new Error("CDP websocket failed to open")), { once: true });
+    ws.addEventListener(
+      "error",
+      () => reject(new Error("CDP websocket failed to open")),
+      { once: true }
+    );
   });
 
   const send = (method: string, params: Record<string, unknown> = {}) => {
@@ -381,19 +509,27 @@ async function cdpSession(cdpPort: number, url: string): Promise<{
         expression,
         returnByValue: true
       });
-      return String((result as { result?: { value?: unknown } }).result?.value ?? "");
+      return String(
+        (result as { result?: { value?: unknown } }).result?.value ?? ""
+      );
     }
   };
 }
 
-async function cdpTarget(cdpPort: number): Promise<{ webSocketDebuggerUrl: string }> {
-  const existingTargets = await fetchJsonArray(`http://127.0.0.1:${cdpPort}/json/list`);
+async function cdpTarget(
+  cdpPort: number
+): Promise<{ webSocketDebuggerUrl: string }> {
+  const existingTargets = await fetchJsonArray(
+    `http://127.0.0.1:${cdpPort}/json/list`
+  );
   const existingTarget = existingTargets.find(hasWebSocketDebuggerUrl);
   if (existingTarget) {
     return existingTarget;
   }
 
-  const created = await fetchJson(`http://127.0.0.1:${cdpPort}/json/new`, { method: "PUT" });
+  const created = await fetchJson(`http://127.0.0.1:${cdpPort}/json/new`, {
+    method: "PUT"
+  });
   if (!hasWebSocketDebuggerUrl(created)) {
     throw new Error("CDP target did not include a websocket debugger URL");
   }
@@ -415,7 +551,9 @@ async function fetchJsonArray(url: string): Promise<unknown[]> {
   return Array.isArray(value) ? value : [];
 }
 
-function hasWebSocketDebuggerUrl(value: unknown): value is { webSocketDebuggerUrl: string } {
+function hasWebSocketDebuggerUrl(
+  value: unknown
+): value is { webSocketDebuggerUrl: string } {
   return (
     typeof value === "object" &&
     value !== null &&

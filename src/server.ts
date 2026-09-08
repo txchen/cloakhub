@@ -4,14 +4,23 @@ import { createBunBrowserProcessLauncher } from "./browser-process-launcher";
 import { createBrowserRuntime, type BrowserRuntime } from "./browser-runtime";
 import { createCdpGateway, createProfileCdpAccessPolicy } from "./cdp-gateway";
 import { createCdpClipboardReader } from "./cdp-clipboard-reader";
-import { createCdpWebSocketHandler, type CdpWebSocketData } from "./cdp-websocket-proxy";
+import {
+  createCdpWebSocketHandler,
+  type CdpWebSocketData
+} from "./cdp-websocket-proxy";
 import { createXclipClipboardWriter } from "./clipboard-writer";
 import { loadConfigFromEnv } from "./config";
 import { ensureDataRoot } from "./data-root";
-import { createKasmVncDisplayRuntime, resolveKasmVncBin } from "./display-runtime";
+import {
+  createKasmVncDisplayRuntime,
+  resolveKasmVncBin
+} from "./display-runtime";
 import { openProfileRepository } from "./profile-repository";
 import { createProfileService } from "./profile-service";
-import { createVncWebSocketHandler, type VncWebSocketData } from "./vnc-websocket-proxy";
+import {
+  createVncWebSocketHandler,
+  type VncWebSocketData
+} from "./vnc-websocket-proxy";
 
 export interface CloakHubServerHandle {
   shutdown(signal?: NodeJS.Signals): Promise<void>;
@@ -59,8 +68,14 @@ export async function startCloakHubServer(): Promise<CloakHubServerHandle> {
     { ...config, browserBin: browserBin.path },
     { browserRuntime, cdpGateway, profileService }
   );
-  const cdpWebSocketHandler = createCdpWebSocketHandler({ cdpSessions: browserRuntime });
-  const vncWebSocketHandler = createVncWebSocketHandler({ manualViewers: browserRuntime });
+  const cdpWebSocketHandler = createCdpWebSocketHandler({
+    cdpSessions: browserRuntime
+  });
+  const vncWebSocketHandler = createVncWebSocketHandler({
+    manualViewers: browserRuntime,
+    clipboardSyncEnabled: (id) =>
+      profileService.getProfile(id)?.clipboard_sync ?? false
+  });
 
   const server = Bun.serve<CloakHubWebSocketData>({
     fetch: (request, server_) => app.fetch(request, server_),
@@ -69,23 +84,39 @@ export async function startCloakHubServer(): Promise<CloakHubServerHandle> {
     websocket: {
       close(ws, code, reason): void {
         if (isVncWebSocketData(ws.data)) {
-          vncWebSocketHandler.close?.(ws as Bun.ServerWebSocket<VncWebSocketData>, code, reason);
+          vncWebSocketHandler.close?.(
+            ws as Bun.ServerWebSocket<VncWebSocketData>,
+            code,
+            reason
+          );
           return;
         }
 
-        cdpWebSocketHandler.close?.(ws as Bun.ServerWebSocket<CdpWebSocketData>, code, reason);
+        cdpWebSocketHandler.close?.(
+          ws as Bun.ServerWebSocket<CdpWebSocketData>,
+          code,
+          reason
+        );
       },
       message(ws, message): void {
         if (isVncWebSocketData(ws.data)) {
-          vncWebSocketHandler.message?.(ws as Bun.ServerWebSocket<VncWebSocketData>, message);
+          vncWebSocketHandler.message?.(
+            ws as Bun.ServerWebSocket<VncWebSocketData>,
+            message
+          );
           return;
         }
 
-        cdpWebSocketHandler.message?.(ws as Bun.ServerWebSocket<CdpWebSocketData>, message);
+        cdpWebSocketHandler.message?.(
+          ws as Bun.ServerWebSocket<CdpWebSocketData>,
+          message
+        );
       },
       open(ws): void {
         if (isVncWebSocketData(ws.data)) {
-          vncWebSocketHandler.open?.(ws as Bun.ServerWebSocket<VncWebSocketData>);
+          vncWebSocketHandler.open?.(
+            ws as Bun.ServerWebSocket<VncWebSocketData>
+          );
           return;
         }
 
@@ -116,7 +147,9 @@ export function createShutdownHandle(options: {
     async shutdown(signal?: NodeJS.Signals): Promise<void> {
       shutdownPromise ??= (async () => {
         if (signal) {
-          console.log(`CloakHub received ${signal}; shutting down Browser Instances`);
+          console.log(
+            `CloakHub received ${signal}; shutting down Browser Instances`
+          );
         }
 
         let shutdownError: unknown;
@@ -177,6 +210,8 @@ if (import.meta.main) {
   await main();
 }
 
-function isVncWebSocketData(data: CloakHubWebSocketData): data is VncWebSocketData {
+function isVncWebSocketData(
+  data: CloakHubWebSocketData
+): data is VncWebSocketData {
   return "targetPort" in data;
 }

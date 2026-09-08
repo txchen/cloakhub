@@ -28,8 +28,14 @@ export interface ProfileRepository {
   recordActivity(profileId: string, occurredAt: string): void;
   recordManualInput(profileId: string, occurredAt: string): void;
   recordDeleteError(profileId: string, error: string): void;
-  setCdpToken(profileId: string, token: string | null): BrowserProfile | undefined;
-  update(profileId: string, input: UpdateProfileInput): BrowserProfile | undefined;
+  setCdpToken(
+    profileId: string,
+    token: string | null
+  ): BrowserProfile | undefined;
+  update(
+    profileId: string,
+    input: UpdateProfileInput
+  ): BrowserProfile | undefined;
 }
 
 type ProfileRow = Omit<BrowserProfile, keyof LaunchProfileFields> & {
@@ -38,7 +44,9 @@ type ProfileRow = Omit<BrowserProfile, keyof LaunchProfileFields> & {
 };
 
 export function openProfileRepository(dataRoot: string): ProfileRepository {
-  return new SqliteProfileRepository(new Database(join(dataRoot, "cloakhub.sqlite")));
+  return new SqliteProfileRepository(
+    new Database(join(dataRoot, "cloakhub.sqlite"))
+  );
 }
 
 class SqliteProfileRepository implements ProfileRepository {
@@ -73,8 +81,13 @@ class SqliteProfileRepository implements ProfileRepository {
       INSERT OR IGNORE INTO schema_migrations (version, applied_at)
       VALUES (1, strftime('%Y-%m-%dT%H:%M:%fZ', 'now'));
     `);
+    this.ensureColumn("profiles", "tags_json", "TEXT NOT NULL DEFAULT '[]'");
     this.ensureColumn("profiles", "cdp_token", "TEXT");
-    this.ensureColumn("profiles", "launch_profile_json", "TEXT NOT NULL DEFAULT '{}'");
+    this.ensureColumn(
+      "profiles",
+      "launch_profile_json",
+      "TEXT NOT NULL DEFAULT '{}'"
+    );
     this.ensureColumn("profiles", "last_activity_at", "TEXT");
     this.ensureColumn("profiles", "last_launch_error", "TEXT");
     this.ensureColumn("profiles", "last_launch_failed_at", "TEXT");
@@ -93,6 +106,7 @@ class SqliteProfileRepository implements ProfileRepository {
           profile_id,
           cdp_token,
           display_name,
+          tags_json,
           notes,
           instance_status,
           last_activity_at,
@@ -111,6 +125,7 @@ class SqliteProfileRepository implements ProfileRepository {
           $profile_id,
           NULL,
           $display_name,
+          $tags_json,
           $notes,
           'stopped',
           NULL,
@@ -130,7 +145,10 @@ class SqliteProfileRepository implements ProfileRepository {
       .run({
         $created_at: now,
         $display_name: input.display_name ?? input.profile_id,
-        $launch_profile_json: JSON.stringify(launchProfileFields({ ...DEFAULT_LAUNCH_PROFILE_FIELDS, ...input })),
+        $launch_profile_json: JSON.stringify(
+          launchProfileFields({ ...DEFAULT_LAUNCH_PROFILE_FIELDS, ...input })
+        ),
+        $tags_json: JSON.stringify(input.tags ?? []),
         $notes: input.notes ?? "",
         $profile_id: input.profile_id,
         $updated_at: now
@@ -140,21 +158,25 @@ class SqliteProfileRepository implements ProfileRepository {
   }
 
   list(): BrowserProfile[] {
-    return (this.db
-      .query("SELECT * FROM profiles ORDER BY profile_id")
-      .all() as ProfileRow[]).map(rowToProfile);
+    return (
+      this.db
+        .query("SELECT * FROM profiles ORDER BY profile_id")
+        .all() as ProfileRow[]
+    ).map(rowToProfile);
   }
 
   get(profileId: string): BrowserProfile | undefined {
-    const row =
-      this.db
-        .query("SELECT * FROM profiles WHERE profile_id = $profile_id")
-        .get({ $profile_id: profileId }) as ProfileRow | null;
+    const row = this.db
+      .query("SELECT * FROM profiles WHERE profile_id = $profile_id")
+      .get({ $profile_id: profileId }) as ProfileRow | null;
 
     return row ? rowToProfile(row) : undefined;
   }
 
-  update(profileId: string, input: UpdateProfileInput): BrowserProfile | undefined {
+  update(
+    profileId: string,
+    input: UpdateProfileInput
+  ): BrowserProfile | undefined {
     if (input.profile_id !== undefined && input.profile_id !== profileId) {
       throw new Error("Profile ID is immutable");
     }
@@ -171,6 +193,7 @@ class SqliteProfileRepository implements ProfileRepository {
         `
         UPDATE profiles
         SET display_name = $display_name,
+            tags_json = $tags_json,
             notes = $notes,
             launch_profile_json = $launch_profile_json,
             updated_at = $updated_at
@@ -180,6 +203,7 @@ class SqliteProfileRepository implements ProfileRepository {
       .run({
         $display_name: input.display_name ?? existing.display_name,
         $launch_profile_json: JSON.stringify(nextLaunchProfile),
+        $tags_json: JSON.stringify(input.tags ?? existing.tags ?? []),
         $notes: input.notes ?? existing.notes,
         $profile_id: profileId,
         $updated_at: nowIso()
@@ -188,7 +212,10 @@ class SqliteProfileRepository implements ProfileRepository {
     return this.get(profileId);
   }
 
-  setCdpToken(profileId: string, token: string | null): BrowserProfile | undefined {
+  setCdpToken(
+    profileId: string,
+    token: string | null
+  ): BrowserProfile | undefined {
     this.db
       .query(
         `
@@ -378,14 +405,25 @@ class SqliteProfileRepository implements ProfileRepository {
     this.db.close();
   }
 
-  private ensureColumn(tableName: string, columnName: string, definition: string): void {
-    const columns = this.db.query(`PRAGMA table_info(${tableName})`).all() as Array<{ name: string }>;
+  private ensureColumn(
+    tableName: string,
+    columnName: string,
+    definition: string
+  ): void {
+    const columns = this.db
+      .query(`PRAGMA table_info(${tableName})`)
+      .all() as Array<{ name: string }>;
     if (!columns.some((column) => column.name === columnName)) {
-      this.db.exec(`ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${definition}`);
+      this.db.exec(
+        `ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${definition}`
+      );
     }
   }
 
-  private setInstanceStatus(profileId: string, status: BrowserProfile["instance_status"]): void {
+  private setInstanceStatus(
+    profileId: string,
+    status: BrowserProfile["instance_status"]
+  ): void {
     this.db
       .query(
         `
@@ -413,11 +451,17 @@ function rowToProfile(row: ProfileRow): BrowserProfile {
     DEFAULT_LAUNCH_PROFILE_FIELDS
   );
 
-  const { launch_profile_json: _launchProfileJson, tags_json: _tagsJson, ...profileRow } = row;
-  const sleepPolicy = launchProfile.sleep_policy ?? DEFAULT_LAUNCH_PROFILE_FIELDS.sleep_policy;
+  const {
+    launch_profile_json: _launchProfileJson,
+    tags_json: _tagsJson,
+    ...profileRow
+  } = row;
+  const sleepPolicy =
+    launchProfile.sleep_policy ?? DEFAULT_LAUNCH_PROFILE_FIELDS.sleep_policy;
 
   return {
     ...profileRow,
+    tags: parseJson<string[]>(row.tags_json, []),
     cdp_token: profileRow.cdp_token ?? null,
     ...DEFAULT_LAUNCH_PROFILE_FIELDS,
     ...launchProfile,

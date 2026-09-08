@@ -49,6 +49,7 @@ export interface ManualViewerSessionObserver {
 }
 
 export interface VncWebSocketHandlerOptions {
+  clipboardSyncEnabled?: (profileId: string) => boolean;
   factory?: VncSocketFactory;
   manualViewers?: ManualViewerSessionObserver;
 }
@@ -128,7 +129,11 @@ export function createVncWebSocketHandler(
     message(ws, message): void {
       const state = ws.data.rfb ?? createRfbProxyState();
       ws.data.rfb = state;
-      const result = translateClientFrame(toBuffer(message), state);
+      const result = translateClientFrame(
+        toBuffer(message),
+        state,
+        options.clipboardSyncEnabled?.(ws.data.profileId) ?? true
+      );
       if (result.manualInput) {
         ws.data.session?.recordInput();
       }
@@ -139,7 +144,9 @@ export function createVncWebSocketHandler(
     },
     open(ws): void {
       ws.data.rfb = createRfbProxyState();
-      ws.data.session = options.manualViewers?.openManualViewerSession(ws.data.profileId);
+      ws.data.session = options.manualViewers?.openManualViewerSession(
+        ws.data.profileId
+      );
       const upstream = factory.connect(ws.data.targetHost, ws.data.targetPort);
       ws.data.upstream = upstream;
 
@@ -171,7 +178,11 @@ function toBuffer(message: VncWebSocketMessage): Buffer {
   }
 
   if (ArrayBuffer.isView(message)) {
-    return Buffer.from(message.buffer as ArrayBuffer, message.byteOffset, message.byteLength);
+    return Buffer.from(
+      message.buffer as ArrayBuffer,
+      message.byteOffset,
+      message.byteLength
+    );
   }
 
   return Buffer.from(new Uint8Array(message));

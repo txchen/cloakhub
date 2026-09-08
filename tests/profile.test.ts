@@ -9,6 +9,12 @@ import {
 } from "../src/profile";
 
 describe("Browser Profile validation", () => {
+  test("rejects unavailable SDK features and invalid regional settings", () => {
+    for (const settings of [{ humanize:true }, { human_preset:"careful" }, { geoip:"US" }, { timezone:"Not/AZone" }, { locale:"not_a_locale" }]) {
+      expect(() => normalizeCreateProfileInput({ profile_id:"work", ...settings })).toThrow();
+    }
+  });
+
   test("accepts v1 Profile IDs", () => {
     expect(validateProfileId("work")).toEqual({ ok: true, profile_id: "work" });
     expect(validateProfileId("work_2026")).toEqual({ ok: true, profile_id: "work_2026" });
@@ -40,13 +46,13 @@ describe("Browser Profile validation", () => {
         color_scheme: "dark",
         custom_launch_args: ["--disable-webgl"],
         fingerprint_seed: "seed-1",
-        geoip: "US",
+        geoip: "",
         gpu_renderer: "Mesa",
         gpu_vendor: "Intel",
         hardware_concurrency: 8,
         headless: true,
-        human_preset: "balanced",
-        humanize: true,
+        human_preset: "",
+        humanize: false,
         locale: "en-US",
         platform: "linux",
         profile_id: "work",

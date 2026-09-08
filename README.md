@@ -126,3 +126,46 @@ CLOAKHUB_BROWSER_BIN=/path/to/cloakbrowser bun run integration:real-runtime
 ```
 
 Those integration tests exercise real headless launch, headed KasmVNC/noVNC startup, CDP Transparent Recovery, spin-down/recovery persistence, and explicit Stop overriding active clients.
+
+## Workspace UI
+
+The default screen is a searchable profile list with tag search, status filters, activity sorting,
+connection counts, memory observations, and a profile detail panel. Profile actions are available
+from the visible `…` menu and detail panel. The editor is loaded on demand and reports server
+validation errors. Saving settings and polling every 2.5 seconds update the workspace without
+reloading an open viewer. Use **Profiles** and **Active viewer** to switch views; **Close viewer**
+disconnects only the viewer.
+
+Timezone, language/locale, and website appearance are passed to the browser on its next start.
+Clipboard sync is enforced on the clipboard endpoints and incoming VNC clipboard messages;
+KasmVNC's native outgoing clipboard preference fully applies on the next start. Automatic GeoIP
+and Humanize are SDK features and are not supported by this direct-process runtime. New requests
+enabling them are rejected. Profiles with older values show an explicit option in Advanced
+settings to remove those unsupported values.
+
+Start, Stop, Restart, Delete, idle stop, and shutdown share a per-profile operation queue.
+Concurrent starts wait for the same ready instance. Deletion waits for browser/display teardown
+before removing data, and failed cleanup preserves metadata. Normal shutdown first requests
+`Browser.close` so browser storage can flush, with process termination as a fallback. Session
+restore retains cookies and tabs across automatic stops; live JavaScript state is not retained.
+
+## Frontend development and verification
+
+HTTP routing lives in `src/app.ts`, response presentation in `src/profile-presentation.ts`, and
+browser code, templates, and CSS in `src/ui/`. Bun builds the TypeScript browser entries on first
+asset request; no separate frontend server or framework is required. Restart the development
+server after changing bundled frontend files (the watch command does this for imported modules;
+client-only assets may require a manual restart).
+
+```sh
+bun run typecheck
+bun test
+bunx playwright install chromium
+bun run test:ui
+```
+
+The UI suite uses an isolated SQLite data directory and controlled runtime handles. Set
+`CLOAKHUB_TEST_BROWSER=/path/to/chrome` to use an installed browser. It covers create/edit errors,
+proxy preservation and removal, tags/search, lifecycle confirmations, token-copy fallback,
+viewer continuity while editing, external profile changes, and narrow screens. Real browser
+persistence and runtime settings remain covered by `bun run integration:real-runtime`.

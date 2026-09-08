@@ -17,6 +17,176 @@ import {
 import type { OwnedProcessRegistry } from "../src/owned-process";
 
 describe("BrowserRuntime", () => {
+  test("concurrent starts share readiness, and stop waits for the pending launch", async () => {
+    const repository = fakeRepository(profile({ profile_id: "work" }));
+    const launcher = fakeLauncher();
+    const ready = Promise.withResolvers<void>();
+    const entered = Promise.withResolvers<void>();
+    const runtime = runtimeFixture({
+      launcher,
+      repository,
+      readinessProbe: {
+        async waitUntilReady() {
+          entered.resolve();
+          await ready.promise;
+        }
+      }
+    });
+    const first = runtime.start("work");
+    await entered.promise;
+    let secondDone = false;
+    const second = runtime.start("work").then((state) => {
+      secondDone = true;
+      return state;
+    });
+    await Bun.sleep(0);
+    expect(secondDone).toBe(false);
+    const stopped = runtime.stop("work");
+    ready.resolve();
+    await Promise.all([first, second, stopped]);
+    expect(repository.get("work")?.instance_status).toBe("stopped");
+    expect(launcher.handles[0]?.closed).toBe(true);
+    expect(launcher.launches).toHaveLength(1);
+  });
+
+  test("failed headed launch closes its display and permits recovery", async () => {
+    const repository = fakeRepository(profile({ headless: false }));
+    const displayRuntime = fakeDisplayRuntime();
+    const runtime = runtimeFixture({
+      repository,
+      displayRuntime,
+      launcher: fakeLauncher({ launchError: new Error("spawn failed") })
+    });
+    await expect(runtime.start("work")).rejects.toThrow("spawn failed");
+    expect(displayRuntime.handles[0]?.closed).toBe(true);
+  });
+
+  test("deletion waits for startup and process cleanup before removing profile data", async () => {
+    const repository = fakeRepository(profile({}));
+    const gate = Promise.withResolvers<void>();
+    const launcher = fakeLauncher({ beforeLaunchResolves: () => gate.promise });
+    const runtime = runtimeFixture({ repository, launcher });
+    const start = runtime.start("work");
+    const deletion = runtime.deleteProfile("work", async () => {
+      expect(launcher.handles[0]?.closed).toBe(true);
+      repository.delete("work");
+    });
+    const lateStart = runtime.start("work");
+    gate.resolve();
+    const rejected = expect(lateStart).rejects.toThrow("not found");
+    await Promise.all([start, deletion, rejected]);
+    expect(repository.get("work")).toBeUndefined();
+  });
+
+  test("shutdown drains pending starts and rejects new recovery requests", async () => {
+    const repository = fakeRepository(profile({}));
+    const gate = Promise.withResolvers<void>();
+    const launcher = fakeLauncher({ beforeLaunchResolves: () => gate.promise });
+    const runtime = runtimeFixture({ repository, launcher });
+    const start = runtime.start("work");
+    const shutdown = runtime.shutdown();
+    await expect(runtime.start("work")).rejects.toThrow("shutting down");
+    gate.resolve();
+    await Promise.all([start, shutdown]);
+    expect(launcher.handles[0]?.closed).toBe(true);
+    expect(repository.get("work")?.instance_status).toBe("stopped");
+  });
+
+  test("failed process teardown keeps profile data visible and blocks deletion", async () => {
+    const repository = fakeRepository(profile({}));
+    const runtime = runtimeFixture({
+      repository,
+      launcher: {
+        launch: async () => ({
+          close: async () => {},
+          hasExited: async () => false,
+          kill: async () => {
+            throw new Error("kill failed");
+          },
+          exited: () => new Promise<void>(() => {})
+        })
+      }
+    });
+    await runtime.start("work");
+    let deleted = false;
+    await expect(
+      runtime.deleteProfile("work", async () => {
+        deleted = true;
+        repository.delete("work");
+      })
+    ).rejects.toThrow("Could not stop all instance processes");
+    expect(deleted).toBe(false);
+    expect(repository.get("work")).toBeDefined();
+  });
+
+  test("deletion waits for actual process exit after hard kill", async () => {
+    const repository = fakeRepository(profile({}));
+    const exited = Promise.withResolvers<void>();
+    const killed = Promise.withResolvers<void>();
+    const runtime = runtimeFixture({
+      repository,
+      launcher: {
+        launch: async () => ({
+          close: async () => {},
+          hasExited: async () => false,
+          kill: async () => {
+            killed.resolve();
+          },
+          exited: () => exited.promise
+        })
+      }
+    });
+    await runtime.start("work");
+    let deleted = false;
+    const deletion = runtime.deleteProfile("work", async () => {
+      deleted = true;
+      repository.delete("work");
+    });
+    await killed.promise;
+    expect(deleted).toBe(false);
+    expect(repository.get("work")).toBeDefined();
+    exited.resolve();
+    await deletion;
+    expect(deleted).toBe(true);
+  });
+
+  test("a browser crash closes its display and clears viewer presence", async () => {
+    const repository = fakeRepository(profile({ headless: false }));
+    const launcher = fakeLauncher();
+    const display = fakeDisplayRuntime();
+    const runtime = runtimeFixture({
+      repository,
+      launcher,
+      displayRuntime: display
+    });
+    await runtime.start("work");
+    runtime.openManualViewerSession("work");
+    launcher.handles[0]!.exit();
+    await Bun.sleep(0);
+    expect(display.handles[0]?.closed).toBe(true);
+    expect(runtime.activeManualViewerCount("work")).toBe(0);
+    expect(repository.get("work")?.last_stop_reason).toBe("crash");
+  });
+
+  test("disabled clipboard rejects passive reads and writes", async () => {
+    const repository = fakeRepository(
+      profile({ headless: false, clipboard_sync: false })
+    );
+    const runtime = runtimeFixture({
+      repository,
+      displayRuntime: fakeDisplayRuntime(),
+      clipboardReader: fakeClipboardReader("secret"),
+      clipboardWriter: fakeClipboardWriter()
+    });
+    await runtime.start("work");
+    await expect(runtime.readManualClipboard("work")).rejects.toThrow(
+      "disabled"
+    );
+    await expect(runtime.writeManualClipboard("work", "paste")).rejects.toThrow(
+      "disabled"
+    );
+  });
+
   test("starts a headless Browser Instance with persistent user-data and private CDP endpoint", async () => {
     const repository = fakeRepository(profile({ profile_id: "work" }));
     const launcher = fakeLauncher();
@@ -74,7 +244,10 @@ describe("BrowserRuntime", () => {
 
   test("passes the Browser Profile proxy to the process launcher", async () => {
     const repository = fakeRepository(
-      profile({ profile_id: "work", proxy: "http://user:secret@proxy.example:8080" })
+      profile({
+        profile_id: "work",
+        proxy: "http://user:secret@proxy.example:8080"
+      })
     );
     const launcher = fakeLauncher();
     const runtime = runtimeFixture({ launcher, repository });
@@ -87,7 +260,9 @@ describe("BrowserRuntime", () => {
   });
 
   test("starts a headed Browser Instance with a private display runtime and VNC endpoint", async () => {
-    const repository = fakeRepository(profile({ headless: false, profile_id: "work" }));
+    const repository = fakeRepository(
+      profile({ headless: false, profile_id: "work" })
+    );
     const displayRuntime = fakeDisplayRuntime();
     const launcher = fakeLauncher();
     const runtime = runtimeFixture({ displayRuntime, launcher, repository });
@@ -104,6 +279,7 @@ describe("BrowserRuntime", () => {
     expect(displayRuntime.starts).toEqual([
       {
         displayNumber: 100,
+        clipboardSync: true,
         profileId: "work",
         screenHeight: 1080,
         screenWidth: 1920,
@@ -120,10 +296,14 @@ describe("BrowserRuntime", () => {
   });
 
   test("headed launch fails clearly when KasmVNC display runtime is unavailable", async () => {
-    const repository = fakeRepository(profile({ headless: false, profile_id: "work" }));
+    const repository = fakeRepository(
+      profile({ headless: false, profile_id: "work" })
+    );
     const runtime = runtimeFixture({ repository });
 
-    await expect(runtime.start("work")).rejects.toThrow(MissingDisplayRuntimeError);
+    await expect(runtime.start("work")).rejects.toThrow(
+      MissingDisplayRuntimeError
+    );
     expect(repository.get("work")).toMatchObject({
       instance_status: "failed",
       last_launch_error: "Missing KasmVNC Xvnc display runtime"
@@ -170,7 +350,9 @@ describe("BrowserRuntime", () => {
 
     await runtime.stop("work", "manual stop");
 
-    expect(clientConnections.disconnects).toEqual([{ profileId: "work", reason: "manual stop" }]);
+    expect(clientConnections.disconnects).toEqual([
+      { profileId: "work", reason: "manual stop" }
+    ]);
   });
 
   test("shutdown closes running Browser Instances and cleans remaining Owned Processes", async () => {
@@ -206,15 +388,25 @@ describe("BrowserRuntime", () => {
       { profileId: "headless", reason: "shutdown" },
       { profileId: "headed", reason: "shutdown" }
     ]);
-    expect(launcher.handles.map((handle) => ({ closed: handle.closed, killed: handle.killed }))).toEqual([
+    expect(
+      launcher.handles.map((handle) => ({
+        closed: handle.closed,
+        killed: handle.killed
+      }))
+    ).toEqual([
       { closed: true, killed: true },
       { closed: true, killed: true }
     ]);
-    expect(displayRuntime.handles[0]).toMatchObject({ closed: true, killed: false });
-    expect(waits).toEqual([1500, 1500]);
+    expect(displayRuntime.handles[0]).toMatchObject({
+      closed: true,
+      killed: false
+    });
+    expect(waits).toEqual([1500, 1500, 1500]);
     expect(runtime.activeCdpSessionCount("headless")).toBe(0);
     expect(runtime.activeManualViewerCount("headed")).toBe(0);
-    expect(ownedProcesses.cleanupCalls).toEqual([{ kinds: undefined, profileIds: undefined }]);
+    expect(ownedProcesses.cleanupCalls).toEqual([
+      { kinds: undefined, profileIds: undefined }
+    ]);
     expect(repository.get("headless")).toMatchObject({
       instance_status: "stopped",
       last_stop_reason: "shutdown"
@@ -243,7 +435,9 @@ describe("BrowserRuntime", () => {
     session.close();
 
     expect(runtime.activeCdpSessionCount("work")).toBe(0);
-    expect(repository.get("work")?.last_activity_at).toBe("2026-01-01T00:01:00.000Z");
+    expect(repository.get("work")?.last_activity_at).toBe(
+      "2026-01-01T00:01:00.000Z"
+    );
   });
 
   test("CDP Session observations include count, duration, remote address, and user agent", async () => {
@@ -275,9 +469,15 @@ describe("BrowserRuntime", () => {
   });
 
   test("manual viewer recovery starts headed profile and exposes viewer state", async () => {
-    const repository = fakeRepository(profile({ headless: false, profile_id: "work" }));
+    const repository = fakeRepository(
+      profile({ headless: false, profile_id: "work" })
+    );
     const manualReadinessProbe = fakeManualReadinessProbe();
-    const runtime = runtimeFixture({ displayRuntime: fakeDisplayRuntime(), manualReadinessProbe, repository });
+    const runtime = runtimeFixture({
+      displayRuntime: fakeDisplayRuntime(),
+      manualReadinessProbe,
+      repository
+    });
 
     const viewer = await runtime.openManualViewer("work");
 
@@ -285,10 +485,17 @@ describe("BrowserRuntime", () => {
       display: ":100",
       profile_id: "work",
       vnc_port: 5900,
+      clipboard_sync: true,
       vnc_ws_path: "/ui/profiles/work/vnc"
     });
     expect(manualReadinessProbe.readyStates).toEqual([
-      { cdp_port: 5100, display: ":100", profile_id: "work", status: "running", vnc_port: 5900 }
+      {
+        cdp_port: 5100,
+        display: ":100",
+        profile_id: "work",
+        status: "running",
+        vnc_port: 5900
+      }
     ]);
     expect(repository.get("work")?.instance_status).toBe("running");
   });
@@ -301,21 +508,31 @@ describe("BrowserRuntime", () => {
         profile_id: "work"
       })
     );
-    const runtime = runtimeFixture({ displayRuntime: fakeDisplayRuntime(), repository });
+    const runtime = runtimeFixture({
+      displayRuntime: fakeDisplayRuntime(),
+      repository
+    });
     await runtime.start("work");
     repository.recordActivity("work", "2026-01-01T00:00:00.000Z");
 
     const viewer = runtime.openManualViewerSession("work");
 
     expect(runtime.activeManualViewerCount("work")).toBe(1);
-    expect(repository.get("work")?.last_activity_at).toBe("2026-01-01T00:00:00.000Z");
+    expect(repository.get("work")?.last_activity_at).toBe(
+      "2026-01-01T00:00:00.000Z"
+    );
     viewer.close();
     expect(runtime.activeManualViewerCount("work")).toBe(0);
   });
 
   test("multiple manual viewers are tracked independently", async () => {
-    const repository = fakeRepository(profile({ headless: false, profile_id: "work" }));
-    const runtime = runtimeFixture({ displayRuntime: fakeDisplayRuntime(), repository });
+    const repository = fakeRepository(
+      profile({ headless: false, profile_id: "work" })
+    );
+    const runtime = runtimeFixture({
+      displayRuntime: fakeDisplayRuntime(),
+      repository
+    });
     await runtime.start("work");
 
     const first = runtime.openManualViewerSession("work");
@@ -329,7 +546,9 @@ describe("BrowserRuntime", () => {
   });
 
   test("manual input records Instance Activity at most once every five seconds", async () => {
-    const repository = fakeRepository(profile({ headless: false, profile_id: "work" }));
+    const repository = fakeRepository(
+      profile({ headless: false, profile_id: "work" })
+    );
     const monotonic = fakeMonotonicClock();
     const nowValues = [
       new Date("2026-01-01T00:00:00.000Z"),
@@ -351,29 +570,47 @@ describe("BrowserRuntime", () => {
     monotonic.advance(5000);
     viewer.recordInput();
 
-    expect(repository.get("work")?.last_activity_at).toBe("2026-01-01T00:00:06.000Z");
+    expect(repository.get("work")?.last_activity_at).toBe(
+      "2026-01-01T00:00:06.000Z"
+    );
     expect(runtime.lastManualInputAt("work")).toBe("2026-01-01T00:00:06.000Z");
   });
 
   test("manual clipboard writes through the running display without recording Manual Input", async () => {
-    const repository = fakeRepository(profile({ headless: false, profile_id: "work" }));
+    const repository = fakeRepository(
+      profile({ headless: false, profile_id: "work" })
+    );
     const clipboardWriter = fakeClipboardWriter();
-    const runtime = runtimeFixture({ clipboardWriter, displayRuntime: fakeDisplayRuntime(), repository });
+    const runtime = runtimeFixture({
+      clipboardWriter,
+      displayRuntime: fakeDisplayRuntime(),
+      repository
+    });
     await runtime.start("work");
 
     await runtime.writeManualClipboard("work", "pasted text");
 
-    expect(clipboardWriter.writes).toEqual([{ display: ":100", text: "pasted text" }]);
+    expect(clipboardWriter.writes).toEqual([
+      { display: ":100", text: "pasted text" }
+    ]);
     expect(runtime.lastManualInputAt("work")).toBeNull();
   });
 
   test("manual clipboard reads through the running browser CDP port", async () => {
-    const repository = fakeRepository(profile({ headless: false, profile_id: "work" }));
+    const repository = fakeRepository(
+      profile({ headless: false, profile_id: "work" })
+    );
     const clipboardReader = fakeClipboardReader("copied text");
-    const runtime = runtimeFixture({ clipboardReader, displayRuntime: fakeDisplayRuntime(), repository });
+    const runtime = runtimeFixture({
+      clipboardReader,
+      displayRuntime: fakeDisplayRuntime(),
+      repository
+    });
     await runtime.start("work");
 
-    await expect(runtime.readManualClipboard("work")).resolves.toBe("copied text");
+    await expect(runtime.readManualClipboard("work")).resolves.toBe(
+      "copied text"
+    );
     expect(clipboardReader.ports).toEqual([5100]);
   });
 
@@ -381,7 +618,11 @@ describe("BrowserRuntime", () => {
     const repository = fakeRepository(profile({ profile_id: "work" }));
     const launcher = fakeLauncher();
     const monotonic = fakeMonotonicClock();
-    const runtime = runtimeFixture({ launcher, monotonicNow: monotonic.now, repository });
+    const runtime = runtimeFixture({
+      launcher,
+      monotonicNow: monotonic.now,
+      repository
+    });
     await runtime.start("work");
     const session = runtime.openCdpSession("work");
     monotonic.advance(31 * 60 * 1000);
@@ -398,7 +639,11 @@ describe("BrowserRuntime", () => {
     const repository = fakeRepository(profile({ profile_id: "work" }));
     const launcher = fakeLauncher();
     const monotonic = fakeMonotonicClock();
-    const runtime = runtimeFixture({ launcher, monotonicNow: monotonic.now, repository });
+    const runtime = runtimeFixture({
+      launcher,
+      monotonicNow: monotonic.now,
+      repository
+    });
     await runtime.start("work");
 
     monotonic.advance(30 * 60 * 1000 + 1);
@@ -413,11 +658,18 @@ describe("BrowserRuntime", () => {
   });
 
   test("idle headed Browser Instances spin down even with viewer presence only", async () => {
-    const repository = fakeRepository(profile({ headless: false, profile_id: "work" }));
+    const repository = fakeRepository(
+      profile({ headless: false, profile_id: "work" })
+    );
     const displayRuntime = fakeDisplayRuntime();
     const launcher = fakeLauncher();
     const monotonic = fakeMonotonicClock();
-    const runtime = runtimeFixture({ displayRuntime, launcher, monotonicNow: monotonic.now, repository });
+    const runtime = runtimeFixture({
+      displayRuntime,
+      launcher,
+      monotonicNow: monotonic.now,
+      repository
+    });
     await runtime.start("work");
     runtime.openManualViewerSession("work");
 
@@ -435,12 +687,20 @@ describe("BrowserRuntime", () => {
       profile({
         profile_id: "work",
         sleep_policy: { mode: "never" },
-        sleep_policy_status: { blocks_sleep: true, effective_minutes: null, mode: "never" }
+        sleep_policy_status: {
+          blocks_sleep: true,
+          effective_minutes: null,
+          mode: "never"
+        }
       })
     );
     const launcher = fakeLauncher();
     const monotonic = fakeMonotonicClock();
-    const runtime = runtimeFixture({ launcher, monotonicNow: monotonic.now, repository });
+    const runtime = runtimeFixture({
+      launcher,
+      monotonicNow: monotonic.now,
+      repository
+    });
     await runtime.start("work");
     monotonic.advance(24 * 60 * 60 * 1000);
 
@@ -503,12 +763,20 @@ describe("BrowserRuntime", () => {
         headless: false,
         profile_id: "viewer",
         sleep_policy: { mode: "never" },
-        sleep_policy_status: { blocks_sleep: true, effective_minutes: null, mode: "never" }
+        sleep_policy_status: {
+          blocks_sleep: true,
+          effective_minutes: null,
+          mode: "never"
+        }
       }),
       profile({ profile_id: "next" })
     );
     const displayRuntime = fakeDisplayRuntime();
-    const runtime = runtimeFixture({ displayRuntime, maxRunningInstances: 1, repository });
+    const runtime = runtimeFixture({
+      displayRuntime,
+      maxRunningInstances: 1,
+      repository
+    });
     await runtime.start("viewer");
     runtime.openManualViewerSession("viewer");
 
@@ -540,7 +808,9 @@ describe("BrowserRuntime", () => {
     const session = runtime.openCdpSession("cdp");
     runtime.openManualViewerSession("manual").recordInput();
 
-    await expect(runtime.start("next")).rejects.toThrow(CapacityUnavailableError);
+    await expect(runtime.start("next")).rejects.toThrow(
+      CapacityUnavailableError
+    );
 
     expect(repository.get("cdp")?.instance_status).toBe("running");
     expect(repository.get("manual")?.instance_status).toBe("running");
@@ -571,7 +841,9 @@ describe("BrowserRuntime", () => {
     monotonic.advance(57_000);
     currentTime = new Date("2026-01-01T00:01:01.000Z");
 
-    await expect(runtime.start("next")).rejects.toThrow(CapacityUnavailableError);
+    await expect(runtime.start("next")).rejects.toThrow(
+      CapacityUnavailableError
+    );
 
     expect(repository.get("manual")?.instance_status).toBe("running");
   });
@@ -611,7 +883,10 @@ describe("BrowserRuntime", () => {
   });
 
   test("concurrent starts for different profiles respect the Running Instance Limit", async () => {
-    const repository = fakeRepository(profile({ profile_id: "first" }), profile({ profile_id: "second" }));
+    const repository = fakeRepository(
+      profile({ profile_id: "first" }),
+      profile({ profile_id: "second" })
+    );
     let releaseLaunch!: () => void;
     const launcher = fakeLauncher({
       beforeLaunchResolves: () =>
@@ -619,7 +894,11 @@ describe("BrowserRuntime", () => {
           releaseLaunch = resolve;
         })
     });
-    const runtime = runtimeFixture({ launcher, maxRunningInstances: 1, repository });
+    const runtime = runtimeFixture({
+      launcher,
+      maxRunningInstances: 1,
+      repository
+    });
 
     const first = runtime.start("first");
     const second = runtime.start("second");
@@ -650,7 +929,11 @@ describe("BrowserRuntime", () => {
           releaseStop = resolve;
         })
     };
-    const runtime = runtimeFixture({ clientConnections, maxRunningInstances: 1, repository });
+    const runtime = runtimeFixture({
+      clientConnections,
+      maxRunningInstances: 1,
+      repository
+    });
     await runtime.start("victim");
 
     const first = runtime.start("first");
@@ -706,7 +989,9 @@ describe("BrowserRuntime", () => {
 
     await runtime.start("work");
 
-    expect(readinessProbe.readyStates).toEqual([{ cdp_port: 5100, profile_id: "work", status: "running" }]);
+    expect(readinessProbe.readyStates).toEqual([
+      { cdp_port: 5100, profile_id: "work", status: "running" }
+    ]);
     expect(repository.get("work")?.instance_status).toBe("running");
   });
 
@@ -735,7 +1020,10 @@ describe("BrowserRuntime", () => {
 
   test("start rejects stored CloakHub-owned CDP launch flags before launching a process", async () => {
     const repository = fakeRepository(
-      profile({ custom_launch_args: ["--remote-debugging-pipe"], profile_id: "work" })
+      profile({
+        custom_launch_args: ["--remote-debugging-pipe"],
+        profile_id: "work"
+      })
     );
     const launcher = fakeLauncher();
     const readinessProbe = fakeReadinessProbe();
@@ -749,7 +1037,8 @@ describe("BrowserRuntime", () => {
     expect(readinessProbe.readyStates).toEqual([]);
     expect(repository.get("work")).toMatchObject({
       instance_status: "failed",
-      last_launch_error: "custom_launch_args cannot include CloakHub-owned flag --remote-debugging-pipe",
+      last_launch_error:
+        "custom_launch_args cannot include CloakHub-owned flag --remote-debugging-pipe",
       last_stop_reason: "launch failure"
     });
   });
@@ -784,7 +1073,7 @@ describe("BrowserRuntime", () => {
     await runtime.start("work");
     launcher.handles[0]?.exit();
     await launcher.handles[0]?.exited();
-    await Promise.resolve();
+    await Bun.sleep(0);
 
     expect(repository.get("work")).toMatchObject({
       instance_status: "stopped",
@@ -852,7 +1141,9 @@ describe("BrowserRuntime", () => {
 function runtimeFixture(options: {
   clientConnections?: BrowserClientConnections;
   clipboardReader?: CdpClipboardReader;
-  clipboardWriter?: Parameters<typeof createBrowserRuntime>[0]["clipboardWriter"];
+  clipboardWriter?: Parameters<
+    typeof createBrowserRuntime
+  >[0]["clipboardWriter"];
   displayRuntime?: BrowserDisplayRuntime;
   launcher?: BrowserProcessLauncher;
   manualReadinessProbe?: BrowserManualReadinessProbe;
@@ -872,7 +1163,8 @@ function runtimeFixture(options: {
     dataRoot: "/data",
     displayRuntime: options.displayRuntime,
     launcher: options.launcher ?? fakeLauncher(),
-    manualReadinessProbe: options.manualReadinessProbe ?? fakeManualReadinessProbe(),
+    manualReadinessProbe:
+      options.manualReadinessProbe ?? fakeManualReadinessProbe(),
     maxRunningInstances: options.maxRunningInstances,
     monotonicNow: options.monotonicNow,
     now: options.now,
@@ -883,7 +1175,9 @@ function runtimeFixture(options: {
   });
 }
 
-function fakeClipboardReader(text: string): CdpClipboardReader & { ports: number[] } {
+function fakeClipboardReader(
+  text: string
+): CdpClipboardReader & { ports: number[] } {
   const ports: number[] = [];
   return {
     ports,
@@ -908,7 +1202,9 @@ function fakeClipboardWriter(): {
   };
 }
 
-function fakeManualReadinessProbe(): BrowserManualReadinessProbe & { readyStates: BrowserRuntimeState[] } {
+function fakeManualReadinessProbe(): BrowserManualReadinessProbe & {
+  readyStates: BrowserRuntimeState[];
+} {
   const readyStates: BrowserRuntimeState[] = [];
 
   return {
@@ -938,7 +1234,10 @@ function fakeDisplayRuntime(): BrowserDisplayRuntime & {
   };
 }
 
-function fakeMonotonicClock(): { advance(milliseconds: number): void; now(): number } {
+function fakeMonotonicClock(): {
+  advance(milliseconds: number): void;
+  now(): number;
+} {
   let current = 0;
 
   return {
@@ -951,11 +1250,13 @@ function fakeMonotonicClock(): { advance(milliseconds: number): void; now(): num
   };
 }
 
-function fakeLauncher(options: {
-  beforeLaunchResolves?: () => Promise<void>;
-  exitsAfterGracefulClose?: boolean;
-  launchError?: Error;
-} = {}): BrowserProcessLauncher & {
+function fakeLauncher(
+  options: {
+    beforeLaunchResolves?: () => Promise<void>;
+    exitsAfterGracefulClose?: boolean;
+    launchError?: Error;
+  } = {}
+): BrowserProcessLauncher & {
   handles: FakeBrowserHandle[];
   launches: unknown[];
 } {
@@ -973,7 +1274,9 @@ function fakeLauncher(options: {
       }
 
       launches.push(command);
-      const handle = new FakeBrowserHandle(options.exitsAfterGracefulClose ?? true);
+      const handle = new FakeBrowserHandle(
+        options.exitsAfterGracefulClose ?? true
+      );
       handles.push(handle);
       return handle;
     }
@@ -991,7 +1294,10 @@ function fakeOwnedProcesses(profileIds: string[]): OwnedProcessRegistry & {
     cleanedProfileIds,
     cleanupCalls,
     cleanupOwnedProcesses: async (targetProfileIds, options) => {
-      cleanupCalls.push({ kinds: options?.kinds, profileIds: targetProfileIds });
+      cleanupCalls.push({
+        kinds: options?.kinds,
+        profileIds: targetProfileIds
+      });
       const cleaned = targetProfileIds ?? profileIds;
       cleanedProfileIds.push(...cleaned);
       return cleaned;
@@ -1018,7 +1324,9 @@ function fakeClientConnections(): BrowserClientConnections & {
   };
 }
 
-function fakeReadinessProbe(): BrowserReadinessProbe & { readyStates: BrowserRuntimeState[] } {
+function fakeReadinessProbe(): BrowserReadinessProbe & {
+  readyStates: BrowserRuntimeState[];
+} {
   const readyStates: BrowserRuntimeState[] = [];
 
   return {
@@ -1057,11 +1365,19 @@ class FakeBrowserHandle {
 
   async kill(): Promise<void> {
     this.killed = true;
+    this.exit();
   }
 }
 
-function fakeRepository(...initialProfiles: BrowserProfile[]): ProfileRepository & { stopReasons: string[] } {
-  const profiles = new Map(initialProfiles.map((initialProfile) => [initialProfile.profile_id, initialProfile]));
+function fakeRepository(
+  ...initialProfiles: BrowserProfile[]
+): ProfileRepository & { stopReasons: string[] } {
+  const profiles = new Map(
+    initialProfiles.map((initialProfile) => [
+      initialProfile.profile_id,
+      initialProfile
+    ])
+  );
   const stopReasons: string[] = [];
 
   return {
@@ -1128,14 +1444,20 @@ function fakeRepository(...initialProfiles: BrowserProfile[]): ProfileRepository
       update(profileId, { last_activity_at: occurredAt });
     },
     recordManualInput: (profileId, occurredAt) => {
-      update(profileId, { last_activity_at: occurredAt, last_manual_input_at: occurredAt });
+      update(profileId, {
+        last_activity_at: occurredAt,
+        last_manual_input_at: occurredAt
+      });
     },
     recordDeleteError: () => undefined,
     setCdpToken: (profileId, token) => update(profileId, { cdp_token: token }),
     update: (profileId, input) => update(profileId, input)
   };
 
-  function update(profileId: string, changes: Partial<BrowserProfile>): BrowserProfile | undefined {
+  function update(
+    profileId: string,
+    changes: Partial<BrowserProfile>
+  ): BrowserProfile | undefined {
     const existing = profiles.get(profileId);
     if (!existing) {
       return undefined;
@@ -1180,7 +1502,11 @@ function profile(overrides: Partial<BrowserProfile>): BrowserProfile {
     screen_height: 1080,
     screen_width: 1920,
     sleep_policy: { mode: "default" },
-    sleep_policy_status: { blocks_sleep: false, effective_minutes: 30, mode: "default" },
+    sleep_policy_status: {
+      blocks_sleep: false,
+      effective_minutes: 30,
+      mode: "default"
+    },
     timezone: "",
     updated_at: "2026-01-01T00:00:00.000Z",
     user_agent: "",

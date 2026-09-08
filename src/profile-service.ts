@@ -2,8 +2,16 @@ import { mkdir, rm } from "node:fs/promises";
 import { randomBytes } from "node:crypto";
 import { join } from "node:path";
 
-import type { BrowserProfile, CreateProfileInput, UpdateProfileInput } from "./profile";
-import { ProfileValidationError, normalizeCreateProfileInput, normalizeUpdateProfileInput } from "./profile";
+import type {
+  BrowserProfile,
+  CreateProfileInput,
+  UpdateProfileInput
+} from "./profile";
+import {
+  ProfileValidationError,
+  normalizeCreateProfileInput,
+  normalizeUpdateProfileInput
+} from "./profile";
 import type { ProfileRepository } from "./profile-repository";
 
 export interface ProfileFileStore {
@@ -53,14 +61,19 @@ export class ProfileNotFoundError extends Error {
 
 export class DeleteProfileDataError extends Error {
   constructor(profileId: string, cause: unknown) {
-    super(`Failed to delete Browser Profile data for "${profileId}": ${errorMessage(cause)}`);
+    super(
+      `Failed to delete Browser Profile data for "${profileId}": ${errorMessage(cause)}`
+    );
     this.name = "DeleteProfileDataError";
   }
 }
 
-export function createProfileService(options: ProfileServiceOptions): ProfileService {
+export function createProfileService(
+  options: ProfileServiceOptions
+): ProfileService {
   const fileStore = createFileStore(options);
-  const generateCdpToken = options.cdpTokenGenerator ?? defaultCdpTokenGenerator;
+  const generateCdpToken =
+    options.cdpTokenGenerator ?? defaultCdpTokenGenerator;
 
   return {
     createCdpToken(profileId: string): CdpTokenState {
@@ -69,7 +82,9 @@ export function createProfileService(options: ProfileServiceOptions): ProfileSer
         return cdpTokenState(profile);
       }
 
-      return cdpTokenState(options.repository.setCdpToken(profileId, generateCdpToken())!);
+      return cdpTokenState(
+        options.repository.setCdpToken(profileId, generateCdpToken())!
+      );
     },
 
     async createProfile(input: unknown): Promise<BrowserProfile> {
@@ -91,10 +106,21 @@ export function createProfileService(options: ProfileServiceOptions): ProfileSer
     deleteStoppedProfile: async (profileId: string): Promise<void> => {
       const profile = requireProfile(options.repository, profileId);
 
+      if (
+        profile.instance_status !== "stopped" &&
+        profile.instance_status !== "failed"
+      ) {
+        throw new ProfileValidationError(
+          "Stop the Browser Instance before deleting its profile data"
+        );
+      }
       try {
         await fileStore.removeProfileData(profile.profile_id);
       } catch (error) {
-        options.repository.recordDeleteError(profile.profile_id, errorMessage(error));
+        options.repository.recordDeleteError(
+          profile.profile_id,
+          errorMessage(error)
+        );
         throw new DeleteProfileDataError(profile.profile_id, error);
       }
 
@@ -115,7 +141,9 @@ export function createProfileService(options: ProfileServiceOptions): ProfileSer
 
     regenerateCdpToken(profileId: string): CdpTokenState {
       requireProfile(options.repository, profileId);
-      return cdpTokenState(options.repository.setCdpToken(profileId, generateCdpToken())!);
+      return cdpTokenState(
+        options.repository.setCdpToken(profileId, generateCdpToken())!
+      );
     },
 
     revokeCdpToken(profileId: string): void {
@@ -140,16 +168,23 @@ export { ProfileValidationError };
 function createFileStore(options: ProfileServiceOptions): ProfileFileStore {
   const defaultStore = {
     createProfileData: async (profileId: string): Promise<void> => {
-      await mkdir(profileDataPath(options.dataRoot, profileId), { recursive: true });
+      await mkdir(profileDataPath(options.dataRoot, profileId), {
+        recursive: true
+      });
     },
     removeProfileData: async (profileId: string): Promise<void> => {
-      await rm(profileDataPath(options.dataRoot, profileId), { force: true, recursive: true });
+      await rm(profileDataPath(options.dataRoot, profileId), {
+        force: true,
+        recursive: true
+      });
     }
   };
 
   return {
-    createProfileData: options.fileStore?.createProfileData ?? defaultStore.createProfileData,
-    removeProfileData: options.fileStore?.removeProfileData ?? defaultStore.removeProfileData
+    createProfileData:
+      options.fileStore?.createProfileData ?? defaultStore.createProfileData,
+    removeProfileData:
+      options.fileStore?.removeProfileData ?? defaultStore.removeProfileData
   };
 }
 
@@ -159,7 +194,10 @@ function ensureUnique(repository: ProfileRepository, profileId: string): void {
   }
 }
 
-function requireProfile(repository: ProfileRepository, profileId: string): BrowserProfile {
+function requireProfile(
+  repository: ProfileRepository,
+  profileId: string
+): BrowserProfile {
   const profile = repository.get(profileId);
   if (!profile) {
     throw new ProfileNotFoundError(profileId);

@@ -69,16 +69,25 @@ export function createRfbProxyState(): RfbProxyState {
   return { clientHandshakeFrameCount: 0, serverFrameBuffer: Buffer.alloc(0) };
 }
 
-export function translateClientFrame(data: Buffer, state: RfbProxyState): RfbClientFrameResult {
+export function translateClientFrame(
+  data: Buffer,
+  state: RfbProxyState,
+  clipboardSync = true
+): RfbClientFrameResult {
   state.clientHandshakeFrameCount += 1;
-  if (state.clientHandshakeFrameCount <= RFB_CLIENT_HANDSHAKE_WEBSOCKET_FRAMES) {
+  if (
+    state.clientHandshakeFrameCount <= RFB_CLIENT_HANDSHAKE_WEBSOCKET_FRAMES
+  ) {
     return { data, manualInput: false };
   }
 
-  return filterRfbClientMessages(data);
+  return filterRfbClientMessages(data, clipboardSync);
 }
 
-export function filterRfbClientMessages(data: Buffer): RfbClientFrameResult {
+export function filterRfbClientMessages(
+  data: Buffer,
+  clipboardSync = true
+): RfbClientFrameResult {
   const chunks: Buffer[] = [];
   let manualInput = false;
   let offset = 0;
@@ -90,6 +99,14 @@ export function filterRfbClientMessages(data: Buffer): RfbClientFrameResult {
       break;
     }
 
+    if (
+      !clipboardSync &&
+      (messageType === RFB_CLIENT_CUT_TEXT ||
+        messageType === RFB_CLIENT_KASMVNC_BINARY_CLIPBOARD)
+    ) {
+      offset += messageLength;
+      continue;
+    }
     if (isStandardClientMessage(messageType)) {
       if (messageType === RFB_CLIENT_SET_ENCODINGS) {
         chunks.push(rewriteSetEncodings(data, offset, messageLength));
@@ -98,7 +115,10 @@ export function filterRfbClientMessages(data: Buffer): RfbClientFrameResult {
         manualInput = true;
       } else {
         chunks.push(data.subarray(offset, offset + messageLength));
-        manualInput = manualInput || messageType === RFB_CLIENT_KEY_EVENT || messageType === RFB_CLIENT_CUT_TEXT;
+        manualInput =
+          manualInput ||
+          messageType === RFB_CLIENT_KEY_EVENT ||
+          messageType === RFB_CLIENT_CUT_TEXT;
       }
     } else if (EXTENSION_MESSAGE_LENGTHS.has(messageType)) {
       chunks.push(data.subarray(offset, offset + messageLength));
@@ -122,7 +142,10 @@ export function translateServerFrame(data: Buffer): Buffer {
   return text === undefined ? Buffer.alloc(0) : buildServerCutText(text);
 }
 
-export function translateServerChunk(data: Buffer, state: RfbProxyState): Buffer {
+export function translateServerChunk(
+  data: Buffer,
+  state: RfbProxyState
+): Buffer {
   state.serverFrameBuffer = Buffer.concat([state.serverFrameBuffer, data]);
   const chunks: Buffer[] = [];
 
@@ -143,7 +166,10 @@ export function translateServerChunk(data: Buffer, state: RfbProxyState): Buffer
   return Buffer.concat(chunks);
 }
 
-export function rfbClientMessageLength(data: Buffer, offset: number): number | undefined {
+export function rfbClientMessageLength(
+  data: Buffer,
+  offset: number
+): number | undefined {
   if (offset >= data.length) {
     return undefined;
   }
@@ -170,7 +196,10 @@ export function rfbClientMessageLength(data: Buffer, offset: number): number | u
   return EXTENSION_MESSAGE_LENGTHS.get(messageType);
 }
 
-export function rfbServerMessageLength(data: Buffer, offset: number): number | undefined {
+export function rfbServerMessageLength(
+  data: Buffer,
+  offset: number
+): number | undefined {
   if (offset >= data.length) {
     return undefined;
   }
@@ -200,7 +229,11 @@ export function rfbServerMessageLength(data: Buffer, offset: number): number | u
   return data.length - offset;
 }
 
-export function rewriteSetEncodings(data: Buffer, offset: number, messageLength: number): Buffer {
+export function rewriteSetEncodings(
+  data: Buffer,
+  offset: number,
+  messageLength: number
+): Buffer {
   const encodingCount = data.readUInt16BE(offset + 2);
   const kept: number[] = [];
 
@@ -237,8 +270,12 @@ export function rewritePointerEvent(data: Buffer, offset: number): Buffer {
 }
 
 export function parseKasmVncClipboard(data: Buffer): string | undefined {
-  const textEntry = readKasmVncClipboard(data, 0).entries.find((entry) => entry.mimeType === "text/plain");
-  return textEntry ? data.subarray(textEntry.dataStart, textEntry.dataEnd).toString("utf8") : undefined;
+  const textEntry = readKasmVncClipboard(data, 0).entries.find(
+    (entry) => entry.mimeType === "text/plain"
+  );
+  return textEntry
+    ? data.subarray(textEntry.dataStart, textEntry.dataEnd).toString("utf8")
+    : undefined;
 }
 
 export function buildServerCutText(text: string): Buffer {
@@ -261,12 +298,20 @@ function isStandardClientMessage(messageType: number): boolean {
   );
 }
 
-function kasmVncClipboardMessageLength(data: Buffer, offset: number): number | undefined {
-  const clipboard = readKasmVncClipboard(data, offset, { stopAtPotentialNextServerMessage: true });
+function kasmVncClipboardMessageLength(
+  data: Buffer,
+  offset: number
+): number | undefined {
+  const clipboard = readKasmVncClipboard(data, offset, {
+    stopAtPotentialNextServerMessage: true
+  });
   return clipboard.complete ? clipboard.endOffset - offset : undefined;
 }
 
-function kasmVncClientClipboardMessageLength(data: Buffer, offset: number): number | undefined {
+function kasmVncClientClipboardMessageLength(
+  data: Buffer,
+  offset: number
+): number | undefined {
   if (data.length - offset < 2) {
     return undefined;
   }
@@ -309,7 +354,11 @@ function readKasmVncClipboard(
   const entries: KasmVncClipboardEntry[] = [];
   let cursor = offset + 6;
   while (cursor < data.length) {
-    if (options.stopAtPotentialNextServerMessage && entries.length > 0 && startsKnownServerMessage(data[cursor]!)) {
+    if (
+      options.stopAtPotentialNextServerMessage &&
+      entries.length > 0 &&
+      startsKnownServerMessage(data[cursor]!)
+    ) {
       return { complete: true, endOffset: cursor, entries };
     }
 
@@ -319,7 +368,9 @@ function readKasmVncClipboard(
       return { complete: false, endOffset: cursor, entries };
     }
 
-    const mimeType = data.subarray(cursor, cursor + mimeLength).toString("utf8");
+    const mimeType = data
+      .subarray(cursor, cursor + mimeLength)
+      .toString("utf8");
     cursor += mimeLength;
     if (cursor + 4 > data.length) {
       return { complete: false, endOffset: cursor, entries };

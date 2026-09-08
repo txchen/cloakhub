@@ -1,6 +1,7 @@
 export const PROFILE_ID_PATTERN = /^[a-z][a-z0-9_]*$/;
 
-export type InstanceStatus = "failed" | "running" | "starting" | "stopped" | "stopping";
+export type InstanceStatus =
+  "failed" | "running" | "starting" | "stopped" | "stopping";
 export type StopReason =
   | "capacity preemption"
   | "crash"
@@ -52,6 +53,7 @@ export interface BrowserProfile extends LaunchProfileFields {
   last_stop_reason: StopReason | null;
   last_stopped_at: string | null;
   notes: string;
+  tags?: string[];
   profile_id: string;
   sleep_policy_status: ResolvedSleepPolicy;
   updated_at: string;
@@ -60,12 +62,14 @@ export interface BrowserProfile extends LaunchProfileFields {
 export type CreateProfileInput = Partial<LaunchProfileFields> & {
   display_name?: string;
   notes?: string;
+  tags?: string[];
   profile_id: string;
 };
 
 export type UpdateProfileInput = Partial<LaunchProfileFields> & {
   display_name?: string;
   notes?: string;
+  tags?: string[];
   profile_id?: string;
 };
 
@@ -78,8 +82,7 @@ export interface ResolvedSleepPolicy {
 export const DEFAULT_SLEEP_POLICY_MINUTES = 30;
 
 export type ProfileIdValidationResult =
-  | { ok: true; profile_id: string }
-  | { error: string; ok: false };
+  { ok: true; profile_id: string } | { error: string; ok: false };
 
 export class ProfileValidationError extends Error {
   constructor(message: string) {
@@ -130,36 +133,51 @@ export function validateProfileId(value: unknown): ProfileIdValidationResult {
   return { ok: true, profile_id: value };
 }
 
-export function normalizeCreateProfileInput(input: unknown): CreateProfileInput {
+export function normalizeCreateProfileInput(
+  input: unknown
+): CreateProfileInput {
   if (!isRecord(input)) {
     throw new ProfileValidationError("Request body must be a JSON object");
   }
 
+  validateSupportedSettings(input);
   const profileId = validateProfileId(input.profile_id);
   if (!profileId.ok) {
     throw new ProfileValidationError(profileId.error);
   }
 
   return {
-    display_name: optionalString(input.display_name, "display_name") ?? profileId.profile_id,
+    display_name:
+      optionalString(input.display_name, "display_name")?.trim() ||
+      profileId.profile_id,
     notes: optionalString(input.notes, "notes") ?? "",
+    tags: normalizeTags(input.tags) ?? [],
     profile_id: profileId.profile_id,
     ...normalizeLaunchProfileFields(input, DEFAULT_LAUNCH_PROFILE_FIELDS)
   };
 }
 
-export function normalizeUpdateProfileInput(profileId: string, input: unknown): UpdateProfileInput {
+export function normalizeUpdateProfileInput(
+  profileId: string,
+  input: unknown
+): UpdateProfileInput {
   if (!isRecord(input)) {
     throw new ProfileValidationError("Request body must be a JSON object");
   }
 
+  validateSupportedSettings(input);
   if (input.profile_id !== undefined && input.profile_id !== profileId) {
     throw new ProfileValidationError("Profile ID is immutable");
   }
 
   return {
-    display_name: optionalString(input.display_name, "display_name"),
+    display_name:
+      input.display_name === undefined
+        ? undefined
+        : optionalString(input.display_name, "display_name")?.trim() ||
+          profileId,
     notes: optionalString(input.notes, "notes"),
+    tags: normalizeTags(input.tags),
     profile_id: input.profile_id === undefined ? undefined : profileId,
     ...normalizePartialLaunchProfileFields(input)
   };
@@ -179,7 +197,9 @@ export function maskProxyCredentials(proxy: string): string {
   return `${parsed.protocol}//${auth}${parsed.hostname}:${parsed.port}`;
 }
 
-export function redactProfileSecretsFromProfile(profile: BrowserProfile): BrowserProfile {
+export function redactProfileSecretsFromProfile(
+  profile: BrowserProfile
+): BrowserProfile {
   return {
     ...profile,
     cdp_token: null,
@@ -187,19 +207,34 @@ export function redactProfileSecretsFromProfile(profile: BrowserProfile): Browse
   };
 }
 
-export function redactProfileSecrets(message: string, cdpTokens: string[] = []): string {
+export function redactProfileSecrets(
+  message: string,
+  cdpTokens: string[] = []
+): string {
   return redactCdpTokens(message, cdpTokens).replace(
     /((?:https?|socks5):\/\/)([^:\s/@]+):([^@\s]+)@([^:\s/@]+):([0-9]+)/g,
-    (_match, scheme: string, username: string, _password: string, hostname: string, port: string) =>
-      `${scheme}${username}:***@${hostname}:${port}`
+    (
+      _match,
+      scheme: string,
+      username: string,
+      _password: string,
+      hostname: string,
+      port: string
+    ) => `${scheme}${username}:***@${hostname}:${port}`
   );
 }
 
-export function redactCdpTokens(message: string, cdpTokens: string[] = []): string {
+export function redactCdpTokens(
+  message: string,
+  cdpTokens: string[] = []
+): string {
   const queryRedacted = message.replace(/([?&]token=)[^&\s"')]+/g, "$1***");
   return cdpTokens
     .filter((token) => token.length > 0)
-    .reduce((redacted, token) => redacted.replaceAll(token, "***"), queryRedacted);
+    .reduce(
+      (redacted, token) => redacted.replaceAll(token, "***"),
+      queryRedacted
+    );
 }
 
 export function resolveSleepPolicy(
@@ -234,60 +269,141 @@ function normalizeLaunchProfileFields(
   defaults: LaunchProfileFields
 ): LaunchProfileFields {
   return {
-    clipboard_sync: optionalBoolean(input.clipboard_sync, "clipboard_sync") ?? defaults.clipboard_sync,
-    color_scheme: optionalColorScheme(input.color_scheme) ?? defaults.color_scheme,
-    custom_launch_args: optionalLaunchArgs(input.custom_launch_args) ?? defaults.custom_launch_args,
+    clipboard_sync:
+      optionalBoolean(input.clipboard_sync, "clipboard_sync") ??
+      defaults.clipboard_sync,
+    color_scheme:
+      optionalColorScheme(input.color_scheme) ?? defaults.color_scheme,
+    custom_launch_args:
+      optionalLaunchArgs(input.custom_launch_args) ??
+      defaults.custom_launch_args,
     fingerprint_seed:
       optionalString(input.fingerprint_seed, "fingerprint_seed") ||
       defaults.fingerprint_seed ||
       randomFingerprintSeed(),
     geoip: optionalString(input.geoip, "geoip") ?? defaults.geoip,
-    gpu_renderer: optionalString(input.gpu_renderer, "gpu_renderer") ?? defaults.gpu_renderer,
-    gpu_vendor: optionalString(input.gpu_vendor, "gpu_vendor") ?? defaults.gpu_vendor,
+    gpu_renderer:
+      optionalString(input.gpu_renderer, "gpu_renderer") ??
+      defaults.gpu_renderer,
+    gpu_vendor:
+      optionalString(input.gpu_vendor, "gpu_vendor") ?? defaults.gpu_vendor,
     hardware_concurrency:
-      optionalInteger(input.hardware_concurrency, "hardware_concurrency", 1, 256) ??
-      defaults.hardware_concurrency,
+      optionalInteger(
+        input.hardware_concurrency,
+        "hardware_concurrency",
+        1,
+        256
+      ) ?? defaults.hardware_concurrency,
     headless: optionalBoolean(input.headless, "headless") ?? defaults.headless,
-    human_preset: optionalString(input.human_preset, "human_preset") ?? defaults.human_preset,
+    human_preset:
+      optionalString(input.human_preset, "human_preset") ??
+      defaults.human_preset,
     humanize: optionalBoolean(input.humanize, "humanize") ?? defaults.humanize,
     locale: optionalString(input.locale, "locale") ?? defaults.locale,
     platform: optionalString(input.platform, "platform") ?? defaults.platform,
     proxy: optionalProxy(input.proxy) ?? defaults.proxy,
     screen_height:
-      optionalInteger(input.screen_height, "screen_height", 100, 10000) ?? defaults.screen_height,
-    screen_width: optionalInteger(input.screen_width, "screen_width", 100, 10000) ?? defaults.screen_width,
-    sleep_policy: optionalSleepPolicy(input.sleep_policy) ?? defaults.sleep_policy,
+      optionalInteger(input.screen_height, "screen_height", 100, 10000) ??
+      defaults.screen_height,
+    screen_width:
+      optionalInteger(input.screen_width, "screen_width", 100, 10000) ??
+      defaults.screen_width,
+    sleep_policy:
+      optionalSleepPolicy(input.sleep_policy) ?? defaults.sleep_policy,
     timezone: optionalString(input.timezone, "timezone") ?? defaults.timezone,
-    user_agent: optionalString(input.user_agent, "user_agent") ?? defaults.user_agent
+    user_agent:
+      optionalString(input.user_agent, "user_agent") ?? defaults.user_agent
   };
 }
 
-function normalizePartialLaunchProfileFields(input: Record<string, unknown>): Partial<LaunchProfileFields> {
+function normalizePartialLaunchProfileFields(
+  input: Record<string, unknown>
+): Partial<LaunchProfileFields> {
   const fields: Partial<LaunchProfileFields> = {};
 
-  assignIfPresent(fields, "clipboard_sync", optionalBoolean(input.clipboard_sync, "clipboard_sync"));
-  assignIfPresent(fields, "color_scheme", optionalColorScheme(input.color_scheme));
-  assignIfPresent(fields, "custom_launch_args", optionalLaunchArgs(input.custom_launch_args));
-  assignIfPresent(fields, "fingerprint_seed", optionalString(input.fingerprint_seed, "fingerprint_seed"));
+  assignIfPresent(
+    fields,
+    "clipboard_sync",
+    optionalBoolean(input.clipboard_sync, "clipboard_sync")
+  );
+  assignIfPresent(
+    fields,
+    "color_scheme",
+    optionalColorScheme(input.color_scheme)
+  );
+  assignIfPresent(
+    fields,
+    "custom_launch_args",
+    optionalLaunchArgs(input.custom_launch_args)
+  );
+  assignIfPresent(
+    fields,
+    "fingerprint_seed",
+    optionalString(input.fingerprint_seed, "fingerprint_seed")
+  );
   assignIfPresent(fields, "geoip", optionalString(input.geoip, "geoip"));
-  assignIfPresent(fields, "gpu_renderer", optionalString(input.gpu_renderer, "gpu_renderer"));
-  assignIfPresent(fields, "gpu_vendor", optionalString(input.gpu_vendor, "gpu_vendor"));
+  assignIfPresent(
+    fields,
+    "gpu_renderer",
+    optionalString(input.gpu_renderer, "gpu_renderer")
+  );
+  assignIfPresent(
+    fields,
+    "gpu_vendor",
+    optionalString(input.gpu_vendor, "gpu_vendor")
+  );
   assignIfPresent(
     fields,
     "hardware_concurrency",
     optionalInteger(input.hardware_concurrency, "hardware_concurrency", 1, 256)
   );
-  assignIfPresent(fields, "headless", optionalBoolean(input.headless, "headless"));
-  assignIfPresent(fields, "human_preset", optionalString(input.human_preset, "human_preset"));
-  assignIfPresent(fields, "humanize", optionalBoolean(input.humanize, "humanize"));
+  assignIfPresent(
+    fields,
+    "headless",
+    optionalBoolean(input.headless, "headless")
+  );
+  assignIfPresent(
+    fields,
+    "human_preset",
+    optionalString(input.human_preset, "human_preset")
+  );
+  assignIfPresent(
+    fields,
+    "humanize",
+    optionalBoolean(input.humanize, "humanize")
+  );
   assignIfPresent(fields, "locale", optionalString(input.locale, "locale"));
-  assignIfPresent(fields, "platform", optionalString(input.platform, "platform"));
+  assignIfPresent(
+    fields,
+    "platform",
+    optionalString(input.platform, "platform")
+  );
   assignIfPresent(fields, "proxy", optionalProxy(input.proxy));
-  assignIfPresent(fields, "screen_height", optionalInteger(input.screen_height, "screen_height", 100, 10000));
-  assignIfPresent(fields, "screen_width", optionalInteger(input.screen_width, "screen_width", 100, 10000));
-  assignIfPresent(fields, "sleep_policy", optionalSleepPolicy(input.sleep_policy));
-  assignIfPresent(fields, "timezone", optionalString(input.timezone, "timezone"));
-  assignIfPresent(fields, "user_agent", optionalString(input.user_agent, "user_agent"));
+  assignIfPresent(
+    fields,
+    "screen_height",
+    optionalInteger(input.screen_height, "screen_height", 100, 10000)
+  );
+  assignIfPresent(
+    fields,
+    "screen_width",
+    optionalInteger(input.screen_width, "screen_width", 100, 10000)
+  );
+  assignIfPresent(
+    fields,
+    "sleep_policy",
+    optionalSleepPolicy(input.sleep_policy)
+  );
+  assignIfPresent(
+    fields,
+    "timezone",
+    optionalString(input.timezone, "timezone")
+  );
+  assignIfPresent(
+    fields,
+    "user_agent",
+    optionalString(input.user_agent, "user_agent")
+  );
 
   return fields;
 }
@@ -314,7 +430,10 @@ function optionalString(value: unknown, fieldName: string): string | undefined {
   return value;
 }
 
-function optionalBoolean(value: unknown, fieldName: string): boolean | undefined {
+function optionalBoolean(
+  value: unknown,
+  fieldName: string
+): boolean | undefined {
   if (value === undefined) {
     return undefined;
   }
@@ -336,8 +455,15 @@ function optionalInteger(
     return undefined;
   }
 
-  if (typeof value !== "number" || !Number.isInteger(value) || value < minimum || value > maximum) {
-    throw new ProfileValidationError(`${fieldName} must be an integer between ${minimum} and ${maximum}`);
+  if (
+    typeof value !== "number" ||
+    !Number.isInteger(value) ||
+    value < minimum ||
+    value > maximum
+  ) {
+    throw new ProfileValidationError(
+      `${fieldName} must be an integer between ${minimum} and ${maximum}`
+    );
   }
 
   return value;
@@ -349,7 +475,9 @@ function optionalColorScheme(value: unknown): ColorScheme | undefined {
   }
 
   if (value !== "light" && value !== "dark" && value !== "system") {
-    throw new ProfileValidationError("color_scheme must be light, dark, or system");
+    throw new ProfileValidationError(
+      "color_scheme must be light, dark, or system"
+    );
   }
 
   return value;
@@ -361,7 +489,9 @@ function optionalSleepPolicy(value: unknown): SleepPolicy | undefined {
   }
 
   if (!isRecord(value) || typeof value.mode !== "string") {
-    throw new ProfileValidationError("sleep_policy.mode must be default, minutes, or never");
+    throw new ProfileValidationError(
+      "sleep_policy.mode must be default, minutes, or never"
+    );
   }
 
   if (value.mode === "default" || value.mode === "never") {
@@ -375,13 +505,22 @@ function optionalSleepPolicy(value: unknown): SleepPolicy | undefined {
     };
   }
 
-  throw new ProfileValidationError("sleep_policy.mode must be default, minutes, or never");
+  throw new ProfileValidationError(
+    "sleep_policy.mode must be default, minutes, or never"
+  );
 }
 
-function requiredInteger(value: unknown, fieldName: string, minimum: number, maximum: number): number {
+function requiredInteger(
+  value: unknown,
+  fieldName: string,
+  minimum: number,
+  maximum: number
+): number {
   const parsed = optionalInteger(value, fieldName, minimum, maximum);
   if (parsed === undefined) {
-    throw new ProfileValidationError(`${fieldName} must be an integer between ${minimum} and ${maximum}`);
+    throw new ProfileValidationError(
+      `${fieldName} must be an integer between ${minimum} and ${maximum}`
+    );
   }
 
   return parsed;
@@ -407,7 +546,13 @@ function parseProxyUrl(proxy: string): {
     const parts = proxy.split(":");
     if (parts.length === 2) {
       validateProxyHostPort(parts[0], parts[1]);
-      return { hostname: parts[0]!, password: "", port: parts[1]!, protocol: "http:", username: "" };
+      return {
+        hostname: parts[0]!,
+        password: "",
+        port: parts[1]!,
+        protocol: "http:",
+        username: ""
+      };
     }
 
     if (parts.length === 4) {
@@ -431,8 +576,14 @@ function parseProxyUrl(proxy: string): {
     throw new ProfileValidationError("proxy must be a valid URL");
   }
 
-  if (url.protocol !== "http:" && url.protocol !== "https:" && url.protocol !== "socks5:") {
-    throw new ProfileValidationError("proxy scheme must be http, https, or socks5");
+  if (
+    url.protocol !== "http:" &&
+    url.protocol !== "https:" &&
+    url.protocol !== "socks5:"
+  ) {
+    throw new ProfileValidationError(
+      "proxy scheme must be http, https, or socks5"
+    );
   }
 
   if (!url.hostname || !url.port) {
@@ -448,7 +599,10 @@ function parseProxyUrl(proxy: string): {
   };
 }
 
-function validateProxyHostPort(hostname: string | undefined, port: string | undefined): void {
+function validateProxyHostPort(
+  hostname: string | undefined,
+  port: string | undefined
+): void {
   if (!hostname || !port) {
     throw new ProfileValidationError("proxy must include a hostname and port");
   }
@@ -459,7 +613,10 @@ function validateProxyHostPort(hostname: string | undefined, port: string | unde
 }
 
 function formatProxy(proxy: ReturnType<typeof parseProxyUrl>): string {
-  const auth = proxy.username || proxy.password ? `${proxy.username}:${proxy.password}@` : "";
+  const auth =
+    proxy.username || proxy.password
+      ? `${proxy.username}:${proxy.password}@`
+      : "";
   return `${proxy.protocol}//${auth}${proxy.hostname}:${proxy.port}`;
 }
 
@@ -468,8 +625,13 @@ function optionalLaunchArgs(value: unknown): string[] | undefined {
     return undefined;
   }
 
-  if (!Array.isArray(value) || !value.every((entry) => typeof entry === "string")) {
-    throw new ProfileValidationError("custom_launch_args must be an array of strings");
+  if (
+    !Array.isArray(value) ||
+    !value.every((entry) => typeof entry === "string")
+  ) {
+    throw new ProfileValidationError(
+      "custom_launch_args must be an array of strings"
+    );
   }
 
   validateCustomLaunchArgs(value);
@@ -478,7 +640,9 @@ function optionalLaunchArgs(value: unknown): string[] | undefined {
 
 export function validateCustomLaunchArgs(value: string[]): void {
   for (const arg of value) {
-    const ownedFlag = CLOAKHUB_OWNED_LAUNCH_FLAGS.find((flag) => arg === flag || arg.startsWith(`${flag}=`));
+    const ownedFlag = CLOAKHUB_OWNED_LAUNCH_FLAGS.find(
+      (flag) => arg === flag || arg.startsWith(`${flag}=`)
+    );
     if (ownedFlag) {
       throw new ProfileValidationError(
         `custom_launch_args cannot include CloakHub-owned flag ${ownedFlag}`
@@ -493,4 +657,48 @@ function randomFingerprintSeed(): string {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+export function validateSupportedSettings(
+  input: Record<string, unknown> | BrowserProfile
+): void {
+  if (input.humanize || input.human_preset || input.geoip) {
+    throw new ProfileValidationError(
+      "Humanize and automatic GeoIP are not supported by this runtime. Clear these settings and choose an explicit timezone and locale."
+    );
+  }
+  if (typeof input.timezone === "string" && input.timezone) {
+    try {
+      new Intl.DateTimeFormat("en", { timeZone: input.timezone });
+    } catch {
+      throw new ProfileValidationError(
+        "timezone must be a valid IANA timezone"
+      );
+    }
+  }
+  if (typeof input.locale === "string" && input.locale) {
+    try {
+      Intl.getCanonicalLocales(input.locale);
+    } catch {
+      throw new ProfileValidationError(
+        "locale must be a valid language tag, such as en-US"
+      );
+    }
+  }
+}
+
+function normalizeTags(value: unknown): string[] | undefined {
+  if (value === undefined) return undefined;
+  if (
+    !Array.isArray(value) ||
+    value.length > 20 ||
+    value.some(
+      (tag) => typeof tag !== "string" || !tag.trim() || tag.length > 40
+    )
+  ) {
+    throw new ProfileValidationError(
+      "tags must contain at most 20 nonempty names, up to 40 characters each"
+    );
+  }
+  return [...new Set(value.map((tag) => tag.trim()))];
 }

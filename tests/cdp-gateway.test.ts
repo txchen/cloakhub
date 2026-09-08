@@ -231,6 +231,7 @@ function fakeRuntime(options: { startError?: Error } = {}): BrowserRuntime & { c
 
   return {
     calls,
+    deleteProfile: async (_id, removeData) => { await removeData(); },
     cleanupOwnedProcessesOnStartup: async () => undefined,
     activeCdpSessionCount: () => 0,
     activeManualViewerCount: () => 0,

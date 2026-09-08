@@ -7,8 +7,16 @@ import {
   createRuntimeCapacity,
   type RuntimeCapacityRunningInstance
 } from "./runtime-capacity";
-import { createOwnedProcessRegistry, type OwnedProcessRegistry } from "./owned-process";
-import { validateCustomLaunchArgs, type BrowserProfile, type StopReason } from "./profile";
+import {
+  createOwnedProcessRegistry,
+  type OwnedProcessRegistry
+} from "./owned-process";
+import {
+  validateSupportedSettings,
+  validateCustomLaunchArgs,
+  type BrowserProfile,
+  type StopReason
+} from "./profile";
 import type { ProfileRepository } from "./profile-repository";
 
 export { CapacityUnavailableError };
@@ -17,6 +25,9 @@ export interface BrowserLaunchCommand {
   browserBin: string;
   cdpPort: number;
   customLaunchArgs: string[];
+  timezone?: string;
+  locale?: string;
+  colorScheme?: "light" | "dark" | "system";
   display?: string;
   fingerprintSeed: string;
   gpuRenderer: string;
@@ -44,6 +55,7 @@ export interface BrowserProcessLauncher {
 }
 
 export interface BrowserDisplayRuntimeCommand {
+  clipboardSync?: boolean;
   displayNumber: number;
   profileId: string;
   screenHeight: number;
@@ -120,6 +132,7 @@ export interface BrowserRuntimeManualViewer {
 }
 
 export interface BrowserRuntimeManualViewerState {
+  clipboard_sync?: boolean;
   display: string;
   profile_id: string;
   vnc_port: number;
@@ -139,7 +152,9 @@ export interface BrowserRuntime {
   cleanupOwnedProcessesOnStartup(): Promise<void>;
   activeCdpSessionCount(profileId: string): number;
   activeManualViewerCount(profileId: string): number;
-  cdpSessionObservations(profileId: string): BrowserRuntimeCdpSessionObservation[];
+  cdpSessionObservations(
+    profileId: string
+  ): BrowserRuntimeCdpSessionObservation[];
   lastManualInputAt(profileId: string): string | null;
   openCdpSession(
     profileId: string,
@@ -151,6 +166,10 @@ export interface BrowserRuntime {
   readManualClipboard(profileId: string): Promise<string>;
   restart(profileId: string): Promise<BrowserRuntimeState>;
   shutdown(): Promise<void>;
+  deleteProfile(
+    profileId: string,
+    removeData: () => Promise<void>
+  ): Promise<void>;
   spinDownIdleInstances(): Promise<IdleSpinDownResult[]>;
   start(profileId: string): Promise<BrowserRuntimeState>;
   stop(profileId: string, reason?: StopReason): Promise<BrowserRuntimeState>;
@@ -162,7 +181,7 @@ interface RunningInstance {
   display?: string;
   displayNumber?: number;
   displayHandle?: BrowserProcessHandle;
-  handle: BrowserProcessHandle;
+  handle?: BrowserProcessHandle;
   vncPort?: number;
 }
 
@@ -190,7 +209,9 @@ const cdpReadinessProbe: BrowserReadinessProbe = {
 
     while (Date.now() <= deadline) {
       try {
-        const response = await fetch(`http://127.0.0.1:${state.cdp_port}/json/version`);
+        const response = await fetch(
+          `http://127.0.0.1:${state.cdp_port}/json/version`
+        );
         if (response.ok) {
           return;
         }
@@ -203,7 +224,9 @@ const cdpReadinessProbe: BrowserReadinessProbe = {
       await Bun.sleep(DEFAULT_READY_POLL_MS);
     }
 
-    throw new Error(`Browser Instance CDP endpoint was not ready: ${lastError}`);
+    throw new Error(
+      `Browser Instance CDP endpoint was not ready: ${lastError}`
+    );
   }
 };
 const vncReadinessProbe: BrowserManualReadinessProbe = {
@@ -226,23 +249,34 @@ const vncReadinessProbe: BrowserManualReadinessProbe = {
       await Bun.sleep(DEFAULT_READY_POLL_MS);
     }
 
-    throw new Error(`Browser Instance VNC endpoint was not ready: ${lastError}`);
+    throw new Error(
+      `Browser Instance VNC endpoint was not ready: ${lastError}`
+    );
   }
 };
 
-export function createBrowserRuntime(options: BrowserRuntimeOptions): BrowserRuntime {
+export function createBrowserRuntime(
+  options: BrowserRuntimeOptions
+): BrowserRuntime {
   const activeCdpSessions = new Map<string, ActiveCdpSession[]>();
   const activeManualViewers = new Map<string, ActiveManualViewer[]>();
   const lastActivityMs = new Map<string, number>();
   const lastManualInputActivityMs = new Map<string, number>();
   const lastManualInputObservedMs = new Map<string, number>();
-  const launchAttempts = new Map<string, Promise<BrowserRuntimeState>>();
+  const operations = new Map<
+    string,
+    { kind: string; promise: Promise<unknown> }
+  >();
+  let shuttingDown = false;
   const runningInstances = new Map<string, RunningInstance>();
   const clientConnections = options.clientConnections ?? noopClientConnections;
   const now = options.now ?? (() => new Date());
   const monotonicNow = options.monotonicNow ?? (() => performance.now());
-  const ownedProcesses = options.ownedProcesses ?? createOwnedProcessRegistry({ dataRoot: options.dataRoot });
-  const manualReadinessProbe = options.manualReadinessProbe ?? vncReadinessProbe;
+  const ownedProcesses =
+    options.ownedProcesses ??
+    createOwnedProcessRegistry({ dataRoot: options.dataRoot });
+  const manualReadinessProbe =
+    options.manualReadinessProbe ?? vncReadinessProbe;
   const capacity = createRuntimeCapacity({
     cdpPortStart: options.cdpPortStart,
     displayNumberStart: options.displayNumberStart,
@@ -266,7 +300,9 @@ export function createBrowserRuntime(options: BrowserRuntimeOptions): BrowserRun
       return activeManualViewers.get(profileId)?.length ?? 0;
     },
 
-    cdpSessionObservations(profileId: string): BrowserRuntimeCdpSessionObservation[] {
+    cdpSessionObservations(
+      profileId: string
+    ): BrowserRuntimeCdpSessionObservation[] {
       return (activeCdpSessions.get(profileId) ?? []).map((session) => ({
         duration_ms: monotonicNow() - session.startedAtMs,
         remote_address: session.remoteAddress ?? null,
@@ -295,7 +331,10 @@ export function createBrowserRuntime(options: BrowserRuntimeOptions): BrowserRun
         startedAtMs: monotonicNow(),
         startedAtWallClock: nowIso(now)
       };
-      activeCdpSessions.set(profileId, [...(activeCdpSessions.get(profileId) ?? []), session]);
+      activeCdpSessions.set(profileId, [
+        ...(activeCdpSessions.get(profileId) ?? []),
+        session
+      ]);
       recordActivity(profileId);
       let closed = false;
 
@@ -322,7 +361,9 @@ export function createBrowserRuntime(options: BrowserRuntimeOptions): BrowserRun
       };
     },
 
-    async openManualViewer(profileId: string): Promise<BrowserRuntimeManualViewerState> {
+    async openManualViewer(
+      profileId: string
+    ): Promise<BrowserRuntimeManualViewerState> {
       const profile = requireProfile(options.repository, profileId);
       if (profile.headless) {
         throw new UnsupportedManualViewerProfileError(profile.profile_id);
@@ -330,7 +371,9 @@ export function createBrowserRuntime(options: BrowserRuntimeOptions): BrowserRun
 
       const state = await this.start(profileId);
       if (state.display === undefined || state.vnc_port === undefined) {
-        throw new Error(`Browser Profile "${profileId}" did not expose a manual viewer endpoint`);
+        throw new Error(
+          `Browser Profile "${profileId}" did not expose a manual viewer endpoint`
+        );
       }
 
       await manualReadinessProbe.waitUntilReady(state);
@@ -339,6 +382,7 @@ export function createBrowserRuntime(options: BrowserRuntimeOptions): BrowserRun
         display: state.display,
         profile_id: profile.profile_id,
         vnc_port: state.vnc_port,
+        clipboard_sync: profile.clipboard_sync,
         vnc_ws_path: `/ui/profiles/${encodeURIComponent(profile.profile_id)}/vnc`
       };
     },
@@ -350,7 +394,10 @@ export function createBrowserRuntime(options: BrowserRuntimeOptions): BrowserRun
       }
 
       const viewer: ActiveManualViewer = { id: nextManualViewerId++ };
-      activeManualViewers.set(profileId, [...(activeManualViewers.get(profileId) ?? []), viewer]);
+      activeManualViewers.set(profileId, [
+        ...(activeManualViewers.get(profileId) ?? []),
+        viewer
+      ]);
       let closed = false;
 
       return {
@@ -387,9 +434,14 @@ export function createBrowserRuntime(options: BrowserRuntimeOptions): BrowserRun
         throw new UnsupportedManualViewerProfileError(profile.profile_id);
       }
 
+      if (!profile.clipboard_sync)
+        throw new Error("Clipboard sync is disabled for this profile");
+
       const running = runningInstances.get(profile.profile_id);
       if (!running) {
-        throw new Error(`Browser Profile "${profile.profile_id}" is not running`);
+        throw new Error(
+          `Browser Profile "${profile.profile_id}" is not running`
+        );
       }
       if (!options.clipboardReader) {
         throw new Error("Manual clipboard reader is unavailable");
@@ -399,57 +451,80 @@ export function createBrowserRuntime(options: BrowserRuntimeOptions): BrowserRun
     },
 
     async restart(profileId: string): Promise<BrowserRuntimeState> {
-      await this.stop(profileId, "restart");
-
-      return this.start(profileId);
+      assertAcceptingStarts();
+      return serialize(profileId, "restart", async () => {
+        await stopProfile(
+          requireProfile(options.repository, profileId),
+          "restart",
+          { recordActivity: true }
+        );
+        return launchProfile(requireProfile(options.repository, profileId));
+      });
     },
 
     async shutdown(): Promise<void> {
-      const stopResults = await Promise.allSettled(
-        Array.from(runningInstances.keys()).map(async (profileId) => {
-          const profile = options.repository.get(profileId);
-          if (!profile) {
-            return;
-          }
-
-          await stopProfile(profile, "shutdown", { recordActivity: false });
-        })
+      shuttingDown = true;
+      const ids = new Set([...runningInstances.keys(), ...operations.keys()]);
+      const results = await Promise.allSettled(
+        [...ids].map((profileId) =>
+          serialize(profileId, "shutdown", async () => {
+            const profile = options.repository.get(profileId);
+            if (profile)
+              await stopProfile(profile, "shutdown", { recordActivity: false });
+          })
+        )
       );
-
       await ownedProcesses.cleanupOwnedProcesses();
       options.repository.markAllStopped("shutdown", nowIso(now));
-
-      const rejected = stopResults.find((result) => result.status === "rejected");
-      if (rejected) {
-        throw rejected.reason;
-      }
+      const failure = results.find((result) => result.status === "rejected");
+      if (failure?.status === "rejected") throw failure.reason;
     },
 
     async start(profileId: string): Promise<BrowserRuntimeState> {
-      const profile = requireProfile(options.repository, profileId);
-      const running = runningInstances.get(profile.profile_id);
-      if (running) {
-        return runningState(profile.profile_id, running);
-      }
-
-      const launchAttempt = launchAttempts.get(profile.profile_id);
-      if (launchAttempt) {
-        return launchAttempt;
-      }
-
-      const nextLaunchAttempt = launchProfile(profile);
-      launchAttempts.set(profile.profile_id, nextLaunchAttempt);
-
-      try {
-        return await nextLaunchAttempt;
-      } finally {
-        launchAttempts.delete(profile.profile_id);
-      }
+      assertAcceptingStarts();
+      const pending = operations.get(profileId);
+      if (pending?.kind === "start")
+        return pending.promise as Promise<BrowserRuntimeState>;
+      return serialize(profileId, "start", async () => {
+        const profile = requireProfile(options.repository, profileId);
+        const running = runningInstances.get(profileId);
+        if (running && profile.instance_status === "running")
+          return runningState(profileId, running);
+        // A previous cleanup failure retains ownership; retry cleanup before reusing its ports.
+        if (running)
+          await stopProfile(profile, "launch failure", {
+            recordActivity: false
+          });
+        return launchProfile(requireProfile(options.repository, profileId));
+      });
     },
 
-    async stop(profileId: string, reason: StopReason = "manual stop"): Promise<BrowserRuntimeState> {
-      const profile = requireProfile(options.repository, profileId);
-      return stopProfile(profile, reason, { recordActivity: true });
+    async stop(
+      profileId: string,
+      reason: StopReason = "manual stop"
+    ): Promise<BrowserRuntimeState> {
+      return serialize(profileId, "stop", () =>
+        stopProfile(requireProfile(options.repository, profileId), reason, {
+          recordActivity: true
+        })
+      );
+    },
+
+    async deleteProfile(
+      profileId: string,
+      removeData: () => Promise<void>
+    ): Promise<void> {
+      return serialize(profileId, "delete", async () => {
+        await stopProfile(
+          requireProfile(options.repository, profileId),
+          "manual stop",
+          { recordActivity: false }
+        );
+        await removeData();
+        lastActivityMs.delete(profileId);
+        lastManualInputActivityMs.delete(profileId);
+        lastManualInputObservedMs.delete(profileId);
+      });
     },
 
     async writeManualClipboard(profileId: string, text: string): Promise<void> {
@@ -458,9 +533,14 @@ export function createBrowserRuntime(options: BrowserRuntimeOptions): BrowserRun
         throw new UnsupportedManualViewerProfileError(profile.profile_id);
       }
 
+      if (!profile.clipboard_sync)
+        throw new Error("Clipboard sync is disabled for this profile");
+
       const running = runningInstances.get(profile.profile_id);
       if (!running?.display) {
-        throw new Error(`Browser Profile "${profile.profile_id}" does not have a running manual viewer display`);
+        throw new Error(
+          `Browser Profile "${profile.profile_id}" does not have a running manual viewer display`
+        );
       }
 
       if (!options.clipboardWriter) {
@@ -480,16 +560,25 @@ export function createBrowserRuntime(options: BrowserRuntimeOptions): BrowserRun
         }
 
         const idleWindowMinutes = profile.sleep_policy_status.effective_minutes;
-        if (idleWindowMinutes === null || this.activeCdpSessionCount(profileId) > 0) {
+        if (
+          idleWindowMinutes === null ||
+          this.activeCdpSessionCount(profileId) > 0
+        ) {
           continue;
         }
 
         const lastActivity = lastActivityMs.get(profileId);
-        if (lastActivity === undefined || monotonicNow() - lastActivity < idleWindowMinutes * 60 * 1000) {
+        if (
+          lastActivity === undefined ||
+          monotonicNow() - lastActivity < idleWindowMinutes * 60 * 1000
+        ) {
           continue;
         }
 
-        await stopProfile(profile, "idle timeout", { recordActivity: false });
+        if (operations.has(profileId)) continue;
+        await serialize(profileId, "idle", () =>
+          stopProfile(profile, "idle timeout", { recordActivity: false })
+        );
         results.push({ profile_id: profileId, reason: "idle timeout" });
       }
 
@@ -497,29 +586,48 @@ export function createBrowserRuntime(options: BrowserRuntimeOptions): BrowserRun
     }
   };
 
-  async function launchProfile(profile: BrowserProfile): Promise<BrowserRuntimeState> {
+  async function launchProfile(
+    profile: BrowserProfile
+  ): Promise<BrowserRuntimeState> {
     const reservationResult = capacity.reserve(profile, {
       preempt: async (candidate) => {
-        await stopProfile(candidate, "capacity preemption", { recordActivity: false });
+        await serialize(candidate.profile_id, "preempt", () =>
+          stopProfile(candidate, "capacity preemption", {
+            recordActivity: false
+          })
+        );
       },
       runningInstances: capacityRunningInstances
     });
-    const reservation = isPromiseLike(reservationResult) ? await reservationResult : reservationResult;
+    const reservation = isPromiseLike(reservationResult)
+      ? await reservationResult
+      : reservationResult;
     const { cdpPort, display, displayNumber, vncPort } = reservation;
     options.repository.markStarting(profile.profile_id);
 
+    const resources: RunningInstance = {
+      cdpPort,
+      display,
+      displayNumber,
+      vncPort
+    };
+    runningInstances.set(profile.profile_id, resources);
     try {
-      let handle: BrowserProcessHandle | undefined;
-      let displayHandle: BrowserProcessHandle | undefined;
+      validateSupportedSettings(profile);
       validateCustomLaunchArgs(profile.custom_launch_args);
 
       if (!profile.headless) {
-        if (!options.displayRuntime || displayNumber === undefined || vncPort === undefined) {
+        if (
+          !options.displayRuntime ||
+          displayNumber === undefined ||
+          vncPort === undefined
+        ) {
           throw new MissingDisplayRuntimeError();
         }
 
-        displayHandle = await options.displayRuntime.start({
+        resources.displayHandle = await options.displayRuntime.start({
           displayNumber,
+          clipboardSync: profile.clipboard_sync,
           profileId: profile.profile_id,
           screenHeight: profile.screen_height,
           screenWidth: profile.screen_width,
@@ -527,10 +635,13 @@ export function createBrowserRuntime(options: BrowserRuntimeOptions): BrowserRun
         });
       }
 
-      handle = await options.launcher.launch({
+      resources.handle = await options.launcher.launch({
         browserBin: options.browserBin,
         cdpPort,
         customLaunchArgs: profile.custom_launch_args,
+        timezone: profile.timezone,
+        locale: profile.locale,
+        colorScheme: profile.color_scheme,
         display,
         fingerprintSeed: profile.fingerprint_seed,
         gpuRenderer: profile.gpu_renderer,
@@ -546,60 +657,76 @@ export function createBrowserRuntime(options: BrowserRuntimeOptions): BrowserRun
         userDataDir: join(options.dataRoot, "profiles", profile.profile_id)
       });
 
-      runningInstances.set(profile.profile_id, {
-        cdpPort,
-        display,
-        displayNumber,
-        displayHandle,
-        handle,
-        vncPort
-      });
-      superviseUnexpectedExit(profile.profile_id, handle);
-      const state = runningState(profile.profile_id, {
-        cdpPort,
-        display,
-        displayNumber,
-        displayHandle,
-        handle,
-        vncPort
-      });
-      try {
-        await readinessProbe.waitUntilReady(state);
-      } catch (error) {
-        await stopLaunchedProcess(profile.profile_id, handle, displayHandle);
-        throw error;
-      }
-
+      const state = runningState(profile.profile_id, resources);
+      await readinessProbe.waitUntilReady(state);
+      superviseUnexpectedExit(profile.profile_id, resources.handle);
       const occurredAt = nowIso(now);
       options.repository.markRunning(profile.profile_id, occurredAt);
       recordActivity(profile.profile_id, occurredAt);
 
       return state;
     } catch (error) {
-      capacity.release(profile.profile_id);
-      runningInstances.delete(profile.profile_id);
-      options.repository.markLaunchFailed(profile.profile_id, errorMessage(error), nowIso(now));
+      try {
+        await releaseResources(profile.profile_id, resources);
+      } catch (cleanupError) {
+        error = new AggregateError(
+          [error, cleanupError],
+          `${errorMessage(error)}; cleanup failed: ${errorMessage(cleanupError)}`
+        );
+      }
+      options.repository.markLaunchFailed(
+        profile.profile_id,
+        errorMessage(error),
+        nowIso(now)
+      );
       throw error;
     }
   }
 
-  async function stopLaunchedProcess(
+  // Keep ownership and the capacity reservation until every process has been reaped.
+  async function releaseResources(
     profileId: string,
-    handle: BrowserProcessHandle,
-    displayHandle: BrowserProcessHandle | undefined
+    resources: RunningInstance
   ): Promise<void> {
+    const handles = [resources.handle, resources.displayHandle].filter(
+      (handle): handle is BrowserProcessHandle => handle !== undefined
+    );
+    // Give the browser time to flush its profile before stopping its display.
+    const errors: unknown[] = [];
+    for (const handle of handles) {
+      try {
+        try {
+          await handle.close();
+        } catch {
+          /* hard-kill fallback below */
+        }
+        await wait(stopGraceMs);
+        if (!(await handle.hasExited())) {
+          await handle.kill();
+          let timeout: ReturnType<typeof setTimeout> | undefined;
+          try {
+            await Promise.race([
+              handle.exited(),
+              new Promise<never>((_resolve, reject) => {
+                timeout = setTimeout(
+                  () =>
+                    reject(new Error("Process did not exit after forced stop")),
+                  5000
+                );
+              })
+            ]);
+          } finally {
+            clearTimeout(timeout);
+          }
+        }
+      } catch (error) {
+        errors.push(error);
+      }
+    }
+    if (errors.length)
+      throw new AggregateError(errors, "Could not stop all instance processes");
     runningInstances.delete(profileId);
-    await handle.close();
-    await displayHandle?.close();
-    await wait(stopGraceMs);
-
-    if (!(await handle.hasExited())) {
-      await handle.kill();
-    }
-
-    if (displayHandle && !(await displayHandle.hasExited())) {
-      await displayHandle.kill();
-    }
+    capacity.release(profileId);
   }
 
   async function stopProfile(
@@ -616,43 +743,65 @@ export function createBrowserRuntime(options: BrowserRuntimeOptions): BrowserRun
 
     await clientConnections.disconnect(profile.profile_id, reason);
 
-    if (running) {
-      runningInstances.delete(profile.profile_id);
-      capacity.release(profile.profile_id);
-      activeCdpSessions.delete(profile.profile_id);
-      activeManualViewers.delete(profile.profile_id);
-      await running.handle.close();
-      await running.displayHandle?.close();
-      await wait(stopGraceMs);
-
-      if (!(await running.handle.hasExited())) {
-        await running.handle.kill();
-      }
-
-      if (running.displayHandle && !(await running.displayHandle.hasExited())) {
-        await running.displayHandle.kill();
-      }
-    }
+    activeCdpSessions.delete(profile.profile_id);
+    activeManualViewers.delete(profile.profile_id);
+    if (running) await releaseResources(profile.profile_id, running);
 
     options.repository.markStopped(profile.profile_id, reason, nowIso(now));
 
-    return { cdp_port: running?.cdpPort ?? -1, profile_id: profile.profile_id, status: "stopped" };
+    return {
+      cdp_port: running?.cdpPort ?? -1,
+      profile_id: profile.profile_id,
+      status: "stopped"
+    };
   }
 
-  function superviseUnexpectedExit(profileId: string, handle: BrowserProcessHandle): void {
+  function superviseUnexpectedExit(
+    profileId: string,
+    handle: BrowserProcessHandle
+  ): void {
     void handle
       .exited()
-      .then(() => {
-        const running = runningInstances.get(profileId);
-        if (running?.handle !== handle) {
-          return;
-        }
+      .then(() =>
+        serialize(profileId, "crash", async () => {
+          if (runningInstances.get(profileId)?.handle !== handle) return;
+          await stopProfile(
+            requireProfile(options.repository, profileId),
+            "crash",
+            { recordActivity: false }
+          );
+        })
+      )
+      .catch((error) => {
+        if (options.repository.get(profileId))
+          options.repository.markFailed(
+            profileId,
+            errorMessage(error),
+            nowIso(now)
+          );
+      });
+  }
 
-        runningInstances.delete(profileId);
-        capacity.release(profileId);
-        options.repository.markStopped(profileId, "crash", nowIso(now));
-      })
-      .catch(() => undefined);
+  function assertAcceptingStarts(): void {
+    if (shuttingDown) throw new Error("CloakHub is shutting down");
+  }
+
+  function serialize<T>(
+    profileId: string,
+    kind: string,
+    action: () => Promise<T>
+  ): Promise<T> {
+    const previous = operations.get(profileId);
+    const promise = previous
+      ? previous.promise.catch(() => undefined).then(action)
+      : action();
+    const operation = { kind, promise };
+    operations.set(profileId, operation);
+    const clear = () => {
+      if (operations.get(profileId) === operation) operations.delete(profileId);
+    };
+    void promise.then(clear, clear);
+    return promise;
   }
 
   function recordActivity(profileId: string, occurredAt = nowIso(now)): void {
@@ -664,7 +813,10 @@ export function createBrowserRuntime(options: BrowserRuntimeOptions): BrowserRun
     const current = monotonicNow();
     lastManualInputObservedMs.set(profileId, current);
     const lastRecorded = lastManualInputActivityMs.get(profileId);
-    if (lastRecorded !== undefined && current - lastRecorded < MANUAL_INPUT_ACTIVITY_THROTTLE_MS) {
+    if (
+      lastRecorded !== undefined &&
+      current - lastRecorded < MANUAL_INPUT_ACTIVITY_THROTTLE_MS
+    ) {
       return;
     }
 
@@ -675,10 +827,14 @@ export function createBrowserRuntime(options: BrowserRuntimeOptions): BrowserRun
   }
 
   function capacityRunningInstances(): RuntimeCapacityRunningInstance[] {
-    return Array.from(runningInstances.entries())
-      .flatMap(([profileId, running]) => {
+    return Array.from(runningInstances.entries()).flatMap(
+      ([profileId, running]) => {
         const profile = options.repository.get(profileId);
-        if (!profile) {
+        if (
+          !profile ||
+          profile.instance_status !== "running" ||
+          operations.has(profileId)
+        ) {
           return [];
         }
 
@@ -703,10 +859,14 @@ export function createBrowserRuntime(options: BrowserRuntimeOptions): BrowserRun
         }
 
         return [snapshot];
-      });
+      }
+    );
   }
 
-  function runningState(profileId: string, running: RunningInstance): BrowserRuntimeState {
+  function runningState(
+    profileId: string,
+    running: RunningInstance
+  ): BrowserRuntimeState {
     return {
       cdp_port: running.cdpPort,
       ...(running.display ? { display: running.display } : {}),
@@ -732,7 +892,10 @@ function waitForTcpPort(port: number): Promise<void> {
   });
 }
 
-function requireProfile(repository: ProfileRepository, profileId: string): BrowserProfile {
+function requireProfile(
+  repository: ProfileRepository,
+  profileId: string
+): BrowserProfile {
   const profile = repository.get(profileId);
   if (!profile) {
     throw new BrowserProfileNotFoundError(profileId);
@@ -750,7 +913,9 @@ export class BrowserProfileNotFoundError extends Error {
 
 export class UnsupportedManualViewerProfileError extends Error {
   constructor(profileId: string) {
-    super(`Manual viewer is unavailable for headless Browser Profiles. Edit the profile to disable headless mode before opening the viewer for "${profileId}".`);
+    super(
+      `Manual viewer is unavailable for headless Browser Profiles. Edit the profile to disable headless mode before opening the viewer for "${profileId}".`
+    );
     this.name = "UnsupportedManualViewerProfileError";
   }
 }
@@ -770,6 +935,8 @@ function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-function isPromiseLike<Value>(value: Promise<Value> | Value): value is Promise<Value> {
+function isPromiseLike<Value>(
+  value: Promise<Value> | Value
+): value is Promise<Value> {
   return typeof value === "object" && value !== null && "then" in value;
 }

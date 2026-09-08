@@ -61,16 +61,21 @@ export function createKasmVncDisplayRuntime(
   options: KasmVncDisplayRuntimeOptions
 ): BrowserDisplayRuntime {
   const ownedProcesses =
-    options.ownedProcesses ?? createOwnedProcessRegistry({ dataRoot: options.dataRoot });
+    options.ownedProcesses ??
+    createOwnedProcessRegistry({ dataRoot: options.dataRoot });
   const spawn = options.spawn ?? Bun.spawn;
 
   return {
-    async start(command: BrowserDisplayRuntimeCommand): Promise<BrowserProcessHandle> {
+    async start(
+      command: BrowserDisplayRuntimeCommand
+    ): Promise<BrowserProcessHandle> {
       if (!options.xvncBin) {
         throw new MissingDisplayRuntimeError();
       }
 
-      await ownedProcesses.cleanupOwnedProcesses([command.profileId], { kinds: ["display"] });
+      await ownedProcesses.cleanupOwnedProcesses([command.profileId], {
+        kinds: ["display"]
+      });
       const subprocess = spawn(displayCommand(options.xvncBin, command), {
         detached: true,
         env: ownedProcesses.env(command.profileId),
@@ -81,7 +86,11 @@ export function createKasmVncDisplayRuntime(
       subprocess.unref();
 
       try {
-        await ownedProcesses.writePid(command.profileId, "display", subprocess.pid);
+        await ownedProcesses.writePid(
+          command.profileId,
+          "display",
+          subprocess.pid
+        );
       } catch (error) {
         await new OwnedSubprocessHandle(subprocess).kill();
         throw error;
@@ -93,11 +102,18 @@ export function createKasmVncDisplayRuntime(
   };
 }
 
-function displayCommand(xvncBin: string, command: BrowserDisplayRuntimeCommand): string[] {
+function displayCommand(
+  xvncBin: string,
+  command: BrowserDisplayRuntimeCommand
+): string[] {
   return [
     xvncBin,
     `:${command.displayNumber}`,
     "-ac",
+    "-AcceptCutText",
+    String(command.clipboardSync !== false ? 1 : 0),
+    "-SendCutText",
+    String(command.clipboardSync !== false ? 1 : 0),
     "-websocketPort",
     String(command.vncPort),
     "-rfbport",

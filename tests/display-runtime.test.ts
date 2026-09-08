@@ -46,6 +46,8 @@ describe("KasmVncDisplayRuntime", () => {
       "/usr/bin/Xvnc",
       ":100",
       "-ac",
+      "-AcceptCutText", "1",
+      "-SendCutText", "1",
       "-websocketPort",
       "5900",
       "-rfbport",

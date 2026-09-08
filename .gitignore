@@ -2,3 +2,6 @@ node_modules/
 .bun-tmp/
 .cloakhub/
 *.log
+
+test-results/
+playwright-report/
