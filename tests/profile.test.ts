@@ -33,7 +33,9 @@ describe("Browser Profile validation", () => {
 
   test("defaults new Browser Profiles to compact desktop resolution", () => {
     expect(normalizeCreateProfileInput({ profile_id: "work" })).toMatchObject({
-      platform: "macos",
+      platform: "linux",
+      headless: false,
+      locale: "en-US",
       screen_height: 768,
       screen_width: 1366
     });

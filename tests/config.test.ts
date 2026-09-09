@@ -4,10 +4,18 @@ import { join } from "node:path";
 import { INTERNAL_CDP_PORT_RANGE, INTERNAL_DISPLAY_NUMBER_RANGE, INTERNAL_VNC_PORT_RANGE, loadConfigFromEnv } from "../src/config";
 
 describe("loadConfigFromEnv", () => {
+  test("validates deployment region defaults before starting", () => {
+    expect(loadConfigFromEnv({
+      CLOAKHUB_DEFAULT_TIMEZONE: "Asia/Tokyo", CLOAKHUB_DEFAULT_LOCALE: "ja-JP"
+    }).creationRegion).toEqual({ timezone: "Asia/Tokyo", locale: "ja-JP" });
+    expect(() => loadConfigFromEnv({ CLOAKHUB_DEFAULT_TIMEZONE: "Not/AZone" })).toThrow();
+    expect(() => loadConfigFromEnv({ CLOAKHUB_DEFAULT_LOCALE: "not_a_locale" })).toThrow();
+  });
   test("uses documented defaults", () => {
     const config = loadConfigFromEnv({}, "/home/operator");
 
     expect(config).toEqual({
+      creationRegion: { timezone: Intl.DateTimeFormat().resolvedOptions().timeZone, locale: "en-US" },
       authToken: undefined,
       browserBin: undefined,
       dataRoot: join("/home/operator", ".cloakhub", "data"),
@@ -31,6 +39,7 @@ describe("loadConfigFromEnv", () => {
     );
 
     expect(config).toEqual({
+      creationRegion: { timezone: Intl.DateTimeFormat().resolvedOptions().timeZone, locale: "en-US" },
       authToken: "admin-token",
       browserBin: "/opt/cloakbrowser/cloakbrowser",
       dataRoot: "/data",

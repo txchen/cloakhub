@@ -91,7 +91,8 @@ export class ProfileValidationError extends Error {
   }
 }
 
-export const DEFAULT_LAUNCH_PROFILE_FIELDS: LaunchProfileFields = {
+// Older records may omit launch fields. Preserve their historical identity on read.
+export const LEGACY_LAUNCH_PROFILE_FIELDS: LaunchProfileFields = {
   clipboard_sync: true,
   color_scheme: "system",
   custom_launch_args: [],
@@ -112,6 +113,26 @@ export const DEFAULT_LAUNCH_PROFILE_FIELDS: LaunchProfileFields = {
   timezone: "",
   user_agent: ""
 };
+
+export const DEFAULT_LAUNCH_PROFILE_FIELDS: LaunchProfileFields = {
+  ...LEGACY_LAUNCH_PROFILE_FIELDS,
+  platform: "linux",
+  locale: "en-US",
+  timezone: "UTC"
+};
+
+export type ProfileRegion = Pick<LaunchProfileFields, "timezone" | "locale">;
+
+export function resolveCreationDefaults(
+  region: Partial<ProfileRegion> = {}
+): LaunchProfileFields {
+  const resolved = {
+    timezone: region.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
+    locale: region.locale || DEFAULT_LAUNCH_PROFILE_FIELDS.locale
+  };
+  validateSupportedSettings(resolved);
+  return { ...DEFAULT_LAUNCH_PROFILE_FIELDS, ...resolved };
+}
 
 const CLOAKHUB_OWNED_LAUNCH_FLAGS = [
   "--user-data-dir",
@@ -134,7 +155,8 @@ export function validateProfileId(value: unknown): ProfileIdValidationResult {
 }
 
 export function normalizeCreateProfileInput(
-  input: unknown
+  input: unknown,
+  defaults = resolveCreationDefaults()
 ): CreateProfileInput {
   if (!isRecord(input)) {
     throw new ProfileValidationError("Request body must be a JSON object");
@@ -153,7 +175,7 @@ export function normalizeCreateProfileInput(
     notes: optionalString(input.notes, "notes") ?? "",
     tags: normalizeTags(input.tags) ?? [],
     profile_id: profileId.profile_id,
-    ...normalizeLaunchProfileFields(input, DEFAULT_LAUNCH_PROFILE_FIELDS)
+    ...normalizeLaunchProfileFields(input, defaults)
   };
 }
 

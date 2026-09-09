@@ -30,6 +30,30 @@ afterEach(async () => {
 });
 
 describe("Browser Profile admin API", () => {
+  test("authenticated defaults match minimal API creation", async () => {
+    const { app } = await tempApp({
+      authToken: "admin-token",
+      creationRegion: { timezone: "Asia/Tokyo", locale: "ja-JP" }
+    });
+    for (const path of ["/api/profile-defaults", "/ui/profile-defaults"]) {
+      const headers: Record<string, string> = path.startsWith("/api/")
+        ? { authorization: "Bearer admin-token" }
+        : { cookie: "cloakhub_auth=admin-token" };
+      expect((await app.fetch(new Request(`http://cloakhub.test${path}`))).status).toBe(401);
+      const response = await app.fetch(new Request(`http://cloakhub.test${path}`, { headers }));
+      expect(response.status).toBe(200);
+      expect(await response.json()).toMatchObject({
+        platform: "linux", headless: false, timezone: "Asia/Tokyo", locale: "ja-JP"
+      });
+      expect((await app.fetch(new Request(`http://cloakhub.test${path}`, { method: "POST", headers }))).status).toBe(405);
+    }
+    const created = await app.fetch(new Request("http://cloakhub.test/api/profiles", {
+      method: "POST", headers: { authorization: "Bearer admin-token", "content-type": "application/json" },
+      body: JSON.stringify({ profile_id: "regional" })
+    }));
+    expect(await created.json()).toMatchObject({ timezone: "Asia/Tokyo", locale: "ja-JP", platform: "linux" });
+  });
+
   test("agents discover profiles and connection metadata without secrets or UI fields", async () => {
     const runtime = fakeBrowserRuntime();
     const { app, repository } = await tempApp({}, runtime);
@@ -880,6 +904,7 @@ async function tempApp(
   const repository = openProfileRepository(dataRoot);
   repository.migrate();
   const profileService = createProfileService({
+    creationRegion: overrides.creationRegion,
     dataRoot,
     repository,
     ...serviceOptions

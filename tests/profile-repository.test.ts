@@ -2,6 +2,7 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
+import { Database } from "bun:sqlite";
 
 import { openProfileRepository } from "../src/profile-repository";
 
@@ -12,6 +13,24 @@ afterEach(async () => {
 });
 
 describe("ProfileRepository", () => {
+  test("legacy rows with omitted identity fields retain historical defaults after edits", async () => {
+    const dataRoot = await tempDataRoot();
+    const initial = openProfileRepository(dataRoot);
+    initial.migrate();
+    initial.create({ profile_id: "legacy", display_name: "Legacy", notes: "" });
+    initial.close();
+    // Fixture representing an older on-disk record, before these fields were saved.
+    const fixture = new Database(join(dataRoot, "cloakhub.sqlite"));
+    fixture.run("UPDATE profiles SET launch_profile_json = '{}' WHERE profile_id = 'legacy'");
+    fixture.close();
+    const reopened = openProfileRepository(dataRoot);
+    reopened.migrate();
+    expect(reopened.get("legacy")).toMatchObject({ platform: "macos", locale: "", timezone: "" });
+    reopened.update("legacy", { notes: "Updated" });
+    expect(reopened.get("legacy")).toMatchObject({ platform: "macos", locale: "", timezone: "" });
+    reopened.close();
+  });
+
   test("runs SQLite migrations idempotently and persists Browser Profiles", async () => {
     const dataRoot = await tempDataRoot();
     const first = openProfileRepository(dataRoot);

@@ -301,6 +301,7 @@ function fakeProfileService(profileOrProfiles: Record<string, unknown> | Array<R
       cdp_token_configured: true,
       profile_id: profileId
     }),
+    getCreationDefaults: () => { throw new Error("not used"); },
     createProfile: async () => {
       throw new Error("not used");
     },

@@ -1,14 +1,26 @@
 import type { PresentedBrowserProfile } from "../profile-presentation";
-import { DEFAULT_LAUNCH_PROFILE_FIELDS } from "../profile";
+import type { LaunchProfileFields } from "../profile";
 import { element, escape, toast } from "./dom";
 import { profilePath, request } from "./api";
 
-export function openProfileEditor(
+let editorRequestId = 0;
+
+export async function openProfileEditor(
   profile: PresentedBrowserProfile | undefined,
   saved: (id: string) => Promise<void>
-): void {
+): Promise<void> {
+  const requestId = ++editorRequestId;
   const dialog = element<HTMLDialogElement>("#profile-editor");
-  const values = { ...DEFAULT_LAUNCH_PROFILE_FIELDS, ...profile };
+  let values: LaunchProfileFields;
+  try {
+    values = profile ?? await request<LaunchProfileFields>("/ui/profile-defaults");
+  } catch (error) {
+    if (requestId === editorRequestId) {
+      toast(error instanceof Error ? error.message : "Unable to load profile defaults");
+    }
+    return;
+  }
+  if (requestId !== editorRequestId) return;
   const edit = Boolean(profile);
   const field = (
     name: string,
@@ -50,7 +62,7 @@ export function openProfileEditor(
             ["false", "Browser with viewer"],
             ["true", "Headless · automation only"]
           ],
-          "Headless profiles connect through CDP and have no viewer."
+          "Browser with viewer also supports unattended CDP automation. Headless has no viewer and may have limited graphics support."
         )}
         ${select(
           "clipboard_sync",
@@ -80,13 +92,15 @@ export function openProfileEditor(
         ])}
       </div><p class="inline-note">An open automation connection keeps the browser running. Watching the viewer without interacting does not.</p></section>
       <section id="panel-2" role="tabpanel" aria-labelledby="tab-2" data-panel="2" hidden><h3>Region & device</h3><p class="section-description">Keep a consistent identity across browser restarts.</p><div class="fields">
-        ${field("timezone", "Timezone", values.timezone, "Leave blank for the browser default.", 'placeholder="America/Los_Angeles"')}
-        ${field("locale", "Language / locale", values.locale, "A language tag such as en-US or zh-CN.", 'placeholder="en-US"')}
+        ${field("timezone", "Timezone", values.timezone, "Match the browser’s internet exit region. Saved with this identity; blank inherits the browser environment.", 'placeholder="America/Los_Angeles"')}
+        ${field("locale", "Language / locale", values.locale, "A saved language tag such as en-US or zh-CN; blank uses the browser environment.", 'placeholder="en-US"')}
+        <p class="inline-note full" id="region-preview"></p>
+        <button type="button" class="secondary" data-region-defaults>Use deployment region</button>
         ${select("platform", "Platform", values.platform, [
+          ["linux", "Linux · recommended for this server"],
           ["macos", "macOS"],
-          ["windows", "Windows"],
-          ["linux", "Linux"]
-        ])}
+          ["windows", "Windows"]
+        ], "Cross-platform identities need matching fonts and graphics. Changing platform changes this browser’s identity.")}
         ${field("hardware_concurrency", "CPU threads", values.hardware_concurrency, "", 'type="number" min="1" max="256" required')}
         ${field("screen_width", "Screen width", values.screen_width, "Pixels", 'type="number" min="100" max="10000" required')}
         ${field("screen_height", "Screen height", values.screen_height, "Pixels", 'type="number" min="100" max="10000" required')}
@@ -103,8 +117,39 @@ export function openProfileEditor(
     <footer class="dialog-actions"><button type="button" data-close class="secondary">Cancel</button><button type="submit" class="primary">${edit ? "Save changes" : "Create profile"}</button></footer>
   </form>`;
   const form = element<HTMLFormElement>("form", dialog);
+  const submit = element<HTMLButtonElement>('[type="submit"]', form);
   let submitting = false;
+  let loadingRegion = false;
   let dirty = false;
+  const timezone = element<HTMLInputElement>('[name="timezone"]', form);
+  const locale = element<HTMLInputElement>('[name="locale"]', form);
+  const previewRegion = () => {
+    element("#region-preview", form).textContent =
+      `Saved region: ${timezone.value || "inherited timezone (not pinned)"} · ${locale.value || "inherited language (not pinned)"}`;
+  };
+  timezone.addEventListener("input", previewRegion);
+  locale.addEventListener("input", previewRegion);
+  previewRegion();
+  const regionButton = element<HTMLButtonElement>("[data-region-defaults]", form);
+  regionButton.onclick = async () => {
+    if (submitting || loadingRegion) return;
+    loadingRegion = true;
+    regionButton.disabled = true;
+    submit.disabled = true;
+    try {
+      const defaults = await request<LaunchProfileFields>("/ui/profile-defaults");
+      timezone.value = defaults.timezone;
+      locale.value = defaults.locale;
+      dirty = true;
+      previewRegion();
+    } catch (error) {
+      toast(error instanceof Error ? error.message : "Unable to load deployment region");
+    } finally {
+      loadingRegion = false;
+      regionButton.disabled = submitting;
+      submit.disabled = submitting;
+    }
+  };
   const switchTab = (index: string) => {
     form
       .querySelectorAll<HTMLElement>("[data-panel]")
@@ -187,7 +232,7 @@ export function openProfileEditor(
   interval.disabled = policy.value !== "minutes";
   form.onsubmit = async (event) => {
     event.preventDefault();
-    if (submitting) return;
+    if (submitting || loadingRegion) return;
     const body: Record<string, unknown> = Object.fromEntries(
       new FormData(form)
     );
@@ -214,7 +259,7 @@ export function openProfileEditor(
     const error = element("#form-error", form);
     error.hidden = true;
     submitting = true;
-    const submit = element<HTMLButtonElement>('[type="submit"]', form);
+    regionButton.disabled = true;
     submit.disabled = true;
     submit.textContent = "Saving…";
     try {
@@ -237,6 +282,7 @@ export function openProfileEditor(
       error.scrollIntoView({ block: "nearest" });
     } finally {
       submitting = false;
+      regionButton.disabled = false;
       submit.disabled = false;
       submit.textContent = edit ? "Save changes" : "Create profile";
     }

@@ -13,6 +13,30 @@ afterEach(async () => {
 });
 
 describe("ProfileService", () => {
+  test("persists deployment region defaults only for new profiles", async () => {
+    const { service } = await tempService({
+      creationRegion: { timezone: "America/Los_Angeles", locale: "en-US" }
+    });
+    const fresh = await service.createProfile({ profile_id: "fresh" });
+    expect(fresh).toMatchObject({
+      platform: "linux", headless: false,
+      timezone: "America/Los_Angeles", locale: "en-US"
+    });
+    expect(service.getCreationDefaults()).toMatchObject({
+      platform: "linux", timezone: "America/Los_Angeles", locale: "en-US"
+    });
+    await service.createProfile({
+      profile_id: "existing", platform: "macos", timezone: "", locale: ""
+    });
+    service.updateProfile("existing", { notes: "Keep this identity" });
+    expect(service.getProfile("existing")).toMatchObject({
+      platform: "macos", timezone: "", locale: ""
+    });
+    expect(service.getProfile("fresh")).toMatchObject({
+      timezone: "America/Los_Angeles", locale: "en-US"
+    });
+  });
+
   test("creates Browser Profile metadata and persistent user-data directory", async () => {
     const { dataRoot, service } = await tempService();
 

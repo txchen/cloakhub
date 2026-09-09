@@ -95,6 +95,8 @@ services:
       CLOAKHUB_DATA_DIR: /data
       CLOAKHUB_HOST: 0.0.0.0
       CLOAKHUB_PORT: "7788"
+      CLOAKHUB_DEFAULT_TIMEZONE: "${CLOAKHUB_DEFAULT_TIMEZONE:-UTC}"
+      CLOAKHUB_DEFAULT_LOCALE: "${CLOAKHUB_DEFAULT_LOCALE:-en-US}"
     ports:
       - "7788:7788"
     volumes:
@@ -126,8 +128,31 @@ Optional settings:
 
 - `CLOAKHUB_BROWSER_BIN`: path to the CloakBrowser Binary
 - `CLOAKHUB_AUTH_TOKEN`: admin auth token for protected UI and admin APIs
+- `CLOAKHUB_DEFAULT_TIMEZONE`: IANA timezone for new profiles, e.g. `America/Los_Angeles`;
+  defaults to the server process timezone (usually UTC in Docker)
+- `CLOAKHUB_DEFAULT_LOCALE`: language tag for new profiles; defaults to `en-US`
 
 Docker deployments should set `CLOAKHUB_HOST=0.0.0.0` and `CLOAKHUB_DATA_DIR=/data`.
+
+New profiles default to a Linux identity, headed mode, 1366×768, and four CPU threads.
+Headed mode uses ANGLE/SwiftShader for WebGL without requiring a host GPU and supports
+unattended CDP automation without opening the viewer. Native headless remains available,
+but WebGL is not reliable with every bundled browser build.
+
+Set the deployment timezone to match the browser's internet exit. For a US west-coast
+deployment, for example, add `CLOAKHUB_DEFAULT_TIMEZONE=America/Los_Angeles` and
+`CLOAKHUB_DEFAULT_LOCALE=en-US` to the container environment (or Compose `.env`).
+These values are saved when each profile is created.
+The editor shows the saved region and offers **Use deployment region** to explicitly
+apply it. A profile using a proxy in another region should set its own timezone/locale.
+There is no automatic GeoIP lookup or region change on restart.
+
+Existing profiles keep their stored platform and region, including legacy blank values
+that inherit the browser environment. Deployment default changes affect new profiles
+only; the updated headed graphics parameters apply on the next browser start. Linux
+is the recommended identity for this server; cross-platform identities may need matching
+fonts and graphics. These defaults improve consistency, but do not guarantee that a
+site cannot identify an automated or modified browser.
 
 The Data Root contains profile data and secrets. Treat it as sensitive storage.
 
@@ -146,6 +171,8 @@ CLOAKHUB_BROWSER_BIN=/path/to/cloakbrowser bun run integration:real-runtime
 ```
 
 Those integration tests exercise real headless launch, headed KasmVNC/noVNC startup, CDP Transparent Recovery, spin-down/recovery persistence, and explicit Stop overriding active clients.
+They also verify that a new default headed profile can render and read pixels through
+both WebGL and WebGL2. They do not depend on public bot-detection websites.
 
 ## Workspace UI
 

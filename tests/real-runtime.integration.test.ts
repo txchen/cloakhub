@@ -44,6 +44,37 @@ const realRuntimeTest = RUN_REAL_RUNTIME_TESTS ? test : test.skip;
 const cleanupFixtures: RealRuntimeFixture[] = [];
 
 describe("real CloakBrowser runtime integration", () => {
+  realRuntimeTest("default headed profile draws with WebGL and WebGL2", async () => {
+    const fixture = await realRuntimeFixture({ requireDisplay: true });
+    await fixture.profileService.createProfile({ profile_id: "graphics", fingerprint_seed: "20260909" });
+    const state = await fixture.runtime.start("graphics");
+    const session = await cdpSession(state.cdp_port, "data:text/html,<title>Graphics regression</title>");
+    try {
+      const result = JSON.parse(await session.evaluate(`JSON.stringify({
+        platform: navigator.platform,
+        contexts: ['webgl', 'webgl2'].map(kind => {
+          const canvas = document.createElement('canvas');
+          canvas.width = canvas.height = 2;
+          const gl = canvas.getContext(kind);
+          if (!gl) return { kind, available: false };
+          gl.clearColor(0.2, 0.4, 0.6, 1);
+          gl.clear(gl.COLOR_BUFFER_BIT);
+          const pixel = new Uint8Array(4);
+          gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+          return { kind, available: true, pixel: Array.from(pixel), error: gl.getError() };
+        })
+      })`));
+      expect(result.platform).toContain("Linux");
+      expect(result.contexts).toEqual([
+        { kind: "webgl", available: true, pixel: [51, 102, 153, 255], error: 0 },
+        { kind: "webgl2", available: true, pixel: [51, 102, 153, 255], error: 0 }
+      ]);
+    } finally {
+      session.close();
+      await fixture.runtime.stop("graphics");
+    }
+  });
+
   realRuntimeTest("agent discovers a protected profile and uses returned connection metadata", async () => {
     const fixture = await realRuntimeFixture();
     await fixture.profileService.createProfile({ profile_id: "agent", headless: true });

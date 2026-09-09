@@ -69,6 +69,7 @@ except successful DELETE responses, which have no body. Do not call `.json()` on
 | Method | Path | Success response |
 | --- | --- | --- |
 | GET | `/api/profiles` | 200, array of full profiles |
+| GET | `/api/profile-defaults` | 200, launch defaults used for new profiles; does not start a browser |
 | GET | `/api/profiles?view=summary` | 200, array of summaries |
 | POST | `/api/profiles` | 201, created full profile |
 | GET | `/api/profiles/{id}` | 200, full profile; also accepts `?view=summary` |
@@ -126,6 +127,18 @@ Token responses contain `profile_id`, `cdp_token` (string or null), and
 Send `Content-Type: application/json`. The minimal create body is
 `{"profile_id":"research"}`. IDs must match `^[a-z][a-z0-9_]*$` and cannot be renamed.
 Profiles default to headed mode; specify `"headless":true` for automation-only use.
+New profiles use a Linux identity, 1366×768, and four CPU threads. Omitted `timezone`
+and `locale` are copied from the deployment defaults and persisted. Query
+`GET /api/profile-defaults` before creation to preview them. The editor uses the same
+defaults through its cookie-authenticated `/ui/profile-defaults` endpoint. Neither
+endpoint contains a fingerprint seed for an existing profile or any credentials.
+
+Configure `CLOAKHUB_DEFAULT_TIMEZONE` for the deployment's internet exit and
+`CLOAKHUB_DEFAULT_LOCALE` for its language. Without configuration, the timezone is the
+server process timezone (usually UTC in Docker) and the locale is `en-US`. Explicit
+profile values override these defaults; explicit empty strings preserve the ability
+to inherit the browser environment. Updating deployment defaults never migrates
+existing profiles. Use per-profile regional settings for proxies in another region.
 
 Common optional create/PATCH fields:
 
@@ -146,6 +159,22 @@ PATCH changes stored configuration; launch-setting changes take effect on the ne
 start/restart. It does not restart a running browser. Humanize and automatic GeoIP are
 not launch options supported by this runtime. Configure human-like actions in your
 automation client, and set timezone/locale explicitly.
+
+### Automation and graphics
+
+The default headed profile supports unattended CDP automation with no viewer connected.
+Its software graphics backend supports WebGL in the packaged Linux environment. Native
+headless is still supported, but some browser builds cannot initialize WebGL there.
+Custom launch arguments can override graphics settings; doing so may change fingerprint
+consistency. Existing stored platform/region settings are not changed by an upgrade.
+
+Prefer Playwright locators for routine element operations. Avoid `page.exposeFunction`
+when a page-to-client callback is unnecessary: its injected binding can reveal the
+automation client. `page.evaluate` executes in the page's main world, where page code
+can observe some calls. Use an isolated world deliberately when appropriate; frame
+navigation changes execution contexts. Isolation does not make all interactions
+undetectable. CloakHub forwards these commands transparently and does not rewrite
+client scripts or supply SDK Humanize behavior.
 
 ## CDP endpoints
 

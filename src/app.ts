@@ -139,6 +139,17 @@ export function createApp(
       return eventLogResponse(request, url, services.events);
     }
 
+    if (url.pathname === "/api/profile-defaults" || url.pathname === "/ui/profile-defaults") {
+      if (url.pathname.startsWith("/ui/") && !isUiAuthorized(request, config.authToken)) {
+        return unauthorizedResponse();
+      }
+      if (request.method !== "GET") {
+        return apiErrorResponse("Method not allowed", 405, "METHOD_NOT_ALLOWED", false, { Allow: "GET" });
+      }
+      if (!services.profileService) return textResponse("Not found", 404);
+      return jsonResponse(services.profileService.getCreationDefaults(), 200, { "cache-control": "no-store" });
+    }
+
     const cdpResponse = await cdpApiResponse(
       request,
       url,

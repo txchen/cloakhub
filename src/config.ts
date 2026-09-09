@@ -1,9 +1,11 @@
 import { homedir } from "node:os";
 import { join } from "node:path";
+import { resolveCreationDefaults, type ProfileRegion } from "./profile";
 
 export type CloakHubEnv = Record<string, string | undefined>;
 
 export interface CloakHubConfig {
+  creationRegion?: ProfileRegion;
   authToken?: string;
   browserBin?: string;
   dataRoot: string;
@@ -36,7 +38,18 @@ export function loadConfigFromEnv(
   env: CloakHubEnv = process.env,
   homeDirectory = homedir()
 ): CloakHubConfig {
+  let creationRegion: ProfileRegion;
+  try {
+    const { timezone, locale } = resolveCreationDefaults({
+      timezone: emptyToUndefined(env.CLOAKHUB_DEFAULT_TIMEZONE),
+      locale: emptyToUndefined(env.CLOAKHUB_DEFAULT_LOCALE)
+    });
+    creationRegion = { timezone, locale };
+  } catch (error) {
+    throw new ConfigError(`Invalid CLOAKHUB_DEFAULT_TIMEZONE/CLOAKHUB_DEFAULT_LOCALE: ${error instanceof Error ? error.message : String(error)}`);
+  }
   return {
+    creationRegion,
     authToken: emptyToUndefined(env.CLOAKHUB_AUTH_TOKEN),
     browserBin: emptyToUndefined(env.CLOAKHUB_BROWSER_BIN),
     dataRoot: emptyToUndefined(env.CLOAKHUB_DATA_DIR) ?? join(homeDirectory, ".cloakhub", "data"),

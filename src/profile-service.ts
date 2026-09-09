@@ -4,12 +4,15 @@ import { join } from "node:path";
 
 import type {
   BrowserProfile,
+  LaunchProfileFields,
+  ProfileRegion,
   CreateProfileInput,
   UpdateProfileInput
 } from "./profile";
 import {
   ProfileValidationError,
   normalizeCreateProfileInput,
+  resolveCreationDefaults,
   normalizeUpdateProfileInput
 } from "./profile";
 import type { ProfileRepository } from "./profile-repository";
@@ -25,6 +28,7 @@ export interface ProfileService {
   cdpTokensForRedaction(): string[];
   deleteStoppedProfile(profileId: string): Promise<void>;
   getProfile(profileId: string): BrowserProfile | undefined;
+  getCreationDefaults(): LaunchProfileFields;
   getCdpToken(profileId: string): CdpTokenState;
   listProfiles(): BrowserProfile[];
   regenerateCdpToken(profileId: string): CdpTokenState;
@@ -39,6 +43,7 @@ export interface CdpTokenState {
 }
 
 export interface ProfileServiceOptions {
+  creationRegion?: Partial<ProfileRegion>;
   cdpTokenGenerator?: () => string;
   dataRoot: string;
   fileStore?: Partial<ProfileFileStore>;
@@ -72,10 +77,12 @@ export function createProfileService(
   options: ProfileServiceOptions
 ): ProfileService {
   const fileStore = createFileStore(options);
+  const creationDefaults = resolveCreationDefaults(options.creationRegion);
   const generateCdpToken =
     options.cdpTokenGenerator ?? defaultCdpTokenGenerator;
 
   return {
+    getCreationDefaults: () => structuredClone(creationDefaults),
     createCdpToken(profileId: string): CdpTokenState {
       const profile = requireProfile(options.repository, profileId);
       if (profile.cdp_token) {
@@ -88,7 +95,7 @@ export function createProfileService(
     },
 
     async createProfile(input: unknown): Promise<BrowserProfile> {
-      const normalized = normalizeCreateProfileInput(input);
+      const normalized = normalizeCreateProfileInput(input, creationDefaults);
       ensureUnique(options.repository, normalized.profile_id);
 
       await fileStore.createProfileData(normalized.profile_id);

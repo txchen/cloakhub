@@ -8,7 +8,9 @@ const dataRoot = await mkdtemp("/tmp/cloakhub-ui-tests-");
 const events = openEventLog(dataRoot);
 const repository = openProfileRepository(dataRoot);
 repository.migrate();
-const profileService = createProfileService({ dataRoot, repository });
+const profileService = createProfileService({
+  dataRoot, repository, creationRegion: { timezone: "Asia/Tokyo", locale: "ja-JP" }
+});
 function handle() {
   const exit = Promise.withResolvers<void>();
   return {

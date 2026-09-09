@@ -3,6 +3,7 @@ import { join } from "node:path";
 
 import {
   DEFAULT_LAUNCH_PROFILE_FIELDS,
+  LEGACY_LAUNCH_PROFILE_FIELDS,
   resolveSleepPolicy,
   type BrowserProfile,
   type CreateProfileInput,
@@ -448,7 +449,7 @@ function nowIso(): string {
 function rowToProfile(row: ProfileRow): BrowserProfile {
   const launchProfile = parseJson<LaunchProfileFields>(
     row.launch_profile_json,
-    DEFAULT_LAUNCH_PROFILE_FIELDS
+    LEGACY_LAUNCH_PROFILE_FIELDS
   );
 
   const {
@@ -463,7 +464,7 @@ function rowToProfile(row: ProfileRow): BrowserProfile {
     ...profileRow,
     tags: parseJson<string[]>(row.tags_json, []),
     cdp_token: profileRow.cdp_token ?? null,
-    ...DEFAULT_LAUNCH_PROFILE_FIELDS,
+    ...LEGACY_LAUNCH_PROFILE_FIELDS,
     ...launchProfile,
     sleep_policy: sleepPolicy,
     sleep_policy_status: resolveSleepPolicy(sleepPolicy)

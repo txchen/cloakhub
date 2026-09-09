@@ -1,4 +1,4 @@
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect, type Page, type Route } from "@playwright/test";
 
 test.beforeEach(async ({ request }) => {
   for (const profile of await (await request.get("/api/profiles")).json())
@@ -16,6 +16,73 @@ async function details(page: Page) {
     .getByRole("button", { name: "Details for Work", exact: true })
     .click();
 }
+
+test("creates with deployment defaults and preserves an existing region on edit", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Create your first profile" }).click();
+  await expect(page.locator('[name="platform"]')).toHaveValue("linux");
+  await expect(page.locator('[name="timezone"]')).toHaveValue("Asia/Tokyo");
+  await expect(page.locator('[name="locale"]')).toHaveValue("ja-JP");
+  await page.getByRole("textbox", { name: "Profile ID", exact: true }).fill("work");
+  await page.getByRole("button", { name: "Create profile", exact: true }).click();
+  await expect(page.locator("#profile-editor")).not.toBeVisible();
+  expect(await (await page.request.get("/api/profiles/work")).json()).toMatchObject({
+    platform: "linux", timezone: "Asia/Tokyo", locale: "ja-JP", headless: false
+  });
+  await page.request.patch("/api/profiles/work", { data: { platform: "macos", timezone: "", locale: "" } });
+  await page.reload();
+  await page.getByRole("button", { name: "Details for work", exact: true }).click();
+  await page.getByRole("button", { name: "Edit settings", exact: true }).click();
+  await expect(page.locator('[name="timezone"]')).toHaveValue("");
+  await expect(page.locator('[name="platform"]')).toHaveValue("macos");
+  await page.getByRole("textbox", { name: "Notes", exact: true }).fill("Keep old identity");
+  await page.getByRole("button", { name: "Save changes" }).click();
+  await expect(page.locator("#profile-editor")).not.toBeVisible();
+  expect(await (await page.request.get("/api/profiles/work")).json()).toMatchObject({
+    platform: "macos", timezone: "", locale: ""
+  });
+});
+
+test("late defaults do not replace a newer editor with unsaved input", async ({ page }) => {
+  const defaults = await (await page.request.get("/api/profile-defaults")).json();
+  let first: Route | undefined;
+  let calls = 0;
+  await page.route("**/ui/profile-defaults", async (route) => {
+    calls++;
+    if (calls === 1) first = route;
+    else await route.fulfill({ json: defaults });
+  });
+  await page.goto("/");
+  const create = page.getByRole("button", { name: "Create your first profile" });
+  await create.click();
+  await expect.poll(() => calls).toBe(1);
+  await create.click();
+  await page.getByRole("textbox", { name: "Profile ID", exact: true }).fill("unsaved");
+  await first!.fulfill({ json: defaults });
+  await page.waitForLoadState("networkidle");
+  await expect(page.getByRole("textbox", { name: "Profile ID", exact: true })).toHaveValue("unsaved");
+});
+
+test("waits for the selected deployment region before allowing save", async ({ page }) => {
+  await seed(page, { timezone: "", locale: "" });
+  await details(page);
+  await page.getByRole("button", { name: "Edit settings", exact: true }).click();
+  await page.getByRole("tab", { name: "Fingerprint", exact: true }).click();
+  let pending: Route | undefined;
+  await page.route("**/ui/profile-defaults", route => { pending = route; });
+  await page.getByRole("button", { name: "Use deployment region" }).click();
+  await expect.poll(() => Boolean(pending)).toBe(true);
+  const save = page.getByRole("button", { name: "Save changes" });
+  await expect(save).toBeDisabled();
+  await pending!.fulfill({ json: { timezone: "Europe/Berlin", locale: "de-DE" } });
+  await expect(page.locator('[name="timezone"]')).toHaveValue("Europe/Berlin");
+  await expect(save).toBeEnabled();
+  await save.click();
+  await expect(page.locator("#profile-editor")).not.toBeVisible();
+  expect(await (await page.request.get("/api/profiles/work")).json()).toMatchObject({
+    timezone: "Europe/Berlin", locale: "de-DE"
+  });
+});
 
 test("creates an identity and reports duplicate IDs", async ({
   page

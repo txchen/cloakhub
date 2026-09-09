@@ -39,6 +39,7 @@ export async function startCloakHubServer(): Promise<CloakHubServerHandle> {
   const profileRepository = openProfileRepository(config.dataRoot);
   profileRepository.migrate();
   const profileService = createProfileService({
+    creationRegion: config.creationRegion,
     dataRoot: config.dataRoot,
     repository: profileRepository
   });
