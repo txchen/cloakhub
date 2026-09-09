@@ -43,7 +43,8 @@ describe("BrowserProxyRuntime", () => {
     const responseBody = await requestThroughProxy(session.browserUrl, "http://example.test/ip");
 
     expect(responseBody).toBe("proxied response");
-    expect(receivedUrl).toBe("http://example.test:80/ip");
+    // Bun versions differ in whether the default HTTP port is serialized.
+    expect(new URL(receivedUrl!).href).toBe("http://example.test/ip");
     expect(receivedAuthorization).toBe(
       `Basic ${Buffer.from("proxy-user:proxy-secret").toString("base64")}`
     );
