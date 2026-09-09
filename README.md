@@ -76,11 +76,11 @@ Headed Browser Profiles also require KasmVNC `Xvnc`; if it is missing, startup c
 Docker-first operation uses `/data` as the Data Root and exposes CloakHub on port `7788`:
 
 ```sh
-docker pull ghcr.io/txchen/cloakhub:0.4.0
+docker pull ghcr.io/txchen/cloakhub:0.5.0
 docker run --rm \
   -p 127.0.0.1:7788:7788 \
   -v cloakhub-data:/data \
-  ghcr.io/txchen/cloakhub:0.4.0
+  ghcr.io/txchen/cloakhub:0.5.0
 ```
 
 Equivalent Docker Compose service:
@@ -88,7 +88,7 @@ Equivalent Docker Compose service:
 ```yaml
 services:
   cloakhub:
-    image: ghcr.io/txchen/cloakhub:0.4.0
+    image: ghcr.io/txchen/cloakhub:0.5.0
     restart: unless-stopped
     shm_size: 2gb
     environment:
@@ -105,13 +105,13 @@ services:
 
 The container listens on `0.0.0.0:7788` internally. The published image includes the CloakBrowser Binary at `/opt/cloakbrowser/cloakbrowser` and KasmVNC for headed Browser Profiles.
 
-Images support `linux/amd64` and `linux/arm64`. Pin a full version such as `0.4.0`
-for predictable deployments and rollback. The `0.4` alias follows patch releases,
+Images support `linux/amd64` and `linux/arm64`. Pin a full version such as `0.5.0`
+for predictable deployments and rollback. The `0.5` alias follows patch releases,
 and `latest` follows the newest stable release. Branch builds publish `master`
 and `sha-*` development tags without changing `latest`.
 
 To release, update `package.json`, commit and push the changes, and wait for the
-Tests workflow to pass. Push a matching Git tag (for example `v0.4.0`) to build
+Tests workflow to pass. Push a matching Git tag (for example `v0.5.0`) to build
 the release images. The image workflow checks that the tag matches the package
 version before publishing.
 
