@@ -1,7 +1,8 @@
 import {
   dashboardProfiles,
   profileResponseProfiles,
-  profileResponseProfile
+  profileResponseProfile,
+  profileSummary
 } from "./profile-presentation";
 import { renderShell } from "./ui/shell";
 import {
@@ -33,8 +34,16 @@ import {
   isUiAuthorized,
   unauthorizedResponse
 } from "./auth";
-import { jsonResponse, textResponse } from "./http";
-import { redactProfileSecrets } from "./profile";
+import {
+  apiErrorResponse,
+  jsonResponse,
+  normalizeApiError,
+  publicRequestUrl,
+  textResponse
+} from "./http";
+import { runtimeErrorResponse } from "./api-errors";
+import { profileConnection } from "./profile-connection";
+import { redactProfileSecrets, type BrowserProfile } from "./profile";
 import {
   DeleteProfileDataError,
   DuplicateProfileError,
@@ -172,7 +181,8 @@ export function createApp(
     const lifecycleResponse = await lifecycleApiResponse(
       request,
       url,
-      services.browserRuntime
+      services.browserRuntime,
+      services.profileService
     );
     if (lifecycleResponse) {
       return lifecycleResponse;
@@ -180,7 +190,7 @@ export function createApp(
 
     const profileResponse = await profileApiResponse(
       request,
-      url,
+      publicRequestUrl(url, request.headers),
       config,
       services.profileService,
       services.browserRuntime
@@ -209,7 +219,17 @@ export function createApp(
   }
 
   return {
-    fetch: fetch as CloakHubApp["fetch"]
+    fetch: (async (request: Request, server?: CloakHubUpgradeServer) => {
+      if (!new URL(request.url).pathname.startsWith("/api/")) return fetch(request, server);
+      try {
+        const response = await fetch(request, server);
+        return response ? await normalizeApiError(response) : undefined;
+      } catch (error) {
+        return error instanceof URIError
+          ? apiErrorResponse("Invalid URL encoding", 400)
+          : apiErrorResponse("An internal error occurred", 500);
+      }
+    }) as CloakHubApp["fetch"]
   };
 }
 
@@ -437,23 +457,16 @@ async function cdpApiResponse(
       return unauthorizedResponse();
     }
 
-    if (error instanceof CapacityUnavailableError) {
-      return retryableErrorResponse(error.message, 503);
-    }
-
-    return errorResponse(
-      redactProfileSecrets(
-        error instanceof Error ? error.message : String(error),
-        cdpTokensFromRequest(request)
-      ),
-      503
+    return runtimeErrorResponse(
+      error, "CDP_UNAVAILABLE", 503, cdpTokensFromRequest(request)
     );
   }
 }
 
 function cdpTokensFromRequest(request: Request): string[] {
   const token = new URL(request.url).searchParams.get("token");
-  return token ? [token] : [];
+  const bearer = /^Bearer\s+(.+)$/i.exec(request.headers.get("authorization") ?? "")?.[1];
+  return [token, bearer].filter((value): value is string => Boolean(value));
 }
 
 async function cdpTokenApiResponse(
@@ -509,7 +522,8 @@ function isWebSocketUpgrade(request: Request): boolean {
 async function lifecycleApiResponse(
   request: Request,
   url: URL,
-  browserRuntime: BrowserRuntime | undefined
+  browserRuntime: BrowserRuntime | undefined,
+  profileService: ProfileService | undefined
 ): Promise<Response | undefined> {
   const match = /^\/(?:api|ui)\/profiles\/([^/]+)\/(start|stop|restart)$/.exec(
     url.pathname
@@ -528,27 +542,40 @@ async function lifecycleApiResponse(
 
   const profileId = match[1]!;
   const action = match[2]!;
+  const responseState = (state: BrowserRuntimeState) => {
+    const profile = profileService?.getProfile(profileId);
+    return {
+      ...lifecycleResponseState(state),
+      instance_status: state.status,
+      ...(profile && url.pathname.startsWith("/api/")
+        ? { connection: profileConnection(profile, publicRequestUrl(url, request.headers)) }
+        : {})
+    };
+  };
 
   try {
     if (action === "start") {
       return jsonResponse(
-        lifecycleResponseState(await browserRuntime.start(profileId))
+        responseState(await browserRuntime.start(profileId))
       );
     }
 
     if (action === "stop") {
       return jsonResponse(
-        lifecycleResponseState(
+        responseState(
           await browserRuntime.stop(profileId, "manual stop")
         )
       );
     }
 
     return jsonResponse(
-      lifecycleResponseState(await browserRuntime.restart(profileId))
+      responseState(await browserRuntime.restart(profileId))
     );
   } catch (error) {
-    return lifecycleErrorResponse(error);
+    return runtimeErrorResponse(
+      error, `BROWSER_${action.toUpperCase()}_FAILED`, 500,
+      profileService?.cdpTokensForRedaction() ?? []
+    );
   }
 }
 
@@ -578,49 +605,50 @@ async function profileApiResponse(
   }
 
   const profileId = match[1];
+  const api = url.pathname.startsWith("/api/");
+  const summary = api && request.method === "GET" && url.searchParams.get("view") === "summary";
+  const present = async (profile: BrowserProfile) => ({
+    ...(summary
+      ? profileSummary(profile, browserRuntime)
+      : await profileResponseProfile(profile, url, config, browserRuntime)),
+    ...(api ? { connection: profileConnection(profile, url) } : {})
+  });
 
   try {
+    const view = url.searchParams.get("view");
+    if (api && request.method === "GET" && view !== null && view !== "summary" && view !== "full") {
+      return apiErrorResponse("view must be summary or full", 400);
+    }
     const body =
       request.method === "POST" || request.method === "PATCH"
         ? await jsonBody(request)
         : undefined;
 
     if (!profileId && request.method === "GET") {
-      return jsonResponse(
-        await profileResponseProfiles(
-          profileService.listProfiles(),
-          url,
-          config,
-          browserRuntime
-        )
-      );
+      const profiles = profileService.listProfiles();
+      if (summary) return jsonResponse(await Promise.all(profiles.map(present)));
+      const presented = await profileResponseProfiles(profiles, url, config, browserRuntime);
+      return jsonResponse(presented.map((profile, index) => ({
+        ...profile,
+        ...(api ? { connection: profileConnection(profiles[index]!, url) } : {})
+      })));
     }
 
     if (!profileId && request.method === "POST") {
       const profile = await profileService.createProfile(body);
-      return jsonResponse(
-        await profileResponseProfile(profile, url, config, browserRuntime),
-        201
-      );
+      return jsonResponse(await present(profile), 201);
     }
 
     if (profileId && request.method === "GET") {
       const profile = profileService.getProfile(profileId);
       return profile
-        ? jsonResponse(
-            await profileResponseProfile(profile, url, config, browserRuntime)
-          )
-        : errorResponse("Browser Profile was not found", 404);
+        ? jsonResponse(await present(profile))
+        : apiErrorResponse("Browser Profile was not found", 404, "PROFILE_NOT_FOUND");
     }
 
     if (profileId && request.method === "PATCH") {
       return jsonResponse(
-        await profileResponseProfile(
-          await profileService.updateProfile(profileId, body),
-          url,
-          config,
-          browserRuntime
-        )
+        await present(profileService.updateProfile(profileId, body))
       );
     }
 
@@ -657,18 +685,18 @@ function profileErrorResponse(error: unknown): Response {
   }
 
   if (error instanceof DuplicateProfileError) {
-    return errorResponse(redactProfileSecrets(error.message), 409);
+    return apiErrorResponse(redactProfileSecrets(error.message), 409, "PROFILE_ALREADY_EXISTS");
   }
 
   if (
     error instanceof ProfileNotFoundError ||
     error instanceof BrowserProfileNotFoundError
   ) {
-    return errorResponse(redactProfileSecrets(error.message), 404);
+    return apiErrorResponse(redactProfileSecrets(error.message), 404, "PROFILE_NOT_FOUND");
   }
 
   if (error instanceof DeleteProfileDataError) {
-    return errorResponse(redactProfileSecrets(error.message), 500);
+    return apiErrorResponse(redactProfileSecrets(error.message), 500, "DATA_DELETE_FAILED");
   }
 
   throw error;
@@ -679,25 +707,10 @@ function cdpTokenErrorResponse(error: unknown): Response {
     error instanceof ProfileNotFoundError ||
     error instanceof BrowserProfileNotFoundError
   ) {
-    return errorResponse(redactProfileSecrets(error.message), 404);
+    return apiErrorResponse(redactProfileSecrets(error.message), 404, "PROFILE_NOT_FOUND");
   }
 
   throw error;
-}
-
-function lifecycleErrorResponse(error: unknown): Response {
-  if (error instanceof BrowserProfileNotFoundError) {
-    return errorResponse(error.message, 404);
-  }
-
-  if (error instanceof CapacityUnavailableError) {
-    return retryableErrorResponse(error.message, 503);
-  }
-
-  return errorResponse(
-    error instanceof Error ? error.message : String(error),
-    500
-  );
 }
 
 function manualViewerErrorResponse(error: unknown): Response {
@@ -750,11 +763,11 @@ function manualViewerJsonErrorResponse(error: unknown): Response {
 }
 
 function errorResponse(error: string, status: number): Response {
-  return jsonResponse({ error }, status);
+  return apiErrorResponse(error, status);
 }
 
 function retryableErrorResponse(error: string, status: number): Response {
-  return jsonResponse({ error, retryable: true }, status);
+  return apiErrorResponse(error, status, "CAPACITY_UNAVAILABLE", true);
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

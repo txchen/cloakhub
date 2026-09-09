@@ -137,7 +137,7 @@ describe("CdpGateway", () => {
     expect(await policy.authorize(new Request("http://cloakhub.test?token=work-token"), "work")).toBe(true);
   });
 
-  test("failed recovery returns one clear retryable response", async () => {
+  test("failed recovery does not invite blind retries", async () => {
     const gateway = createCdpGateway({
       browserHttp: fakeBrowserHttp({}),
       browserRuntime: fakeRuntime({ startError: new Error("launch failed") })
@@ -150,7 +150,7 @@ describe("CdpGateway", () => {
     );
 
     expect(response.status).toBe(503);
-    expect(await response.json()).toEqual({ error: "launch failed" });
+    expect(await response.json()).toEqual({ error: "launch failed", message: "launch failed", code: "CDP_UNAVAILABLE", retryable: false });
   });
 
   test("capacity failures during recovery are reported as retryable", async () => {
@@ -168,6 +168,8 @@ describe("CdpGateway", () => {
     expect(response.status).toBe(503);
     expect(await response.json()).toEqual({
       error: "Running Instance capacity is full; retry after another Browser Instance stops",
+      message: "Running Instance capacity is full; retry after another Browser Instance stops",
+      code: "CAPACITY_UNAVAILABLE",
       retryable: true
     });
   });
@@ -185,7 +187,7 @@ describe("CdpGateway", () => {
       "/json/version"
     );
 
-    expect(await response.json()).toEqual({ error: "launch failed for ***" });
+    expect(await response.json()).toEqual({ error: "launch failed for ***", message: "launch failed for ***", code: "CDP_UNAVAILABLE", retryable: false });
   });
 
   test("prepares websocket proxy target after Transparent Recovery", async () => {

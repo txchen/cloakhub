@@ -2,6 +2,8 @@ import { describe, expect, test } from "bun:test";
 
 import { createApp, type CloakHubUpgradeServer, type CloakHubWebSocketData } from "../src/app";
 import type { CdpGateway } from "../src/cdp-gateway";
+import { createCdpGateway } from "../src/cdp-gateway";
+import { BrowserProfileNotFoundError, CapacityUnavailableError, type BrowserRuntime } from "../src/browser-runtime";
 import type { CdpWebSocketData } from "../src/cdp-websocket-proxy";
 import type { CloakHubConfig } from "../src/config";
 
@@ -15,6 +17,30 @@ const config: CloakHubConfig = {
 };
 
 describe("CDP API", () => {
+  test("missing profiles and capacity failures have matching HTTP and websocket error semantics", async () => {
+    for (const [error, status, code, retryable] of [
+      [new BrowserProfileNotFoundError("missing"), 404, "PROFILE_NOT_FOUND", false],
+      [new CapacityUnavailableError(), 503, "CAPACITY_UNAVAILABLE", true]
+    ] as const) {
+      const browserRuntime = { start: async () => { throw error; } } as unknown as BrowserRuntime;
+      const app = createApp(config, {
+        browserRuntime,
+        cdpGateway: createCdpGateway({ browserRuntime })
+      });
+      for (const [path, headers] of [
+        ["/api/profiles/missing/start", { authorization: "Bearer admin-token" }],
+        ["/api/profiles/missing/cdp/json/version", {}],
+        ["/api/profiles/missing/cdp", { upgrade: "websocket" }]
+      ] as const) {
+        const response = await app.fetch(new Request(`http://cloakhub.test${path}`, {
+          method: path.endsWith("/start") ? "POST" : "GET", headers
+        }), fakeUpgradeServer());
+        expect(response?.status).toBe(status);
+        expect(await response?.json()).toEqual({ code, retryable, message: error.message, error: error.message });
+      }
+    }
+  });
+
   test("routes CDP discovery without admin auth so CDP auth can happen before wake", async () => {
     const cdpGateway = fakeCdpGateway();
     const app = createApp(config, { cdpGateway });
@@ -63,7 +89,7 @@ describe("CDP API", () => {
     );
 
     expect(response?.status).toBe(503);
-    expect(await response?.json()).toEqual({ error: "failed for ***" });
+    expect(await response?.json()).toEqual({ error: "failed for ***", message: "failed for ***", code: "CDP_UNAVAILABLE", retryable: false });
   });
 });
 

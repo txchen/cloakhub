@@ -1,6 +1,6 @@
 services:
   cloakhub:
-    image: ghcr.io/txchen/cloakhub:0.2.0
+    image: ghcr.io/txchen/cloakhub:0.3.0
     platform: linux/arm64
     pull_policy: always
     restart: unless-stopped

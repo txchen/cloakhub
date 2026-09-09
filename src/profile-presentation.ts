@@ -28,6 +28,22 @@ export type PresentedBrowserProfile = Omit<BrowserProfile, "cdp_token"> & {
   sleep_status: string;
 };
 
+// Agent discovery does not need launch settings, UI labels, or a process scan.
+export function profileSummary(profile: BrowserProfile, runtime?: BrowserRuntime) {
+  return {
+    profile_id: profile.profile_id,
+    display_name: profile.display_name,
+    notes: profile.notes,
+    headless: profile.headless,
+    instance_status: profile.instance_status,
+    cdp_session_count: runtime?.activeCdpSessionCount(profile.profile_id) ?? 0,
+    manual_viewer_count: runtime?.activeManualViewerCount(profile.profile_id) ?? 0,
+    last_launch_error: profile.last_launch_error
+      ? redactProfileSecrets(profile.last_launch_error, profile.cdp_token ? [profile.cdp_token] : [])
+      : null
+  };
+}
+
 function timestampMs(value: string | null | undefined): number {
   if (!value) {
     return 0;

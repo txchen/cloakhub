@@ -43,6 +43,62 @@ const realRuntimeTest = RUN_REAL_RUNTIME_TESTS ? test : test.skip;
 const cleanupFixtures: RealRuntimeFixture[] = [];
 
 describe("real CloakBrowser runtime integration", () => {
+  realRuntimeTest("agent discovers a protected profile and uses returned connection metadata", async () => {
+    const fixture = await realRuntimeFixture();
+    await fixture.profileService.createProfile({ profile_id: "agent", headless: true });
+    fixture.profileService.createCdpToken("agent");
+    fixture.setCdpGateway(createCdpGateway({
+      accessPolicy: createProfileCdpAccessPolicy(fixture.profileService),
+      browserRuntime: fixture.runtime
+    }));
+    const server = Bun.serve<CdpWebSocketData>({
+      fetch: (request, server_) => fixture.app.fetch(request, server_),
+      hostname: "127.0.0.1", port: 0,
+      websocket: createCdpWebSocketHandler({ cdpSessions: fixture.runtime })
+    });
+    const base = `http://127.0.0.1:${server.port}`;
+    try {
+      const profiles = await (await fetch(`${base}/api/profiles?view=summary`)).json() as Array<{
+        profile_id: string; instance_status: string;
+        connection: { cdp_token_url: string; cdp_url: string; cdp_ws_url: string; auth: string };
+      }>;
+      const profile = profiles.find((entry) => entry.profile_id === "agent")!;
+      expect(profile.instance_status).toBe("stopped");
+      expect(profile.connection.auth).toBe("cdp_token");
+      const denied = await fetch(profile.connection.cdp_url);
+      expect(denied.status).toBe(401);
+      expect(fixture.repository.get("agent")!.instance_status).toBe("stopped");
+      const tokenState = await (await fetch(profile.connection.cdp_token_url)).json() as { cdp_token: string };
+      const starts = await Promise.all([0, 1].map(async () => {
+        const response = await fetch(`${base}/api/profiles/agent/start`, { method: "POST" });
+        expect(response.status).toBe(200);
+        return response.json() as Promise<{ instance_status: string; connection: typeof profile.connection }>;
+      }));
+      expect(starts[0]!.instance_status).toBe("running");
+      expect(starts[1]).toEqual(starts[0]);
+      expect(starts[0]!.connection).toEqual(profile.connection);
+      const version = await (await fetch(profile.connection.cdp_url, {
+        headers: { authorization: `Bearer ${tokenState.cdp_token}` }
+      })).json() as { webSocketDebuggerUrl: string };
+      const socketUrl = new URL(version.webSocketDebuggerUrl);
+      socketUrl.searchParams.set("token", tokenState.cdp_token);
+      const result = await cdpWebSocketCommand(socketUrl.href, "Browser.getVersion");
+      expect((result as { product: string }).product).toContain("Chrome");
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const stopped = await fetch(`${base}/api/profiles/agent/stop`, { method: "POST" });
+        expect(stopped.status).toBe(200);
+        expect(await stopped.json()).toMatchObject({ instance_status: "stopped", status: "stopped" });
+      }
+      const stable = new URL(profile.connection.cdp_ws_url);
+      stable.searchParams.set("token", tokenState.cdp_token);
+      await cdpWebSocketCommand(stable.href, "Browser.getVersion");
+      expect(fixture.repository.get("agent")!.instance_status).toBe("running");
+    } finally {
+      await fixture.runtime.stop("agent");
+      server.stop(true);
+    }
+  });
+
   realRuntimeTest(
     "applies timezone, locale, and website appearance to real pages",
     async () => {

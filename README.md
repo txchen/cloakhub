@@ -51,6 +51,14 @@ running-instance limit.
   preemption.
 - Docker and non-Docker Linux operation, with configurable Data Root and browser binary discovery.
 
+## Automation API
+
+For AI agents and scripts, see the [API guide](docs/api.md) and
+[runnable Playwright example](examples/agent-workflow.mjs). The guide covers profile
+discovery, start/connect/stop, separate admin and CDP credentials, and retry behavior.
+Use `GET /api/profiles?view=summary` for compact discovery; profile and lifecycle
+responses include fixed CDP connection URLs.
+
 ## Run
 
 ```sh
@@ -66,11 +74,11 @@ Headed Browser Profiles also require KasmVNC `Xvnc`; if it is missing, startup c
 Docker-first operation uses `/data` as the Data Root and exposes CloakHub on port `7788`:
 
 ```sh
-docker pull ghcr.io/txchen/cloakhub:0.2.0
+docker pull ghcr.io/txchen/cloakhub:0.3.0
 docker run --rm \
   -p 127.0.0.1:7788:7788 \
   -v cloakhub-data:/data \
-  ghcr.io/txchen/cloakhub:0.2.0
+  ghcr.io/txchen/cloakhub:0.3.0
 ```
 
 Equivalent Docker Compose service:
@@ -78,7 +86,7 @@ Equivalent Docker Compose service:
 ```yaml
 services:
   cloakhub:
-    image: ghcr.io/txchen/cloakhub:0.2.0
+    image: ghcr.io/txchen/cloakhub:0.3.0
     restart: unless-stopped
     shm_size: 2gb
     environment:
@@ -93,13 +101,13 @@ services:
 
 The container listens on `0.0.0.0:7788` internally. The published image includes the CloakBrowser Binary at `/opt/cloakbrowser/cloakbrowser` and KasmVNC for headed Browser Profiles.
 
-Images support `linux/amd64` and `linux/arm64`. Pin a full version such as `0.2.0`
-for predictable deployments and rollback. The `0.2` alias follows patch releases,
+Images support `linux/amd64` and `linux/arm64`. Pin a full version such as `0.3.0`
+for predictable deployments and rollback. The `0.3` alias follows patch releases,
 and `latest` follows the newest stable release. Branch builds publish `master`
 and `sha-*` development tags without changing `latest`.
 
 To release, update `package.json`, commit and push the changes, and wait for the
-Tests workflow to pass. Push a matching Git tag (for example `v0.2.0`) to build
+Tests workflow to pass. Push a matching Git tag (for example `v0.3.0`) to build
 the release images. The image workflow checks that the tag matches the package
 version before publishing.
 

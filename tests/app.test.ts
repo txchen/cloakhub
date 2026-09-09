@@ -13,6 +13,27 @@ const config: CloakHubConfig = {
 };
 
 describe("CloakHub HTTP app", () => {
+  test("API routing and authentication errors use the same machine-readable contract", async () => {
+    const app = createApp({ ...config, authToken: "admin-token" });
+    for (const [path, method, authorized, status, code] of [
+      ["/api/profiles", "GET", false, 401, "UNAUTHORIZED"],
+      ["/api/unknown", "GET", true, 404, "NOT_FOUND"],
+      ["/api/health", "POST", true, 405, "METHOD_NOT_ALLOWED"],
+      ["/api/profiles/%ZZ/cdp", "GET", true, 400, "BAD_REQUEST"]
+    ] as const) {
+      const response = await app.fetch(new Request(`http://cloakhub.test${path}`, {
+        method,
+        headers: authorized ? { authorization: "Bearer admin-token" } : {}
+      }));
+      expect(response.status).toBe(status);
+      expect(response.headers.get("content-type")).toContain("application/json");
+      const body = await response.json();
+      expect(body).toEqual({ code, message: expect.any(String), error: body.message, retryable: false });
+      if (status === 401) expect(response.headers.get("www-authenticate")).toBe("Bearer");
+      if (status === 405) expect(response.headers.get("allow")).toBe("GET");
+    }
+  });
+
   test("serves and links a favicon", async () => {
     const app = createApp(config);
 

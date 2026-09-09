@@ -1,7 +1,8 @@
-import { CapacityUnavailableError, type BrowserRuntime } from "./browser-runtime";
+import type { BrowserRuntime } from "./browser-runtime";
 import type { CdpWebSocketData } from "./cdp-websocket-proxy";
 import type { ProfileService } from "./profile-service";
-import { redactProfileSecrets } from "./profile";
+import { runtimeErrorResponse } from "./api-errors";
+import { publicRequestUrl } from "./http";
 
 export interface CdpAccessPolicy {
   authorize(request: Request, profileId: string): Promise<boolean> | boolean;
@@ -62,13 +63,8 @@ export function createCdpGateway(options: CdpGatewayOptions): CdpGateway {
 
         return Response.json(rewriteDiscoveryUrls(discovery, request, profileId));
       } catch (error) {
-        if (error instanceof CapacityUnavailableError) {
-          return Response.json({ error: error.message, retryable: true }, { status: 503 });
-        }
-
-        return Response.json(
-          { error: redactProfileSecrets(errorMessage(error), options.cdpTokensForRedaction?.() ?? []) },
-          { status: 503 }
+        return runtimeErrorResponse(
+          error, "CDP_UNAVAILABLE", 503, options.cdpTokensForRedaction?.() ?? []
         );
       }
     },
@@ -156,7 +152,7 @@ function rewriteDiscoveryUrls(value: unknown, request: Request, profileId: strin
 
 function rewriteWebSocketDebuggerUrl(value: string, request: Request, profileId: string): string {
   const original = new URL(value);
-  const publicUrl = publicRequestUrl(request);
+  const publicUrl = publicRequestUrl(new URL(request.url), request.headers);
   const protocol = publicUrl.protocol === "https:" ? "wss:" : "ws:";
   const token = publicUrl.searchParams.get("token");
   if (token && !original.searchParams.has("token")) {
@@ -191,26 +187,6 @@ function bearerToken(request: Request): string | undefined {
   return match?.[1];
 }
 
-function publicRequestUrl(request: Request): URL {
-  const url = new URL(request.url);
-  const forwardedHost = request.headers.get("x-forwarded-host");
-  const forwardedProto = request.headers.get("x-forwarded-proto");
-
-  if (forwardedHost) {
-    url.host = forwardedHost;
-  }
-
-  if (forwardedProto === "http" || forwardedProto === "https") {
-    url.protocol = `${forwardedProto}:`;
-  }
-
-  return url;
-}
-
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
 }

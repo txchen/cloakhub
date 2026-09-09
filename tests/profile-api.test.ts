@@ -30,6 +30,46 @@ afterEach(async () => {
 });
 
 describe("Browser Profile admin API", () => {
+  test("agents discover profiles and connection metadata without secrets or UI fields", async () => {
+    const runtime = fakeBrowserRuntime();
+    const { app, repository } = await tempApp({}, runtime);
+    await app.fetch(jsonRequest("http://cloakhub.test/api/profiles", "POST", {
+      profile_id: "work", display_name: "Work", notes: "Research account",
+      proxy: "http://user:secret@proxy.test:8080", headless: true
+    }));
+    await app.fetch(new Request("http://cloakhub.test/api/profiles/work/cdp-token", { method: "POST" }));
+    const token = repository.get("work")!.cdp_token!;
+    const headers = { "x-forwarded-host": "hub.example:8443", "x-forwarded-proto": "https" };
+    const response = await app.fetch(new Request("http://internal/api/profiles?view=summary", { headers }));
+    const profiles = await response.json();
+    const connection = {
+      cdp_url: "https://hub.example:8443/api/profiles/work/cdp",
+      cdp_ws_url: "wss://hub.example:8443/api/profiles/work/cdp",
+      cdp_discovery_url: "https://hub.example:8443/api/profiles/work/cdp/json/version",
+      cdp_token_url: "https://hub.example:8443/api/profiles/work/cdp-token",
+      auth: "cdp_token"
+    };
+    expect(profiles).toEqual([{
+      profile_id: "work", display_name: "Work", notes: "Research account", headless: true,
+      instance_status: "stopped", cdp_session_count: 0, manual_viewer_count: 0,
+      last_launch_error: null, connection
+    }]);
+    expect(JSON.stringify(profiles)).not.toContain(token);
+    expect(JSON.stringify(profiles)).not.toContain("secret");
+    expect(runtime.calls).toEqual([]);
+    const read = await app.fetch(new Request("http://internal/api/profiles/work?view=summary", { headers }));
+    expect(await read.json()).toEqual(profiles[0]);
+    const started = await app.fetch(new Request("http://internal/api/profiles/work/start", { method: "POST", headers }));
+    expect(await started.json()).toEqual({
+      profile_id: "work", status: "running", instance_status: "running", connection
+    });
+    const full = await app.fetch(new Request("http://internal/api/profiles/work", { headers }));
+    expect(await full.json()).toMatchObject({ connection, sleep_policy: { mode: "default" } });
+    await app.fetch(new Request("http://internal/api/profiles/work/cdp-token", { method: "DELETE" }));
+    const open = await app.fetch(new Request("http://internal/api/profiles/work?view=summary", { headers }));
+    expect((await open.json()).connection.auth).toBe("none");
+  });
+
   test("creates, lists, reads, updates, and deletes stopped Browser Profiles", async () => {
     const { app, dataRoot } = await tempApp();
 
@@ -300,15 +340,15 @@ describe("Browser Profile admin API", () => {
       })
     );
 
-    expect(await started.json()).toEqual({
+    expect(await started.json()).toMatchObject({
       profile_id: "work",
       status: "running"
     });
-    expect(await stopped.json()).toEqual({
+    expect(await stopped.json()).toMatchObject({
       profile_id: "work",
       status: "stopped"
     });
-    expect(await restarted.json()).toEqual({
+    expect(await restarted.json()).toMatchObject({
       profile_id: "work",
       status: "running"
     });
@@ -351,6 +391,8 @@ describe("Browser Profile admin API", () => {
     expect(await response.json()).toEqual({
       error:
         "Running Instance capacity is full; retry after another Browser Instance stops",
+      message: "Running Instance capacity is full; retry after another Browser Instance stops",
+      code: "CAPACITY_UNAVAILABLE",
       retryable: true
     });
   });
@@ -510,6 +552,8 @@ describe("Browser Profile admin API", () => {
     expect(await response?.json()).toEqual({
       error:
         "Running Instance capacity is full; retry after another Browser Instance stops",
+      message: "Running Instance capacity is full; retry after another Browser Instance stops",
+      code: "CAPACITY_UNAVAILABLE",
       retryable: true
     });
     expect(server.upgrades).toEqual([]);
