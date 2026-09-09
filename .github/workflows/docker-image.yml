@@ -23,6 +23,17 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
+      - name: Validate release version
+        if: github.ref_type == 'tag'
+        run: |
+          python3 - <<'PY'
+          import json, os, re
+          version = json.load(open("package.json"))["version"]
+          tag = os.environ["GITHUB_REF_NAME"]
+          if not re.fullmatch(r"v\d+\.\d+\.\d+", tag) or tag != f"v{version}":
+              raise SystemExit(f"Release tag {tag!r} must match package.json version v{version}")
+          PY
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
@@ -42,13 +53,14 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ghcr.io/${{ github.repository }}
+          flavor: latest=false
           tags: |
             type=ref,event=branch
             type=ref,event=tag
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=sha,prefix=sha-
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=latest,enable=${{ github.ref_type == 'tag' }}
 
       - name: Build and publish
         uses: docker/build-push-action@v6

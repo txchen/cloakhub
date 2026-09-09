@@ -11,6 +11,10 @@ import {
 import { request, profilePath } from "./api";
 import { openProfileEditor } from "./profile-editor";
 import { createViewerController } from "./viewer-controller";
+import { createProfileNavigation } from "./profile-navigation";
+import { initializeSidebar } from "./sidebar-controller";
+
+initializeSidebar();
 
 type Profile = PresentedBrowserProfile;
 const bootstrap = JSON.parse(element("#bootstrap").textContent!) as {
@@ -19,16 +23,20 @@ const bootstrap = JSON.parse(element("#bootstrap").textContent!) as {
 };
 let profiles = bootstrap.profiles;
 let selectedId = "";
-let filter = "all";
 const busy = new Set<string>();
 const rows = element<HTMLTableSectionElement>("#profile-rows");
 const detail = element("#profile-detail");
-const search = element<HTMLInputElement>("#search");
-const sort = element<HTMLSelectElement>("#sort");
 const syncStatus = element("#sync-status");
-const viewer = createViewerController(() => {
-  void refresh(true);
-});
+const profileNavigation = createProfileNavigation();
+const viewer = createViewerController(
+  () => { void refresh(true); },
+  (id) => {
+    selectedId = id ?? "";
+    element("#profiles-page").classList.remove("profile-focus");
+    renderDetail();
+    profileNavigation.update(profiles, selectedId);
+  }
+);
 const htmlCache = new WeakMap<HTMLElement, string>();
 function setHTML(node: HTMLElement, html: string) {
   if (htmlCache.get(node) === html) return;
@@ -42,10 +50,6 @@ function setHTML(node: HTMLElement, html: string) {
 }
 const statusBadge = (profile: Profile) =>
   `<span class="badge ${escape(profile.instance_status)}"><i></i>${escape(profile.instance_status)}</span>`;
-const tags = (profile: Profile) =>
-  (profile.tags ?? [])
-    .map((tag) => `<span class="tag">${escape(tag)}</span>`)
-    .join("");
 function action(
   profile: Profile,
   name: string,
@@ -61,13 +65,13 @@ function action(
     (name === "stop" && profile.instance_status === "stopped");
   return `<button type="button" class="${className}" data-action="${name}" data-id="${escape(profile.profile_id)}"${disabled ? " disabled" : ""}>${label}</button>`;
 }
-function renderRows(filtered: Profile[]) {
+function renderRows(ordered: Profile[]) {
   // Keep an open actions menu stable while status observations arrive.
   if (rows.querySelector("details[open]")) return;
-  const desired = new Set(filtered.map((profile) => profile.profile_id));
+  const desired = new Set(ordered.map((profile) => profile.profile_id));
   for (const row of Array.from(rows.children))
     if (!desired.has((row as HTMLElement).dataset.id!)) row.remove();
-  filtered.forEach((profile, index) => {
+  ordered.forEach((profile, index) => {
     let row = Array.from(rows.children).find(
       (row) => (row as HTMLElement).dataset.id === profile.profile_id
     ) as HTMLTableRowElement | undefined;
@@ -79,10 +83,11 @@ function renderRows(filtered: Profile[]) {
     const clients = profile.cdp_session_count + profile.manual_viewer_count;
     setHTML(
       row,
-      `<td><button class="profile-name-button" data-action="select" data-id="${escape(profile.profile_id)}" aria-label="Details for ${escape(profile.display_name)}"><span class="avatar hue-${index % 4}">${escape(profile.display_name.slice(0, 2).toUpperCase())}</span><span><strong>${escape(profile.display_name)}</strong><code>${escape(profile.profile_id)}</code></span></button><div class="row-tags">${tags(profile)}</div></td>
-      <td>${statusBadge(profile)}<small class="subline" title="${escape(profile.last_activity_at ?? "")}">${relativeTime(profile.last_activity_at)}</small>${!profile.cdp_token_configured ? '<span class="open-access">CDP open</span>' : ""}</td>
+      `<td><button class="profile-name-button" data-action="select" data-id="${escape(profile.profile_id)}" aria-label="Details for ${escape(profile.display_name)}"><span><strong>${escape(profile.display_name)}</strong><code>${escape(profile.profile_id)}</code></span></button></td>
+      <td>${statusBadge(profile)}${!profile.cdp_token_configured ? '<span class="open-access">CDP open</span>' : ""}</td>
       <td><span class="connection-count">${clients ? `${profile.cdp_session_count} CDP <span>·</span> ${profile.manual_viewer_count} viewer` : '<span class="muted">No connections</span>'}</span><small class="subline">${profile.headless ? "Automation only" : "Browser & viewer"}</small></td>
       <td class="memory-cell">${memory(profile.resource_usage.rss_bytes)}</td>
+      <td class="activity-cell" title="${escape(profile.last_activity_at ?? "")}">${relativeTime(profile.last_activity_at)}</td>
       <td><div class="row-actions">${profile.headless ? action(profile, "start", "Start") : action(profile, "open", "Open ↗")}
         <details class="row-menu"><summary class="icon-button" aria-label="Actions for ${escape(profile.display_name)}" title="Profile actions">···</summary><div class="menu-content">${action(profile, "edit", "Edit settings", "menu-button")}${action(profile, "copy", "Copy CDP URL", "menu-button")}${action(profile, "start", "Start", "menu-button")}${action(profile, "stop", "Stop", "menu-button")}${action(profile, "restart", "Restart", "menu-button")}${action(profile, "delete", "Delete profile", "menu-button text-danger")}</div></details></div></td>`
     );
@@ -97,13 +102,20 @@ function renderDetail() {
     "has-selection",
     Boolean(profile)
   );
-  if (!profile) return;
+  if (!profile) {
+    if (element("#profiles-page").classList.contains("profile-focus"))
+      element("#page-context").textContent = "Browser profiles";
+    element("#profiles-page").classList.remove("profile-focus");
+    return;
+  }
+  if (element("#profiles-page").classList.contains("profile-focus"))
+    element("#page-context").textContent = profile.display_name;
   const facts = (label: string, value: string) =>
     `<div><dt>${label}</dt><dd>${value}</dd></div>`;
   setHTML(
     detail,
     `<header class="detail-heading"><span class="eyebrow">PROFILE DETAILS</span><button class="icon-button" data-action="dismiss" aria-label="Close profile details">×</button></header>
-    <div class="detail-identity"><span class="avatar large">${escape(profile.display_name.slice(0, 2).toUpperCase())}</span><h2>${escape(profile.display_name)}</h2><code>${escape(profile.profile_id)}</code><div class="detail-badges">${statusBadge(profile)}${tags(profile)}</div></div>
+    <div class="detail-identity"><h2>${escape(profile.display_name)}</h2><code>${escape(profile.profile_id)}</code><div class="detail-badges">${statusBadge(profile)}</div></div>
     <div class="detail-actions">${profile.headless ? action(profile, "start", "Start browser", "primary") : action(profile, "open", "Open browser ↗", "primary")}${action(profile, "edit", "Edit settings")}</div>
     ${profile.last_launch_error ? `<div class="error-card"><strong>Last launch error</strong><p>${escape(profile.last_launch_error)}</p></div>` : ""}
     ${profile.last_delete_error ? `<div class="error-card"><strong>Last deletion error</strong><p>${escape(profile.last_delete_error)}</p></div>` : ""}
@@ -128,48 +140,25 @@ function render() {
     .filter((value): value is number => value !== null);
   setHTML(
     element("#metrics"),
-    `<div class="metric"><span>Total profiles</span><strong>${profiles.length}<small>persistent identities</small></strong></div><div class="metric"><span><i class="live-dot"></i> Running now</span><strong>${running}<small>/ ${bootstrap.limit} capacity</small></strong></div><div class="metric"><span>Automation connections</span><strong>${cdp}<small>active CDP sessions</small></strong></div><div class="metric"><span>Browser memory</span><strong>${memory(memoryValues.length ? memoryValues.reduce((a, b) => a + b, 0) : null)}<small>approx. RSS</small></strong></div>`
+    `<span class="metric"><i class="live-dot"></i> Running <strong>${running} / ${bootstrap.limit}</strong></span><span class="metric">CDP connections <strong>${cdp}</strong></span><span class="metric">Memory <strong>${memory(memoryValues.length ? memoryValues.reduce((a, b) => a + b, 0) : null)}</strong></span>`
   );
   element("#nav-count").textContent = String(profiles.length);
-  const query = search.value.trim().toLocaleLowerCase();
-  const filtered = profiles.filter(
-    (profile) =>
-      (filter === "all" || profile.instance_status === filter) &&
-      [profile.display_name, profile.profile_id, ...(profile.tags ?? [])].some(
-        (value) => value.toLocaleLowerCase().includes(query)
-      )
+  const ordered = [...profiles].sort((a, b) =>
+    a.display_name.localeCompare(b.display_name) ||
+    a.profile_id.localeCompare(b.profile_id)
   );
-  const rank: Record<string, number> = {
-    failed: 0,
-    starting: 1,
-    running: 2,
-    stopping: 3,
-    stopped: 4
-  };
-  filtered.sort(
-    (a, b) =>
-      (sort.value === "name"
-        ? a.display_name.localeCompare(b.display_name)
-        : sort.value === "status"
-          ? rank[a.instance_status]! - rank[b.instance_status]!
-          : (Date.parse(b.last_activity_at ?? "") || 0) -
-            (Date.parse(a.last_activity_at ?? "") || 0)) ||
-      a.profile_id.localeCompare(b.profile_id)
-  );
-  renderRows(filtered);
+  renderRows(ordered);
   renderDetail();
   const empty = element("#empty-state");
-  empty.hidden = filtered.length > 0;
+  empty.hidden = profiles.length > 0;
   setHTML(
     empty,
-    profiles.length
-      ? `<span class="empty-icon">⌕</span><h2>No matching profiles</h2><p>Try another name or tag, or clear your filters.</p><button class="secondary" data-action="reset">Clear filters</button>`
-      : `<span class="empty-icon">▦</span><h2>Your workspace starts here</h2><p>Create a browser profile to keep its identity, cookies, and settings together.</p><button class="primary" data-action="create">Create your first profile</button>`
+    `<span class="empty-icon">▦</span><h2>Your workspace starts here</h2><p>Create a browser profile to keep its identity, cookies, and settings together.</p><button class="primary" data-action="create">Create your first profile</button>`
   );
-  element("#result-count").textContent = `${filtered.length} shown`;
   element("#list-total").textContent =
     `${profiles.length} ${profiles.length === 1 ? "profile" : "profiles"}`;
   viewer.update(profiles);
+  profileNavigation.update(profiles, selectedId);
 }
 let inFlight: Promise<void> | undefined;
 async function refresh(force = false): Promise<void> {
@@ -197,24 +186,14 @@ async function refresh(force = false): Promise<void> {
 }
 function create() {
   openProfileEditor(undefined, async (id) => {
+    viewer.showProfiles();
     selectedId = id;
-    filter = "all";
-    search.value = "";
-    updateFilters();
     await refresh(true);
   });
 }
-function updateFilters() {
-  document
-    .querySelectorAll<HTMLButtonElement>("[data-filter]")
-    .forEach((button) => {
-      const active = button.dataset.filter === filter;
-      button.classList.toggle("active", active);
-      button.setAttribute("aria-pressed", String(active));
-    });
-}
 async function perform(name: string, id: string) {
   if (name === "dismiss") {
+    viewer.showProfiles();
     selectedId = "";
     render();
     return;
@@ -223,15 +202,19 @@ async function perform(name: string, id: string) {
     create();
     return;
   }
-  if (name === "reset") {
-    filter = "all";
-    search.value = "";
-    updateFilters();
-    render();
-    return;
-  }
   const profile = profiles.find((profile) => profile.profile_id === id);
   if (!profile) return;
+  if (name === "switch") {
+    if (profile.headless) {
+      viewer.showProfiles();
+      selectedId = id;
+      element("#profiles-page").classList.add("profile-focus");
+      render();
+    } else {
+      viewer.open(profile);
+    }
+    return;
+  }
   if (name === "select") {
     selectedId = id;
     render();
@@ -346,34 +329,26 @@ document.addEventListener("click", (event) => {
       .forEach((menu) => (menu.open = false));
 });
 document.addEventListener("keydown", (event) => {
-  if (
-    event.key === "/" &&
-    !(event.target instanceof HTMLInputElement) &&
-    !(event.target instanceof HTMLTextAreaElement) &&
-    !document.querySelector("dialog[open]")
-  ) {
-    event.preventDefault();
-    search.focus();
-  }
   if (event.key === "Escape")
     rows
       .querySelectorAll<HTMLDetailsElement>("details[open]")
       .forEach((menu) => (menu.open = false));
 });
-search.oninput = render;
-sort.onchange = render;
+// Keep every action reachable, including on the last visible table row.
+rows.addEventListener("toggle", (event) => {
+  const details = event.target;
+  if (!(details instanceof HTMLDetailsElement) || !details.open) return;
+  const anchor = details.querySelector("summary")!.getBoundingClientRect();
+  const menu = details.querySelector<HTMLElement>(".menu-content")!;
+  const { width, height } = menu.getBoundingClientRect();
+  menu.style.left = `${Math.max(8, Math.min(anchor.right - width, innerWidth - width - 8))}px`;
+  menu.style.right = "auto";
+  menu.style.top = `${Math.max(8, anchor.bottom + height + 8 <= innerHeight ? anchor.bottom : anchor.top - height)}px`;
+}, true);
 element("#create-profile").onclick = create;
 element("#refresh").onclick = () => {
   void refresh(true);
 };
-document.querySelectorAll<HTMLButtonElement>("[data-filter]").forEach(
-  (button) =>
-    (button.onclick = () => {
-      filter = button.dataset.filter!;
-      updateFilters();
-      render();
-    })
-);
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) void refresh();
 });

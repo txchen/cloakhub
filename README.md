@@ -42,7 +42,7 @@ running-instance limit.
 ## Features
 
 - Browser Profile CRUD with CloakBrowser-compatible launch settings, fingerprint settings, proxy,
-  locale/timezone, platform, screen, GPU, hardware concurrency, user agent, tags, notes, custom
+  locale/timezone, platform, screen, GPU, hardware concurrency, user agent, notes, custom
   launch args, headless mode, clipboard preference, and Sleep Policy.
 - Stable profile-level CDP endpoints under `/api/profiles/{profile_id}/cdp`.
 - Manual headed viewing through the CloakHub UI and a noVNC-compatible KasmVNC proxy.
@@ -66,11 +66,11 @@ Headed Browser Profiles also require KasmVNC `Xvnc`; if it is missing, startup c
 Docker-first operation uses `/data` as the Data Root and exposes CloakHub on port `7788`:
 
 ```sh
-docker pull ghcr.io/txchen/cloakhub:latest
+docker pull ghcr.io/txchen/cloakhub:0.2.0
 docker run --rm \
   -p 127.0.0.1:7788:7788 \
   -v cloakhub-data:/data \
-  ghcr.io/txchen/cloakhub:latest
+  ghcr.io/txchen/cloakhub:0.2.0
 ```
 
 Equivalent Docker Compose service:
@@ -78,7 +78,7 @@ Equivalent Docker Compose service:
 ```yaml
 services:
   cloakhub:
-    image: ghcr.io/txchen/cloakhub:latest
+    image: ghcr.io/txchen/cloakhub:0.2.0
     restart: unless-stopped
     shm_size: 2gb
     environment:
@@ -92,6 +92,16 @@ services:
 ```
 
 The container listens on `0.0.0.0:7788` internally. The published image includes the CloakBrowser Binary at `/opt/cloakbrowser/cloakbrowser` and KasmVNC for headed Browser Profiles.
+
+Images support `linux/amd64` and `linux/arm64`. Pin a full version such as `0.2.0`
+for predictable deployments and rollback. The `0.2` alias follows patch releases,
+and `latest` follows the newest stable release. Branch builds publish `master`
+and `sha-*` development tags without changing `latest`.
+
+To release, update `package.json`, commit and push the changes, and wait for the
+Tests workflow to pass. Push a matching Git tag (for example `v0.2.0`) to build
+the release images. The image workflow checks that the tag matches the package
+version before publishing.
 
 ## Configuration
 
@@ -129,12 +139,16 @@ Those integration tests exercise real headless launch, headed KasmVNC/noVNC star
 
 ## Workspace UI
 
-The default screen is a searchable profile list with tag search, status filters, activity sorting,
-connection counts, memory observations, and a profile detail panel. Profile actions are available
-from the visible `…` menu and detail panel. The editor is loaded on demand and reports server
-validation errors. Saving settings and polling every 2.5 seconds update the workspace without
-reloading an open viewer. Use **Profiles** and **Active viewer** to switch views; **Close viewer**
-disconnects only the viewer.
+The workspace is designed for roughly 10–15 profiles. A permanent sidebar lists every profile
+by name with its current status. Click a profile to open its viewer, or its controls if headless.
+Use the sidebar arrow to collapse or expand it. Drag its right edge to resize, or double-click
+the edge to restore the default width. The edge also supports arrow keys, Home, and End.
+Width and collapsed state are remembered in your browser; resizing keeps the viewer connected.
+The overview shows connection counts, memory observations, and a profile detail panel.
+Profile actions are available from the `…` menu and detail panel; the viewer has a **Settings**
+button. The editor is loaded on demand and reports server validation errors. Saving settings
+and polling every 2.5 seconds update the workspace without reloading an open viewer.
+**Close viewer** disconnects only the viewer.
 
 Timezone, language/locale, and website appearance are passed to the browser on its next start.
 Clipboard sync is enforced on the clipboard endpoints and incoming VNC clipboard messages;
@@ -166,6 +180,6 @@ bun run test:ui
 
 The UI suite uses an isolated SQLite data directory and controlled runtime handles. Set
 `CLOAKHUB_TEST_BROWSER=/path/to/chrome` to use an installed browser. It covers create/edit errors,
-proxy preservation and removal, tags/search, lifecycle confirmations, token-copy fallback,
+proxy preservation and removal, lifecycle confirmations, token-copy fallback, sidebar switching,
 viewer continuity while editing, external profile changes, and narrow screens. Real browser
 persistence and runtime settings remain covered by `bun run integration:real-runtime`.

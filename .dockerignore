@@ -4,3 +4,7 @@ node_modules
 data
 coverage
 *.log
+.cloakhub
+.bun-tmp
+test-results
+playwright-report

@@ -2,7 +2,10 @@ import type { PresentedBrowserProfile } from "../profile-presentation";
 import { copyText, element, toast } from "./dom";
 import { profilePath } from "./api";
 
-export function createViewerController(onConnectionChange: () => void) {
+export function createViewerController(
+  onConnectionChange: () => void,
+  onNavigate: (profileId: string | undefined) => void
+) {
   const page = element("#viewer-page");
   const profilesPage = element("#profiles-page");
   const frame = element<HTMLIFrameElement>("#viewer-frame");
@@ -19,8 +22,9 @@ export function createViewerController(onConnectionChange: () => void) {
     nav.classList.toggle("active", viewer);
     element("#nav-profiles").classList.toggle("active", !viewer);
     element("#page-context").textContent = viewer
-      ? "Browser viewer"
+      ? active?.display_name ?? "Browser viewer"
       : "Browser profiles";
+    onNavigate(viewer ? active?.profile_id : undefined);
   };
   const updateClipboard = () => {
     paste.disabled = !connected || !active?.clipboard_sync;
@@ -126,6 +130,9 @@ export function createViewerController(onConnectionChange: () => void) {
       .catch((error) => toast(error.message, true));
   };
   return {
+    showProfiles() {
+      setPage(false);
+    },
     open(profile: PresentedBrowserProfile) {
       if (profile.headless) {
         toast(
@@ -153,6 +160,8 @@ export function createViewerController(onConnectionChange: () => void) {
       }
       active = updated;
       element("#viewer-name").textContent = updated.display_name;
+      if (!page.hidden)
+        element("#page-context").textContent = updated.display_name;
       frame.contentWindow?.postMessage(
         {
           type: "cloakhub-clipboard-preference",

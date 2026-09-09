@@ -37,7 +37,6 @@ export function openProfileEditor(
       <section id="panel-0" role="tabpanel" aria-labelledby="tab-0" data-panel="0"><h3>Make it yours</h3><p class="section-description">Give this browser a name and a purpose. You can fine-tune the rest later.</p><div class="fields">
         ${field("display_name", "Profile name", profile?.display_name ?? "", "A recognizable name in your workspace.", 'placeholder="e.g. Research · US" autocomplete="off"')}
         ${field("profile_id", "Profile ID", profile?.profile_id ?? "", edit ? "Permanent ID used in connections and storage." : "Lower-case letters, numbers, underscores. Starts with a letter.", `pattern="[a-z][a-z0-9_]*" ${edit ? "disabled" : "required"} placeholder="research_us" autocomplete="off"`)}
-        ${field("tags", "Tags", profile?.tags?.join(", ") ?? "", "Separate tags with commas.", 'placeholder="Research, US, Team"')}
         ${field("proxy", "Proxy", "", edit && profile?.proxy ? `Current: ${escape(profile.proxy)}. Leave blank to keep it.` : "Optional. HTTP, HTTPS, or SOCKS5 proxy.", 'type="password" autocomplete="new-password" placeholder="http://user:password@host:port"')}
         ${profile?.proxy ? '<label class="checkbox full"><input name="remove_proxy" type="checkbox"> Remove the current proxy</label>' : ""}
         <label class="field full"><span>Notes</span><textarea name="notes" rows="3" placeholder="Purpose, owner, or a reminder for next time…">${escape(profile?.notes ?? "")}</textarea></label>
@@ -98,7 +97,7 @@ export function openProfileEditor(
         ${field("gpu_vendor", "GPU vendor", values.gpu_vendor)}
         ${field("gpu_renderer", "GPU renderer", values.gpu_renderer)}
         <label class="field full"><span>Custom launch arguments</span><textarea name="custom_launch_args" rows="3" placeholder="--flag=value">${escape(values.custom_launch_args.join("\n"))}</textarea><small>One argument per line. Profile storage and CDP settings are managed by CloakHub.</small></label>
-      </div><p class="inline-note">Automatic GeoIP and Humanize are not available. Set timezone and language explicitly; configure human-like actions in your automation client.</p>
+      </div>
       ${unsupported ? '<label class="checkbox warning"><input name="clear_unsupported" type="checkbox"> Remove previously saved GeoIP / Humanize settings so this profile can start.</label>' : ""}</section>
     </div>
     <footer class="dialog-actions"><button type="button" data-close class="secondary">Cancel</button><button type="submit" class="primary">${edit ? "Save changes" : "Create profile"}</button></footer>
@@ -196,10 +195,6 @@ export function openProfileEditor(
       body[key] = body[key] === "true";
     for (const key of ["screen_width", "screen_height", "hardware_concurrency"])
       body[key] = Number(body[key]);
-    body.tags = String(body.tags)
-      .split(",")
-      .map((tag) => tag.trim())
-      .filter(Boolean);
     body.custom_launch_args = String(body.custom_launch_args)
       .split(/\r?\n/)
       .map((arg) => arg.trim())

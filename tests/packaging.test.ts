@@ -34,10 +34,11 @@ describe("Docker-first packaging", () => {
 
   test("README documents registry-first Docker and Compose usage", async () => {
     const readme = await Bun.file("README.md").text();
+    const { version } = await Bun.file("package.json").json();
 
-    expect(readme).toContain("docker pull ghcr.io/txchen/cloakhub:latest");
+    expect(readme).toContain(`docker pull ghcr.io/txchen/cloakhub:${version}`);
     expect(readme).toContain("docker run --rm");
-    expect(readme).toContain("image: ghcr.io/txchen/cloakhub:latest");
+    expect(readme).toContain(`image: ghcr.io/txchen/cloakhub:${version}`);
     expect(readme).toContain("restart: unless-stopped");
     expect(readme).toContain("shm_size: 2gb");
     expect(readme).toContain('"7788:7788"');
@@ -49,8 +50,9 @@ describe("Docker-first packaging", () => {
 
   test("ARM64 Compose deployment is persistent and authenticated", async () => {
     const compose = await Bun.file("compose.arm64.yml").text();
+    const { version } = await Bun.file("package.json").json();
 
-    expect(compose).toContain("image: ghcr.io/txchen/cloakhub:latest");
+    expect(compose).toContain(`image: ghcr.io/txchen/cloakhub:${version}`);
     expect(compose).toContain("platform: linux/arm64");
     expect(compose).toContain("pull_policy: always");
     expect(compose).toContain("restart: unless-stopped");
@@ -83,7 +85,9 @@ describe("Docker-first packaging", () => {
       "push: ${{ github.event_name != 'pull_request' }}",
       "pull_request:",
       "tags:",
-      "type=raw,value=latest,enable={{is_default_branch}}",
+      "flavor: latest=false",
+      "type=raw,value=latest,enable=${{ github.ref_type == 'tag' }}",
+      "type=semver,pattern={{version}}",
     ];
 
     for (const snippet of requiredWorkflowSnippets) {
