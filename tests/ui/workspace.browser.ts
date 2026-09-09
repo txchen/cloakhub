@@ -281,7 +281,7 @@ test("headless sidebar selection opens its controls without starting a browser",
   await work.click();
   await expect(page.locator("#viewer-page")).not.toBeVisible();
   await expect(page.locator("#profile-detail")).toBeVisible();
-  await expect(page.locator(".profiles-panel")).not.toBeVisible();
+  await expect(page.getByRole("region", { name: "Profile list", exact: true })).not.toBeVisible();
   await expect(page.locator("#profile-detail h2")).toHaveText("Work");
   await expect(page.locator("#profile-detail .badge").first()).toHaveText("stopped");
   await expect(work).toHaveAttribute("aria-current", "true");
@@ -394,4 +394,27 @@ test("sidebar controls work when browser storage is unavailable", async ({ page 
   await page.keyboard.press("ArrowRight");
   await expect(handle).toHaveAttribute("aria-valuenow", "296");
   await expect(page.locator("#profile-rows tr")).toHaveCount(1);
+});
+
+test("event log filters lifecycle history and shows why automatic sleep is blocked", async ({ page }) => {
+  await seed(page, { headless: true });
+  await page.request.post("/api/profiles/work/start");
+  await page.request.post("/__test/cdp/work");
+  await page.getByRole("button", { name: "Event log", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Event log", exact: true })).toBeVisible();
+  await expect(page.locator("#events-sleep-status")).toContainText("active CDP Session");
+  await expect(page.locator("#event-rows")).toContainText("cdp.connected");
+  await page.getByLabel("Profile ID", { exact: true }).fill("work");
+  await page.getByRole("combobox", { name: "Event type", exact: true }).selectOption("browser.stopped");
+  await page.getByRole("button", { name: "Apply filters" }).click();
+  await page.request.post("/api/profiles/work/stop");
+  await page.getByRole("button", { name: "Refresh events", exact: true }).click();
+  await expect(page.locator("#event-rows")).toContainText("manual stop");
+  await expect(page.locator("#event-rows")).not.toContainText("cdp.connected");
+  await page.getByLabel("Profile ID", { exact: true }).fill("missing");
+  await page.getByRole("button", { name: "Apply filters" }).click();
+  await expect(page.locator("#events-empty")).toBeVisible();
+  await page.getByRole("button", { name: "Browser profiles", exact: false }).click();
+  await expect(page.locator("#profiles-page")).toBeVisible();
+  await expect(page.locator("#events-page")).not.toBeVisible();
 });

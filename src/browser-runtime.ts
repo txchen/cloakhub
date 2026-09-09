@@ -1,3 +1,4 @@
+import type { EventLog, EventInput } from "./event-log";
 import { join } from "node:path";
 import { connect as connectTcp } from "node:net";
 
@@ -81,6 +82,7 @@ export interface BrowserManualReadinessProbe {
 
 export interface BrowserRuntimeOptions {
   browserBin: string;
+  events?: Pick<EventLog, "record">;
   clipboardReader?: CdpClipboardReader;
   clipboardWriter?: BrowserClipboardWriter;
   cdpPortStart?: number;
@@ -258,6 +260,10 @@ const vncReadinessProbe: BrowserManualReadinessProbe = {
 export function createBrowserRuntime(
   options: BrowserRuntimeOptions
 ): BrowserRuntime {
+  const sleepObservations = new Map<string, string>();
+  const log = (profileId: string, type: string, message: string, details: EventInput["details"] = {}, level: EventInput["level"] = "info") => {
+    options.events?.record({ profile_id: profileId, type, message, details, level, occurred_at: nowIso(now) });
+  };
   const activeCdpSessions = new Map<string, ActiveCdpSession[]>();
   const activeManualViewers = new Map<string, ActiveManualViewer[]>();
   const lastActivityMs = new Map<string, number>();
@@ -317,6 +323,9 @@ export function createBrowserRuntime(
 
     async cleanupOwnedProcessesOnStartup(): Promise<void> {
       await ownedProcesses.cleanupOwnedProcesses();
+      for (const profile of options.repository.list()) {
+        if (profile.instance_status !== "stopped") log(profile.profile_id, "browser.stopped", "Stopped during CloakHub startup cleanup.", { reason: "restart" });
+      }
       options.repository.markAllStopped("restart", nowIso(now));
     },
 
@@ -336,6 +345,7 @@ export function createBrowserRuntime(
         session
       ]);
       recordActivity(profileId);
+      log(profileId, "cdp.connected", "CDP client connected; automatic sleep is blocked.", { connections: activeCdpSessions.get(profileId)!.length });
       let closed = false;
 
       return {
@@ -348,6 +358,7 @@ export function createBrowserRuntime(
           const nextSessions = (activeCdpSessions.get(profileId) ?? []).filter(
             (entry) => entry.id !== session.id
           );
+          log(profileId, "cdp.disconnected", "CDP client disconnected.", { connections: nextSessions.length });
           if (nextSessions.length === 0) {
             activeCdpSessions.delete(profileId);
             return;
@@ -555,31 +566,30 @@ export function createBrowserRuntime(
 
       for (const profileId of runningInstances.keys()) {
         const profile = options.repository.get(profileId);
-        if (!profile || profile.sleep_policy_status.blocks_sleep) {
-          continue;
-        }
-
-        const idleWindowMinutes = profile.sleep_policy_status.effective_minutes;
-        if (
-          idleWindowMinutes === null ||
-          this.activeCdpSessionCount(profileId) > 0
-        ) {
-          continue;
-        }
-
+        if (!profile || operations.has(profileId)) continue;
+        const minutes = profile.sleep_policy_status.effective_minutes;
+        const connections = this.activeCdpSessionCount(profileId);
         const lastActivity = lastActivityMs.get(profileId);
-        if (
-          lastActivity === undefined ||
-          monotonicNow() - lastActivity < idleWindowMinutes * 60 * 1000
-        ) {
-          continue;
+        const idleMs = lastActivity === undefined ? null : Math.max(0, monotonicNow() - lastActivity);
+        const blocker = profile.sleep_policy_status.blocks_sleep || minutes === null ? "never-sleep policy"
+          : connections > 0 ? "active CDP connections" : null;
+        const observation = JSON.stringify([blocker, minutes, connections]);
+        if (sleepObservations.get(profileId) !== observation) {
+          sleepObservations.set(profileId, observation);
+          log(profileId, blocker ? "sleep.blocked" : "sleep.countdown",
+            blocker ? `Automatic sleep blocked by ${blocker}.` : "Automatic sleep countdown is active.",
+            { idle_minutes: minutes, connections, last_activity_at: profile.last_activity_at, idle_ms: idleMs });
         }
-
-        if (operations.has(profileId)) continue;
-        await serialize(profileId, "idle", () =>
-          stopProfile(profile, "idle timeout", { recordActivity: false })
-        );
-        results.push({ profile_id: profileId, reason: "idle timeout" });
+        if (blocker || minutes === null || idleMs === null || idleMs < minutes * 60_000) continue;
+        log(profileId, "sleep.timeout", "Idle timeout reached; stopping browser.", {
+          idle_minutes: minutes, idle_ms: idleMs, last_activity_at: profile.last_activity_at, connections
+        });
+        try {
+          await serialize(profileId, "idle", () => stopProfile(profile, "idle timeout", { recordActivity: false }));
+          results.push({ profile_id: profileId, reason: "idle timeout" });
+        } catch {
+          // stopProfile records the failure. Keep checking other profiles and retry next sweep.
+        }
       }
 
       return results;
@@ -604,6 +614,7 @@ export function createBrowserRuntime(
       : reservationResult;
     const { cdpPort, display, displayNumber, vncPort } = reservation;
     options.repository.markStarting(profile.profile_id);
+    log(profile.profile_id, "browser.starting", "Browser is starting.");
 
     const resources: RunningInstance = {
       cdpPort,
@@ -663,6 +674,8 @@ export function createBrowserRuntime(
       const occurredAt = nowIso(now);
       options.repository.markRunning(profile.profile_id, occurredAt);
       recordActivity(profile.profile_id, occurredAt);
+      sleepObservations.delete(profile.profile_id);
+      log(profile.profile_id, "browser.started", "Browser started.", { idle_minutes: profile.sleep_policy_status.effective_minutes });
 
       return state;
     } catch (error) {
@@ -674,6 +687,7 @@ export function createBrowserRuntime(
           `${errorMessage(error)}; cleanup failed: ${errorMessage(cleanupError)}`
         );
       }
+      log(profile.profile_id, "browser.start_failed", "Browser failed to start. Check the profile launch error.", {}, "error");
       options.repository.markLaunchFailed(
         profile.profile_id,
         errorMessage(error),
@@ -737,17 +751,25 @@ export function createBrowserRuntime(
     const running = runningInstances.get(profile.profile_id);
 
     options.repository.markStopping(profile.profile_id);
+    log(profile.profile_id, "browser.stopping", "Browser is stopping.", { reason });
     if (options_.recordActivity) {
       recordActivity(profile.profile_id);
     }
 
-    await clientConnections.disconnect(profile.profile_id, reason);
+    try {
+      await clientConnections.disconnect(profile.profile_id, reason);
 
-    activeCdpSessions.delete(profile.profile_id);
-    activeManualViewers.delete(profile.profile_id);
-    if (running) await releaseResources(profile.profile_id, running);
+      activeCdpSessions.delete(profile.profile_id);
+      activeManualViewers.delete(profile.profile_id);
+      if (running) await releaseResources(profile.profile_id, running);
 
-    options.repository.markStopped(profile.profile_id, reason, nowIso(now));
+      options.repository.markStopped(profile.profile_id, reason, nowIso(now));
+      sleepObservations.delete(profile.profile_id);
+      log(profile.profile_id, "browser.stopped", "Browser stopped.", { reason }, reason === "crash" ? "warning" : "info");
+    } catch (error) {
+      log(profile.profile_id, "browser.stop_failed", "Browser cleanup failed; stop has not completed.", { reason }, "error");
+      throw error;
+    }
 
     return {
       cdp_port: running?.cdpPort ?? -1,
@@ -824,6 +846,7 @@ export function createBrowserRuntime(
     const occurredAt = nowIso(now);
     lastActivityMs.set(profileId, current);
     options.repository.recordManualInput(profileId, occurredAt);
+    log(profileId, "sleep.activity", "Manual input reset the idle countdown.", { source: "manual input" });
   }
 
   function capacityRunningInstances(): RuntimeCapacityRunningInstance[] {

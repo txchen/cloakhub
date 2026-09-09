@@ -49,7 +49,7 @@ export function createViewerController(
     clipboard = "";
     frame.removeAttribute("src");
     nav.hidden = true;
-    setPage(false);
+    if (!page.hidden) setPage(false);
     updateClipboard();
     onConnectionChange();
   };

@@ -1,3 +1,4 @@
+import type { EventInput } from "../src/event-log";
 import { describe, expect, test } from "bun:test";
 
 import type { BrowserProfile } from "../src/profile";
@@ -635,6 +636,46 @@ describe("BrowserRuntime", () => {
     session.close();
   });
 
+  test("idle history explains blockers and records successful timeout only after teardown", async () => {
+    const events: EventInput[] = [];
+    const repository = fakeRepository(profile({ profile_id: "work" }));
+    const launcher = fakeLauncher();
+    const monotonic = fakeMonotonicClock();
+    const runtime = runtimeFixture({ repository, launcher, monotonicNow: monotonic.now, events: { record: (event) => events.push(event) } });
+    await runtime.start("work");
+    const session = runtime.openCdpSession("work");
+    monotonic.advance(31 * 60_000);
+    await runtime.spinDownIdleInstances();
+    await runtime.spinDownIdleInstances();
+    expect(events.filter((event) => event.type === "sleep.blocked")).toHaveLength(1);
+    expect(events.some((event) => event.type === "sleep.timeout")).toBe(false);
+    session.close();
+    await runtime.spinDownIdleInstances();
+    expect(events.map((event) => event.type)).toEqual([
+      "browser.starting", "browser.started", "cdp.connected", "sleep.blocked", "cdp.disconnected", "sleep.countdown", "sleep.timeout", "browser.stopping", "browser.stopped"
+    ]);
+    expect(events.at(-1)?.details?.reason).toBe("idle timeout");
+    expect(launcher.handles[0]?.closed).toBe(true);
+  });
+
+  test("failed idle teardown records failure, continues other profiles, and retries later", async () => {
+    const events: EventInput[] = [];
+    const repository = fakeRepository(profile({ profile_id: "work" }), profile({ profile_id: "other" }));
+    const launcher = fakeLauncher({ exitsAfterGracefulClose: false });
+    const monotonic = fakeMonotonicClock();
+    const runtime = runtimeFixture({ repository, launcher, monotonicNow: monotonic.now, events: { record: (event) => events.push(event) } });
+    await runtime.start("work");
+    await runtime.start("other");
+    const originalKill = launcher.handles[0]!.kill.bind(launcher.handles[0]);
+    launcher.handles[0]!.kill = async () => { throw new Error("kill failed"); };
+    monotonic.advance(31 * 60_000);
+    expect(await runtime.spinDownIdleInstances()).toEqual([{ profile_id: "other", reason: "idle timeout" }]);
+    expect(events.some((event) => event.profile_id === "work" && event.type === "browser.stop_failed")).toBe(true);
+    expect(events.some((event) => event.profile_id === "work" && event.type === "browser.stopped")).toBe(false);
+    launcher.handles[0]!.kill = originalKill;
+    expect(await runtime.spinDownIdleInstances()).toEqual([{ profile_id: "work", reason: "idle timeout" }]);
+  });
+
   test("idle headless Browser Instances spin down when Sleep Policy allows it", async () => {
     const repository = fakeRepository(profile({ profile_id: "work" }));
     const launcher = fakeLauncher();
@@ -1139,6 +1180,7 @@ describe("BrowserRuntime", () => {
 });
 
 function runtimeFixture(options: {
+  events?: { record(event: EventInput): void };
   clientConnections?: BrowserClientConnections;
   clipboardReader?: CdpClipboardReader;
   clipboardWriter?: Parameters<
@@ -1157,6 +1199,7 @@ function runtimeFixture(options: {
 }) {
   return createBrowserRuntime({
     browserBin: "/opt/cloakbrowser/cloakbrowser",
+    events: options.events,
     clipboardReader: options.clipboardReader,
     clipboardWriter: options.clipboardWriter,
     clientConnections: options.clientConnections,

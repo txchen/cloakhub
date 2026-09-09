@@ -1,3 +1,4 @@
+import { openEventLog } from "./event-log";
 import { createApp, type CloakHubWebSocketData } from "./app";
 import { resolveBrowserBin } from "./browser-bin";
 import { createBunBrowserProcessLauncher } from "./browser-process-launcher";
@@ -34,6 +35,7 @@ export async function startCloakHubServer(): Promise<CloakHubServerHandle> {
   if (kasmVncBin.warning) {
     console.warn(kasmVncBin.warning);
   }
+  const events = openEventLog(config.dataRoot);
   const profileRepository = openProfileRepository(config.dataRoot);
   profileRepository.migrate();
   const profileService = createProfileService({
@@ -42,6 +44,7 @@ export async function startCloakHubServer(): Promise<CloakHubServerHandle> {
   });
   const browserRuntime = createBrowserRuntime({
     browserBin: browserBin.path,
+    events,
     clipboardReader: createCdpClipboardReader(),
     clipboardWriter: createXclipClipboardWriter(),
     dataRoot: config.dataRoot,
@@ -60,16 +63,29 @@ export async function startCloakHubServer(): Promise<CloakHubServerHandle> {
     cdpTokensForRedaction: () => profileService.cdpTokensForRedaction()
   });
   const idleTimer = setInterval(() => {
-    void browserRuntime.spinDownIdleInstances();
+    void browserRuntime.spinDownIdleInstances().catch(() => {
+      events.record({
+        profile_id: null,
+        type: "sleep.check_failed",
+        level: "error",
+        message: "Idle check failed."
+      });
+    });
   }, 5000);
   idleTimer.unref();
 
   const app = createApp(
     { ...config, browserBin: browserBin.path },
-    { browserRuntime, cdpGateway, profileService }
+    { browserRuntime, cdpGateway, profileService, events }
   );
   const cdpWebSocketHandler = createCdpWebSocketHandler({
-    cdpSessions: browserRuntime
+    cdpSessions: browserRuntime,
+    onBlankTab: (profileId) =>
+      events.record({
+        profile_id: profileId,
+        type: "tab.protected",
+        message: "Created an empty tab before closing the last tab."
+      })
   });
   const vncWebSocketHandler = createVncWebSocketHandler({
     manualViewers: browserRuntime,
@@ -125,11 +141,20 @@ export async function startCloakHubServer(): Promise<CloakHubServerHandle> {
     }
   });
 
+  events.record({
+    profile_id: null,
+    type: "hub.started",
+    message: "CloakHub started; idle checks run every 5 seconds."
+  });
+
   console.log(`CloakHub listening on http://${config.host}:${config.port}`);
 
   return createShutdownHandle({
     browserRuntime,
-    closeRepository: () => profileRepository.close(),
+    closeRepository: () => {
+      profileRepository.close();
+      events.close();
+    },
     idleTimer,
     stopServer: () => server.stop(true)
   });

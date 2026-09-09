@@ -2,7 +2,7 @@ import type { BrowserRuntime } from "./browser-runtime";
 import type { CdpWebSocketData } from "./cdp-websocket-proxy";
 import type { ProfileService } from "./profile-service";
 import { runtimeErrorResponse } from "./api-errors";
-import { publicRequestUrl } from "./http";
+import { apiErrorResponse, publicRequestUrl } from "./http";
 
 export interface CdpAccessPolicy {
   authorize(request: Request, profileId: string): Promise<boolean> | boolean;
@@ -56,6 +56,11 @@ export function createCdpGateway(options: CdpGatewayOptions): CdpGateway {
         throw new CdpUnauthorizedError();
       }
 
+      // Chromium's HTTP close endpoint would bypass the WebSocket protection queue.
+      if (cdpPath.startsWith("/json/close/")) {
+        return apiErrorResponse("Close tabs through CDP Target.closeTarget or Page.close", 405, "METHOD_NOT_ALLOWED");
+      }
+
       try {
         const runtimeState = await options.browserRuntime.start(profileId);
         const discovery = await browserHttp.getJson(runtimeState.cdp_port, discoveryPath(cdpPath));
@@ -75,16 +80,19 @@ export function createCdpGateway(options: CdpGatewayOptions): CdpGateway {
       }
 
       const runtimeState = await options.browserRuntime.start(profileId);
+      const version = await browserHttp.getJson(runtimeState.cdp_port, "/json/version");
+      const browserTargetUrl = browserWebSocketTarget(version, runtimeState.cdp_port);
       if (cdpPath === "/json/version") {
-        const version = await browserHttp.getJson(runtimeState.cdp_port, "/json/version");
         return {
           profileId,
-          targetUrl: browserWebSocketTarget(version, runtimeState.cdp_port)
+          browserTargetUrl,
+          targetUrl: browserTargetUrl
         };
       }
 
       return {
         profileId,
+        browserTargetUrl,
         targetUrl: `ws://127.0.0.1:${runtimeState.cdp_port}${cdpPath}`
       };
     }

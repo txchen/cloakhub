@@ -1,3 +1,4 @@
+import { createEventLogController } from "./event-log-controller";
 import type { PresentedBrowserProfile } from "../profile-presentation";
 import {
   element,
@@ -31,12 +32,14 @@ const profileNavigation = createProfileNavigation();
 const viewer = createViewerController(
   () => { void refresh(true); },
   (id) => {
+    eventLog.hide();
     selectedId = id ?? "";
     element("#profiles-page").classList.remove("profile-focus");
     renderDetail();
     profileNavigation.update(profiles, selectedId);
   }
 );
+const eventLog = createEventLogController(() => viewer.showProfiles());
 const htmlCache = new WeakMap<HTMLElement, string>();
 function setHTML(node: HTMLElement, html: string) {
   if (htmlCache.get(node) === html) return;
@@ -158,6 +161,7 @@ function render() {
   element("#list-total").textContent =
     `${profiles.length} ${profiles.length === 1 ? "profile" : "profiles"}`;
   viewer.update(profiles);
+  eventLog.update(profiles);
   profileNavigation.update(profiles, selectedId);
 }
 let inFlight: Promise<void> | undefined;

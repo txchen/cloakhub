@@ -1,3 +1,4 @@
+import { openEventLog } from "../src/event-log";
 import { afterAll, describe, expect, test, setDefaultTimeout } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -299,6 +300,10 @@ describe("real CloakBrowser runtime integration", () => {
         expect(await fixture.runtime.spinDownIdleInstances()).toEqual([
           { profile_id: "persistent", reason: "idle timeout" }
         ]);
+        const history = fixture.events.list({ profile_id: "persistent" }).events;
+        expect(history[0]).toMatchObject({ type: "browser.stopped", details: { reason: "idle timeout" } });
+        expect(history.some((event) => event.type === "sleep.timeout")).toBe(true);
+        await expect(fetch(`http://127.0.0.1:${firstState.cdp_port}/json/version`, { signal: AbortSignal.timeout(1000) })).rejects.toThrow();
         const secondState = await fixture.runtime.start("persistent");
         const secondCdp = await cdpSession(secondState.cdp_port, origin);
         const persisted = await secondCdp.evaluate(
@@ -344,6 +349,7 @@ describe("real CloakBrowser runtime integration", () => {
 });
 
 interface RealRuntimeFixture {
+  events: ReturnType<typeof openEventLog>;
   app: ReturnType<typeof createApp>;
   dataRoot: string;
   launcher: ReturnType<typeof createBunBrowserProcessLauncher>;
@@ -369,12 +375,14 @@ async function realRuntimeFixture(
     );
   }
 
+  const events = openEventLog(dataRoot);
   const repository = openProfileRepository(dataRoot);
   repository.migrate();
   const profileService = createProfileService({ dataRoot, repository });
   const launcher = createBunBrowserProcessLauncher({ dataRoot });
   const runtime = createBrowserRuntime({
     browserBin: browserBin.path,
+    events,
     clientConnections: options.clientConnections,
     dataRoot,
     displayRuntime: createKasmVncDisplayRuntime({
@@ -398,6 +406,7 @@ async function realRuntimeFixture(
     fetch: (request: Request, server?: CloakHubUpgradeServer) => {
       const currentApp = createApp(appConfig, {
         browserRuntime: runtime,
+        events,
         cdpGateway,
         profileService
       });
@@ -408,6 +417,7 @@ async function realRuntimeFixture(
   } as ReturnType<typeof createApp>;
   const fixture = {
     app,
+    events,
     dataRoot,
     launcher,
     profileService,
@@ -429,6 +439,7 @@ afterAll(async () => {
 async function cleanupFixture(fixture: RealRuntimeFixture): Promise<void> {
   await fixture.runtime.shutdown();
   fixture.repository.close();
+  fixture.events.close();
   await rm(fixture.dataRoot, { force: true, recursive: true });
 }
 

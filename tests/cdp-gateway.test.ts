@@ -204,6 +204,19 @@ describe("CdpGateway", () => {
     expect(data.targetUrl).toBe("ws://127.0.0.1:5100/devtools/page/page-1");
   });
 
+  test("rejects HTTP tab close before it can bypass WebSocket protection", async () => {
+    let started = false;
+    let fetched = false;
+    const gateway = createCdpGateway({
+      browserRuntime: { start: async () => { started = true; throw new Error("unexpected start"); } } as unknown as BrowserRuntime,
+      browserHttp: { getJson: async () => { fetched = true; return {}; } }
+    });
+    const response = await gateway.discoveryResponse(new Request("http://hub/api/profiles/work/cdp/json/close/tab"), "work", "/json/close/tab");
+    expect(response.status).toBe(405);
+    expect(started).toBe(false);
+    expect(fetched).toBe(false);
+  });
+
   test("root stable CDP websocket resolves through browser discovery", async () => {
     const gateway = createCdpGateway({
       browserHttp: fakeBrowserHttp({
@@ -221,6 +234,7 @@ describe("CdpGateway", () => {
     );
 
     expect(data).toEqual({
+      browserTargetUrl: "ws://127.0.0.1:5100/devtools/browser/browser-1",
       profileId: "work",
       targetUrl: "ws://127.0.0.1:5100/devtools/browser/browser-1"
     });

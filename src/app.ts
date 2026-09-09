@@ -1,3 +1,5 @@
+import { eventLogResponse } from "./event-api";
+import type { EventLog } from "./event-log";
 import {
   dashboardProfiles,
   profileResponseProfiles,
@@ -69,6 +71,7 @@ export interface CloakHubUpgradeServer {
 export type CloakHubWebSocketData = CdpWebSocketData | VncWebSocketData;
 
 export interface CloakHubServices {
+  events?: EventLog;
   browserRuntime?: BrowserRuntime;
   cdpGateway?: CdpGateway;
   profileService?: ProfileService;
@@ -129,6 +132,11 @@ export function createApp(
       !isUiAuthorized(request, config.authToken)
     ) {
       return unauthorizedResponse();
+    }
+
+    if (url.pathname === "/api/events" || url.pathname === "/ui/events") {
+      if (url.pathname === "/ui/events" && !isUiAuthorized(request, config.authToken)) return unauthorizedResponse();
+      return eventLogResponse(request, url, services.events);
     }
 
     const cdpResponse = await cdpApiResponse(

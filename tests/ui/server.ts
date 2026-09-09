@@ -1,9 +1,11 @@
+import { openEventLog } from "../../src/event-log";
 import { mkdtemp, rm } from "node:fs/promises";
 import { createApp } from "../../src/app";
 import { createBrowserRuntime } from "../../src/browser-runtime";
 import { openProfileRepository } from "../../src/profile-repository";
 import { createProfileService } from "../../src/profile-service";
 const dataRoot = await mkdtemp("/tmp/cloakhub-ui-tests-");
+const events = openEventLog(dataRoot);
 const repository = openProfileRepository(dataRoot);
 repository.migrate();
 const profileService = createProfileService({ dataRoot, repository });
@@ -22,6 +24,7 @@ function handle() {
 }
 const runtime = createBrowserRuntime({
   browserBin: "fixture",
+  events,
   dataRoot,
   repository,
   launcher: { launch: async () => handle() },
@@ -48,7 +51,7 @@ const app = createApp(
     authToken: undefined,
     browserBin: undefined
   },
-  { profileService, browserRuntime: runtime }
+  { profileService, browserRuntime: runtime, events }
 );
 const server = Bun.serve({
   hostname: "127.0.0.1",
@@ -66,6 +69,7 @@ process.on("SIGTERM", () => {
   void runtime.shutdown().finally(async () => {
     server.stop(true);
     repository.close();
+    events.close();
     await rm(dataRoot, { recursive: true, force: true });
     process.exit(0);
   });

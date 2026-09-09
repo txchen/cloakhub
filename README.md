@@ -47,8 +47,10 @@ running-instance limit.
 - Stable profile-level CDP endpoints under `/api/profiles/{profile_id}/cdp`.
 - Manual headed viewing through the CloakHub UI and a noVNC-compatible KasmVNC proxy.
 - Per-profile CDP Token create, copy, regenerate, and revoke actions.
-- Lifecycle history for starts, stops, crashes, launch failures, idle timeouts, and capacity
-  preemption.
+- Persistent event log with profile, event-type, and time-range filters, including
+  starts, stops, failures, idle timeouts, CDP sleep blockers, and capacity preemption.
+- Last-tab protection for CDP automation: creates an empty tab before closing the last
+  page, preserving normal client close events.
 - Docker and non-Docker Linux operation, with configurable Data Root and browser binary discovery.
 
 ## Automation API
@@ -74,11 +76,11 @@ Headed Browser Profiles also require KasmVNC `Xvnc`; if it is missing, startup c
 Docker-first operation uses `/data` as the Data Root and exposes CloakHub on port `7788`:
 
 ```sh
-docker pull ghcr.io/txchen/cloakhub:0.3.0
+docker pull ghcr.io/txchen/cloakhub:0.4.0
 docker run --rm \
   -p 127.0.0.1:7788:7788 \
   -v cloakhub-data:/data \
-  ghcr.io/txchen/cloakhub:0.3.0
+  ghcr.io/txchen/cloakhub:0.4.0
 ```
 
 Equivalent Docker Compose service:
@@ -86,7 +88,7 @@ Equivalent Docker Compose service:
 ```yaml
 services:
   cloakhub:
-    image: ghcr.io/txchen/cloakhub:0.3.0
+    image: ghcr.io/txchen/cloakhub:0.4.0
     restart: unless-stopped
     shm_size: 2gb
     environment:
@@ -101,13 +103,13 @@ services:
 
 The container listens on `0.0.0.0:7788` internally. The published image includes the CloakBrowser Binary at `/opt/cloakbrowser/cloakbrowser` and KasmVNC for headed Browser Profiles.
 
-Images support `linux/amd64` and `linux/arm64`. Pin a full version such as `0.3.0`
-for predictable deployments and rollback. The `0.3` alias follows patch releases,
+Images support `linux/amd64` and `linux/arm64`. Pin a full version such as `0.4.0`
+for predictable deployments and rollback. The `0.4` alias follows patch releases,
 and `latest` follows the newest stable release. Branch builds publish `master`
 and `sha-*` development tags without changing `latest`.
 
 To release, update `package.json`, commit and push the changes, and wait for the
-Tests workflow to pass. Push a matching Git tag (for example `v0.3.0`) to build
+Tests workflow to pass. Push a matching Git tag (for example `v0.4.0`) to build
 the release images. The image workflow checks that the tag matches the package
 version before publishing.
 
@@ -157,6 +159,11 @@ Profile actions are available from the `…` menu and detail panel; the viewer h
 button. The editor is loaded on demand and reports server validation errors. Saving settings
 and polling every 2.5 seconds update the workspace without reloading an open viewer.
 **Close viewer** disconnects only the viewer.
+
+Use **Event log** in the sidebar to inspect past lifecycle events and current automatic
+sleep status. An `idle timeout` stop is confirmed only after process cleanup completes.
+The log updates every five seconds and retains the latest 100,000 events across restarts;
+loading older events pauses automatic history refresh until you click **Refresh events**.
 
 Timezone, language/locale, and website appearance are passed to the browser on its next start.
 Clipboard sync is enforced on the clipboard endpoints and incoming VNC clipboard messages;

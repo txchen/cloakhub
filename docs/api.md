@@ -209,3 +209,52 @@ Allow enough time for cold browser startup and teardown (a 60-second client time
 is a reasonable starting point). A client timeout/disconnect does not cancel the
 server operation. Read profile state after an ambiguous timeout; retry start/stop
 only when appropriate. Coordinate concurrent users even for idempotent operations.
+
+## Last-tab protection
+
+CloakHub protects tab-close commands sent through its CDP WebSocket proxy. Before
+closing the last ordinary page, it creates a new `about:blank` page and then forwards
+the original close command. The original page really closes, so Playwright's
+`page.close()` and close events retain their normal meaning. Close requests from
+multiple clients are serialized per profile. Targets already acknowledged as closing
+are excluded from the next count, even if destruction or a beforeunload dialog is pending.
+A cancelled beforeunload can therefore leave an extra blank tab.
+
+This covers `Target.closeTarget` and `Page.close` (flattened sessions or direct page
+WebSockets). Protection failure returns a CDP error rather than deliberately closing
+the last page without a replacement; refresh the target list after an ambiguous close.
+Legacy nested `Target.sendMessageToTarget`, page JavaScript, and manual window closes
+are outside this protection. Explicit `Browser.close` and CloakHub Stop/Restart still
+close the browser. HTTP `/json/close/...` is rejected; use the protected WebSocket commands.
+The internal protection connection is short-lived and does not count as a sleep blocker.
+
+## Event history
+
+`GET /api/events` requires admin auth when configured. The workspace's **Event log**
+page uses the same history via UI authentication. Filters are optional:
+
+- `profile_id`: exact ID, including a deleted profile's ID.
+- `type`: exact event type, such as `sleep.timeout`, `sleep.blocked`, or `browser.stopped`.
+- `since`, `until`: inclusive ISO timestamps; use an explicit timezone.
+- `limit`: 1–200, default 100.
+- `before`: cursor from `next_before` to load older records.
+
+The response is `{ "events": [...], "next_before": 123 }`, with `next_before: null`
+at the end. Each event has `id`, `occurred_at` (UTC), `profile_id` (null for the hub),
+`type`, `level`, `message`, and structured `details`. Results are newest-recorded first;
+the ID cursor remains stable when timestamps match or new events arrive.
+
+History is stored in `events.sqlite` under the Data Root and survives server restarts
+and profile deletion. It retains the latest 100,000 events and begins when this feature
+is enabled; old profile timestamps are not reconstructed into historical events.
+Page contents, cookies, credentials, and raw CDP messages are not logged.
+
+To diagnose idle shutdown, look for `sleep.timeout` followed by `browser.stopped` with
+`details.reason: "idle timeout"`. A timeout event only indicates that stopping began;
+`browser.stop_failed` means process cleanup did not complete and a later idle sweep
+will retry. Open external CDP sessions block sleep even without traffic. After they
+disconnect, the countdown uses the last recorded activity, so an already-expired
+browser may stop on the next sweep. The server checks every 5 seconds. Blocker and
+policy changes are recorded on observation instead of logging every sweep. Manual
+input resets are throttled to once per 5 seconds, matching runtime activity tracking.
+Reading history and polling profile status never wake or keep a browser alive.
