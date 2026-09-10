@@ -39,6 +39,7 @@ describe("BunBrowserProcessLauncher", () => {
     expect(spawn.commands[0]).toEqual([
       "/opt/cloakbrowser/cloakbrowser",
       `--user-data-dir=${join(dataRoot, "profiles", "work")}`,
+      "--disk-cache-size=268435456",
       "--remote-debugging-address=127.0.0.1",
       "--remote-debugging-port=5100",
       "--no-sandbox",
@@ -78,6 +79,21 @@ describe("BunBrowserProcessLauncher", () => {
       user_data_dir: join(dataRoot, "profiles", "work")
     });
     expect(await createOwnedProcessRegistry({ dataRoot }).ownedProfileIds({ kinds: ["browser"] })).toEqual(["work"]);
+  });
+
+  test("applies the configured cache budget to each profile without touching stored data", async () => {
+    const dataRoot = await tempDataRoot();
+    const spawn = fakeSpawn();
+    const launcher = createBunBrowserProcessLauncher({ dataRoot, spawn: spawn.fn, diskCacheSizeMb: 128 });
+    for (const profileId of ["one", "two"]) {
+      const userDataDir = join(dataRoot, "profiles", profileId);
+      await mkdir(userDataDir, { recursive: true });
+      await writeFile(join(userDataDir, "storage-sentinel"), "keep");
+      await launcher.launch({ ...licenseTestCommand(dataRoot), profileId, userDataDir });
+      expect(await readFile(join(userDataDir, "storage-sentinel"), "utf8")).toBe("keep");
+    }
+    expect(spawn.commands).toHaveLength(2);
+    for (const command of spawn.commands) expect(command).toContain("--disk-cache-size=134217728");
   });
 
   test("launches headed CloakBrowser with display environment and without headless flag", async () => {

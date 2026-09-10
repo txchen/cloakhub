@@ -79,7 +79,7 @@ Save the following as `compose.yml`:
 ```yaml
 services:
   cloakhub:
-    image: ghcr.io/txchen/cloakhub:0.6.0
+    image: ghcr.io/txchen/cloakhub:0.6.1
     restart: unless-stopped
     shm_size: 2gb
     environment:
@@ -87,6 +87,7 @@ services:
       CLOAKHUB_DATA_DIR: /data
       CLOAKHUB_HOST: 0.0.0.0
       CLOAKHUB_PORT: "7788"
+      CLOAKHUB_DISK_CACHE_SIZE_MB: "${CLOAKHUB_DISK_CACHE_SIZE_MB:-256}"
       CLOAKHUB_DEFAULT_TIMEZONE: "${CLOAKHUB_DEFAULT_TIMEZONE:-UTC}"
       CLOAKHUB_DEFAULT_LOCALE: "${CLOAKHUB_DEFAULT_LOCALE:-en-US}"
       CLOAKHUB_AUTH_TOKEN: "${CLOAKHUB_AUTH_TOKEN:?Set CLOAKHUB_AUTH_TOKEN in .env}"
@@ -125,15 +126,25 @@ the installer. An invalid explicit binary path fails rather than falling back to
 See [151 deployment and multiple keys](docs/cloakbrowser-151.md) for key configuration,
 concurrency limits, version availability, and migration/rollback instructions.
 
-Images support `linux/amd64` and `linux/arm64`. Pin a full version such as `0.6.0`
+Images support `linux/amd64` and `linux/arm64`. Pin a full version such as `0.6.1`
 for predictable deployments and rollback. The `0.6` alias follows patch releases,
 and `latest` follows the newest stable release. Branch builds publish `master`
 and `sha-*` development tags without changing `latest`.
 
 To release, update `package.json`, commit and push the changes, and wait for the
-Tests workflow to pass. Push a matching Git tag (for example `v0.6.0`) to build
+Tests workflow to pass. Push a matching Git tag (for example `v0.6.1`) to build
 the release images. The image workflow checks that the tag matches the package
 version before publishing.
+
+The disk cache budget applies to ordinary HTTP resources such as pages and images, via
+Chromium's `--disk-cache-size` setting. Chromium evicts old cache entries as needed;
+this is not a filesystem quota or a limit on the whole profile directory. Cache metadata
+and in-flight writes can exceed the target. Cookies, localStorage, IndexedDB, Service Worker
+Cache Storage, and downloads are not cleared or capped by this setting. Existing profiles
+receive the budget on their next browser launch; reducing it does not synchronously shrink
+an existing cache. Restart the service after changing the environment variable.
+`--disk-cache-size` is reserved by CloakHub; remove it from existing custom launch arguments
+and use the environment variable instead.
 
 ## Configuration
 
@@ -143,6 +154,7 @@ Defaults:
 - `CLOAKHUB_PORT`: `7788`
 - `CLOAKHUB_DATA_DIR`: `~/.cloakhub/data`
 - `CLOAKHUB_MAX_RUNNING_INSTANCES`: `10`
+- `CLOAKHUB_DISK_CACHE_SIZE_MB`: `256` MiB per profile (integer 1–2047)
 
 Optional settings:
 

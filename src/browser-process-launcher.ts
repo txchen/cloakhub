@@ -1,5 +1,6 @@
 import { mkdir, rm } from "node:fs/promises";
 import { join } from "node:path";
+import { DEFAULT_DISK_CACHE_SIZE_MB } from "./config";
 import { LicenseCapacityError, withoutLicenseSecrets, type BrowserLicensePool, type LicenseLease } from "./browser-license";
 
 import type {
@@ -20,6 +21,7 @@ import {
 
 export interface BunBrowserProcessLauncherOptions {
   dataRoot: string;
+  diskCacheSizeMb?: number;
   licensePool?: BrowserLicensePool;
   ownedProcesses?: OwnedProcessRegistry;
   proxyRuntime?: BrowserProxyRuntime;
@@ -53,7 +55,7 @@ export function createBunBrowserProcessLauncher(
       let subprocess: BrowserSubprocess;
       try {
         lease = await options.licensePool?.acquire();
-        subprocess = spawn(browserCommand(command, proxySession.browserUrl), {
+        subprocess = spawn(browserCommand(command, proxySession.browserUrl, options.diskCacheSizeMb ?? DEFAULT_DISK_CACHE_SIZE_MB), {
           detached: true,
           env: {
             ...ownedProcesses.env(command.profileId, withoutLicenseSecrets(process.env)),
@@ -117,11 +119,13 @@ async function removeStaleChromiumSingletonLocks(
 
 function browserCommand(
   command: BrowserLaunchCommand,
-  proxyUrl: string
+  proxyUrl: string,
+  diskCacheSizeMb: number
 ): string[] {
   return [
     command.browserBin,
     `--user-data-dir=${command.userDataDir}`,
+    `--disk-cache-size=${diskCacheSizeMb * 1024 * 1024}`,
     "--remote-debugging-address=127.0.0.1",
     `--remote-debugging-port=${command.cdpPort}`,
     "--no-sandbox",

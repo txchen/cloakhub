@@ -8,6 +8,7 @@ export interface CloakHubConfig {
   creationRegion?: ProfileRegion;
   authToken?: string;
   browserBin?: string;
+  diskCacheSizeMb?: number;
   dataRoot: string;
   host: string;
   maxRunningInstances: number;
@@ -20,6 +21,8 @@ export class ConfigError extends Error {
     this.name = "ConfigError";
   }
 }
+
+export const DEFAULT_DISK_CACHE_SIZE_MB = 256;
 
 export const DEFAULT_HOST = "127.0.0.1";
 export const DEFAULT_PORT = 7788;
@@ -52,6 +55,12 @@ export function loadConfigFromEnv(
     creationRegion,
     authToken: emptyToUndefined(env.CLOAKHUB_AUTH_TOKEN),
     browserBin: emptyToUndefined(env.CLOAKHUB_BROWSER_BIN),
+    diskCacheSizeMb: parsePositiveInteger(
+      env.CLOAKHUB_DISK_CACHE_SIZE_MB,
+      "CLOAKHUB_DISK_CACHE_SIZE_MB",
+      DEFAULT_DISK_CACHE_SIZE_MB,
+      2047
+    ),
     dataRoot: emptyToUndefined(env.CLOAKHUB_DATA_DIR) ?? join(homeDirectory, ".cloakhub", "data"),
     host: emptyToUndefined(env.CLOAKHUB_HOST) ?? DEFAULT_HOST,
     maxRunningInstances: parsePositiveInteger(

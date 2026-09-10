@@ -64,7 +64,11 @@ export async function startCloakHubServer(): Promise<CloakHubServerHandle> {
       dataRoot: config.dataRoot,
       xvncBin: kasmVncBin.path
     }),
-    launcher: createBunBrowserProcessLauncher({ dataRoot: config.dataRoot, licensePool }),
+    launcher: createBunBrowserProcessLauncher({
+      dataRoot: config.dataRoot,
+      diskCacheSizeMb: config.diskCacheSizeMb,
+      licensePool
+    }),
     maxRunningInstances,
     repository: profileRepository
   });

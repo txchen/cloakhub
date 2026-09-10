@@ -136,6 +136,7 @@ export function resolveCreationDefaults(
 
 const CLOAKHUB_OWNED_LAUNCH_FLAGS = [
   "--user-data-dir",
+  "--disk-cache-size",
   "--remote-debugging-port",
   "--remote-debugging-address",
   "--remote-debugging-pipe",

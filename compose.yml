@@ -1,6 +1,6 @@
 services:
   cloakhub:
-    image: ghcr.io/txchen/cloakhub:0.6.0
+    image: ghcr.io/txchen/cloakhub:0.6.1
     restart: unless-stopped
     shm_size: 2gb
     environment:
@@ -8,6 +8,7 @@ services:
       CLOAKHUB_DATA_DIR: /data
       CLOAKHUB_HOST: 0.0.0.0
       CLOAKHUB_PORT: "7788"
+      CLOAKHUB_DISK_CACHE_SIZE_MB: "${CLOAKHUB_DISK_CACHE_SIZE_MB:-256}"
       CLOAKHUB_DEFAULT_TIMEZONE: "${CLOAKHUB_DEFAULT_TIMEZONE:-UTC}"
       CLOAKHUB_DEFAULT_LOCALE: "${CLOAKHUB_DEFAULT_LOCALE:-en-US}"
       CLOAKHUB_AUTH_TOKEN: "${CLOAKHUB_AUTH_TOKEN:?Set CLOAKHUB_AUTH_TOKEN in .env}"

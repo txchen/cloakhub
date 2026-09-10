@@ -18,6 +18,7 @@ describe("loadConfigFromEnv", () => {
       creationRegion: { timezone: Intl.DateTimeFormat().resolvedOptions().timeZone, locale: "en-US" },
       authToken: undefined,
       browserBin: undefined,
+      diskCacheSizeMb: 256,
       dataRoot: join("/home/operator", ".cloakhub", "data"),
       host: "127.0.0.1",
       maxRunningInstances: 10,
@@ -30,6 +31,7 @@ describe("loadConfigFromEnv", () => {
       {
         CLOAKHUB_AUTH_TOKEN: "admin-token",
         CLOAKHUB_BROWSER_BIN: "/opt/cloakbrowser/cloakbrowser",
+        CLOAKHUB_DISK_CACHE_SIZE_MB: "128",
         CLOAKHUB_DATA_DIR: "/data",
         CLOAKHUB_HOST: "0.0.0.0",
         CLOAKHUB_MAX_RUNNING_INSTANCES: "4",
@@ -42,6 +44,7 @@ describe("loadConfigFromEnv", () => {
       creationRegion: { timezone: Intl.DateTimeFormat().resolvedOptions().timeZone, locale: "en-US" },
       authToken: "admin-token",
       browserBin: "/opt/cloakbrowser/cloakbrowser",
+      diskCacheSizeMb: 128,
       dataRoot: "/data",
       host: "0.0.0.0",
       maxRunningInstances: 4,
@@ -61,6 +64,13 @@ describe("loadConfigFromEnv", () => {
     expect(() =>
       loadConfigFromEnv({ CLOAKHUB_MAX_RUNNING_INSTANCES: "101" }, "/home/operator")
     ).toThrow("CLOAKHUB_MAX_RUNNING_INSTANCES must be no more than 100");
+  });
+
+  test("rejects invalid cache sizes instead of falling back to automatic sizing", () => {
+    for (const value of ["0", "-1", "1.5", "NaN", "Infinity", "2048"]) {
+      expect(() => loadConfigFromEnv({ CLOAKHUB_DISK_CACHE_SIZE_MB: value })).toThrow("CLOAKHUB_DISK_CACHE_SIZE_MB");
+    }
+    expect(loadConfigFromEnv({ CLOAKHUB_DISK_CACHE_SIZE_MB: " " }).diskCacheSizeMb).toBe(256);
   });
 
   test("documents fixed internal resource ranges used for Running Instance capacity", () => {

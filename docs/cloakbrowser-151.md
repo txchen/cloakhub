@@ -7,7 +7,7 @@ are unchanged. Changing the selected key does not change the profile's seed or s
 
 ## Deploy the published image
 
-Use `ghcr.io/txchen/cloakhub:0.6.0` with the [Compose configuration](../compose.yml)
+Use `ghcr.io/txchen/cloakhub:0.6.1` with the [Compose configuration](../compose.yml)
 and [deployment instructions](../README.md#docker). No local build is required.
 The image supports amd64 and arm64; Docker selects the host architecture.
 

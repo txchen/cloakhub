@@ -74,6 +74,13 @@ describe("Browser Profile validation", () => {
     });
   });
 
+  test("reserves the deployment cache budget flag", () => {
+    for (const arg of ["--disk-cache-size", "--disk-cache-size=0"]) {
+      expect(() => normalizeCreateProfileInput({ profile_id: "cache", custom_launch_args: [arg] }))
+        .toThrow("CloakHub-owned flag --disk-cache-size");
+    }
+  });
+
   test("rejects invalid proxy, screen dimensions, and CloakHub-owned launch flags", () => {
     expect(() =>
       normalizeCreateProfileInput({ profile_id: "work", proxy: "http://proxy.example" })
