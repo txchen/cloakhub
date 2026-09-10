@@ -226,3 +226,60 @@ async function tempDataRoot(): Promise<string> {
   cleanupPaths.push(dataRoot);
   return dataRoot;
 }
+
+test("binds only the selected key and keeps the lease until actual process exit", async () => {
+  const { createBrowserLicensePool } = await import("../src/browser-license");
+  const dataRoot = await tempDataRoot();
+  const pool = await createBrowserLicensePool(["test-key-a"], async () => ({ active: 0, limit: 1 }));
+  const exit = Promise.withResolvers<number>();
+  const child = { exitCode: null as number | null, exited: exit.promise, kill() {}, pid: 2147480000, unref() {} };
+  let spawnOptions: any;
+  let spawnCommand: string[] = [];
+  const launcher = createBunBrowserProcessLauncher({
+    dataRoot, licensePool: pool,
+    spawn: ((command: string[], options: unknown) => { spawnCommand = command; spawnOptions = options; return child; }) as typeof Bun.spawn
+  });
+  const previous = process.env.CLOAKHUB_LICENSE_KEYS;
+  process.env.CLOAKHUB_LICENSE_KEYS = '["test-key-a", "other-key"]';
+  try {
+    const handle = await launcher.launch(licenseTestCommand(dataRoot));
+    expect(spawnOptions.env.CLOAKBROWSER_LICENSE_KEY).toBe("test-key-a");
+    expect(spawnOptions.env.CLOAKHUB_LICENSE_KEYS).toBeUndefined();
+    expect(spawnCommand.join(" ")).not.toContain("test-key-a");
+    expect(await readFile(join(dataRoot, "runtime", "license-test", "launch.json"), "utf8")).not.toContain("test-key-a");
+    await handle.kill();
+    await expect(pool.acquire()).rejects.toThrow("capacity is full");
+    child.exitCode = 76;
+    exit.resolve(76);
+    await handle.exited();
+    expect(handle.exitError?.()?.message).toContain("concurrency limit");
+    await expect(pool.acquire()).resolves.toMatchObject({ key: "test-key-a" });
+  } finally {
+    if (previous === undefined) delete process.env.CLOAKHUB_LICENSE_KEYS;
+    else process.env.CLOAKHUB_LICENSE_KEYS = previous;
+  }
+});
+
+test("returns a license reservation on spawn failure and closes the prepared proxy", async () => {
+  const { createBrowserLicensePool } = await import("../src/browser-license");
+  const dataRoot = await tempDataRoot();
+  const pool = await createBrowserLicensePool(["test-key-a"], async () => ({ active: 0, limit: 1 }));
+  let closed = false;
+  const launcher = createBunBrowserProcessLauncher({
+    dataRoot, licensePool: pool,
+    proxyRuntime: { prepare: async () => ({ browserUrl: "", close: async () => { closed = true; } }) },
+    spawn: (() => { throw new Error("spawn failed"); }) as unknown as typeof Bun.spawn
+  });
+  await expect(launcher.launch(licenseTestCommand(dataRoot))).rejects.toThrow("spawn failed");
+  expect(closed).toBe(true);
+  await expect(pool.acquire()).resolves.toMatchObject({ key: "test-key-a" });
+});
+
+function licenseTestCommand(dataRoot: string) {
+  return {
+    browserBin: "/opt/cloakbrowser/cloakbrowser", cdpPort: 5199, customLaunchArgs: [],
+    fingerprintSeed: "", gpuRenderer: "", gpuVendor: "", hardwareConcurrency: 4,
+    headless: true, platform: "linux" as const, profileId: "license-test", proxy: "",
+    screenHeight: 768, screenWidth: 1366, userAgent: "", userDataDir: join(dataRoot, "profiles", "license-test")
+  };
+}

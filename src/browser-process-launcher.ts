@@ -1,5 +1,6 @@
 import { mkdir, rm } from "node:fs/promises";
 import { join } from "node:path";
+import { LicenseCapacityError, withoutLicenseSecrets, type BrowserLicensePool, type LicenseLease } from "./browser-license";
 
 import type {
   BrowserLaunchCommand,
@@ -19,6 +20,7 @@ import {
 
 export interface BunBrowserProcessLauncherOptions {
   dataRoot: string;
+  licensePool?: BrowserLicensePool;
   ownedProcesses?: OwnedProcessRegistry;
   proxyRuntime?: BrowserProxyRuntime;
   spawn?: typeof Bun.spawn;
@@ -47,26 +49,32 @@ export function createBunBrowserProcessLauncher(
       await removeStaleChromiumSingletonLocks(command.userDataDir);
 
       const proxySession = await proxyRuntime.prepare(command.proxy);
+      let lease: LicenseLease | undefined;
       let subprocess: BrowserSubprocess;
       try {
+        lease = await options.licensePool?.acquire();
         subprocess = spawn(browserCommand(command, proxySession.browserUrl), {
           detached: true,
-          env: ownedProcesses.env(command.profileId, {
-            ...process.env,
+          env: {
+            ...ownedProcesses.env(command.profileId, withoutLicenseSecrets(process.env)),
+            ...(lease ? { CLOAKBROWSER_LICENSE_KEY: lease.key } : {}),
             ...(command.display ? { DISPLAY: command.display } : {})
-          }),
+          },
           stderr: "inherit",
           stdin: "ignore",
           stdout: "ignore"
         }) as BrowserSubprocess;
       } catch (error) {
+        lease?.release();
         await proxySession.close();
         throw error;
       }
 
-      subprocess.unref();
+      // Releasing on kill()/close() would allow another launch before actual exit.
+      void subprocess.exited.then(() => lease?.release()).catch(() => undefined);
 
       try {
+        subprocess.unref();
         await ownedProcesses.writePid(
           command.profileId,
           "browser",
@@ -149,11 +157,23 @@ function browserCommand(
 
 class ProxyBoundBrowserProcessHandle extends OwnedSubprocessHandle {
   constructor(
-    subprocess: BrowserSubprocess,
+    private readonly browserProcess: BrowserSubprocess,
     private readonly proxySession: BrowserProxySession,
     private readonly cdpPort: number
   ) {
-    super(subprocess);
+    super(browserProcess);
+  }
+
+  exitError(): Error | undefined {
+    const messages: Record<number, string> = {
+      76: "CloakBrowser rejected the session: license concurrency limit reached",
+      77: "CloakBrowser rejected the license: missing, invalid, or expired key",
+      78: "CloakBrowser license validation unavailable; retry later"
+    };
+    const code = this.browserProcess.exitCode;
+    const message = messages[code ?? -1];
+    if (!message) return undefined;
+    return code === 76 || code === 78 ? new LicenseCapacityError(message) : new Error(message);
   }
 
   override async close(): Promise<void> {

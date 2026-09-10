@@ -1,5 +1,5 @@
 import { openEventLog } from "../src/event-log";
-import { afterAll, describe, expect, test, setDefaultTimeout } from "bun:test";
+import { afterEach, describe, expect, test, setDefaultTimeout } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -11,6 +11,7 @@ import {
 } from "../src/app";
 import { resolveBrowserBin } from "../src/browser-bin";
 import { createBunBrowserProcessLauncher } from "../src/browser-process-launcher";
+import { createBrowserLicensePool, loadBrowserLicenseKeys } from "../src/browser-license";
 import {
   createBrowserRuntime,
   type BrowserClientConnections,
@@ -410,7 +411,9 @@ async function realRuntimeFixture(
   const repository = openProfileRepository(dataRoot);
   repository.migrate();
   const profileService = createProfileService({ dataRoot, repository });
-  const launcher = createBunBrowserProcessLauncher({ dataRoot });
+  const licenseKeys = await loadBrowserLicenseKeys();
+  const licensePool = licenseKeys.length ? await createBrowserLicensePool(licenseKeys) : undefined;
+  const launcher = createBunBrowserProcessLauncher({ dataRoot, licensePool });
   const runtime = createBrowserRuntime({
     browserBin: browserBin.path,
     events,
@@ -421,6 +424,7 @@ async function realRuntimeFixture(
       xvncBin: kasmVnc.path
     }),
     launcher,
+    maxRunningInstances: Math.min(10, licensePool?.capacity ?? Infinity),
     monotonicNow: options.monotonicNow,
     repository
   });
@@ -463,7 +467,7 @@ async function realRuntimeFixture(
   return fixture;
 }
 
-afterAll(async () => {
+afterEach(async () => {
   await Promise.all(cleanupFixtures.splice(0).map(cleanupFixture));
 });
 

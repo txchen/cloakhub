@@ -1,6 +1,7 @@
 import { openEventLog } from "./event-log";
 import { createApp, type CloakHubWebSocketData } from "./app";
-import { resolveBrowserBin } from "./browser-bin";
+import { prepareBrowserBinary } from "./browser-install";
+import { createBrowserLicensePool, loadBrowserLicenseKeys } from "./browser-license";
 import { createBunBrowserProcessLauncher } from "./browser-process-launcher";
 import { createBrowserRuntime, type BrowserRuntime } from "./browser-runtime";
 import { createCdpGateway, createProfileCdpAccessPolicy } from "./cdp-gateway";
@@ -30,7 +31,17 @@ export interface CloakHubServerHandle {
 export async function startCloakHubServer(): Promise<CloakHubServerHandle> {
   const config = loadConfigFromEnv();
   await ensureDataRoot(config.dataRoot);
-  const browserBin = await resolveBrowserBin(config.browserBin);
+  const licenseKeys = await loadBrowserLicenseKeys();
+  const browserBin = await prepareBrowserBinary({
+    browserBin: config.browserBin,
+    dataRoot: config.dataRoot,
+    licenseKeys,
+    installer: process.env.CLOAKHUB_BROWSER_INSTALLER,
+    version: process.env.CLOAKHUB_BROWSER_VERSION
+  });
+  const licensePool = licenseKeys.length ? await createBrowserLicensePool(licenseKeys) : undefined;
+  const maxRunningInstances = Math.min(config.maxRunningInstances, licensePool?.capacity ?? Infinity);
+  if (licensePool) console.log(`CloakBrowser: ${licenseKeys.length} configured key(s), ${licensePool.capacity} licensed slots; Hub limit ${maxRunningInstances}`);
   const kasmVncBin = await resolveKasmVncBin();
   if (kasmVncBin.warning) {
     console.warn(kasmVncBin.warning);
@@ -53,8 +64,8 @@ export async function startCloakHubServer(): Promise<CloakHubServerHandle> {
       dataRoot: config.dataRoot,
       xvncBin: kasmVncBin.path
     }),
-    launcher: createBunBrowserProcessLauncher({ dataRoot: config.dataRoot }),
-    maxRunningInstances: config.maxRunningInstances,
+    launcher: createBunBrowserProcessLauncher({ dataRoot: config.dataRoot, licensePool }),
+    maxRunningInstances,
     repository: profileRepository
   });
   await browserRuntime.cleanupOwnedProcessesOnStartup();

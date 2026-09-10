@@ -12,6 +12,12 @@ afterEach(async () => {
 });
 
 describe("resolveBrowserBin", () => {
+  test("does not substitute a PATH browser when an explicit override is broken", async () => {
+    const browserBin = await fakeExecutable("cloakbrowser");
+    await expect(resolveBrowserBin("/missing/explicit-browser", {
+      pathEnv: dirname(browserBin), packagedDockerPath: browserBin
+    })).rejects.toThrow("Configured CLOAKHUB_BROWSER_BIN");
+  });
   test("uses an executable CLOAKHUB_BROWSER_BIN override", async () => {
     const browserBin = await fakeExecutable("cloakbrowser-custom");
 

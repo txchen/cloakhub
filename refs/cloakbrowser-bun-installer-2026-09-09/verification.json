@@ -1,0 +1,20 @@
+{
+  "typecheck": "pass",
+  "unit": {
+    "passed": 203,
+    "skipped": 10,
+    "failed": 0
+  },
+  "real_runtime": {
+    "passed": 9,
+    "failed": 0
+  },
+  "e2e": {
+    "passed": 11,
+    "failed": 0
+  },
+  "license_seats": {
+    "active": 0,
+    "limit": 1
+  }
+}

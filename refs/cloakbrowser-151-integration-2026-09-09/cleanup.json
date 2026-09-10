@@ -1,0 +1,12 @@
+{
+  "evaluation_containers_stopped": true,
+  "license_seats": {
+    "state": "ok",
+    "active": 0,
+    "limit": 1
+  },
+  "preexisting_containers_untouched": [
+    "cloakhub-antibot-20260909",
+    "cloakhub-ui-review"
+  ]
+}

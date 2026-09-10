@@ -45,6 +45,7 @@ export interface BrowserLaunchCommand {
 }
 
 export interface BrowserProcessHandle {
+  exitError?(): Error | undefined;
   close(): Promise<void>;
   exited(): Promise<void>;
   hasExited(): Promise<boolean>;
@@ -669,7 +670,13 @@ export function createBrowserRuntime(
       });
 
       const state = runningState(profile.profile_id, resources);
-      await readinessProbe.waitUntilReady(state);
+      const handle = resources.handle;
+      await Promise.race([
+        readinessProbe.waitUntilReady(state),
+        handle.exited().then(() => {
+          throw handle.exitError?.() ?? new Error("Browser exited before CDP was ready");
+        })
+      ]);
       superviseUnexpectedExit(profile.profile_id, resources.handle);
       const occurredAt = nowIso(now);
       options.repository.markRunning(profile.profile_id, occurredAt);
@@ -792,6 +799,8 @@ export function createBrowserRuntime(
             "crash",
             { recordActivity: false }
           );
+          const exitError = handle.exitError?.();
+          if (exitError) options.repository.markFailed(profileId, exitError.message, nowIso(now));
         })
       )
       .catch((error) => {

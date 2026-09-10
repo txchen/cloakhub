@@ -5,3 +5,9 @@ node_modules/
 
 test-results/
 playwright-report/
+
+secrets/
+
+.env
+.env.*
+!.env.example

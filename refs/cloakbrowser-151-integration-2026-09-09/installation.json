@@ -1,0 +1,8 @@
+{
+  "missing_key_rejected": true,
+  "pin_check": {
+    "exit_code": 2,
+    "wrong_pin_rejected": true
+  },
+  "image_bytes": 315594183
+}

@@ -8,3 +8,9 @@ coverage
 .bun-tmp
 test-results
 playwright-report
+
+secrets/
+
+.env
+.env.*
+!.env.example

@@ -22,9 +22,9 @@ running-instance limit.
 - **Automation visibility**: open CDP sessions, manual viewer counts, last activity, stop reasons,
   and approximate owned-process resource usage are surfaced through the UI/API.
 - **Bun-first runtime**: the backend directly supervises CloakBrowser, KasmVNC, ports, process
-  groups, and cleanup without a Python backend service.
-- **Docker-first packaging**: the published image includes the CloakBrowser Binary and KasmVNC, so
-  normal deployments do not download the browser at runtime.
+  groups, and cleanup through Bun.
+- **Docker-first packaging**: KasmVNC and the official browser installer are included.
+  CloakBrowser 151 is downloaded once into a persistent cache using your license key.
 
 ## CloakHub vs CloakBrowser Manager
 
@@ -37,7 +37,7 @@ running-instance limit.
 | CDP access | CDP is proxied through the manager for running profiles. | CDP is proxied through CloakHub, uses stable profile URLs, and can be protected per profile with a CDP Token. |
 | Process cleanup | Optimized for a single-purpose container. | Cleanup targets CloakHub-owned processes by profile-specific ownership markers. |
 | Stack | FastAPI backend plus React/Vite frontend. | Bun backend with a lightweight Bun-served UI. |
-| Docker image | Builds a Manager application image. | Uses a registry-first image with bundled CloakBrowser Binary and KasmVNC. |
+| Docker image | Builds a Manager application image. | Includes KasmVNC; downloads CloakBrowser 151 from official channels into a persistent cache. |
 
 ## Features
 
@@ -68,50 +68,70 @@ bun install
 bun run start
 ```
 
-Startup requires a discoverable CloakBrowser Binary. Set `CLOAKHUB_BROWSER_BIN`, provide the packaged Docker path, or install `cloakbrowser` on `PATH`.
+For local development, startup requires a discoverable CloakBrowser Binary (use the tested 151 build). Set `CLOAKHUB_BROWSER_BIN`, provide the packaged Docker path, or install `cloakbrowser` on `PATH`.
 Headed Browser Profiles also require KasmVNC `Xvnc`; if it is missing, startup continues with a warning and headed launch/viewer actions fail until `Xvnc` is installed.
 
 ## Docker
 
-Docker-first operation uses `/data` as the Data Root and exposes CloakHub on port `7788`:
-
-```sh
-docker pull ghcr.io/txchen/cloakhub:0.5.0
-docker run --rm \
-  -p 127.0.0.1:7788:7788 \
-  -v cloakhub-data:/data \
-  ghcr.io/txchen/cloakhub:0.5.0
-```
-
-Equivalent Docker Compose service:
+Deploy the published image with Docker Compose; no source checkout or local build is needed.
+Save the following as `compose.yml`:
 
 ```yaml
 services:
   cloakhub:
-    image: ghcr.io/txchen/cloakhub:0.5.0
+    image: ghcr.io/txchen/cloakhub:0.6.0
     restart: unless-stopped
     shm_size: 2gb
     environment:
+      CLOAKHUB_LICENSE_KEYS_FILE: /run/secrets/cloakbrowser-keys
       CLOAKHUB_DATA_DIR: /data
       CLOAKHUB_HOST: 0.0.0.0
       CLOAKHUB_PORT: "7788"
       CLOAKHUB_DEFAULT_TIMEZONE: "${CLOAKHUB_DEFAULT_TIMEZONE:-UTC}"
       CLOAKHUB_DEFAULT_LOCALE: "${CLOAKHUB_DEFAULT_LOCALE:-en-US}"
+      CLOAKHUB_AUTH_TOKEN: "${CLOAKHUB_AUTH_TOKEN:?Set CLOAKHUB_AUTH_TOKEN in .env}"
     ports:
-      - "7788:7788"
+      - "${CLOAKHUB_BIND_ADDRESS:-127.0.0.1}:7788:7788"
     volumes:
       - ./data:/data
+      - ./secrets/cloakbrowser-keys:/run/secrets/cloakbrowser-keys:ro
 ```
 
-The container listens on `0.0.0.0:7788` internally. The published image includes the CloakBrowser Binary at `/opt/cloakbrowser/cloakbrowser` and KasmVNC for headed Browser Profiles.
+Create a `.env` file alongside it with `CLOAKHUB_AUTH_TOKEN=<random admin password>`
+(generate a value with `openssl rand -hex 32`). Set `CLOAKHUB_BIND_ADDRESS=0.0.0.0`
+for LAN access; the default only exposes the service on localhost. Set
+`CLOAKHUB_DEFAULT_TIMEZONE` and `CLOAKHUB_DEFAULT_LOCALE` to match your browser region.
 
-Images support `linux/amd64` and `linux/arm64`. Pin a full version such as `0.5.0`
-for predictable deployments and rollback. The `0.5` alias follows patch releases,
+```sh
+mkdir -p secrets data
+chmod 700 secrets
+# Create secrets/cloakbrowser-keys with one license key per line, then:
+chmod 600 .env secrets/cloakbrowser-keys
+docker compose pull
+docker compose up -d
+docker compose logs -f cloakhub
+```
+
+Open `http://localhost:7788`, or `http://<server-lan-ip>:7788` when LAN binding is enabled,
+and sign in with the configured admin password. The multi-platform image automatically
+selects amd64 or arm64; `compose.arm64.yml` explicitly selects ARM64 when needed.
+The container listens on `0.0.0.0:7788` internally.
+It downloads **151.0.7922.108.4** through the official JS package `cloakbrowser@0.5.10`, running on Bun, including
+upstream signature/checksum verification, on the first start. The binary is cached under
+`/data/browser-cache`; subsequent starts use that exact cached build. No key or browser
+binary is included in the application image. Python and Node are not required or bundled. A mounted `CLOAKHUB_BROWSER_BIN` overrides
+the installer. An invalid explicit binary path fails rather than falling back to another browser.
+
+See [151 deployment and multiple keys](docs/cloakbrowser-151.md) for key configuration,
+concurrency limits, version availability, and migration/rollback instructions.
+
+Images support `linux/amd64` and `linux/arm64`. Pin a full version such as `0.6.0`
+for predictable deployments and rollback. The `0.6` alias follows patch releases,
 and `latest` follows the newest stable release. Branch builds publish `master`
 and `sha-*` development tags without changing `latest`.
 
 To release, update `package.json`, commit and push the changes, and wait for the
-Tests workflow to pass. Push a matching Git tag (for example `v0.5.0`) to build
+Tests workflow to pass. Push a matching Git tag (for example `v0.6.0`) to build
 the release images. The image workflow checks that the tag matches the package
 version before publishing.
 
@@ -126,7 +146,12 @@ Defaults:
 
 Optional settings:
 
-- `CLOAKHUB_BROWSER_BIN`: path to the CloakBrowser Binary
+- `CLOAKHUB_BROWSER_BIN`: path to an already installed/mounted CloakBrowser Binary
+- `CLOAKHUB_LICENSE_KEYS_FILE`: read-only file with one key per line (recommended)
+- `CLOAKHUB_LICENSE_KEYS`: JSON array of keys; takes precedence over the file
+- `CLOAKBROWSER_LICENSE_KEY`: legacy single-key environment variable
+- `CLOAKHUB_BROWSER_INSTALLER`: set to `bun` for managed downloads (already set in Docker)
+- `CLOAKHUB_BROWSER_VERSION`: exact 151 release for the Docker installer; defaults to `151.0.7922.108.4`
 - `CLOAKHUB_AUTH_TOKEN`: admin auth token for protected UI and admin APIs
 - `CLOAKHUB_DEFAULT_TIMEZONE`: IANA timezone for new profiles, e.g. `America/Los_Angeles`;
   defaults to the server process timezone (usually UTC in Docker)

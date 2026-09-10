@@ -18,6 +18,38 @@ import {
 import type { OwnedProcessRegistry } from "../src/owned-process";
 
 describe("BrowserRuntime", () => {
+  test("records license denial before CDP readiness and releases the display", async () => {
+    const repository = fakeRepository(profile({ headless: false }));
+    const launcher = fakeLauncher();
+    const display = fakeDisplayRuntime();
+    const entered = Promise.withResolvers<void>();
+    const runtime = runtimeFixture({
+      repository, launcher, displayRuntime: display,
+      readinessProbe: { waitUntilReady: async () => { entered.resolve(); await new Promise(() => {}); } }
+    });
+    const start = runtime.start("work");
+    await entered.promise;
+    Object.assign(launcher.handles[0]!, { exitError: () => new Error("license rejected") });
+    launcher.handles[0]!.exit();
+    await expect(start).rejects.toThrow("license rejected");
+    expect(display.handles[0]?.closed).toBe(true);
+    expect(repository.get("work")?.last_launch_error).toBe("license rejected");
+  });
+
+  test("records late license denial after CDP readiness instead of losing the reason", async () => {
+    const repository = fakeRepository(profile({ headless: false }));
+    const launcher = fakeLauncher();
+    const display = fakeDisplayRuntime();
+    const runtime = runtimeFixture({ repository, launcher, displayRuntime: display });
+    await runtime.start("work");
+    Object.assign(launcher.handles[0]!, { exitError: () => new Error("license concurrency exceeded") });
+    launcher.handles[0]!.exit();
+    await Bun.sleep(0);
+    expect(display.handles[0]?.closed).toBe(true);
+    expect(repository.get("work")?.instance_status).toBe("failed");
+    expect(repository.get("work")?.last_launch_error).toBe("license concurrency exceeded");
+  });
+
   test("concurrent starts share readiness, and stop waits for the pending launch", async () => {
     const repository = fakeRepository(profile({ profile_id: "work" }));
     const launcher = fakeLauncher();

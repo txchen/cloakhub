@@ -24,6 +24,9 @@ export async function resolveBrowserBin(
   configuredBrowserBin: string | undefined,
   options: BrowserBinDiscoveryOptions = {}
 ): Promise<BrowserBinInfo> {
+  if (configuredBrowserBin && !(await isExecutable(configuredBrowserBin))) {
+    throw new BrowserBinError("Configured CLOAKHUB_BROWSER_BIN is missing or not executable");
+  }
   const candidates = [
     configuredBrowserBin,
     options.packagedDockerPath ?? DEFAULT_PACKAGED_DOCKER_PATH,

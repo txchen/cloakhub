@@ -1,5 +1,6 @@
 import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import { withoutLicenseSecrets } from "./browser-license";
 
 export const CLOAKHUB_OWNED_PROCESS_DATA_ROOT_ENV = "CLOAKHUB_DATA_ROOT";
 export const CLOAKHUB_OWNED_PROCESS_PROFILE_ID_ENV = "CLOAKHUB_PROFILE_ID";
@@ -152,7 +153,7 @@ export function ownedProcessEnv(
   baseEnv: NodeJS.ProcessEnv = process.env
 ): NodeJS.ProcessEnv {
   return {
-    ...baseEnv,
+    ...withoutLicenseSecrets(baseEnv),
     [CLOAKHUB_OWNED_PROCESS_DATA_ROOT_ENV]: dataRoot,
     [CLOAKHUB_OWNED_PROCESS_PROFILE_ID_ENV]: profileId
   };
