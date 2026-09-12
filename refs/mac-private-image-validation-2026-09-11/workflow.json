@@ -1,0 +1,42 @@
+[
+  {
+    "name": "Mac identity and multilingual form entry",
+    "pass": true,
+    "detail": {
+      "version": "151.0.7922.108",
+      "platform": "MacIntel"
+    }
+  },
+  {
+    "name": "iframe popup upload download",
+    "pass": true
+  },
+  {
+    "name": "Mac fonts resolve through the profile-specific font configuration",
+    "pass": true,
+    "detail": {
+      "helveticaNeueLocalLoad": true
+    }
+  },
+  {
+    "name": "two CDP clients share profile",
+    "pass": true
+  },
+  {
+    "name": "cookies localStorage IndexedDB survive browser stop and auto-wake",
+    "pass": true,
+    "detail": {
+      "cookies": true,
+      "localStorage": true,
+      "indexedDB": true
+    }
+  },
+  {
+    "name": "container restart retains Mac identity and storage",
+    "pass": true,
+    "detail": {
+      "platform": "macos",
+      "cookieAndLocalStorage": true
+    }
+  }
+]

@@ -22,6 +22,7 @@ import {
 export interface BunBrowserProcessLauncherOptions {
   dataRoot: string;
   diskCacheSizeMb?: number;
+  macosFontconfigFile?: string;
   licensePool?: BrowserLicensePool;
   ownedProcesses?: OwnedProcessRegistry;
   proxyRuntime?: BrowserProxyRuntime;
@@ -59,6 +60,8 @@ export function createBunBrowserProcessLauncher(
           detached: true,
           env: {
             ...ownedProcesses.env(command.profileId, withoutLicenseSecrets(process.env)),
+            ...(command.platform === "macos" && options.macosFontconfigFile
+              ? { FONTCONFIG_FILE: options.macosFontconfigFile } : {}),
             ...(lease ? { CLOAKBROWSER_LICENSE_KEY: lease.key } : {}),
             ...(command.display ? { DISPLAY: command.display } : {})
           },

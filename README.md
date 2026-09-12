@@ -123,6 +123,9 @@ upstream signature/checksum verification, on the first start. The binary is cach
 binary is included in the application image. Python and Node are not required or bundled. A mounted `CLOAKHUB_BROWSER_BIN` overrides
 the installer. An invalid explicit binary path fails rather than falling back to another browser.
 
+For a local image with real Mac fonts and Mac defaults for new profiles, see
+[personal Mac-persona image](docs/private-macos.md).
+
 See [151 deployment and multiple keys](docs/cloakbrowser-151.md) for key configuration,
 concurrency limits, version availability, and migration/rollback instructions.
 

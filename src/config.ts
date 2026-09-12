@@ -5,6 +5,7 @@ import { resolveCreationDefaults, type ProfileRegion } from "./profile";
 export type CloakHubEnv = Record<string, string | undefined>;
 
 export interface CloakHubConfig {
+  creationPlatform?: string;
   creationRegion?: ProfileRegion;
   authToken?: string;
   browserBin?: string;
@@ -12,6 +13,7 @@ export interface CloakHubConfig {
   dataRoot: string;
   host: string;
   maxRunningInstances: number;
+  macosFontconfigFile?: string;
   port: number;
 }
 
@@ -42,16 +44,20 @@ export function loadConfigFromEnv(
   homeDirectory = homedir()
 ): CloakHubConfig {
   let creationRegion: ProfileRegion;
+  let creationPlatform: string;
   try {
-    const { timezone, locale } = resolveCreationDefaults({
+    const { timezone, locale, platform } = resolveCreationDefaults({
       timezone: emptyToUndefined(env.CLOAKHUB_DEFAULT_TIMEZONE),
       locale: emptyToUndefined(env.CLOAKHUB_DEFAULT_LOCALE)
-    });
+    }, emptyToUndefined(env.CLOAKHUB_DEFAULT_PLATFORM));
     creationRegion = { timezone, locale };
+    creationPlatform = platform;
   } catch (error) {
-    throw new ConfigError(`Invalid CLOAKHUB_DEFAULT_TIMEZONE/CLOAKHUB_DEFAULT_LOCALE: ${error instanceof Error ? error.message : String(error)}`);
+    throw new ConfigError(`Invalid CLOAKHUB_DEFAULT_PLATFORM/CLOAKHUB_DEFAULT_TIMEZONE/CLOAKHUB_DEFAULT_LOCALE: ${error instanceof Error ? error.message : String(error)}`);
   }
   return {
+    creationPlatform,
+    macosFontconfigFile: emptyToUndefined(env.CLOAKHUB_MACOS_FONTCONFIG_FILE),
     creationRegion,
     authToken: emptyToUndefined(env.CLOAKHUB_AUTH_TOKEN),
     browserBin: emptyToUndefined(env.CLOAKHUB_BROWSER_BIN),

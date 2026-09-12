@@ -30,8 +30,9 @@ afterEach(async () => {
 });
 
 describe("Browser Profile admin API", () => {
-  test("authenticated defaults match minimal API creation", async () => {
+  test.each(["linux", "macos"])("authenticated defaults match minimal API creation (%s)", async (platform) => {
     const { app } = await tempApp({
+      creationPlatform: platform,
       authToken: "admin-token",
       creationRegion: { timezone: "Asia/Tokyo", locale: "ja-JP" }
     });
@@ -43,7 +44,7 @@ describe("Browser Profile admin API", () => {
       const response = await app.fetch(new Request(`http://cloakhub.test${path}`, { headers }));
       expect(response.status).toBe(200);
       expect(await response.json()).toMatchObject({
-        platform: "linux", headless: false, timezone: "Asia/Tokyo", locale: "ja-JP"
+        platform, headless: false, timezone: "Asia/Tokyo", locale: "ja-JP"
       });
       expect((await app.fetch(new Request(`http://cloakhub.test${path}`, { method: "POST", headers }))).status).toBe(405);
     }
@@ -51,7 +52,7 @@ describe("Browser Profile admin API", () => {
       method: "POST", headers: { authorization: "Bearer admin-token", "content-type": "application/json" },
       body: JSON.stringify({ profile_id: "regional" })
     }));
-    expect(await created.json()).toMatchObject({ timezone: "Asia/Tokyo", locale: "ja-JP", platform: "linux" });
+    expect(await created.json()).toMatchObject({ timezone: "Asia/Tokyo", locale: "ja-JP", platform });
   });
 
   test("agents discover profiles and connection metadata without secrets or UI fields", async () => {
@@ -904,6 +905,7 @@ async function tempApp(
   const repository = openProfileRepository(dataRoot);
   repository.migrate();
   const profileService = createProfileService({
+    creationPlatform: overrides.creationPlatform,
     creationRegion: overrides.creationRegion,
     dataRoot,
     repository,

@@ -13,6 +13,16 @@ afterEach(async () => {
 });
 
 describe("ProfileService", () => {
+  test("a new deployment default changes only new profiles without an explicit platform", async () => {
+    const { service, repository, dataRoot } = await tempService();
+    await service.createProfile({ profile_id: "existing" });
+    const macService = createProfileService({ dataRoot, repository, creationPlatform: "macos" });
+    expect(macService.getCreationDefaults().platform).toBe("macos");
+    expect((await macService.createProfile({ profile_id: "fresh" })).platform).toBe("macos");
+    expect((await macService.createProfile({ profile_id: "explicit", platform: "windows" })).platform).toBe("windows");
+    macService.updateProfile("existing", { notes: "Preserve saved identity" });
+    expect(macService.getProfile("existing")!.platform).toBe("linux");
+  });
   test("persists deployment region defaults only for new profiles", async () => {
     const { service } = await tempService({
       creationRegion: { timezone: "America/Los_Angeles", locale: "en-US" }
@@ -88,5 +98,5 @@ async function tempService(overrides = {}) {
   repository.migrate();
   const service = createProfileService({ dataRoot, repository, ...overrides });
 
-  return { dataRoot, service };
+  return { dataRoot, repository, service };
 }

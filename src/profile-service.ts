@@ -43,6 +43,7 @@ export interface CdpTokenState {
 }
 
 export interface ProfileServiceOptions {
+  creationPlatform?: string;
   creationRegion?: Partial<ProfileRegion>;
   cdpTokenGenerator?: () => string;
   dataRoot: string;
@@ -77,7 +78,7 @@ export function createProfileService(
   options: ProfileServiceOptions
 ): ProfileService {
   const fileStore = createFileStore(options);
-  const creationDefaults = resolveCreationDefaults(options.creationRegion);
+  const creationDefaults = resolveCreationDefaults(options.creationRegion, options.creationPlatform);
   const generateCdpToken =
     options.cdpTokenGenerator ?? defaultCdpTokenGenerator;
 

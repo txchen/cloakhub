@@ -1,0 +1,15 @@
+# Local, personal image. Build with scripts/build-mac-image.sh.
+ARG BASE_IMAGE=ghcr.io/txchen/cloakhub:0.6.1
+FROM ${BASE_IMAGE}
+
+ENV CLOAKHUB_BROWSER_VERSION=151.0.7922.108.6 \
+    CLOAKHUB_DEFAULT_PLATFORM=macos \
+    CLOAKHUB_MACOS_FONTCONFIG_FILE=/app/macos-fonts.conf
+
+COPY src /app/src
+COPY macos-fonts.conf /app/macos-fonts.conf
+COPY check-mac-fonts.ts /app/check-mac-fonts.ts
+COPY fonts /opt/cloakhub/fonts/macos
+
+RUN FONTCONFIG_FILE=/app/macos-fonts.conf fc-cache -f \
+    && FONTCONFIG_FILE=/app/macos-fonts.conf bun /app/check-mac-fonts.ts

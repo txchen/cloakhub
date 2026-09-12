@@ -1,0 +1,5 @@
+# docker compose -f compose.yml -f compose.mac.yml up -d
+services:
+  cloakhub:
+    image: cloakhub:mac-private
+    pull_policy: never

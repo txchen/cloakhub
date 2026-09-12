@@ -13,6 +13,18 @@ afterEach(async () => {
 });
 
 describe("BunBrowserProcessLauncher", () => {
+  test("uses the optional Mac font configuration only for Mac profiles", async () => {
+    const dataRoot = await tempDataRoot();
+    const spawn = fakeSpawn();
+    const macosFontconfigFile = "/opt/cloakhub/macos-fonts.conf";
+    const launcher = createBunBrowserProcessLauncher({ dataRoot, spawn: spawn.fn, macosFontconfigFile });
+    for (const platform of ["linux", "macos"]) {
+      await launcher.launch({ ...licenseTestCommand(dataRoot), platform, profileId: platform,
+        userDataDir: join(dataRoot, "profiles", platform) });
+    }
+    expect((spawn.options[0]!.env as Record<string, string | undefined>).FONTCONFIG_FILE).toBe(process.env.FONTCONFIG_FILE);
+    expect((spawn.options[1]!.env as Record<string, string | undefined>).FONTCONFIG_FILE).toBe(macosFontconfigFile);
+  });
   test("launches CloakBrowser with private CDP, persistent user-data, and ownership markers", async () => {
     const dataRoot = await tempDataRoot();
     const spawn = fakeSpawn();

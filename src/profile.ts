@@ -124,9 +124,14 @@ export const DEFAULT_LAUNCH_PROFILE_FIELDS: LaunchProfileFields = {
 export type ProfileRegion = Pick<LaunchProfileFields, "timezone" | "locale">;
 
 export function resolveCreationDefaults(
-  region: Partial<ProfileRegion> = {}
+  region: Partial<ProfileRegion> = {},
+  platform = DEFAULT_LAUNCH_PROFILE_FIELDS.platform
 ): LaunchProfileFields {
+  if (!["linux", "windows", "macos"].includes(platform)) {
+    throw new ProfileValidationError("default platform must be linux, windows, or macos");
+  }
   const resolved = {
+    platform,
     timezone: region.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
     locale: region.locale || DEFAULT_LAUNCH_PROFILE_FIELDS.locale
   };

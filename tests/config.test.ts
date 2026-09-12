@@ -4,6 +4,11 @@ import { join } from "node:path";
 import { INTERNAL_CDP_PORT_RANGE, INTERNAL_DISPLAY_NUMBER_RANGE, INTERNAL_VNC_PORT_RANGE, loadConfigFromEnv } from "../src/config";
 
 describe("loadConfigFromEnv", () => {
+  test("validates the default persona and treats empty configuration as the default", () => {
+    expect(loadConfigFromEnv({ CLOAKHUB_DEFAULT_PLATFORM: " macos " }).creationPlatform).toBe("macos");
+    expect(loadConfigFromEnv({ CLOAKHUB_DEFAULT_PLATFORM: " " }).creationPlatform).toBe("linux");
+    expect(() => loadConfigFromEnv({ CLOAKHUB_DEFAULT_PLATFORM: "invalid" })).toThrow("CLOAKHUB_DEFAULT_PLATFORM");
+  });
   test("validates deployment region defaults before starting", () => {
     expect(loadConfigFromEnv({
       CLOAKHUB_DEFAULT_TIMEZONE: "Asia/Tokyo", CLOAKHUB_DEFAULT_LOCALE: "ja-JP"
@@ -15,6 +20,8 @@ describe("loadConfigFromEnv", () => {
     const config = loadConfigFromEnv({}, "/home/operator");
 
     expect(config).toEqual({
+      creationPlatform: "linux",
+      macosFontconfigFile: undefined,
       creationRegion: { timezone: Intl.DateTimeFormat().resolvedOptions().timeZone, locale: "en-US" },
       authToken: undefined,
       browserBin: undefined,
@@ -41,6 +48,8 @@ describe("loadConfigFromEnv", () => {
     );
 
     expect(config).toEqual({
+      creationPlatform: "linux",
+      macosFontconfigFile: undefined,
       creationRegion: { timezone: Intl.DateTimeFormat().resolvedOptions().timeZone, locale: "en-US" },
       authToken: "admin-token",
       browserBin: "/opt/cloakbrowser/cloakbrowser",

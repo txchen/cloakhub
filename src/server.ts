@@ -30,6 +30,9 @@ export interface CloakHubServerHandle {
 
 export async function startCloakHubServer(): Promise<CloakHubServerHandle> {
   const config = loadConfigFromEnv();
+  if (config.macosFontconfigFile && !await Bun.file(config.macosFontconfigFile).exists()) {
+    throw new Error("CLOAKHUB_MACOS_FONTCONFIG_FILE must point to an existing fontconfig file");
+  }
   await ensureDataRoot(config.dataRoot);
   const licenseKeys = await loadBrowserLicenseKeys();
   const browserBin = await prepareBrowserBinary({
@@ -50,6 +53,7 @@ export async function startCloakHubServer(): Promise<CloakHubServerHandle> {
   const profileRepository = openProfileRepository(config.dataRoot);
   profileRepository.migrate();
   const profileService = createProfileService({
+    creationPlatform: config.creationPlatform,
     creationRegion: config.creationRegion,
     dataRoot: config.dataRoot,
     repository: profileRepository
@@ -67,6 +71,7 @@ export async function startCloakHubServer(): Promise<CloakHubServerHandle> {
     launcher: createBunBrowserProcessLauncher({
       dataRoot: config.dataRoot,
       diskCacheSizeMb: config.diskCacheSizeMb,
+      macosFontconfigFile: config.macosFontconfigFile,
       licensePool
     }),
     maxRunningInstances,
