@@ -40,7 +40,8 @@ export async function startCloakHubServer(): Promise<CloakHubServerHandle> {
     dataRoot: config.dataRoot,
     licenseKeys,
     installer: process.env.CLOAKHUB_BROWSER_INSTALLER,
-    version: process.env.CLOAKHUB_BROWSER_VERSION
+    version: process.env.CLOAKHUB_BROWSER_VERSION,
+    channel: process.env.CLOAKHUB_BROWSER_CHANNEL
   });
   const licensePool = licenseKeys.length ? await createBrowserLicensePool(licenseKeys) : undefined;
   const maxRunningInstances = Math.min(config.maxRunningInstances, licensePool?.capacity ?? Infinity);

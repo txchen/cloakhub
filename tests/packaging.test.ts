@@ -28,7 +28,7 @@ describe("Docker-first packaging", () => {
     expect(dockerfile).toContain('VOLUME ["/data"]');
     expect(dockerfile).toContain("COPY --from=bun /usr/local/bin/bun /usr/local/bin/bun");
     expect(dockerfile).toContain("CLOAKHUB_BROWSER_INSTALLER=bun");
-    expect(dockerfile).toContain("CLOAKHUB_BROWSER_VERSION=151.0.7922.108.4");
+    expect(dockerfile).toContain("CLOAKHUB_BROWSER_VERSION=152.0.7977.82.1");
     expect(dockerfile).toContain("kasmvncserver_bookworm");
     expect(dockerfile).toContain("xclip");
     expect(dockerfile).toContain('ENTRYPOINT ["/usr/bin/tini", "--"]');
@@ -40,7 +40,7 @@ describe("Docker-first packaging", () => {
   test("README documents deployment from the published image", async () => {
     const readme = await Bun.file("README.md").text();
 
-    expect(readme).toContain("image: ghcr.io/txchen/cloakhub:0.6.1");
+    expect(readme).toContain("image: ghcr.io/txchen/cloakhub:0.7.0");
     expect(readme).toContain("docker compose pull");
     expect(readme).toContain("restart: unless-stopped");
     expect(readme).toContain("shm_size: 2gb");
@@ -55,7 +55,7 @@ describe("Docker-first packaging", () => {
     const compose = await Bun.file("compose.arm64.yml").text();
 
     expect(compose).not.toContain("build:");
-    expect(compose).toContain("image: ghcr.io/txchen/cloakhub:0.6.1");
+    expect(compose).toContain("image: ghcr.io/txchen/cloakhub:0.7.0");
     expect(compose).toContain("CLOAKHUB_LICENSE_KEYS_FILE: /run/secrets/cloakbrowser-keys");
     expect(compose).toContain("platform: linux/arm64");
     expect(compose).toContain("restart: unless-stopped");

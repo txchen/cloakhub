@@ -4,7 +4,7 @@
 
 CloakHub is a Linux-focused, Bun-based manager for persistent CloakBrowser profiles and on-demand browser runtimes. It keeps the useful profile-management, VNC viewer, and CDP automation features from CloakBrowser Manager, but improves long-running server efficiency by spinning down browser/display processes when they are not actively used and transparently recovering them when CDP or manual access returns.
 
-The primary reference study is [refs/cloakbrowser-manager.md](../refs/cloakbrowser-manager.md). Domain language is defined in [CONTEXT.md](../CONTEXT.md), and architectural decisions live in [docs/adr](./adr).
+Domain language is defined in [CONTEXT.md](../CONTEXT.md), and architectural decisions live in [docs/adr](./adr).
 
 ## Goals
 

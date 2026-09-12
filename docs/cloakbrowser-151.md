@@ -133,7 +133,3 @@ both compressed blobs and unpacked snapshots. These are different measurements. 
 current image plus installed browser has roughly 1.36 GiB of unpacked logical content, before
 profile data; Docker may retain its compressed layers in addition. Shared layers and
 filesystem allocation affect actual incremental disk usage.
-
-See [Bun installer verification](../refs/cloakbrowser-bun-installer-2026-09-09.md) for the
-current image and [151 integration verification](../refs/cloakbrowser-151-integration-2026-09-09.md)
-for the initial migration, key allocation, and earlier image measurements.

@@ -24,7 +24,7 @@ running-instance limit.
 - **Bun-first runtime**: the backend directly supervises CloakBrowser, KasmVNC, ports, process
   groups, and cleanup through Bun.
 - **Docker-first packaging**: KasmVNC and the official browser installer are included.
-  CloakBrowser 151 is downloaded once into a persistent cache using your license key.
+  CloakBrowser is downloaded once into a persistent cache using your license key.
 
 ## CloakHub vs CloakBrowser Manager
 
@@ -37,7 +37,7 @@ running-instance limit.
 | CDP access | CDP is proxied through the manager for running profiles. | CDP is proxied through CloakHub, uses stable profile URLs, and can be protected per profile with a CDP Token. |
 | Process cleanup | Optimized for a single-purpose container. | Cleanup targets CloakHub-owned processes by profile-specific ownership markers. |
 | Stack | FastAPI backend plus React/Vite frontend. | Bun backend with a lightweight Bun-served UI. |
-| Docker image | Builds a Manager application image. | Includes KasmVNC; downloads CloakBrowser 151 from official channels into a persistent cache. |
+| Docker image | Builds a Manager application image. | Includes KasmVNC; downloads CloakBrowser from official channels into a persistent cache. |
 
 ## Features
 
@@ -68,7 +68,7 @@ bun install
 bun run start
 ```
 
-For local development, startup requires a discoverable CloakBrowser Binary (use the tested 151 build). Set `CLOAKHUB_BROWSER_BIN`, provide the packaged Docker path, or install `cloakbrowser` on `PATH`.
+For local development, startup requires a discoverable CloakBrowser Binary (use the pinned build below). Set `CLOAKHUB_BROWSER_BIN`, provide the packaged Docker path, or install `cloakbrowser` on `PATH`.
 Headed Browser Profiles also require KasmVNC `Xvnc`; if it is missing, startup continues with a warning and headed launch/viewer actions fail until `Xvnc` is installed.
 
 ## Docker
@@ -79,7 +79,7 @@ Save the following as `compose.yml`:
 ```yaml
 services:
   cloakhub:
-    image: ghcr.io/txchen/cloakhub:0.6.1
+    image: ghcr.io/txchen/cloakhub:0.7.0
     restart: unless-stopped
     shm_size: 2gb
     environment:
@@ -117,25 +117,28 @@ Open `http://localhost:7788`, or `http://<server-lan-ip>:7788` when LAN binding 
 and sign in with the configured admin password. The multi-platform image automatically
 selects amd64 or arm64; `compose.arm64.yml` explicitly selects ARM64 when needed.
 The container listens on `0.0.0.0:7788` internally.
-It downloads **151.0.7922.108.4** through the official JS package `cloakbrowser@0.5.10`, running on Bun, including
+Source builds download **152.0.7977.82.1** from the preview channel through the official JS package `cloakbrowser@0.5.10`, running on Bun, including
 upstream signature/checksum verification, on the first start. The binary is cached under
 `/data/browser-cache`; subsequent starts use that exact cached build. No key or browser
 binary is included in the application image. Python and Node are not required or bundled. A mounted `CLOAKHUB_BROWSER_BIN` overrides
 the installer. An invalid explicit binary path fails rather than falling back to another browser.
 
-For a local image with real Mac fonts and Mac defaults for new profiles, see
-[personal Mac-persona image](docs/private-macos.md).
+Source builds include the repository’s Mac fonts and default new profiles to Mac
+with preview `152.0.7977.82.1`. See [Mac fonts and image builds](docs/private-macos.md).
+These defaults are included starting with `0.7.0`.
+See the [152 preview vs 151 stable comparison](docs/browser-channel-comparison.md)
+for the measured results and remaining limits.
 
 See [151 deployment and multiple keys](docs/cloakbrowser-151.md) for key configuration,
 concurrency limits, version availability, and migration/rollback instructions.
 
-Images support `linux/amd64` and `linux/arm64`. Pin a full version such as `0.6.1`
-for predictable deployments and rollback. The `0.6` alias follows patch releases,
-and `latest` follows the newest stable release. Branch builds publish `master`
+Images support `linux/amd64` and `linux/arm64`. Pin a full version such as `0.7.0`
+for predictable deployments and rollback. The `0.7` alias follows patch releases,
+and `latest` follows the newest CloakHub release (whose browser channel is currently preview). Branch builds publish `master`
 and `sha-*` development tags without changing `latest`.
 
 To release, update `package.json`, commit and push the changes, and wait for the
-Tests workflow to pass. Push a matching Git tag (for example `v0.6.1`) to build
+Tests workflow to pass. Push a matching Git tag (for example `v0.7.0`) to build
 the release images. The image workflow checks that the tag matches the package
 version before publishing.
 
@@ -166,7 +169,8 @@ Optional settings:
 - `CLOAKHUB_LICENSE_KEYS`: JSON array of keys; takes precedence over the file
 - `CLOAKBROWSER_LICENSE_KEY`: legacy single-key environment variable
 - `CLOAKHUB_BROWSER_INSTALLER`: set to `bun` for managed downloads (already set in Docker)
-- `CLOAKHUB_BROWSER_VERSION`: exact 151 release for the Docker installer; defaults to `151.0.7922.108.4`
+- `CLOAKHUB_BROWSER_VERSION`: exact release for the Docker installer; defaults to `152.0.7977.82.1`
+- `CLOAKHUB_BROWSER_CHANNEL`: `preview` (default) or `stable`; use `stable` with version `151.0.7922.108.6` for the tested stable build
 - `CLOAKHUB_AUTH_TOKEN`: admin auth token for protected UI and admin APIs
 - `CLOAKHUB_DEFAULT_TIMEZONE`: IANA timezone for new profiles, e.g. `America/Los_Angeles`;
   defaults to the server process timezone (usually UTC in Docker)

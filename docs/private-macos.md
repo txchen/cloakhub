@@ -1,69 +1,59 @@
-# Personal Mac-persona image
+# Mac fonts and image builds
 
-The local `cloakhub:mac-private` image uses CloakBrowser stable
-`151.0.7922.108.6`, real fonts supplied from a local directory, and `macos` as
-the default persona for **new** profiles. Existing stored personas, seeds and
-browser data are retained. The standard image is built separately.
+The standard Dockerfile includes `fonts/macos/`, uses CloakBrowser preview
+`152.0.7977.82.1`, and defaults new profiles to `macos`. The GitHub Docker
+workflow builds this same Dockerfile for amd64 and arm64, so published images
+include the fonts starting with `0.7.0`.
 
-## Build and run
-
-Supply a directory containing your Mac font files, including the required
-families below. The build script stages only the application source, font
-configuration and that directory; profile data and license keys are not included.
+Build from the repository:
 
 ```sh
-scripts/build-mac-image.sh /path/to/mac-fonts
+docker build --build-arg TARGETARCH=amd64 -t cloakhub:mac-preview .
+docker tag cloakhub:mac-preview cloakhub:mac-private
 docker compose -f compose.yml -f compose.mac.yml up -d
 ```
 
-The first command builds locally, without pushing an image. The Compose override
-selects the local image and disables pulling it. The existing Compose settings
-for the license file, authentication, persistent data and region still apply.
-An optional second argument selects a different local image tag; update the
-override to match if you use it.
+Use `TARGETARCH=arm64` when building natively on ARM64. With Buildx,
+`TARGETARCH` is supplied automatically for the selected platform. The Compose
+override selects the local tag; the ordinary Compose file pins published version
+`0.7.0`.
 
-On the current development machine, the previously tested, real-font directory
-is `.cloakhub/cloak152-mac-fonts/fonts/`: 46 files, 55.06 MiB. These were obtained
-in the earlier Apple-font experiment, not exported directly from your MacBook.
-The build takes a local copy, so you can replace this directory with your own
-export and rebuild. No font binaries are committed to the repository or added
-to the public Docker build/publishing workflow.
+The repository contains 46 real-font files totaling 57,735,740 bytes (55.06 MiB),
+from the earlier Apple catalog/recovery experiment, not a direct MacBook export.
+See [font inventory](../fonts/README.md). No browser binary or license key is
+embedded; the signed browser downloader installs the pinned browser into the
+persistent data volume at startup.
 
-The base application image is `ghcr.io/txchen/cloakhub:0.6.1`. The private build
-overlays the checked-out application source and fixes its browser version to
-stable `.6`; it keeps the existing signed browser downloader and license-key
-handling. No browser binary or key is embedded. Keep the data volume to reuse
-the downloaded browser. If the upstream free tier later serves a different
-stable, the existing exact-version guard will reject it instead of silently
-upgrading profiles.
+Fonts live at `/opt/cloakhub/fonts/macos` in the image. The build checks all 20
+required families and fails if any are missing. This verifies discoverability,
+not complete glyph coverage, every font weight, or exact correspondence with a
+modern Mac. For example, Comic Sans MS currently includes only Bold; the tested
+Menlo and Comic Sans MS faces also remain unavailable through CSS `local()` in
+both engines despite fontconfig finding them. See the
+[151/152 comparison](browser-channel-comparison.md).
 
-## Fonts and profile defaults
+`CLOAKHUB_MACOS_FONTCONFIG_FILE=/app/macos-fonts.conf` adds those fonts only for
+Mac browser processes. Linux and Windows profiles use ordinary font configuration.
+`CLOAKHUB_DEFAULT_PLATFORM=macos` controls new-profile defaults in the image;
+explicit and saved settings take precedence. Running the application outside
+Docker retains its Linux default unless this variable is set.
 
-The build checks these 20 families through fontconfig and fails if any are missing:
-Apple Color Emoji, Arial, Arial Narrow, Arial Unicode MS, Comic Sans MS, Courier,
-Courier New, Georgia, Gill Sans, Helvetica, Helvetica Neue, Impact, Menlo,
-Microsoft Sans Serif, Monaco, Tahoma, Times New Roman, Trebuchet MS, Webdings,
-Wingdings. This verifies discoverability, not provenance or complete glyph coverage.
+Existing profiles and seeds are retained. Added fonts can change the rendered
+fingerprint of existing Mac profiles. The display remains 1366×768. Public
+detector results do not guarantee that every site will behave identically.
 
-The font files live at `/opt/cloakhub/fonts/macos`, shared by all Mac profiles.
-`CLOAKHUB_MACOS_FONTCONFIG_FILE=/app/macos-fonts.conf` applies that extra directory
-only when launching a Mac profile. Linux/Windows profiles continue to use the
-ordinary font configuration. The desktop viewer and Hub process also keep the
-ordinary configuration.
+For a custom font directory, the optional `scripts/build-mac-image.sh FONT_DIR`
+and `Dockerfile.mac` workflow remains available.
 
-`CLOAKHUB_DEFAULT_PLATFORM=macos` controls defaults advertised to the UI and used
-by minimal profile-creation API requests. Explicit profile settings take
-precedence. The supported default values are `linux`, `windows`, and `macos`;
-without an override, the application retains its standard Linux default.
+The browser version is pinned for repeatable builds. `CLOAKHUB_BROWSER_CHANNEL`
+defaults to `preview`; to run the stable comparison, add these entries to the
+Compose service’s `environment` (or pass them with `docker run -e`):
 
-The private image keeps headed mode and the existing 1366×768 display settings.
-Changing the default persona does not rewrite existing profiles or rotate seeds.
-Font changes can still change the rendered fingerprint of existing Mac profiles.
+```yaml
+CLOAKHUB_BROWSER_CHANNEL: stable
+CLOAKHUB_BROWSER_VERSION: 151.0.7922.108.6
+```
 
-This is a personal build using the supplied fonts, not a grant of font rights.
-Use font sources appropriate to your own license; this workflow does not publish
-or redistribute them automatically.
-
-The [private-image validation](../refs/mac-private-image-validation-2026-09-11.md)
-records the observed benefits and limits. Public detector results do not guarantee
-that every profile or business site will behave identically.
+An entry in `.env` alone is insufficient unless Compose references it. Both the
+channel and exact version are passed to the official verified downloader. A returned version that differs
+from the pin is rejected. Future preview releases require an explicit pin update.

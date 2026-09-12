@@ -49,7 +49,7 @@ describe("pinned browser installation", () => {
     await expect(installPinnedBrowser(cache, DEFAULT_BROWSER_VERSION, stage => binary(stage))).resolves.toContain("chrome");
   });
 
-  test("rejects free-key version substitution without adopting the newer build", async () => {
+  test("rejects free-key version substitution without adopting a different build", async () => {
     const cache = await temp();
     await expect(installPinnedBrowser(cache, DEFAULT_BROWSER_VERSION, stage => binary(stage, "151.0.7922.108.6")))
       .rejects.toBeInstanceOf(BrowserVersionMismatchError);
@@ -67,6 +67,13 @@ describe("pinned browser installation", () => {
       if (previous === undefined) delete process.env.CLOAKBROWSER_BINARY_PATH;
       else process.env.CLOAKBROWSER_BINARY_PATH = previous;
     }
+  });
+
+  test("stable remains available through an explicit version and channel", async () => {
+    const dataRoot = await temp();
+    const version = "151.0.7922.108.6";
+    const expected = await binary(join(dataRoot, "browser-cache"), version);
+    expect(await prepareBrowserBinary({ dataRoot, licenseKeys: ["test-key"], installer: "bun", version, channel: "stable" })).toEqual({ path: expected });
   });
 
   test("waits for an existing OS cache lock and proceeds after its owner exits", async () => {
@@ -96,8 +103,9 @@ describe("pinned browser installation", () => {
   test("validates configuration before downloading and keeps explicit binary overrides", async () => {
     const dataRoot = await temp();
     await expect(prepareBrowserBinary({ dataRoot, installer: "bun", licenseKeys: [] })).rejects.toThrow("requires a license key");
-    await expect(prepareBrowserBinary({ dataRoot, installer: "bun", licenseKeys: ["key"], version: "152.0.0.0" })).rejects.toThrow("exact CloakBrowser 151");
+    await expect(prepareBrowserBinary({ dataRoot, installer: "bun", licenseKeys: ["key"], version: "latest" })).rejects.toThrow("exact CloakBrowser");
     await expect(prepareBrowserBinary({ dataRoot, installer: "/usr/local/bin/python", licenseKeys: ["key"] })).rejects.toThrow("must be bun");
+    await expect(prepareBrowserBinary({ dataRoot, installer: "bun", licenseKeys: ["key"], channel: "nightly" })).rejects.toThrow("stable or preview");
     const browserBin = await binary(dataRoot);
     expect(await prepareBrowserBinary({ dataRoot, installer: "bun", licenseKeys: [], browserBin })).toEqual({ path: browserBin });
   });

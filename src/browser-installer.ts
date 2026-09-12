@@ -11,8 +11,8 @@ export async function installPinnedBrowser(
   version: string,
   download: (stagingCache: string) => Promise<string>
 ): Promise<string> {
-  if (!/^151\.\d+\.\d+\.\d+(?:\.\d+)?$/.test(version)) {
-    throw new Error("Expected an exact CloakBrowser 151 release version");
+  if (!/^\d{3}\.\d+\.\d+\.\d+(?:\.\d+)?$/.test(version)) {
+    throw new Error("Expected an exact CloakBrowser release version");
   }
   const binaryDir = `chromium-${version}-pro`;
   const expected = resolve(cacheDir, binaryDir, "chrome");
@@ -43,7 +43,8 @@ async function main(): Promise<void> {
   console.log = console.info = console.warn = console.error = () => undefined;
   try {
     if (process.platform !== "linux") throw new Error("Managed installation requires Linux");
-    const [, , cacheDir, version] = process.argv;
+    const [, , cacheDir, version, channel = "preview"] = process.argv;
+    if (channel !== "stable" && channel !== "preview") throw new Error("Invalid release channel");
     if (!cacheDir || !version) throw new Error("Missing installer arguments");
     const key = process.env.CLOAKBROWSER_LICENSE_KEY;
     // Never inherit mirrors, binary overrides, update channels, or verification overrides.
@@ -54,10 +55,10 @@ async function main(): Promise<void> {
       if (!key?.trim()) throw new Error("Missing license key");
       process.env.CLOAKBROWSER_CACHE_DIR = stagingCache;
       process.env.CLOAKBROWSER_AUTO_UPDATE = "false";
-      process.env.CLOAKBROWSER_RELEASE_CHANNEL = "stable";
+      process.env.CLOAKBROWSER_RELEASE_CHANNEL = channel;
       const { ensureBinary } = await import("cloakbrowser");
       // The official JS package verifies Ed25519, manifest version, and SHA256.
-      return ensureBinary(key, version, "stable");
+      return ensureBinary(key, version, channel);
     });
     process.stdout.write(`${binary}\n`);
   } catch (error) {
