@@ -220,6 +220,62 @@ reports `"ok": true`, and disconnects. Then ask your agent, for example:
 See the [skill](skills/cloakhub-browser/SKILL.md) for the browser workflow and
 [client setup reference](skills/cloakhub-browser/references/setup.md) for troubleshooting.
 
+## Use any CDP client
+
+CloakHub exposes standard Chrome DevTools Protocol (CDP) endpoints. Existing
+CDP-based tools such as Playwright and Puppeteer can connect directly: point their
+remote-browser connection at your profile's endpoint and supply its CDP token.
+No CloakHub SDK, agent skill, or admin credential is required for browser operations.
+
+For example, install Playwright's client library on your client machine:
+
+```sh
+npm install playwright-core
+```
+
+Save this as `browse.mjs`. Replace the example origin and profile ID, and provide
+the profile token through the `CLOAKHUB_CDP_TOKEN` environment variable:
+
+```js
+import { chromium } from 'playwright-core';
+
+const token = process.env.CLOAKHUB_CDP_TOKEN;
+if (!token) throw new Error('Set CLOAKHUB_CDP_TOKEN to the profile CDP token');
+
+const browser = await chromium.connectOverCDP(
+  'https://browser.example.com/api/profiles/research/cdp',
+  {
+    headers: { Authorization: `Bearer ${token}` },
+    timeout: 60_000 // Allow time to wake a stopped browser.
+  }
+);
+
+try {
+  const context = browser.contexts()[0]; // Reuse the profile's saved login state.
+  const page = await context.newPage();
+  try {
+    await page.goto('https://example.com');
+    console.log(await page.title());
+  } finally {
+    await page.close(); // Close only the tab this script created.
+  }
+} finally {
+  await browser.close(); // Playwright disconnects this remote CDP client.
+}
+```
+
+Run `node browse.mjs` with the token available in its environment. The connection
+automatically starts a stopped profile; no separate launch request is needed.
+Clients accepting a WebSocket endpoint can use
+`wss://browser.example.com/api/profiles/research/cdp` with the same authorization
+header. For a private HTTP deployment, use `http://` / `ws://` instead.
+
+Disconnect when finished so idle shutdown can reclaim resources. Reconnect through
+the same fixed profile URL after a stop or restart; existing connections and in-flight
+commands are not automatically resumed. Compatibility follows each library's CDP
+support; CloakHub does not implement Playwright's separate browser-server protocol.
+See the [API guide](docs/api.md#cdp-endpoints) for discovery and authentication details.
+
 ## Everyday use
 
 Select a profile in the sidebar to open its viewer or controls. Use its menu to edit
