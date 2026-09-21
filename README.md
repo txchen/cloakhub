@@ -224,7 +224,7 @@ See the [skill](skills/cloakhub-browser/SKILL.md) for the browser workflow and
 
 CloakHub exposes standard Chrome DevTools Protocol (CDP) endpoints. Existing
 CDP-based tools such as Playwright and Puppeteer can connect directly: point their
-remote-browser connection at your profile's endpoint and supply its CDP token.
+remote-browser connection at your profile's endpoint and, if configured, supply its CDP token.
 No CloakHub SDK, agent skill, or admin credential is required for browser operations.
 
 For example, install Playwright's client library on your client machine:
@@ -233,19 +233,21 @@ For example, install Playwright's client library on your client machine:
 npm install playwright-core
 ```
 
-Save this as `browse.mjs`. Replace the example origin and profile ID, and provide
-the profile token through the `CLOAKHUB_CDP_TOKEN` environment variable:
+Save this as `browse.mjs`. Replace the example origin and profile ID. If the profile
+has a CDP token, provide it through `CLOAKHUB_CDP_TOKEN`; otherwise leave that variable
+unset. Omitting the client token does not bypass a token configured on the server.
+This example opens [Device & Browser Info's bot test](https://deviceandbrowserinfo.com/are_you_a_bot),
+prints its detection results, and saves a screenshot on the client:
 
 ```js
 import { chromium } from 'playwright-core';
 
 const token = process.env.CLOAKHUB_CDP_TOKEN;
-if (!token) throw new Error('Set CLOAKHUB_CDP_TOKEN to the profile CDP token');
 
 const browser = await chromium.connectOverCDP(
   'https://browser.example.com/api/profiles/research/cdp',
   {
-    headers: { Authorization: `Bearer ${token}` },
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
     timeout: 60_000 // Allow time to wake a stopped browser.
   }
 );
@@ -254,8 +256,14 @@ try {
   const context = browser.contexts()[0]; // Reuse the profile's saved login state.
   const page = await context.newPage();
   try {
-    await page.goto('https://example.com');
-    console.log(await page.title());
+    await page.goto('https://deviceandbrowserinfo.com/are_you_a_bot', {
+      waitUntil: 'domcontentloaded', timeout: 60_000
+    });
+    // Wait for the site's asynchronous report, not just the initial page load.
+    const report = page.locator('#jsonResult').filter({ hasText: /"isBot"\s*:/ });
+    await report.waitFor({ state: 'visible', timeout: 60_000 });
+    console.log(JSON.stringify(JSON.parse(await report.innerText()), null, 2));
+    await page.screenshot({ path: 'bot-detection.png', fullPage: true });
   } finally {
     await page.close(); // Close only the tab this script created.
   }
@@ -264,11 +272,19 @@ try {
 }
 ```
 
-Run `node browse.mjs` with the token available in its environment. The connection
+Run `node browse.mjs` (with the token in its environment if required). The connection
 automatically starts a stopped profile; no separate launch request is needed.
 Clients accepting a WebSocket endpoint can use
 `wss://browser.example.com/api/profiles/research/cdp` with the same authorization
 header. For a private HTTP deployment, use `http://` / `ws://` instead.
+
+Inspect the site's `isBot` verdict and signals such as `isAutomatedWithCDP`,
+`isAutomatedWithCDPInWebWorker`, `isPlaywright`, and `hasWebdriverTrue`. A `true`
+detection signal means that particular check flagged the browser. This test covers
+fingerprinting signals, not IP reputation or user behavior; passing it is not a
+guarantee against detection on other sites. Results depend on the browser build,
+profile settings, automation client, and the site's current checks. If the report
+times out, treat the test as incomplete, not as a pass; the site's DOM may also change.
 
 Disconnect when finished so idle shutdown can reclaim resources. Reconnect through
 the same fixed profile URL after a stop or restart; existing connections and in-flight
