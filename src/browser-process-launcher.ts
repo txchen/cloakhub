@@ -1,5 +1,6 @@
 import { mkdir, rm } from "node:fs/promises";
-import { join } from "node:path";
+import { createHash } from "node:crypto";
+import { join, resolve } from "node:path";
 import { DEFAULT_DISK_CACHE_SIZE_MB } from "./config";
 import { LicenseCapacityError, withoutLicenseSecrets, type BrowserLicensePool, type LicenseLease } from "./browser-license";
 
@@ -56,10 +57,12 @@ export function createBunBrowserProcessLauncher(
       let subprocess: BrowserSubprocess;
       try {
         lease = await options.licensePool?.acquire();
+        const licenseEnv = lease ? await prepareLicenseHome(options.dataRoot, lease.key) : {};
         subprocess = spawn(browserCommand(command, proxySession.browserUrl, options.diskCacheSizeMb ?? DEFAULT_DISK_CACHE_SIZE_MB), {
           detached: true,
           env: {
             ...ownedProcesses.env(command.profileId, withoutLicenseSecrets(process.env)),
+            ...licenseEnv,
             ...(command.platform === "macos" && options.macosFontconfigFile
               ? { FONTCONFIG_FILE: options.macosFontconfigFile } : {}),
             ...(lease ? { CLOAKBROWSER_LICENSE_KEY: lease.key } : {}),
@@ -107,6 +110,20 @@ export function createBunBrowserProcessLauncher(
         command.cdpPort
       );
     }
+  };
+}
+
+async function prepareLicenseHome(dataRoot: string, key: string): Promise<Record<string, string>> {
+  // Stable across profile rotation and Hub restarts; never put the raw key in a path.
+  const keyId = createHash("sha256").update(key).digest("hex");
+  const home = resolve(dataRoot, "license-homes", keyId);
+  await mkdir(home, { recursive: true, mode: 0o700 });
+  return {
+    HOME: home,
+    XDG_CONFIG_HOME: join(home, ".config"),
+    XDG_CACHE_HOME: join(home, ".cache"),
+    XDG_DATA_HOME: join(home, ".local", "share"),
+    XDG_STATE_HOME: join(home, ".local", "state")
   };
 }
 

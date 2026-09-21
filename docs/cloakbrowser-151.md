@@ -42,6 +42,21 @@ owned display processes receive no license environment variables. This is secret
 not user isolation: the Hub administrator and processes with the same OS privileges can
 read process credentials and mounted files.
 
+Starting with 0.7.1, each allocated key has a persistent browser HOME at
+`<Data Root>/license-homes/<SHA-256 of key>`, created with mode `700`. The same key
+reuses that directory across profiles and Hub restarts; different keys use separate
+directories. XDG config, cache, data, and state paths also point inside that HOME.
+Keep `license-homes` in data-volume backups so the browser's installation identity
+survives replacement. Profile user-data directories, cookies, and storage remain
+attached to their profiles when key allocation rotates.
+
+On the first launch after adopting this change, each key starts with a fresh HOME
+and the browser creates its installation identity there. The old shared HOME's
+installation ID, user-level certificate databases, and other settings are not copied.
+Deploy any required user-level trust/configuration into the corresponding new HOME;
+explicit font configuration and the container's system configuration remain in use.
+Already-running browsers keep their original environment until restarted.
+
 ## Concurrency and failures
 
 Hub reads each key's quota from the official `/api/license/session/count` endpoint.

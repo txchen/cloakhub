@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 
@@ -299,6 +299,58 @@ test("returns a license reservation on spawn failure and closes the prepared pro
     spawn: (() => { throw new Error("spawn failed"); }) as unknown as typeof Bun.spawn
   });
   await expect(launcher.launch(licenseTestCommand(dataRoot))).rejects.toThrow("spawn failed");
+  expect(closed).toBe(true);
+  await expect(pool.acquire()).resolves.toMatchObject({ key: "test-key-a" });
+});
+
+test("persists a separate HOME per key across profiles and launcher restarts", async () => {
+  const { createBrowserLicensePool } = await import("../src/browser-license");
+  const dataRoot = await tempDataRoot();
+  const spawn = fakeSpawn();
+  const pool = await createBrowserLicensePool(["test-key-a", "test-key-b"], async () => ({ active: 0, limit: 4 }));
+  const launcher = createBunBrowserProcessLauncher({ dataRoot, spawn: spawn.fn, licensePool: pool });
+  for (const profileId of ["one", "two", "three"]) {
+    await launcher.launch({ ...licenseTestCommand(dataRoot), profileId,
+      userDataDir: join(dataRoot, "profiles", profileId) });
+  }
+  const envs = spawn.options.map(options => options.env as Record<string, string>);
+  const homeA = envs[0]!.HOME!;
+  const homeB = envs[1]!.HOME!;
+  expect(homeA).not.toBe(homeB);
+  expect(envs[2]!.HOME).toBe(homeA);
+  expect(envs.map(env => env.CLOAKBROWSER_LICENSE_KEY)).toEqual(["test-key-a", "test-key-b", "test-key-a"]);
+  for (const env of envs) {
+    expect(env.HOME).not.toContain(env.CLOAKBROWSER_LICENSE_KEY!);
+    expect((await stat(env.HOME!)).mode & 0o777).toBe(0o700);
+    expect(env.XDG_CONFIG_HOME).toBe(join(env.HOME!, ".config"));
+    expect(env.XDG_CACHE_HOME).toBe(join(env.HOME!, ".cache"));
+    expect(env.XDG_DATA_HOME).toBe(join(env.HOME!, ".local", "share"));
+    expect(env.XDG_STATE_HOME).toBe(join(env.HOME!, ".local", "state"));
+  }
+  await mkdir(join(homeA, ".cloakbrowser"));
+  await writeFile(join(homeA, ".cloakbrowser", "install_id"), "persistent-install-a");
+  const restarted = createBunBrowserProcessLauncher({ dataRoot, spawn: spawn.fn,
+    licensePool: await createBrowserLicensePool(["test-key-a"], async () => ({ active: 0, limit: 4 })) });
+  await restarted.launch({ ...licenseTestCommand(dataRoot), profileId: "four",
+    userDataDir: join(dataRoot, "profiles", "four") });
+  expect((spawn.options[3]!.env as Record<string, string>).HOME).toBe(homeA);
+  expect(await readFile(join(homeA, ".cloakbrowser", "install_id"), "utf8")).toBe("persistent-install-a");
+  for (const [index, profileId] of ["one", "two", "three", "four"].entries()) {
+    expect(spawn.commands[index]).toContain(`--user-data-dir=${join(dataRoot, "profiles", profileId)}`);
+  }
+});
+
+test("releases the key and proxy if its HOME cannot be prepared", async () => {
+  const { createBrowserLicensePool } = await import("../src/browser-license");
+  const dataRoot = await tempDataRoot();
+  await writeFile(join(dataRoot, "license-homes"), "not a directory");
+  const pool = await createBrowserLicensePool(["test-key-a"], async () => ({ active: 0, limit: 1 }));
+  const spawn = fakeSpawn();
+  let closed = false;
+  const launcher = createBunBrowserProcessLauncher({ dataRoot, licensePool: pool, spawn: spawn.fn,
+    proxyRuntime: { prepare: async () => ({ browserUrl: "", close: async () => { closed = true; } }) } });
+  await expect(launcher.launch(licenseTestCommand(dataRoot))).rejects.toThrow();
+  expect(spawn.commands).toHaveLength(0);
   expect(closed).toBe(true);
   await expect(pool.acquire()).resolves.toMatchObject({ key: "test-key-a" });
 });
