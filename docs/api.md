@@ -4,6 +4,13 @@ The API manages persistent browser profiles and their running browser processes.
 Use Playwright, Puppeteer, or another CDP client to operate pages after connecting.
 All paths below are relative to the CloakHub origin, for example `http://server:7788`.
 
+For client installation and everyday browser tasks, use the
+[CloakHub browser skill](../skills/cloakhub-browser/SKILL.md) and its
+[connection setup](../skills/cloakhub-browser/references/setup.md). It provides a
+Node/Playwright runner with local target aliases, profile-scoped credentials, and
+automatic disconnect after each script. It requires neither MCP nor admin access.
+The management workflow below is for clients that need profile administration.
+
 ## Credentials
 
 | Credential | Where to send it | Allows |
@@ -126,9 +133,11 @@ Token responses contain `profile_id`, `cdp_token` (string or null), and
 
 Send `Content-Type: application/json`. The minimal create body is
 `{"profile_id":"research"}`. IDs must match `^[a-z][a-z0-9_]*$` and cannot be renamed.
-Profiles default to headed mode; specify `"headless":true` for automation-only use.
-New profiles use a Linux identity, 1366×768, and four CPU threads. Omitted `timezone`
-and `locale` are copied from the deployment defaults and persisted. Query
+Profiles default to headed mode, which also supports unattended automation. Specify
+`"headless":true` only when native headless behavior is wanted; see the graphics notes below.
+New profiles use the deployment's `CLOAKHUB_DEFAULT_PLATFORM`: macOS in Docker images,
+Linux for source runs without an override. They use 1366×768 and four CPU threads.
+Omitted `timezone` and `locale` are copied from the deployment defaults and persisted. Query
 `GET /api/profile-defaults` before creation to preview them. The editor uses the same
 defaults through its cookie-authenticated `/ui/profile-defaults` endpoint. Neither
 endpoint contains a fingerprint seed for an existing profile or any credentials.

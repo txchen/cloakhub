@@ -1,14 +1,22 @@
 # CloakBrowser 151 deployment
 
-The Docker default is CloakBrowser **151.0.7922.108.4**, Linux identity, headed mode,
+This guide records the 151 deployment and migration introduced before 0.7.0.
+For current deployment defaults, use the [README](../README.md#docker): 0.7.0 images
+use preview `152.0.7977.82.1` with a macOS identity. The key configuration and
+concurrency behavior below still apply; the version and footprint measurements are
+for the historical 151 images.
+
+The 0.6.1 Docker default was CloakBrowser **151.0.7922.108.4**, Linux identity, headed mode,
 1366×768, four CPU threads, and the kernel-generated User-Agent. Existing profile
 settings are retained. CDP URLs, authentication, Playwright clients, and profile APIs
 are unchanged. Changing the selected key does not change the profile's seed or storage.
 
 ## Deploy the published image
 
-Use `ghcr.io/txchen/cloakhub:0.6.1` with the [Compose configuration](../compose.yml)
-and [deployment instructions](../README.md#docker). No local build is required.
+For the historical 151 image, use `ghcr.io/txchen/cloakhub:0.6.1`. The current
+[Compose configuration](../compose.yml) and [deployment instructions](../README.md#docker)
+select a newer image; explicitly change the image tag when reproducing this deployment.
+No local build is required.
 The image supports amd64 and arm64; Docker selects the host architecture.
 
 ## Configure keys
@@ -125,11 +133,11 @@ a test of every existing profile, extension, or login; retain a verified backup.
 | Released 0.5.0, bundled 146 | 648.6 MiB | 1,988.7 MiB | Included in image |
 | Initial 151 integration | 301.0 MiB | 857.0 MiB | About 745 MiB |
 | 151 with Python downloader-only dependencies (previous) | 253.1 MiB | 718.5 MiB | About 745 MiB |
-| 151 with Bun + official JS downloader (current) | **231.8 MiB** | **651.2 MiB** | About 745 MiB |
+| 151 with Bun + official JS downloader (measured 151 image) | **231.8 MiB** | **651.2 MiB** | About 745 MiB |
 
 On this machine Docker uses the containerd image store: `docker image inspect .Size`
 reports compressed content, and `docker image ls` shows a larger disk figure that includes
 both compressed blobs and unpacked snapshots. These are different measurements. The
-current image plus installed browser has roughly 1.36 GiB of unpacked logical content, before
+measured 151 image plus installed browser has roughly 1.36 GiB of unpacked logical content, before
 profile data; Docker may retain its compressed layers in addition. Shared layers and
 filesystem allocation affect actual incremental disk usage.

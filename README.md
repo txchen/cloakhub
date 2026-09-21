@@ -1,80 +1,52 @@
 # CloakHub
 
-CloakHub is a Linux-focused, Docker-first manager for persistent CloakBrowser profiles and
-on-demand browser runtimes. It keeps the useful parts of CloakBrowser Manager - profile
-configuration, a live browser viewer, and CDP automation - but is designed for long-running
-servers where idle browser processes should not stay alive forever.
+Run persistent browsers on your own server and let agents use them from another machine.
+CloakHub manages [CloakBrowser](https://github.com/CloakHQ/CloakBrowser) profiles with
+saved logins, a live browser viewer, and remote automation. Idle browsers stop to free
+resources and wake when you connect again; their profile data stays on disk.
 
-CloakBrowser Manager provides an all-in-one UI for creating, launching, viewing, and automating
-isolated CloakBrowser profiles. CloakHub is aimed at operators who need the same persistent
-browser identities, but also want predictable resource control: instances can spin down when
-they are idle, wake automatically when CDP or manual viewing resumes, and respect a configured
-running-instance limit.
+- **Persistent identities:** each profile keeps cookies, storage, fingerprint settings, and proxy configuration.
+- **On-demand browsers:** automatic wake-up, configurable idle sleep, and a running-instance limit.
+- **Human and agent access:** use the web viewer for login or manual work and the companion skill for automation.
+- **Simple deployment:** Docker Compose on Linux, with amd64 and arm64 images.
 
-## Why CloakHub
+## How it works
 
-- **Persistent profiles, disposable runtimes**: profile metadata and browser user-data survive,
-  while browser, display, VNC, clipboard, and CDP support processes can be stopped and recreated.
-- **Transparent Recovery**: stable profile-level CDP and viewer URLs can start a stopped Browser
-  Instance on demand, so clients do not need a separate "launch first" step.
-- **Resource-aware lifecycle**: idle Browser Instances spin down after their Sleep Policy window,
-  and capacity pressure can preempt viewer-only or inactive instances.
-- **Automation visibility**: open CDP sessions, manual viewer counts, last activity, stop reasons,
-  and approximate owned-process resource usage are surfaced through the UI/API.
-- **Bun-first runtime**: the backend directly supervises CloakBrowser, KasmVNC, ports, process
-  groups, and cleanup through Bun.
-- **Docker-first packaging**: KasmVNC and the official browser installer are included.
-  CloakBrowser is downloaded once into a persistent cache using your license key.
-
-## CloakHub vs CloakBrowser Manager
-
-| Area | CloakBrowser Manager | CloakHub |
-| --- | --- | --- |
-| Primary goal | All-in-one profile manager with launch, viewer, and CDP access. | Server-oriented profile manager with resource-efficient Browser Instance lifecycle. |
-| Runtime model | Profiles are launched and stopped explicitly. | Stopped profiles can wake automatically from stable CDP or viewer endpoints. |
-| Idle behavior | Running browsers remain live until explicitly stopped. | Idle Browser Instances can spin down while preserving profile data. |
-| Capacity control | Runtime capacity is mostly an operator concern. | `CLOAKHUB_MAX_RUNNING_INSTANCES` limits live instances and can trigger capacity preemption. |
-| CDP access | CDP is proxied through the manager for running profiles. | CDP is proxied through CloakHub, uses stable profile URLs, and can be protected per profile with a CDP Token. |
-| Process cleanup | Optimized for a single-purpose container. | Cleanup targets CloakHub-owned processes by profile-specific ownership markers. |
-| Stack | FastAPI backend plus React/Vite frontend. | Bun backend with a lightweight Bun-served UI. |
-| Docker image | Builds a Manager application image. | Includes KasmVNC; downloads CloakBrowser from official channels into a persistent cache. |
-
-## Features
-
-- Browser Profile CRUD with CloakBrowser-compatible launch settings, fingerprint settings, proxy,
-  locale/timezone, platform, screen, GPU, hardware concurrency, user agent, notes, custom
-  launch args, headless mode, clipboard preference, and Sleep Policy.
-- Stable profile-level CDP endpoints under `/api/profiles/{profile_id}/cdp`.
-- Manual headed viewing through the CloakHub UI and a noVNC-compatible KasmVNC proxy.
-- Per-profile CDP Token create, copy, regenerate, and revoke actions.
-- Persistent event log with profile, event-type, and time-range filters, including
-  starts, stops, failures, idle timeouts, CDP sleep blockers, and capacity preemption.
-- Last-tab protection for CDP automation: creates an empty tab before closing the last
-  page, preserving normal client close events.
-- Docker and non-Docker Linux operation, with configurable Data Root and browser binary discovery.
-
-## Automation API
-
-For AI agents and scripts, see the [API guide](docs/api.md) and
-[runnable Playwright example](examples/agent-workflow.mjs). The guide covers profile
-discovery, start/connect/stop, separate admin and CDP credentials, and retry behavior.
-Use `GET /api/profiles?view=summary` for compact discovery; profile and lifecycle
-responses include fixed CDP connection URLs.
-
-## Run
-
-```sh
-bun install
-bun run start
+```mermaid
+flowchart LR
+  subgraph client[Client machine]
+    agent[AI agent]
+    skill[CloakHub browser skill]
+    config[client.json and CDP token]
+    agent --> skill
+    config --> skill
+  end
+  human[Your web browser]
+  subgraph server[Linux server - Docker Compose]
+    hub[CloakHub - port 7788]
+    browser[CloakBrowser instances]
+    display[KasmVNC - live viewer]
+    data[(Persistent data volume)]
+    hub -->|CDP and lifecycle| browser
+    hub -->|Viewer proxy| display
+    display --- browser
+    hub -->|Profile metadata| data
+    browser -->|Cookies and browser storage| data
+  end
+  skill -->|CDP over WebSocket| hub
+  human -->|Web UI and live viewer| hub
+  browser --> sites[Websites]
 ```
 
-For local development, startup requires a discoverable CloakBrowser Binary (use the pinned build below). Set `CLOAKHUB_BROWSER_BIN`, provide the packaged Docker path, or install `cloakbrowser` on `PATH`.
-Headed Browser Profiles also require KasmVNC `Xvnc`; if it is missing, startup continues with a warning and headed launch/viewer actions fail until `Xvnc` is installed.
+The server runs the browsers. The client runs the agent and a small Node/Playwright
+script supplied by the skill; it needs no local browser, browser license, or MCP server.
+A client target alias selects the hub URL, exact profile ID, and profile CDP token together.
 
 ## Docker
 
-Deploy the published image with Docker Compose; no source checkout or local build is needed.
-Save the following as `compose.yml`:
+You need a Linux host with Docker Compose and a CloakBrowser key that permits the
+selected browser build. No source checkout or local image build is required. Create
+a deployment directory and save this as `compose.yml` (also available [here](compose.yml)):
 
 ```yaml
 services:
@@ -98,174 +70,202 @@ services:
       - ./secrets/cloakbrowser-keys:/run/secrets/cloakbrowser-keys:ro
 ```
 
-Create a `.env` file alongside it with `CLOAKHUB_AUTH_TOKEN=<random admin password>`
-(generate a value with `openssl rand -hex 32`). Set `CLOAKHUB_BIND_ADDRESS=0.0.0.0`
-for LAN access; the default only exposes the service on localhost. Set
-`CLOAKHUB_DEFAULT_TIMEZONE` and `CLOAKHUB_DEFAULT_LOCALE` to match your browser region.
+Create `.env` beside it, replacing the admin password with a value generated by
+`openssl rand -hex 32`. The following example allows access from your private LAN:
+
+```dotenv
+CLOAKHUB_AUTH_TOKEN=replace-with-a-random-admin-password
+CLOAKHUB_BIND_ADDRESS=0.0.0.0
+CLOAKHUB_DEFAULT_TIMEZONE=America/Los_Angeles
+CLOAKHUB_DEFAULT_LOCALE=en-US
+```
+
+Choose the timezone and locale for your browser's internet exit. Omit
+`CLOAKHUB_BIND_ADDRESS` to bind only to server localhost, for example behind a local
+reverse proxy. For internet access, use HTTPS and a proxy supporting WebSocket upgrades.
+Set `X-Forwarded-Host` and `X-Forwarded-Proto` to the public origin and overwrite
+client-supplied forwarded headers. Mount CloakHub at the origin root, not a path prefix.
+
+Prepare storage, then create `secrets/cloakbrowser-keys` with one CloakBrowser key per line:
 
 ```sh
 mkdir -p secrets data
 chmod 700 secrets
-# Create secrets/cloakbrowser-keys with one license key per line, then:
+# Save your key(s) in secrets/cloakbrowser-keys, then:
 chmod 600 .env secrets/cloakbrowser-keys
 docker compose pull
 docker compose up -d
 docker compose logs -f cloakhub
 ```
 
-Open `http://localhost:7788`, or `http://<server-lan-ip>:7788` when LAN binding is enabled,
-and sign in with the configured admin password. The multi-platform image automatically
-selects amd64 or arm64; `compose.arm64.yml` explicitly selects ARM64 when needed.
-The container listens on `0.0.0.0:7788` internally.
-Source builds download **152.0.7977.82.1** from the preview channel through the official JS package `cloakbrowser@0.5.10`, running on Bun, including
-upstream signature/checksum verification, on the first start. The binary is cached under
-`/data/browser-cache`; subsequent starts use that exact cached build. No key or browser
-binary is included in the application image. Python and Node are not required or bundled. A mounted `CLOAKHUB_BROWSER_BIN` overrides
-the installer. An invalid explicit binary path fails rather than falling back to another browser.
+Open `http://<server-lan-ip>:7788` (or your HTTPS origin) and sign in with the admin
+password. With localhost binding, open `http://localhost:7788` on the server or use
+your reverse proxy. The image automatically selects amd64 or arm64.
 
-Source builds include the repository’s Mac fonts and default new profiles to Mac
-with preview `152.0.7977.82.1`. See [Mac fonts and image builds](docs/private-macos.md).
-These defaults are included starting with `0.7.0`.
-See the [152 preview vs 151 stable comparison](docs/browser-channel-comparison.md)
-for the measured results and remaining limits.
+On first start, the server downloads and verifies the pinned browser and caches it in
+`./data/browser-cache`. Version `0.7.0` uses preview **152.0.7977.82.1**, includes Mac
+fonts, and defaults new profiles to a macOS identity. No browser binary or license key
+is bundled in the image. Keep `./data` across container replacements: it contains
+profile metadata, browser storage, and secrets. See [browser builds](docs/private-macos.md)
+and the [preview/stable comparison](docs/browser-channel-comparison.md) for details.
 
-See [151 deployment and multiple keys](docs/cloakbrowser-151.md) for key configuration,
-concurrency limits, version availability, and migration/rollback instructions.
+## Prepare a browser profile
 
-Images support `linux/amd64` and `linux/arm64`. Pin a full version such as `0.7.0`
-for predictable deployments and rollback. The `0.7` alias follows patch releases,
-and `latest` follows the newest CloakHub release (whose browser channel is currently preview). Branch builds publish `master`
-and `sha-*` development tags without changing `latest`.
+1. Create a profile in the web UI with an exact ID such as `research`.
+2. Open its viewer and sign into any websites the agent should use. Default headed
+   mode supports unattended automation; you do not need to leave the viewer open.
+3. Generate and copy the profile's **CDP token** from its controls.
+4. Give the client the hub origin, profile ID, and that CDP token.
 
-To release, update `package.json`, commit and push the changes, and wait for the
-Tests workflow to pass. Push a matching Git tag (for example `v0.7.0`) to build
-the release images. The image workflow checks that the tag matches the package
-version before publishing.
+There are three separate credentials:
 
-The disk cache budget applies to ordinary HTTP resources such as pages and images, via
-Chromium's `--disk-cache-size` setting. Chromium evicts old cache entries as needed;
-this is not a filesystem quota or a limit on the whole profile directory. Cache metadata
-and in-flight writes can exceed the target. Cookies, localStorage, IndexedDB, Service Worker
-Cache Storage, and downloads are not cleared or capped by this setting. Existing profiles
-receive the budget on their next browser launch; reducing it does not synchronously shrink
-an existing cache. Restart the service after changing the environment variable.
-`--disk-cache-size` is reserved by CloakHub; remove it from existing custom launch arguments
-and use the environment variable instead.
+| Credential | Where it belongs | Purpose |
+| --- | --- | --- |
+| CloakBrowser key | Server secret file | Download and run the browser |
+| CloakHub admin password | Operator / management API | Manage profiles and the server UI |
+| Profile CDP token | Client secret file or environment | Operate one profile's browser |
 
-## Configuration
+The agent needs only the profile CDP token. An admin password does not replace it.
+A profile without a CDP token has **unprotected CDP endpoints**, even when admin
+authentication is enabled.
 
-Defaults:
+## Install the agent skill
 
-- `CLOAKHUB_HOST`: `127.0.0.1`
-- `CLOAKHUB_PORT`: `7788`
-- `CLOAKHUB_DATA_DIR`: `~/.cloakhub/data`
-- `CLOAKHUB_MAX_RUNNING_INSTANCES`: `10`
-- `CLOAKHUB_DISK_CACHE_SIZE_MB`: `256` MiB per profile (integer 1–2047)
-
-Optional settings:
-
-- `CLOAKHUB_BROWSER_BIN`: path to an already installed/mounted CloakBrowser Binary
-- `CLOAKHUB_LICENSE_KEYS_FILE`: read-only file with one key per line (recommended)
-- `CLOAKHUB_LICENSE_KEYS`: JSON array of keys; takes precedence over the file
-- `CLOAKBROWSER_LICENSE_KEY`: legacy single-key environment variable
-- `CLOAKHUB_BROWSER_INSTALLER`: set to `bun` for managed downloads (already set in Docker)
-- `CLOAKHUB_BROWSER_VERSION`: exact release for the Docker installer; defaults to `152.0.7977.82.1`
-- `CLOAKHUB_BROWSER_CHANNEL`: `preview` (default) or `stable`; use `stable` with version `151.0.7922.108.6` for the tested stable build
-- `CLOAKHUB_AUTH_TOKEN`: admin auth token for protected UI and admin APIs
-- `CLOAKHUB_DEFAULT_TIMEZONE`: IANA timezone for new profiles, e.g. `America/Los_Angeles`;
-  defaults to the server process timezone (usually UTC in Docker)
-- `CLOAKHUB_DEFAULT_LOCALE`: language tag for new profiles; defaults to `en-US`
-
-Docker deployments should set `CLOAKHUB_HOST=0.0.0.0` and `CLOAKHUB_DATA_DIR=/data`.
-
-New profiles default to a Linux identity, headed mode, 1366×768, and four CPU threads.
-Headed mode uses ANGLE/SwiftShader for WebGL without requiring a host GPU and supports
-unattended CDP automation without opening the viewer. Native headless remains available,
-but WebGL is not reliable with every bundled browser build.
-
-Set the deployment timezone to match the browser's internet exit. For a US west-coast
-deployment, for example, add `CLOAKHUB_DEFAULT_TIMEZONE=America/Los_Angeles` and
-`CLOAKHUB_DEFAULT_LOCALE=en-US` to the container environment (or Compose `.env`).
-These values are saved when each profile is created.
-The editor shows the saved region and offers **Use deployment region** to explicitly
-apply it. A profile using a proxy in another region should set its own timezone/locale.
-There is no automatic GeoIP lookup or region change on restart.
-
-Existing profiles keep their stored platform and region, including legacy blank values
-that inherit the browser environment. Deployment default changes affect new profiles
-only; the updated headed graphics parameters apply on the next browser start. Linux
-is the recommended identity for this server; cross-platform identities may need matching
-fonts and graphics. These defaults improve consistency, but do not guarantee that a
-site cannot identify an automated or modified browser.
-
-The Data Root contains profile data and secrets. Treat it as sensitive storage.
-
-## Tests
-
-Normal tests do not launch real CloakBrowser or KasmVNC:
+On the **client machine**, install Node.js 20+ and run:
 
 ```sh
-bun test
+npx skills add txchen/cloakhub --skill cloakhub-browser --global
 ```
 
-Real-runtime integration tests are opt-in and require CloakBrowser plus KasmVNC for headed coverage:
+Select your agent clients and the default symlink installation mode when prompted.
+The global skill directory is normally `~/.agents/skills/cloakhub-browser` in that mode.
+Install its pinned Node dependency there:
 
 ```sh
-CLOAKHUB_BROWSER_BIN=/path/to/cloakbrowser bun run integration:real-runtime
+npm ci --prefix "$HOME/.agents/skills/cloakhub-browser"
 ```
 
-Those integration tests exercise real headless launch, headed KasmVNC/noVNC startup, CDP Transparent Recovery, spin-down/recovery persistence, and explicit Stop overriding active clients.
-They also verify that a new default headed profile can render and read pixels through
-both WebGL and WebGL2. They do not depend on public bot-detection websites.
+If you choose copy mode or a different installation location, use the directory
+printed by the installer instead. Reload your agent's skills or restart its session.
+The [skills CLI](https://github.com/vercel-labs/skills#readme) installs the skill files;
+`npm ci` installs `playwright-core` without downloading a local browser. After a skill
+update, run `npm ci` in the installed directory again.
 
-## Workspace UI
+## Configure the client
 
-The workspace is designed for roughly 10–15 profiles. A permanent sidebar lists every profile
-by name with its current status. Click a profile to open its viewer, or its controls if headless.
-Use the sidebar arrow to collapse or expand it. Drag its right edge to resize, or double-click
-the edge to restore the default width. The edge also supports arrow keys, Home, and End.
-Width and collapsed state are remembered in your browser; resizing keeps the viewer connected.
-The overview shows connection counts, memory observations, and a profile detail panel.
-Profile actions are available from the `…` menu and detail panel; the viewer has a **Settings**
-button. The editor is loaded on demand and reports server validation errors. Saving settings
-and polling every 2.5 seconds update the workspace without reloading an open viewer.
-**Close viewer** disconnects only the viewer.
-
-Use **Event log** in the sidebar to inspect past lifecycle events and current automatic
-sleep status. An `idle timeout` stop is confirmed only after process cleanup completes.
-The log updates every five seconds and retains the latest 100,000 events across restarts;
-loading older events pauses automatic history refresh until you click **Refresh events**.
-
-Timezone, language/locale, and website appearance are passed to the browser on its next start.
-Clipboard sync is enforced on the clipboard endpoints and incoming VNC clipboard messages;
-KasmVNC's native outgoing clipboard preference fully applies on the next start. Automatic GeoIP
-and Humanize are SDK features and are not supported by this direct-process runtime. New requests
-enabling them are rejected. Profiles with older values show an explicit option in Advanced
-settings to remove those unsupported values.
-
-Start, Stop, Restart, Delete, idle stop, and shutdown share a per-profile operation queue.
-Concurrent starts wait for the same ready instance. Deletion waits for browser/display teardown
-before removing data, and failed cleanup preserves metadata. Normal shutdown first requests
-`Browser.close` so browser storage can flush, with process termination as a fallback. Session
-restore retains cookies and tabs across automatic stops; live JavaScript state is not retained.
-
-## Frontend development and verification
-
-HTTP routing lives in `src/app.ts`, response presentation in `src/profile-presentation.ts`, and
-browser code, templates, and CSS in `src/ui/`. Bun builds the TypeScript browser entries on first
-asset request; no separate frontend server or framework is required. Restart the development
-server after changing bundled frontend files (the watch command does this for imported modules;
-client-only assets may require a manual restart).
+Create the client configuration directory:
 
 ```sh
-bun run typecheck
-bun test
-bunx playwright install chromium
-bun run test:ui
+mkdir -p "$HOME/.config/cloakhub/tokens"
+chmod 700 "$HOME/.config/cloakhub" "$HOME/.config/cloakhub/tokens"
 ```
 
-The UI suite uses an isolated SQLite data directory and controlled runtime handles. Set
-`CLOAKHUB_TEST_BROWSER=/path/to/chrome` to use an installed browser. It covers create/edit errors,
-proxy preservation and removal, lifecycle confirmations, token-copy fallback, sidebar switching,
-viewer continuity while editing, external profile changes, and narrow screens. Real browser
-persistence and runtime settings remain covered by `bun run integration:real-runtime`.
+Save this as `~/.config/cloakhub/client.json`, replacing the example origin and
+profile ID with yours:
+
+```json
+{
+  "version": 1,
+  "defaultTarget": "work",
+  "targets": {
+    "work": {
+      "url": "http://192.168.1.50:7788",
+      "profile": "research",
+      "tokenFile": "tokens/work"
+    }
+  }
+}
+```
+
+Save only the profile's CDP token in `~/.config/cloakhub/tokens/work`, then restrict
+its permissions:
+
+```sh
+chmod 600 "$HOME/.config/cloakhub/tokens/work"
+```
+
+`work` is a client-local alias; `research` is the exact server profile ID, not its
+display name. `url` is the hub origin without `/api/...`. Relative token paths are
+resolved beside `client.json`, so `tokens/work` needs no machine-specific path.
+The helper reads the token directly; keep it out of prompts and committed files.
+
+For multiple profiles or servers, add entries under `targets`, each with its own
+`url`, `profile`, and credential. The same skill works for all of them:
+
+- No explicit selection: use `defaultTarget`.
+- A request such as “use the personal browser”: the agent passes `--target personal`.
+- `CLOAKHUB_TARGET=work` in the agent's execution environment overrides the default;
+  explicit `--target` takes precedence over both.
+- `CLOAKHUB_CLIENT_CONFIG` selects a different config file. No project-local config
+  is automatically loaded.
+
+For an environment-managed secret, replace `tokenFile` with
+`"tokenEnv": "WORK_CLOAKHUB_CDP_TOKEN"` and provide that variable to the agent's process.
+Missing configuration or credentials cause an error; the helper does not choose an
+arbitrary profile or fall back to a local browser.
+
+Verify the setup:
+
+```sh
+node "$HOME/.agents/skills/cloakhub-browser/scripts/browser.mjs" targets
+node "$HOME/.agents/skills/cloakhub-browser/scripts/browser.mjs" check --target work
+```
+
+`targets` lists local connection metadata without reading tokens or contacting the
+server. `check` makes an authenticated CDP connection, wakes the profile if needed,
+reports `"ok": true`, and disconnects. Then ask your agent, for example:
+
+> Use the CloakHub work browser to open example.com and tell me the page title.
+
+See the [skill](skills/cloakhub-browser/SKILL.md) for the browser workflow and
+[client setup reference](skills/cloakhub-browser/references/setup.md) for troubleshooting.
+
+## Everyday use
+
+Select a profile in the sidebar to open its viewer or controls. Use its menu to edit
+settings, manage its token, or start/stop it. **Close viewer** disconnects the viewer
+only. The event log shows starts, failures, idle stops, and capacity events.
+
+Browsers wake automatically through their fixed profile connection URL. The skill
+disconnects after each script so idle sleep can work. An open CDP connection prevents
+automatic sleep; simply watching the viewer does not. Sleep retains browser storage
+and restores tabs, but does not preserve live JavaScript or unfinished operations.
+
+Multiple clients using the same profile share tabs and login state; aliases do not
+provide task isolation. Coordinate access or assign separate profiles for parallel work.
+Explicit Stop/Restart disconnects every client. Delete removes the profile's stored data.
+Launch-setting edits apply on the next start; deployment defaults affect new profiles only.
+Automatic GeoIP and SDK Humanize are not provided by this runtime.
+
+## Server settings and upgrades
+
+Common settings can be added under `environment` in Compose. Only variables explicitly
+referenced by `compose.yml` are picked up from `.env`.
+
+| Setting | Default / purpose |
+| --- | --- |
+| `CLOAKHUB_MAX_RUNNING_INSTANCES` | `10`; browser key quotas may lower the effective limit |
+| `CLOAKHUB_DEFAULT_PLATFORM` | `macos` in Docker; `linux` in source runs without an override |
+| `CLOAKHUB_DEFAULT_TIMEZONE` / `CLOAKHUB_DEFAULT_LOCALE` | Compose uses `UTC` / `en-US`; set these to your region |
+| `CLOAKHUB_DISK_CACHE_SIZE_MB` | `256` per profile; HTTP cache budget, not a profile disk quota |
+| `CLOAKHUB_BROWSER_VERSION` / `CLOAKHUB_BROWSER_CHANNEL` | Exact build and channel; Docker pins `152.0.7977.82.1` / `preview` |
+| `CLOAKHUB_BROWSER_BIN` | Optional mounted binary, overriding the downloader |
+| `CLOAKHUB_LICENSE_KEYS_FILE` | Browser keys; see [multiple-key configuration](docs/cloakbrowser-151.md#configure-keys) |
+
+Pin a full image tag such as `0.7.0` for predictable upgrades. The `0.7` alias follows
+patch releases; `latest` follows releases, and `master` / `sha-*` are development tags.
+Browser builds stay pinned until you change the selected build or image.
+
+Before upgrading, stop the service with `docker compose stop` and back up the entire
+`./data` directory while browsers are stopped. Update the image tag, then run
+`docker compose pull` and `docker compose up -d`. Retain the old image tag and backup
+for rollback; do not assume older browsers can read profiles upgraded by newer builds.
+
+## Further documentation
+
+- [Automation API](docs/api.md) and [management script example](examples/agent-workflow.mjs)
+- [Client setup and troubleshooting](skills/cloakhub-browser/references/setup.md)
+- [Mac fonts and image builds](docs/private-macos.md)
+- [152 preview versus 151 stable](docs/browser-channel-comparison.md)
+- [Browser keys, concurrency, and historical 151 migration](docs/cloakbrowser-151.md)
+- [Development and tests](docs/development.md)
