@@ -64,11 +64,11 @@ COPY scripts/check-mac-fonts.ts /app/check-mac-fonts.ts
 RUN FONTCONFIG_FILE=/app/macos-fonts.conf fc-cache -f \
     && FONTCONFIG_FILE=/app/macos-fonts.conf bun /app/check-mac-fonts.ts
 
-# Bake the patched browser. The release asset is verified by SHA-256 before
+# Bake the license-free browser. The release asset is verified by SHA-256 before
 # extraction so a moved or re-uploaded asset cannot silently change the build.
 RUN set -eux; \
     if [ "$TARGETARCH" != "amd64" ]; then \
-      echo "cloakhub_free only supports linux/amd64 (the patch is x64-only)"; \
+      echo "cloakhub_free only supports linux/amd64"; \
       exit 1; \
     fi; \
     wget -q -O /tmp/cloakbrowser.tar.zst \

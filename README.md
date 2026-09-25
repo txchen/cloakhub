@@ -128,12 +128,15 @@ Use the free image when you cannot or do not want to supply a CloakBrowser key. 
 requires no secret file, does not contact the license service, and does not download a
 browser at runtime. It is **amd64 only**; on arm64, use the standard image instead.
 
-The image sets `CLOAKHUB_LICENSE_MODE=none`, so the Hub reads no license key, never
-queries license capacity, and never downloads a browser. It uses the license-free
-CloakBrowser build from the [152.0.7977.82.1 Linux x64 release](https://github.com/txchen/cloakhub/releases/tag/cloakbrowser-152.0.7977.82.1-linux-x64),
-verified by SHA-256 at image-build time. Concurrent Browser Instances are capped only by
-`CLOAKHUB_MAX_RUNNING_INSTANCES`; the free image defaults it to `10`, and you can raise
-it in Compose.
+The free image sets `CLOAKHUB_LICENSE_MODE=none` and already defaults
+`CLOAKHUB_DATA_DIR`, `CLOAKHUB_HOST`, `CLOAKHUB_PORT`, and
+`CLOAKHUB_MAX_RUNNING_INSTANCES=10`, so the Compose file only needs the settings an
+operator typically customizes. The Hub reads no license key, never queries license
+capacity, and never downloads a browser. It uses the license-free CloakBrowser build
+from the [152.0.7977.82.1 Linux x64 release](https://github.com/txchen/cloakhub/releases/tag/cloakbrowser-152.0.7977.82.1-linux-x64),
+verified by SHA-256 at image-build time. Concurrent Browser Instances are capped only
+by `CLOAKHUB_MAX_RUNNING_INSTANCES` (default `10`; add it to the Compose `environment`
+to raise it).
 
 Save [`compose.free.yml`](compose.free.yml) as `compose.yml` in your deployment
 directory:
@@ -145,11 +148,6 @@ services:
     restart: unless-stopped
     shm_size: 2gb
     environment:
-      CLOAKHUB_LICENSE_MODE: none
-      CLOAKHUB_DATA_DIR: /data
-      CLOAKHUB_HOST: 0.0.0.0
-      CLOAKHUB_PORT: "7788"
-      CLOAKHUB_MAX_RUNNING_INSTANCES: "10"
       CLOAKHUB_DISK_CACHE_SIZE_MB: "${CLOAKHUB_DISK_CACHE_SIZE_MB:-256}"
       CLOAKHUB_DEFAULT_TIMEZONE: "${CLOAKHUB_DEFAULT_TIMEZONE:-UTC}"
       CLOAKHUB_DEFAULT_LOCALE: "${CLOAKHUB_DEFAULT_LOCALE:-en-US}"

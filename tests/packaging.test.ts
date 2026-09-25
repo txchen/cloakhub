@@ -56,7 +56,7 @@ describe("Docker-first packaging", () => {
 
     expect(readme).toContain("### Run the free image");
     expect(readme).toContain("image: ghcr.io/txchen/cloakhub_free:0.8.0");
-    expect(readme).toContain("CLOAKHUB_LICENSE_MODE: none");
+    expect(readme).toContain("CLOAKHUB_LICENSE_MODE=none");
     expect(readme).toContain("docker compose logs -f cloakhub-free");
   });
 
@@ -135,7 +135,7 @@ describe("Docker-first packaging", () => {
     const compose = await Bun.file("compose.free.yml").text();
 
     expect(compose).toContain("image: ghcr.io/txchen/cloakhub_free:0.8.0");
-    expect(compose).toContain("CLOAKHUB_LICENSE_MODE: none");
+    expect(compose).not.toMatch(/^\s*CLOAKHUB_LICENSE_MODE:/m);
     expect(compose).not.toContain("CLOAKHUB_LICENSE_KEYS_FILE");
     expect(compose).not.toContain("cloakbrowser-keys");
   });
