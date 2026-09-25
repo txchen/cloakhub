@@ -40,7 +40,7 @@ describe("Docker-first packaging", () => {
   test("README documents deployment from the published image", async () => {
     const readme = await Bun.file("README.md").text();
 
-    expect(readme).toContain("image: ghcr.io/txchen/cloakhub:0.7.1");
+    expect(readme).toContain("image: ghcr.io/txchen/cloakhub:0.8.0");
     expect(readme).toContain("docker compose pull");
     expect(readme).toContain("restart: unless-stopped");
     expect(readme).toContain("shm_size: 2gb");
@@ -55,7 +55,7 @@ describe("Docker-first packaging", () => {
     const compose = await Bun.file("compose.arm64.yml").text();
 
     expect(compose).not.toContain("build:");
-    expect(compose).toContain("image: ghcr.io/txchen/cloakhub:0.7.1");
+    expect(compose).toContain("image: ghcr.io/txchen/cloakhub:0.8.0");
     expect(compose).toContain("CLOAKHUB_LICENSE_KEYS_FILE: /run/secrets/cloakbrowser-keys");
     expect(compose).toContain("platform: linux/arm64");
     expect(compose).toContain("restart: unless-stopped");
@@ -96,5 +96,38 @@ describe("Docker-first packaging", () => {
     for (const snippet of requiredWorkflowSnippets) {
       expect(workflow).toContain(snippet);
     }
+  });
+
+  test("free Dockerfile bakes the license-free browser and disables license checks", async () => {
+    const dockerfile = await Bun.file("Dockerfile.free").text();
+
+    expect(dockerfile).toContain("FROM oven/bun:1.3.14-debian AS bun");
+    expect(dockerfile).toContain("FROM debian:bookworm-slim");
+    expect(dockerfile).toContain("CLOAKHUB_LICENSE_MODE=none");
+    expect(dockerfile).toContain("CLOAKHUB_BROWSER_BIN=/opt/cloakbrowser/chrome");
+    expect(dockerfile).toContain("CLOAKHUB_MAX_RUNNING_INSTANCES=10");
+    expect(dockerfile).toContain("CLOAKHUB_DEFAULT_PLATFORM=macos");
+    expect(dockerfile).toContain("cloakbrowser-152.0.7977.82.1-pro-linux-x64.tar.zst");
+    expect(dockerfile).toContain("sha256sum -c -");
+    expect(dockerfile).not.toContain("CLOAKHUB_BROWSER_INSTALLER");
+    expect(dockerfile).not.toMatch(/^(ARG|ENV) .*LICENSE_KEY/m);
+  });
+
+  test("workflow publishes the free image as amd64 and never pushes on pull requests", async () => {
+    const workflow = await Bun.file(".github/workflows/docker-image.yml").text();
+
+    expect(workflow).toContain("images: ghcr.io/${{ github.repository }}_free");
+    expect(workflow).toContain("file: Dockerfile.free");
+    expect(workflow).toMatch(/file: Dockerfile\.free\n.*platforms: linux\/amd64\n/);
+    expect(workflow.split("push: ${{ github.event_name != 'pull_request' }}").length - 1).toBe(2);
+  });
+
+  test("free compose example needs no license secret", async () => {
+    const compose = await Bun.file("compose.free.yml").text();
+
+    expect(compose).toContain("image: ghcr.io/txchen/cloakhub_free:0.8.0");
+    expect(compose).toContain("CLOAKHUB_LICENSE_MODE: none");
+    expect(compose).not.toContain("CLOAKHUB_LICENSE_KEYS_FILE");
+    expect(compose).not.toContain("cloakbrowser-keys");
   });
 });

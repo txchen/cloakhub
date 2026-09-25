@@ -918,7 +918,8 @@ async function tempApp(
     host: "127.0.0.1",
     maxRunningInstances: 10,
     port: 7788,
-    ...overrides
+    ...overrides,
+    licenseMode: overrides.licenseMode ?? "required"
   };
 
   return {

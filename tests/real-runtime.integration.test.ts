@@ -434,6 +434,7 @@ async function realRuntimeFixture(
     browserBin: browserBin.path,
     dataRoot,
     host: "127.0.0.1",
+    licenseMode: "required" as const,
     maxRunningInstances: 10,
     port: 7788
   };

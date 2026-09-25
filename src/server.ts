@@ -34,18 +34,28 @@ export async function startCloakHubServer(): Promise<CloakHubServerHandle> {
     throw new Error("CLOAKHUB_MACOS_FONTCONFIG_FILE must point to an existing fontconfig file");
   }
   await ensureDataRoot(config.dataRoot);
-  const licenseKeys = await loadBrowserLicenseKeys();
+  const licenseFree = config.licenseMode === "none";
+  // In free mode, never read or validate license configuration: the license-free
+  // browser performs no license check and Hub must not reserve licensed slots.
+  const licenseKeys = licenseFree ? [] : await loadBrowserLicenseKeys();
   const browserBin = await prepareBrowserBinary({
     browserBin: config.browserBin,
     dataRoot: config.dataRoot,
     licenseKeys,
-    installer: process.env.CLOAKHUB_BROWSER_INSTALLER,
+    // Free mode always uses the mounted/packaged binary; never the installer.
+    installer: licenseFree ? undefined : process.env.CLOAKHUB_BROWSER_INSTALLER,
     version: process.env.CLOAKHUB_BROWSER_VERSION,
     channel: process.env.CLOAKHUB_BROWSER_CHANNEL
   });
   const licensePool = licenseKeys.length ? await createBrowserLicensePool(licenseKeys) : undefined;
   const maxRunningInstances = Math.min(config.maxRunningInstances, licensePool?.capacity ?? Infinity);
-  if (licensePool) console.log(`CloakBrowser: ${licenseKeys.length} configured key(s), ${licensePool.capacity} licensed slots; Hub limit ${maxRunningInstances}`);
+  if (licenseFree) {
+    console.log(
+      `CLOAKHUB_LICENSE_MODE=none: CloakBrowser license checks disabled; Hub limit ${maxRunningInstances}`
+    );
+  } else if (licensePool) {
+    console.log(`CloakBrowser: ${licenseKeys.length} configured key(s), ${licensePool.capacity} licensed slots; Hub limit ${maxRunningInstances}`);
+  }
   const kasmVncBin = await resolveKasmVncBin();
   if (kasmVncBin.warning) {
     console.warn(kasmVncBin.warning);

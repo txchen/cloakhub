@@ -50,6 +50,7 @@ const app = createApp(
     host: "127.0.0.1",
     port: 17790,
     maxRunningInstances: 10,
+    licenseMode: "required",
     authToken: undefined,
     browserBin: undefined
   },

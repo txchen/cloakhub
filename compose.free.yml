@@ -1,13 +1,17 @@
+# License-free CloakHub image. No license key, no browser download at runtime,
+# and no license-capacity query: the license-free browser is baked into the image.
+# Browser Instances are bounded by CLOAKHUB_MAX_RUNNING_INSTANCES (default 10).
 services:
-  cloakhub:
-    image: ghcr.io/txchen/cloakhub:0.8.0
+  cloakhub-free:
+    image: ghcr.io/txchen/cloakhub_free:0.8.0
     restart: unless-stopped
     shm_size: 2gb
     environment:
-      CLOAKHUB_LICENSE_KEYS_FILE: /run/secrets/cloakbrowser-keys
+      CLOAKHUB_LICENSE_MODE: none
       CLOAKHUB_DATA_DIR: /data
       CLOAKHUB_HOST: 0.0.0.0
       CLOAKHUB_PORT: "7788"
+      CLOAKHUB_MAX_RUNNING_INSTANCES: "10"
       CLOAKHUB_DISK_CACHE_SIZE_MB: "${CLOAKHUB_DISK_CACHE_SIZE_MB:-256}"
       CLOAKHUB_DEFAULT_TIMEZONE: "${CLOAKHUB_DEFAULT_TIMEZONE:-UTC}"
       CLOAKHUB_DEFAULT_LOCALE: "${CLOAKHUB_DEFAULT_LOCALE:-en-US}"
@@ -16,4 +20,3 @@ services:
       - "${CLOAKHUB_BIND_ADDRESS:-127.0.0.1}:7788:7788"
     volumes:
       - ./data:/data
-      - ./secrets/cloakbrowser-keys:/run/secrets/cloakbrowser-keys:ro

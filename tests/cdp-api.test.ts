@@ -12,6 +12,7 @@ const config: CloakHubConfig = {
   browserBin: undefined,
   dataRoot: "/sensitive/data-root",
   host: "127.0.0.1",
+  licenseMode: "required",
   maxRunningInstances: 10,
   port: 7788
 };

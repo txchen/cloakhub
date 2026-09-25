@@ -28,6 +28,7 @@ describe("loadConfigFromEnv", () => {
       diskCacheSizeMb: 256,
       dataRoot: join("/home/operator", ".cloakhub", "data"),
       host: "127.0.0.1",
+      licenseMode: "required",
       maxRunningInstances: 10,
       port: 7788
     });
@@ -56,9 +57,20 @@ describe("loadConfigFromEnv", () => {
       diskCacheSizeMb: 128,
       dataRoot: "/data",
       host: "0.0.0.0",
+      licenseMode: "required",
       maxRunningInstances: 4,
       port: 8899
     });
+  });
+
+  test("supports the explicit license-free switch", () => {
+    expect(loadConfigFromEnv({}).licenseMode).toBe("required");
+    expect(loadConfigFromEnv({ CLOAKHUB_LICENSE_MODE: " " }).licenseMode).toBe("required");
+    expect(loadConfigFromEnv({ CLOAKHUB_LICENSE_MODE: "none" }).licenseMode).toBe("none");
+    expect(loadConfigFromEnv({ CLOAKHUB_LICENSE_MODE: " required " }).licenseMode).toBe("required");
+    expect(() => loadConfigFromEnv({ CLOAKHUB_LICENSE_MODE: "free" })).toThrow(
+      "CLOAKHUB_LICENSE_MODE must be required or none"
+    );
   });
 
   test("fails clearly for invalid numeric configuration", () => {

@@ -59,6 +59,7 @@ test("event endpoints enforce admin and UI auth, validate filters, and do not to
       host: "localhost",
       port: 7788,
       maxRunningInstances: 10,
+      licenseMode: "required",
       authToken: "admin",
       browserBin: undefined
     },

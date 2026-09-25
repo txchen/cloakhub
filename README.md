@@ -51,7 +51,7 @@ a deployment directory and save this as `compose.yml` (also available [here](com
 ```yaml
 services:
   cloakhub:
-    image: ghcr.io/txchen/cloakhub:0.7.1
+    image: ghcr.io/txchen/cloakhub:0.8.0
     restart: unless-stopped
     shm_size: 2gb
     environment:
@@ -103,11 +103,42 @@ password. With localhost binding, open `http://localhost:7788` on the server or 
 your reverse proxy. The image automatically selects amd64 or arm64.
 
 On first start, the server downloads and verifies the pinned browser and caches it in
-`./data/browser-cache`. Version `0.7.1` uses preview **152.0.7977.82.1**, includes Mac
+`./data/browser-cache`. Version `0.8.0` uses preview **152.0.7977.82.1**, includes Mac
 fonts, and defaults new profiles to a macOS identity. No browser binary or license key
 is bundled in the image. Keep `./data` across container replacements: it contains
 profile metadata, browser storage, and secrets. See [browser builds](docs/private-macos.md)
 and the [preview/stable comparison](docs/browser-channel-comparison.md) for details.
+
+### The two published images
+
+The same release publishes two images:
+
+| Image | License key | Browser | Notes |
+| --- | --- | --- | --- |
+| `ghcr.io/txchen/cloakhub` | Required | Downloaded and verified on first start into `./data/browser-cache` | Smaller image; amd64 and arm64 |
+| `ghcr.io/txchen/cloakhub_free` | None | Baked into the image at build time | Larger image; amd64 only |
+
+Both default to a macOS persona, bundle Mac fonts, and otherwise share the same Hub
+features and settings.
+
+The free image sets `CLOAKHUB_LICENSE_MODE=none`, so Hub reads no license key, never
+queries license capacity, and never downloads a browser. It uses the license-free
+CloakBrowser build from the [152.0.7977.82.1 Linux x64 release](https://github.com/txchen/cloakhub/releases/tag/cloakbrowser-152.0.7977.82.1-linux-x64),
+verified by SHA-256 at image-build time. Concurrent Browser Instances are capped only by
+`CLOAKHUB_MAX_RUNNING_INSTANCES` (default `10` in that image). See
+[`compose.free.yml`](compose.free.yml).
+
+To deploy the free image, save [`compose.free.yml`](compose.free.yml) as `compose.yml`,
+set `CLOAKHUB_AUTH_TOKEN` in `.env`, and run the same commands. No
+`secrets/cloakbrowser-keys` file is needed:
+
+```sh
+mkdir -p data
+# save compose.free.yml as compose.yml, then set CLOAKHUB_AUTH_TOKEN in .env
+docker compose pull
+docker compose up -d
+docker compose logs -f cloakhub-free
+```
 
 ## Prepare a browser profile
 
@@ -322,11 +353,13 @@ referenced by `compose.yml` are picked up from `.env`.
 | `CLOAKHUB_DISK_CACHE_SIZE_MB` | `256` per profile; HTTP cache budget, not a profile disk quota |
 | `CLOAKHUB_BROWSER_VERSION` / `CLOAKHUB_BROWSER_CHANNEL` | Exact build and channel; Docker pins `152.0.7977.82.1` / `preview` |
 | `CLOAKHUB_BROWSER_BIN` | Optional mounted binary, overriding the downloader |
+| `CLOAKHUB_LICENSE_MODE` | `required`; set `none` to skip license loading and capacity checks (the free image sets `none`) |
 | `CLOAKHUB_LICENSE_KEYS_FILE` | Browser keys; see [multiple-key configuration](docs/cloakbrowser-151.md#configure-keys) |
 
-Pin a full image tag such as `0.7.1` for predictable upgrades. The `0.7` alias follows
+Pin a full image tag such as `0.8.0` for predictable upgrades. The `0.8` alias follows
 patch releases; `latest` follows releases, and `master` / `sha-*` are development tags.
-Browser builds stay pinned until you change the selected build or image.
+Browser builds stay pinned until you change the selected build or image. The free image,
+`ghcr.io/txchen/cloakhub_free`, follows the same tags.
 
 Before upgrading, stop the service with `docker compose stop` and back up the entire
 `./data` directory while browsers are stopped. Update the image tag, then run

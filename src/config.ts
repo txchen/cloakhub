@@ -4,6 +4,8 @@ import { resolveCreationDefaults, type ProfileRegion } from "./profile";
 
 export type CloakHubEnv = Record<string, string | undefined>;
 
+export type LicenseMode = "required" | "none";
+
 export interface CloakHubConfig {
   creationPlatform?: string;
   creationRegion?: ProfileRegion;
@@ -12,6 +14,7 @@ export interface CloakHubConfig {
   diskCacheSizeMb?: number;
   dataRoot: string;
   host: string;
+  licenseMode: LicenseMode;
   maxRunningInstances: number;
   macosFontconfigFile?: string;
   port: number;
@@ -69,6 +72,7 @@ export function loadConfigFromEnv(
     ),
     dataRoot: emptyToUndefined(env.CLOAKHUB_DATA_DIR) ?? join(homeDirectory, ".cloakhub", "data"),
     host: emptyToUndefined(env.CLOAKHUB_HOST) ?? DEFAULT_HOST,
+    licenseMode: parseLicenseMode(env.CLOAKHUB_LICENSE_MODE),
     maxRunningInstances: parsePositiveInteger(
       env.CLOAKHUB_MAX_RUNNING_INSTANCES,
       "CLOAKHUB_MAX_RUNNING_INSTANCES",
@@ -82,6 +86,15 @@ export function loadConfigFromEnv(
 function emptyToUndefined(value: string | undefined): string | undefined {
   const trimmed = value?.trim();
   return trimmed ? trimmed : undefined;
+}
+
+// `required` is the default for the key-based image. `none` is the explicit
+// license-free switch used by the free image: keys are ignored and never loaded.
+function parseLicenseMode(value: string | undefined): LicenseMode {
+  const trimmed = value?.trim();
+  if (!trimmed) return "required";
+  if (trimmed === "required" || trimmed === "none") return trimmed;
+  throw new ConfigError("CLOAKHUB_LICENSE_MODE must be required or none");
 }
 
 function parsePort(value: string | undefined): number {
