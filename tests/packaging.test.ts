@@ -51,6 +51,15 @@ describe("Docker-first packaging", () => {
     expect(readme).toContain("docker compose up -d");
   });
 
+  test("README documents free-image deployment", async () => {
+    const readme = await Bun.file("README.md").text();
+
+    expect(readme).toContain("### Run the free image");
+    expect(readme).toContain("image: ghcr.io/txchen/cloakhub_free:0.8.0");
+    expect(readme).toContain("CLOAKHUB_LICENSE_MODE: none");
+    expect(readme).toContain("docker compose logs -f cloakhub-free");
+  });
+
   test("ARM64 Compose deployment is persistent and authenticated", async () => {
     const compose = await Bun.file("compose.arm64.yml").text();
 

@@ -45,8 +45,9 @@ A client target alias selects the hub URL, exact profile ID, and profile CDP tok
 ## Docker
 
 You need a Linux host with Docker Compose and a CloakBrowser key that permits the
-selected browser build. No source checkout or local image build is required. Create
-a deployment directory and save this as `compose.yml` (also available [here](compose.yml)):
+selected browser build. No source checkout or local image build is required. If you
+cannot provide a license key, skip ahead to [Run the free image](#run-the-free-image-cloakhub_free).
+Create a deployment directory and save this as `compose.yml` (also available [here](compose.yml)):
 
 ```yaml
 services:
@@ -121,24 +122,68 @@ The same release publishes two images:
 Both default to a macOS persona, bundle Mac fonts, and otherwise share the same Hub
 features and settings.
 
-The free image sets `CLOAKHUB_LICENSE_MODE=none`, so Hub reads no license key, never
+### Run the free image (`cloakhub_free`)
+
+Use the free image when you cannot or do not want to supply a CloakBrowser key. It
+requires no secret file, does not contact the license service, and does not download a
+browser at runtime. It is **amd64 only**; on arm64, use the standard image instead.
+
+The image sets `CLOAKHUB_LICENSE_MODE=none`, so the Hub reads no license key, never
 queries license capacity, and never downloads a browser. It uses the license-free
 CloakBrowser build from the [152.0.7977.82.1 Linux x64 release](https://github.com/txchen/cloakhub/releases/tag/cloakbrowser-152.0.7977.82.1-linux-x64),
 verified by SHA-256 at image-build time. Concurrent Browser Instances are capped only by
-`CLOAKHUB_MAX_RUNNING_INSTANCES` (default `10` in that image). See
-[`compose.free.yml`](compose.free.yml).
+`CLOAKHUB_MAX_RUNNING_INSTANCES`; the free image defaults it to `10`, and you can raise
+it in Compose.
 
-To deploy the free image, save [`compose.free.yml`](compose.free.yml) as `compose.yml`,
-set `CLOAKHUB_AUTH_TOKEN` in `.env`, and run the same commands. No
-`secrets/cloakbrowser-keys` file is needed:
+Save [`compose.free.yml`](compose.free.yml) as `compose.yml` in your deployment
+directory:
+
+```yaml
+services:
+  cloakhub-free:
+    image: ghcr.io/txchen/cloakhub_free:0.8.0
+    restart: unless-stopped
+    shm_size: 2gb
+    environment:
+      CLOAKHUB_LICENSE_MODE: none
+      CLOAKHUB_DATA_DIR: /data
+      CLOAKHUB_HOST: 0.0.0.0
+      CLOAKHUB_PORT: "7788"
+      CLOAKHUB_MAX_RUNNING_INSTANCES: "10"
+      CLOAKHUB_DISK_CACHE_SIZE_MB: "${CLOAKHUB_DISK_CACHE_SIZE_MB:-256}"
+      CLOAKHUB_DEFAULT_TIMEZONE: "${CLOAKHUB_DEFAULT_TIMEZONE:-UTC}"
+      CLOAKHUB_DEFAULT_LOCALE: "${CLOAKHUB_DEFAULT_LOCALE:-en-US}"
+      CLOAKHUB_AUTH_TOKEN: "${CLOAKHUB_AUTH_TOKEN:?Set CLOAKHUB_AUTH_TOKEN in .env}"
+    ports:
+      - "${CLOAKHUB_BIND_ADDRESS:-127.0.0.1}:7788:7788"
+    volumes:
+      - ./data:/data
+```
+
+Create `.env` beside it with an admin password. No `secrets/cloakbrowser-keys` file or
+`secrets` directory is needed:
+
+```dotenv
+CLOAKHUB_AUTH_TOKEN=replace-with-a-random-admin-password
+CLOAKHUB_BIND_ADDRESS=0.0.0.0
+CLOAKHUB_DEFAULT_TIMEZONE=America/Los_Angeles
+CLOAKHUB_DEFAULT_LOCALE=en-US
+```
+
+Then start it:
 
 ```sh
 mkdir -p data
-# save compose.free.yml as compose.yml, then set CLOAKHUB_AUTH_TOKEN in .env
+chmod 600 .env
 docker compose pull
 docker compose up -d
 docker compose logs -f cloakhub-free
 ```
+
+Open `http://<server-lan-ip>:7788` (or your HTTPS origin) and sign in with the admin
+password. Keep `./data` across container replacements. To pin a different release,
+change the `image:` tag; on a release, `latest` also points at the free image. The rest
+of this guide (profiles, client setup, and CDP) applies unchanged.
 
 ## Prepare a browser profile
 
