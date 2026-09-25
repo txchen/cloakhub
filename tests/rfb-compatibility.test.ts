@@ -150,7 +150,7 @@ describe("RFB compatibility proxy", () => {
     expect(translateServerFrame(makeKasmVncClipboard([{ mime: "image/png", text: "PNG" }]))).toEqual(
       Buffer.alloc(0)
     );
-    expect(buildServerCutText("hello 日本").subarray(8).toString("latin1")).toBe("hello ??");
+    expect(buildServerCutText("hello \u0416\u0416").subarray(8).toString("latin1")).toBe("hello ??");
   });
 });
 

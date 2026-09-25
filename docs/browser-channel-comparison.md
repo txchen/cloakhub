@@ -1,40 +1,25 @@
-# Mac persona：152 preview 与 151 stable 对比
+# Mac persona: 152 preview vs 151 stable comparison
 
-测试日期：2026-09-11（America/Los_Angeles；原始日志为 UTC 2026-09-12）。
+Test date: 2026-09-11 (America/Los_Angeles; raw logs are UTC 2026-09-12).
 
-标准构建已改为 preview `152.0.7977.82.1`。这次对照中，152 的三组
-Fingerprint 篡改模型分数均低于 151，常规功能测试未发现版本回归。
-这不是所有网站通过率的估计；两版在主要检测器上的布尔判定本来就相同。
+The standard build has moved to preview `152.0.7977.82.1`. In this comparison, all three of 152's Fingerprint tampering-model scores were lower than 151, and routine functional tests found no version regression. This is not an estimate of pass rates across all websites; the two builds already had the same boolean verdicts on the major detectors.
 
-## 环境与安装
+## Environment and installation
 
-| 项目 | stable | preview |
+| Item | stable | preview |
 | --- | --- | --- |
-| 官方完整版本 | 151.0.7922.108.6 | 152.0.7977.82.1 |
-| CDP 返回版本 | 151.0.7922.108 | 152.0.7977.82 |
-| 网页 Client Hints 的 Chrome 完整版本 | 151.0.7922.109 | 152.0.7977.83 |
-| 浏览器目录逻辑大小 | 782,547,835 bytes | 787,839,336 bytes |
+| Official full version | 151.0.7922.108.6 | 152.0.7977.82.1 |
+| Version returned by CDP | 151.0.7922.108 | 152.0.7977.82 |
+| Full Chrome version in web Client Hints | 151.0.7922.109 | 152.0.7977.83 |
+| Logical browser directory size | 782,547,835 bytes | 787,839,336 bytes |
 
-官方版本接口分别查询了 Linux x64 和 ARM64；两者都返回上述版本，preview
-没有回退到 stable。实际运行测试只覆盖 Linux amd64。
-来源：[stable](https://cloakbrowser.dev/api/download/version)、
-[preview](https://cloakbrowser.dev/api/download/version?channel=preview)，请求使用
-`X-Platform` 头。
+The official version endpoint was queried for Linux x64 and ARM64 separately; both returned the versions above, and preview did not fall back to stable. The live tests covered Linux amd64 only. Sources: [stable](https://cloakbrowser.dev/api/download/version), [preview](https://cloakbrowser.dev/api/download/version?channel=preview); requests used the `X-Platform` header.
 
-两组使用相同应用镜像
-`sha256:ce9ef8ad88295249f120d82e7c3a7a479612222b90839a98335dc88e8acccd79`，
-仅改变浏览器版本及渠道。两组均从空缓存通过官方 `cloakbrowser@0.5.10`
-下载器安装，保留 Ed25519、manifest 版本和 SHA-256 校验；没有用显式 binary
-路径绕过托管安装。实际下载路径和 CDP 版本均核对过。
+Both groups used the same app image `sha256:ce9ef8ad88295249f120d82e7c3a7a479612222b90839a98335dc88e8acccd79`, changing only the browser version and channel. Both installed from an empty cache through the official `cloakbrowser@0.5.10` downloader, retaining Ed25519, manifest version, and SHA-256 verification; no explicit binary path was used to bypass managed installation. The actual download paths and CDP versions were checked.
 
-共同条件：Mac persona、46 个真实字体文件（55.06 MiB）、headed、1366×768、
-DPR 1、4 CPU 配额、2 GiB shared memory、SwiftShader 软件渲染、en-US、
-America/Los_Angeles、相同出口。
-公共检测不使用代理、账号或自定义 UA。三个新 profile 的 seed 为 20260909、
-20260910、20260911；每个 seed 在两版相同。第二组交换运行顺序，所有浏览器
-串行运行，以适应单会话许可证。
+Common conditions: Mac persona, 46 real font files (55.06 MiB), headed, 1366×768, DPR 1, 4-CPU quota, 2 GiB shared memory, SwiftShader software rendering, en-US, America/Los_Angeles, same egress. Public detection used no proxy, account, or custom UA. The three new profiles had seeds 20260909, 20260910, 20260911; each seed was the same for both builds. The second group swapped run order, and all browsers ran serially to fit a single-session license.
 
-## 公共检测
+## Public detection
 
 | Seed | 151 tampering_ml_score | 152 tampering_ml_score |
 | --- | ---: | ---: |
@@ -42,129 +27,79 @@ America/Los_Angeles、相同出口。
 | 20260910 | 0.0748 | 0.0300 |
 | 20260911 | 0.1258 | 0.0541 |
 
-六次 Fingerprint 观察均为：`bot=not_detected`、`tampering=false`、
-`anomaly_score=0`、`anti_detect_browser=false`、`virtual_machine=false`。
-六次 Device & Browser Info 观察均为 `isBot=false`，其明细没有 true 项。
-模型分数不是业务通过率，也不应解释为“有多少概率被网站封禁”。分数受
-引擎版本、特征组合和服务端模型影响，本次不能定位到某一个具体补丁。
+All six Fingerprint observations were: `bot=not_detected`, `tampering=false`, `anomaly_score=0`, `anti_detect_browser=false`, `virtual_machine=false`. All six Device & Browser Info observations were `isBot=false`, with no true entries. The model score is not a business pass rate and should not be read as "the probability of being banned by a website." The score is affected by engine version, feature combination, and server-side model; this comparison cannot localize it to a specific patch.
 
-以下站点只对第一组 seed 做完整对照：
+The following sites were compared in full only for the first seed:
 
-| 检测项目 | 151 | 152 |
+| Detection item | 151 | 152 |
 | --- | --- | --- |
-| Sannysoft | 表格中无 failed 项 | 相同 |
-| Rebrowser | mainWorldExecution、exposeFunctionLeak 两项红色 | 相同 |
-| CreepJS | 31% like headless、0% headless、0% stealth | 相同 |
-| CreepJS 字体加载探测 | 2/51 | 相同 |
-| Iphey | 100，Trustworthy | 相同 |
+| Sannysoft | no failed rows in the table | same |
+| Rebrowser | mainWorldExecution and exposeFunctionLeak red; the rest green | same |
+| CreepJS | 31% like headless, 0% headless, 0% stealth | same |
+| CreepJS font-loading probe | 2/51 | same |
+| Iphey | 100, Trustworthy | same |
 
-Rebrowser 脚本按站点要求主动执行主世界代码并调用 `exposeFunction`，这两项
-能观察到自动化操作；不能把上述结果描述成“所有反侦测项目全绿”。CreepJS
-的 2/51 是其特定字体列表探测结果，不等于本机只安装了两个字体。
-所有 20 次公共站点访问均返回 HTTP 200，未记录页面导航错误。
+The Rebrowser script deliberately executes main-world code and calls `exposeFunction` as required by the site, so those two items can observe automation; these results cannot be described as "all anti-detection items green." CreepJS's 2/51 is its specific font-list probe result, not that only two fonts are installed locally. All 20 public-site visits returned HTTP 200, with no page navigation errors recorded.
 
-## 功能与指纹一致性
+## Functionality and fingerprint consistency
 
-普通测试：211 通过；类型检查通过。默认跳过的 10 项真实浏览器集成测试，
-这次显式启用并在两版分别执行，均为 10 通过、0 失败。这十项覆盖 WebGL
-像素、区域/暗色设置、headless/headed、KasmVNC/RFB、CDP 鉴权、自动唤醒、
-空闲休眠后的持久化、强制停止、多客户端关闭标签页。其 fixture 使用应用
-基础 Linux 默认值；下面另外通过实际 Docker 服务测试 Mac 默认值。
+Routine tests: 211 passed; typecheck passed. The 10 real-browser integration tests skipped by default were explicitly enabled and run on both builds, each with 10 passed and 0 failed. These ten cover WebGL pixels, regional/dark settings, headless/headed, KasmVNC/RFB, CDP auth, auto-wake, persistence after idle sleep, forced stop, and multi-client tab close. Their fixture uses the app's base Linux defaults; Mac defaults are tested separately through the live Docker service below.
 
-两版均通过：
+Both builds passed:
 
-- UI/API 默认创建 Mac profile；显式 Linux profile 保留 Linux 身份且无法加载私有 Helvetica Neue。
-- Mac 多语言输入、iframe、弹窗、上传、下载、多 CDP 客户端。
-- 浏览器停止后唤醒保留 cookie、localStorage、IndexedDB。
-- 容器重启后保留 Mac 身份、cookie 和 localStorage。
-- 连续五次停止/唤醒；headless Mac 身份和字体加载。
-- WebGL/WebGL2 像素输出、OffscreenCanvas WebGL2、OfflineAudioContext 非静音有限采样。
-- WebGPU adapter 可获取；H.264、VP9、AAC、Opus 的 `canPlayType` 均为 probably。
+- UI/API default create a Mac profile; an explicit Linux profile keeps a Linux identity and cannot load private Helvetica Neue.
+- Mac multilingual input, iframes, popups, upload, download, multiple CDP clients.
+- Wake after browser stop preserves cookies, localStorage, IndexedDB.
+- Container restart preserves Mac identity, cookies, and localStorage.
+- Five consecutive stop/wake cycles; headless Mac identity and font loading.
+- WebGL/WebGL2 pixel output, OffscreenCanvas WebGL2, OfflineAudioContext non-silent finite sampling.
+- WebGPU adapter available; `canPlayType` for H.264, VP9, AAC, Opus all `probably`.
 
-编解码检查测的是能力声明，不是完整视频解码压力测试；WebGPU 检查不是
-GPU 性能测试。两版报告的存储配额均为 10 GiB。
+The codec checks test capability declarations, not full video-decoding stress; the WebGPU check is not a GPU performance test. Both builds reported a 10 GiB storage quota.
 
-三个 seed 的主线程、Worker、跨域 iframe、HTTP UA/Client Hints、语言、CPU、
-时区共 12 项一致性检查，两版均通过。同 seed 的 12 组文字测量、WebGL
-renderer/版本/像素、screen 和 window 数据在两版相同；UA/Client Hints 的
-Chromium 主版本随引擎升级，GREASE brand 也改变。发行版本、CDP 版本与网页
-完整版本是不同表面，不把它们数值不完全相同单独当作检测失败。
+For the three seeds, 12 consistency checks across main thread, Worker, cross-origin iframe, HTTP UA/Client Hints, language, CPU, and timezone passed on both builds. For the same seed, the 12 sets of text metrics, WebGL renderer/version/pixels, and screen/window data were identical across builds; the UA/Client Hints Chromium major version changed with the engine upgrade, and the GREASE brand also changed. The release version, CDP version, and web full version are different surfaces, so their values not being identical is not by itself a detection failure.
 
-字体安装检查为 20/20 家族；CSS `local()` 直接使用家族名只加载 18/20。
-Menlo 的实际完整名称是 `Menlo Regular`，Comic Sans MS 当前只有 Bold。
-继续测试其完整名和 PostScript 名，两版仍无法通过 CSS `local()` 加载这两种
-字体；原因尚未定位，不能只归因于调用时用了家族名。其他 18 个家族名可加载。
-初始扩展探测把“家族名可发现”和“同名 CSS local 可加载”等同，触发断言；
-后续改为分别记录这两个问题，字体文件和浏览器配置没有为消除断言而修改。
+The font installation check was 20/20 families; CSS `local()` using family names directly loaded only 18/20. Menlo's actual full name is `Menlo Regular`, and Comic Sans MS currently has only Bold. Testing its full name and PostScript name, both builds still could not load these two fonts via CSS `local()`; the cause is not yet identified and cannot be attributed solely to using the family name at call time. The other 18 family names loaded. The initial extension probe conflated "family name discoverable" with "same-name CSS local loadable," triggering an assertion; this was later changed to record the two issues separately, and no font files or browser configuration were modified to eliminate the assertion.
 
-## VNC、代理与 profile 升级
+## VNC, proxy, and profile upgrade
 
-两版均通过实际 noVNC UI 的鼠标点击和中文剪贴板粘贴。
-把正常关闭后的 151 Mac profile 复制到 152 后，cookie、localStorage 和
-IndexedDB 均保留；原 151 profile 未改动。这是同主机、同镜像环境的升级测试，
-不是跨机器 portable-cookies 测试，也不是降级测试。
+Both builds passed mouse clicks and Chinese clipboard paste in the live noVNC UI.
+After copying a cleanly stopped 151 Mac profile to 152, cookies, localStorage, and IndexedDB were preserved; the original 151 profile was unchanged. This is an upgrade test on the same host and image environment, not a cross-machine portable-cookies test, and not a downgrade test.
 
-| 代理场景 | 151 | 152 |
+| Proxy scenario | 151 | 152 |
 | --- | --- | --- |
-| 普通认证 HTTP 代理，经 Hub relay，12 次本地 HTTP/HTTPS 导航 | 通过 | 通过 |
-| 普通认证 HTTP 代理，example.com 的 HTTPS/HTTP/HTTPS 三次导航 | 全部 200 | 全部 200 |
-| 额外开启 `--fingerprint-transparent-proxy` | 启动失败，日志报告配置无效 | 能启动，导航未通过 |
+| Normal authenticated HTTP proxy, via Hub relay, 12 local HTTP/HTTPS navigations | passed | passed |
+| Normal authenticated HTTP proxy, three example.com navigations HTTPS/HTTP/HTTPS | all 200 | all 200 |
+| Also enabling `--fingerprint-transparent-proxy` | failed to start; log reported invalid configuration | could start; navigation did not pass |
 
-透明模式最初在虚构域名上测试，152 报 `ERR_NAME_NOT_RESOLVED`；因此补测
-可解析的 example.com 和可转发公网 CONNECT 的认证代理。151 仍未能启动，
-152 报 `ERR_PROXY_CONNECTION_FAILED`。这证明本次 HTTP relay 配置下未实现
-透明模式的可用对照，不能据此宣称它在所有代理上失效，也没有观察到其连接
-可靠性提升。该标志没有加入默认配置。
+Transparent mode was first tested on a fictitious domain, where 152 reported `ERR_NAME_NOT_RESOLVED`; a resolvable example.com and an authenticated proxy able to forward public CONNECT were therefore added. 151 still failed to start, and 152 reported `ERR_PROXY_CONNECTION_FAILED`. This proves transparent mode was not usable under these HTTP relay settings; it cannot claim it fails on all proxies, and no improvement in connection reliability was observed. The flag was not added to the default configuration.
 
-本地 HTTPS fixture 使用自签名证书，测试通过 CDP 临时忽略该证书错误；
-example.com 对照没有关闭证书校验。
+The local HTTPS fixture used a self-signed certificate, and the test temporarily ignored that certificate error through CDP; the example.com comparison did not disable certificate verification.
 
-## 耗时与体积
+## Timings and size
 
-| 项目 | 151 | 152 |
+| Item | 151 | 152 |
 | --- | --- | --- |
-| 五次停止后重新连接并加载本地页面，毫秒 | 4749 / 4855 / 5048 / 5133 / 5339 | 4751 / 4950 / 5026 / 5189 / 5346 |
-| 中位时间 | 5.048 s | 5.026 s |
-| 当次容器内存样本 | 307 MiB | 287.3 MiB |
+| Reconnect and load a local page after five stops, milliseconds | 4749 / 4855 / 5048 / 5133 / 5339 | 4751 / 4950 / 5026 / 5189 / 5346 |
+| Median time | 5.048 s | 5.026 s |
+| Container memory sample for that run | 307 MiB | 287.3 MiB |
 
-这只是同主机顺序运行的小样本，包含 Hub、许可证和页面加载开销，不能据此
-宣称 152 显著更快或更省内存。浏览器目录增加 5,291,501 bytes，约 5.05 MiB。
+This is only a small same-host sequential sample including Hub, license, and page-load overhead; it cannot claim 152 is significantly faster or uses less memory. The browser directory grew by 5,291,501 bytes, about 5.05 MiB.
 
-## 异常退出与许可证
+## Abnormal exit and license
 
-主动对 151 主进程发送 `Browser.crash` 后，Hub 清理了本地浏览器和显示进程，
-但服务端仍计数 1/1，阻止后续启动。直接启动官方二进制作为控制，也在短暂
-开放 CDP 后退出，退出码为 76；CDP 端口出现不等于许可证检查最终通过。
+After deliberately sending `Browser.crash` to the 151 main process, Hub cleaned up the local browser and display processes, but the server still counted 1/1, blocking subsequent starts. Directly launching the official binary as a control also exited after briefly opening CDP, with exit code 76; a CDP port appearing does not mean the license check ultimately passed.
 
-官方在 [issue #477 的维护者回复](https://github.com/CloakHQ/CloakBrowser/issues/477#issuecomment-5132347894)
-确认：免费版硬崩溃遗留会话最多等待 15 分钟自动过期，正常关闭立即释放。
-这是上游会话策略，不能把等待期间 152 收到的 503 算作 152 引擎回归。
-本次首次观察占用归零为 UTC 00:37:53，距离约 00:22:45 的故障约 15 分钟
-（每 10 秒轮询）。之后同一 CDP URL 能重新启动原 profile；但紧接着写入后
-立即硬崩溃的 localStorage 值读回为 null，该持久化断言失败。测试没有在
-故障前确认该次写入已落盘，不能用它代表正常关闭后的持久化。
+In the [maintainer reply on issue #477](https://github.com/CloakHQ/CloakBrowser/issues/477#issuecomment-5132347894), the vendor confirms: a session left by a hard crash on the free tier waits up to 15 minutes to expire automatically, while a normal close releases immediately. This is an upstream session policy, so the 503 that 152 received during the wait cannot be counted as a 152 engine regression. This run first observed occupancy returning to zero at UTC 00:37:53, about 15 minutes after the failure at about 00:22:45 (polled every 10 seconds). Afterwards the same CDP URL could restart the original profile; but a localStorage value that was written and then hard-crashed immediately read back as null, failing that persistence assertion. The test did not confirm before the failure that the write had reached disk, so it cannot represent persistence after a normal close.
 
-主进程硬崩溃注入发生在 151；没有在 152 再重复一次相同的 15 分钟服务器
-占位实验。两版正常停止、自动唤醒和容器重启恢复已分别测试。
+The main-process hard-crash injection was done on 151; the same 15-minute server-reservation experiment was not repeated on 152. Both builds' normal stop, auto-wake, and container-restart recovery were tested separately.
 
-## 范围限制与构建变更
+## Scope limits and build changes
 
-本次没有测试真实业务账号、多主机 cookie 迁移、152 数据目录降级回 151、
-长时间压力负载、ARM64 运行时或真实 MacBook 对照。代理测试只覆盖本地测试
-代理；不代表住宅/数据中心代理供应商的成功率。当前显示仍为 DPR 1，未验证
-4K/DPR 2。字体家族齐全不等于所有字重、字形或字体接口与真实 Mac 完全一致。
+This comparison did not test real business accounts, cross-host cookie migration, downgrading a 152 data directory back to 151, long stress loads, ARM64 runtime, or a real MacBook comparison. Proxy tests covered only local test proxies; they do not represent success rates of residential/datacenter proxy providers. The display remained DPR 1; 4K/DPR 2 was not verified. Complete font families do not mean all weights, glyphs, or font interfaces exactly match a real Mac.
 
-标准及自定义字体 Dockerfile 现在固定 `152.0.7977.82.1` / `preview`。
-安装器接受精确 Chromium 版本，并显式传递 `CLOAKHUB_BROWSER_CHANNEL`；保留
-精确版本不匹配拒绝、原子缓存发布及官方签名校验。可显式选择
-`151.0.7922.108.6` / `stable`。新 profile 默认 Mac，已有 profile 的 persona
-和 seed 不会被重写。
+The standard and custom font Dockerfiles now pin `152.0.7977.82.1` / `preview`. The installer accepts exact Chromium versions and explicitly passes `CLOAKHUB_BROWSER_CHANNEL`; it retains exact-version mismatch rejection, atomic cache publication, and official signature verification. `151.0.7922.108.6` / `stable` can be selected explicitly. New profiles default to Mac; existing profiles' persona and seed are not rewritten.
 
-本地标签 `cloakhub:mac-preview`、`cloakhub:mac-private`、`cloakhub:mac-standard`
-指向这次 preview 镜像。没有推送镜像、发布版本或替换既有服务。
-两组测试容器均已停止；关闭前没有残留浏览器、显示进程或僵尸进程，
-最终许可证占用为 0/1。
-操作说明见 [Mac fonts and image builds](private-macos.md)。
+Local tags `cloakhub:mac-preview`, `cloakhub:mac-private`, `cloakhub:mac-standard` point to this preview image. No images were pushed, no release was published, and no existing service was replaced. Both test containers were stopped; before shutdown there were no leftover browsers, display processes, or zombie processes, and the final license occupancy was 0/1. See [Mac fonts and image builds](private-macos.md) for operations.
 
-原始日志、测试脚本、页面及截图保存在本机忽略目录
-`.cloakhub/mac-channel-comparison/`。含 IP、访客标识或令牌的原始材料不写入本报告。
+Raw logs, test scripts, pages, and screenshots are kept in the local ignored directory `.cloakhub/mac-channel-comparison/`. Raw material containing IPs, visitor identifiers, or tokens is not written into this report.
