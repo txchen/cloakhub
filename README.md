@@ -188,8 +188,8 @@ of this guide (profiles, client setup, and CDP) applies unchanged.
 1. Create a profile in the web UI with an exact ID such as `research`.
 2. Open its viewer and sign into any websites the agent should use. Default headed
    mode supports unattended automation; you do not need to leave the viewer open.
-3. Generate and copy the profile's **CDP token** from its controls.
-4. Give the client the hub origin, profile ID, and that CDP token.
+3. To protect CDP access, select the profile to open its details. Under **Automation access**, click **Protect with token**, then **Copy CDP URL** to retrieve the generated **CDP token**. It is not an editable field in **Edit settings**; the UI does not accept a custom token.
+4. Give the client the hub origin, profile ID, and CDP token if configured.
 
 There are three separate credentials:
 
@@ -199,7 +199,7 @@ There are three separate credentials:
 | CloakHub admin password | Operator / management API | Manage profiles and the server UI |
 | Profile CDP token | Client secret file or environment | Operate one profile's browser |
 
-The agent needs only the profile CDP token. An admin password does not replace it.
+If CDP access is protected, the agent needs only the profile CDP token. An admin password does not replace it.
 A profile without a CDP token has **unprotected CDP endpoints**, even when admin
 authentication is enabled.
 
@@ -230,8 +230,8 @@ update, run `npm ci` in the installed directory again.
 Create the client configuration directory:
 
 ```sh
-mkdir -p "$HOME/.config/cloakhub/tokens"
-chmod 700 "$HOME/.config/cloakhub" "$HOME/.config/cloakhub/tokens"
+mkdir -p "$HOME/.config/cloakhub"
+chmod 700 "$HOME/.config/cloakhub"
 ```
 
 Save this as `~/.config/cloakhub/client.json`, replacing the example origin and
@@ -245,23 +245,21 @@ profile ID with yours:
     "work": {
       "url": "http://192.168.1.50:7788",
       "profile": "research",
-      "tokenFile": "tokens/work"
+      "token": "REPLACE_WITH_PROFILE_CDP_TOKEN"
     }
   }
 }
 ```
 
-Save only the profile's CDP token in `~/.config/cloakhub/tokens/work`, then restrict
-its permissions:
+Restrict access to the config file, which now contains the CDP token:
 
 ```sh
-chmod 600 "$HOME/.config/cloakhub/tokens/work"
+chmod 600 "$HOME/.config/cloakhub/client.json"
 ```
 
 `work` is a client-local alias; `research` is the exact server profile ID, not its
-display name. `url` is the hub origin without `/api/...`. Relative token paths are
-resolved beside `client.json`, so `tokens/work` needs no machine-specific path.
-The helper reads the token directly; keep it out of prompts and committed files.
+display name. `url` is the hub origin without `/api/...`. The helper reads the
+token directly; keep `client.json` out of prompts and committed files.
 
 For multiple profiles or servers, add entries under `targets`, each with its own
 `url`, `profile`, and credential. The same skill works for all of them:
@@ -273,10 +271,20 @@ For multiple profiles or servers, add entries under `targets`, each with its own
 - `CLOAKHUB_CLIENT_CONFIG` selects a different config file. No project-local config
   is automatically loaded.
 
-For an environment-managed secret, replace `tokenFile` with
-`"tokenEnv": "WORK_CLOAKHUB_CDP_TOKEN"` and provide that variable to the agent's process.
-Missing configuration or credentials cause an error; the helper does not choose an
-arbitrary profile or fall back to a local browser.
+The older `"tokenFile": "tokens/work"` (relative to `client.json`) and
+`"tokenEnv": "WORK_CLOAKHUB_CDP_TOKEN"` options are still supported if you prefer
+them. Use only one of `token`, `tokenFile`, or `tokenEnv` per target. If the profile
+has **no CDP token**, omit all three from its target;
+`"auth": "none"` is optional. For example:
+
+```json
+"work": { "url": "http://192.168.1.50:7788", "profile": "research" }
+```
+
+This allows anyone who can reach the CDP endpoint to connect, even if the admin UI
+requires a password. If a token source is configured but its credential is missing,
+the helper fails rather than falling back to anonymous access. It does not choose
+an arbitrary profile or fall back to a local browser.
 
 Verify the setup:
 

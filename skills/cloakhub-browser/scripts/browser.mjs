@@ -34,9 +34,13 @@ function describeTarget(name, target) {
   if (typeof target.profile !== "string" || !/^[a-z][a-z0-9_]*$/.test(target.profile)) {
     throw new Error("Target profile must be an exact CloakHub profile ID.");
   }
-  const sources = [target.tokenFile !== undefined, target.tokenEnv !== undefined, target.auth === "none"];
-  if (sources.filter(Boolean).length !== 1 || (target.auth !== undefined && target.auth !== "none")) {
-    throw new Error("Configure exactly one of tokenFile, tokenEnv, or auth: none per target.");
+  const sources = [target.token !== undefined, target.tokenFile !== undefined, target.tokenEnv !== undefined];
+  if (sources.filter(Boolean).length > 1 || (target.auth !== undefined && target.auth !== "none") ||
+      (target.auth === "none" && sources.some(Boolean))) {
+    throw new Error("Configure at most one of token, tokenFile, or tokenEnv; omit all for open CDP access.");
+  }
+  if (target.token !== undefined && typeof target.token !== "string") {
+    throw new Error("token must be a string.");
   }
   if (target.tokenFile !== undefined && (typeof target.tokenFile !== "string" || !target.tokenFile.trim())) {
     throw new Error("tokenFile must be a nonempty path.");
@@ -44,7 +48,7 @@ function describeTarget(name, target) {
   if (target.tokenEnv !== undefined && (typeof target.tokenEnv !== "string" || !/^[A-Za-z_][A-Za-z0-9_]*$/.test(target.tokenEnv))) {
     throw new Error("tokenEnv must name an environment variable.");
   }
-  return { name, url: url.origin, profile: target.profile, auth: target.auth === "none" ? "none" : "cdp_token" };
+  return { name, url: url.origin, profile: target.profile, auth: sources.some(Boolean) ? "cdp_token" : "none" };
 }
 
 export function listTargets(config) {
@@ -61,7 +65,9 @@ export async function resolveTarget({ config, path }, explicitTarget, env = proc
   const target = config.targets[name];
   const metadata = describeTarget(name, target);
   let token;
-  if (target.tokenFile !== undefined) {
+  if (target.token !== undefined) {
+    token = target.token.trim();
+  } else if (target.tokenFile !== undefined) {
     const tokenPath = target.tokenFile.startsWith("~/")
       ? join(homedir(), target.tokenFile.slice(2)) : resolve(dirname(path), target.tokenFile);
     try { token = (await readFile(tokenPath, "utf8")).trim(); }

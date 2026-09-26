@@ -38,6 +38,24 @@ describe("CloakHub browser skill client", () => {
     expect((await resolveTarget(loaded, "work", env)).token).toBe("work-secret");
   });
 
+  test("accepts an inline token without exposing it in target listings", async () => {
+    const loaded = await fixture();
+    loaded.config.targets.work = { url: "https://work.example", profile: "research", token: "inline-secret" };
+    expect(listTargets(loaded.config)).toContainEqual({
+      name: "work", url: "https://work.example", profile: "research", auth: "cdp_token", default: true
+    });
+    expect(JSON.stringify(listTargets(loaded.config))).not.toContain("inline-secret");
+    const target = await resolveTarget(loaded, "work", {});
+    expect(target.token).toBe("inline-secret");
+    await withBrowser(target, async () => {}, async (_endpoint, options) => {
+      expect(options.headers).toEqual({ Authorization: "Bearer inline-secret" });
+      return {
+        contexts: () => [{ setDefaultTimeout() {}, setDefaultNavigationTimeout() {} }],
+        close: async () => {}
+      };
+    });
+  });
+
   test("lists safe target metadata even when secret files are absent", async () => {
     const loaded = await fixture();
     await rm(join(loaded.path, "..", "work.token"));
@@ -60,8 +78,22 @@ describe("CloakHub browser skill client", () => {
     const loaded = await fixture();
     await expect(resolveTarget(loaded, "personal", { CLOAKHUB_AUTH_TOKEN: "admin-secret" }))
       .rejects.toThrow("No connection was attempted");
-    loaded.config.targets.personal = { url: "http://127.0.0.1:7788", profile: "personal", auth: "none" };
-    expect((await resolveTarget(loaded, "personal", {})).token).toBeUndefined();
+    loaded.config.targets.personal = { url: "http://127.0.0.1:7788", profile: "personal" };
+    expect(listTargets(loaded.config)[1].auth).toBe("none");
+    const open = await resolveTarget(loaded, "personal", {});
+    expect(open.token).toBeUndefined();
+    let connected = false;
+    await withBrowser(open, async () => {}, async (_endpoint, options) => {
+      expect(options.headers).toEqual({});
+      connected = true;
+      return {
+        contexts: () => [{ setDefaultTimeout() {}, setDefaultNavigationTimeout() {} }],
+        close: async () => {}
+      };
+    });
+    expect(connected).toBe(true);
+    loaded.config.targets.personal.auth = "none";
+    expect((await resolveTarget(loaded, "personal", {})).metadata.auth).toBe("none");
   });
 
   test("rejects malformed origins and ambiguous credential sources", async () => {
@@ -72,7 +104,16 @@ describe("CloakHub browser skill client", () => {
     }
     loaded.config.targets.work.url = "https://work.example";
     loaded.config.targets.work.tokenEnv = "TOKEN";
-    await expect(resolveTarget(loaded, "work", {})).rejects.toThrow("exactly one");
+    await expect(resolveTarget(loaded, "work", {})).rejects.toThrow("at most one");
+    delete loaded.config.targets.work.tokenEnv;
+    loaded.config.targets.work.auth = "none";
+    await expect(resolveTarget(loaded, "work", {})).rejects.toThrow("at most one");
+    delete loaded.config.targets.work.auth;
+    loaded.config.targets.work.token = "inline-secret";
+    await expect(resolveTarget(loaded, "work", {})).rejects.toThrow("at most one");
+    delete loaded.config.targets.work.tokenFile;
+    loaded.config.targets.work.token = "  ";
+    await expect(resolveTarget(loaded, "work", {})).rejects.toThrow("missing or invalid");
   });
 
   test("loads an explicit config path and keeps malformed JSON out of errors", async () => {

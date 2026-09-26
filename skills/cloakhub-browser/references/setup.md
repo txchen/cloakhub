@@ -1,9 +1,12 @@
 # Client setup
 
-The operator first creates a profile in CloakHub, signs into any required websites
-through the viewer, and generates a CDP token for that profile. The client needs
-the reachable hub origin, exact profile ID, and that profile's token. Admin access
-and the CloakBrowser license stay on the server/operator side.
+The operator first creates a profile in CloakHub and signs into any required websites
+through the viewer. For protected CDP access, open the profile's details in the
+management page, then under **Automation access** click **Protect with token**.
+Use **Copy CDP URL** to retrieve the generated token; the UI does not accept a
+custom token. The client needs the reachable hub origin, exact profile ID, and
+that token if protection is enabled. Admin access and the CloakBrowser license
+stay on the server/operator side.
 
 ## Install
 
@@ -26,7 +29,7 @@ Create `~/.config/cloakhub/client.json` on the client:
     "work": {
       "url": "https://browser.example.com",
       "profile": "research",
-      "tokenFile": "tokens/work"
+      "token": "REPLACE_WITH_PROFILE_CDP_TOKEN"
     },
     "personal": {
       "url": "http://192.168.1.50:7788",
@@ -37,19 +40,22 @@ Create `~/.config/cloakhub/client.json` on the client:
 }
 ```
 
-Replace the example values with operator-provided values. Put only the profile's
-CDP token in `~/.config/cloakhub/tokens/work`; on Unix, restrict the token file to
-mode `600` and its directory to `700`. The agent should let the script read it,
-not load it into conversational context. `tokenEnv` names a variable inherited by
-the agent's execution process; setting it in an unrelated terminal will not affect
-an already-running desktop agent.
+Replace the example values with operator-provided values. With an inline `token`,
+`client.json` contains a secret: on Unix, restrict `~/.config/cloakhub` to mode
+`700` and `client.json` to mode `600`; do not commit or paste it into a prompt.
+The agent should let the script read it without loading it into conversational
+context. `tokenFile` remains supported (a path relative to `client.json`, absolute,
+or starting with `~/`); `tokenEnv` names a variable inherited by the agent process.
+Setting it in an unrelated terminal will not affect an already-running desktop agent.
 
-Choose exactly one authentication source per target: `tokenFile`, `tokenEnv`, or
-`"auth": "none"` for an intentionally unprotected CDP endpoint. Missing credentials
-fail before connecting; there is no anonymous fallback. Admin auth does not protect
-an un-tokened profile's CDP endpoints.
+For a protected profile, choose exactly one of `token`, `tokenFile`, or `tokenEnv`.
+For a profile without a CDP token, omit all three fields (or use `"auth": "none"`
+to make the intent explicit). This sends no CDP credential; admin auth does not
+protect an un-tokened profile's CDP endpoints. If a source is configured but its
+token is missing, the client fails before connecting rather than falling back to
+anonymous access. An open target cannot connect to a profile whose server-side
+CDP token is configured.
 
-Token paths can be absolute, start with `~/`, or be relative to the config file.
 URLs must be HTTP(S) origins with no path, query, embedded credentials, or fragment.
 CloakHub path-prefix hosting is unsupported. Use HTTPS outside a trusted private
 network. Reverse proxies must support WebSocket upgrades and set the public

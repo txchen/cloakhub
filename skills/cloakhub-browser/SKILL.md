@@ -19,10 +19,13 @@ default. Selection precedence is `--target`, `CLOAKHUB_TARGET`, then `defaultTar
 Keep the chosen alias for the entire task. Ask for a choice if the request is ambiguous.
 
 Configuration lives at `~/.config/cloakhub/client.json`, or the explicit
-`CLOAKHUB_CLIENT_CONFIG` path. If setup, dependencies, or credentials are missing,
-read [references/setup.md](references/setup.md). Never guess a URL/profile, select
+`CLOAKHUB_CLIENT_CONFIG` path. A target can supply `token` inline or use
+`tokenFile` / `tokenEnv`. Without any of these it connects without a CDP token
+only when that profile's CDP endpoint is unprotected. If setup,
+dependencies, or credentials are missing, read [references/setup.md](references/setup.md).
+Never guess a URL/profile, select
 the first server profile, or substitute the admin password for the CDP token.
-The helper loads the credential itself; do not print token files or environment values.
+The helper loads the credential itself; do not print the config, token files, or environment values.
 
 `check --target ALIAS` verifies a real CDP connection and disconnects. It can wake a
 stopped browser. For an actual task, go directly to `run` rather than checking first.
