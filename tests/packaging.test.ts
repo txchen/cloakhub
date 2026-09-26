@@ -40,7 +40,7 @@ describe("Docker-first packaging", () => {
   test("README documents deployment from the published image", async () => {
     const readme = await Bun.file("README.md").text();
 
-    expect(readme).toContain("image: ghcr.io/txchen/cloakhub:0.8.0");
+    expect(readme).toContain("image: ghcr.io/txchen/cloakhub:0.8.1");
     expect(readme).toContain("docker compose pull");
     expect(readme).toContain("restart: unless-stopped");
     expect(readme).toContain("shm_size: 2gb");
@@ -55,7 +55,7 @@ describe("Docker-first packaging", () => {
     const readme = await Bun.file("README.md").text();
 
     expect(readme).toContain("### Run the free image");
-    expect(readme).toContain("image: ghcr.io/txchen/cloakhub_free:0.8.0");
+    expect(readme).toContain("image: ghcr.io/txchen/cloakhub_free:0.8.1");
     expect(readme).toContain("CLOAKHUB_LICENSE_MODE=none");
     expect(readme).toContain("docker compose logs -f cloakhub-free");
   });
@@ -64,7 +64,7 @@ describe("Docker-first packaging", () => {
     const compose = await Bun.file("compose.arm64.yml").text();
 
     expect(compose).not.toContain("build:");
-    expect(compose).toContain("image: ghcr.io/txchen/cloakhub:0.8.0");
+    expect(compose).toContain("image: ghcr.io/txchen/cloakhub:0.8.1");
     expect(compose).toContain("CLOAKHUB_LICENSE_KEYS_FILE: /run/secrets/cloakbrowser-keys");
     expect(compose).toContain("platform: linux/arm64");
     expect(compose).toContain("restart: unless-stopped");
@@ -134,7 +134,7 @@ describe("Docker-first packaging", () => {
   test("free compose example needs no license secret", async () => {
     const compose = await Bun.file("compose.free.yml").text();
 
-    expect(compose).toContain("image: ghcr.io/txchen/cloakhub_free:0.8.0");
+    expect(compose).toContain("image: ghcr.io/txchen/cloakhub_free:0.8.1");
     expect(compose).not.toMatch(/^\s*CLOAKHUB_LICENSE_MODE:/m);
     expect(compose).not.toContain("CLOAKHUB_LICENSE_KEYS_FILE");
     expect(compose).not.toContain("cloakbrowser-keys");

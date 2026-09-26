@@ -1,8 +1,8 @@
 # Client setup
 
 The operator first creates a profile in CloakHub and signs into any required websites
-through the viewer. For protected CDP access, open the profile's details in the
-management page, then under **Automation access** click **Protect with token**.
+through the viewer. For protected CDP access, open the profile's **···** menu in the
+management page and select **Manage CDP token**, then click **Protect with token**.
 Use **Copy CDP URL** to retrieve the generated token; the UI does not accept a
 custom token. The client needs the reachable hub origin, exact profile ID, and
 that token if protection is enabled. Admin access and the CloakBrowser license

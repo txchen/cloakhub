@@ -52,7 +52,7 @@ Create a deployment directory and save this as `compose.yml` (also available [he
 ```yaml
 services:
   cloakhub:
-    image: ghcr.io/txchen/cloakhub:0.8.0
+    image: ghcr.io/txchen/cloakhub:0.8.1
     restart: unless-stopped
     shm_size: 2gb
     environment:
@@ -104,7 +104,7 @@ password. With localhost binding, open `http://localhost:7788` on the server or 
 your reverse proxy. The image automatically selects amd64 or arm64.
 
 On first start, the server downloads and verifies the pinned browser and caches it in
-`./data/browser-cache`. Version `0.8.0` uses preview **152.0.7977.82.1**, includes Mac
+`./data/browser-cache`. Version `0.8.1` uses preview **152.0.7977.82.1**, includes Mac
 fonts, and defaults new profiles to a macOS identity. No browser binary or license key
 is bundled in the image. Keep `./data` across container replacements: it contains
 profile metadata, browser storage, and secrets. See [browser builds](docs/private-macos.md)
@@ -144,7 +144,7 @@ directory:
 ```yaml
 services:
   cloakhub-free:
-    image: ghcr.io/txchen/cloakhub_free:0.8.0
+    image: ghcr.io/txchen/cloakhub_free:0.8.1
     restart: unless-stopped
     shm_size: 2gb
     environment:
@@ -188,7 +188,7 @@ of this guide (profiles, client setup, and CDP) applies unchanged.
 1. Create a profile in the web UI with an exact ID such as `research`.
 2. Open its viewer and sign into any websites the agent should use. Default headed
    mode supports unattended automation; you do not need to leave the viewer open.
-3. To protect CDP access, select the profile to open its details. Under **Automation access**, click **Protect with token**, then **Copy CDP URL** to retrieve the generated **CDP token**. It is not an editable field in **Edit settings**; the UI does not accept a custom token.
+3. To protect CDP access, open the profile's **···** menu and select **Manage CDP token**. In the **CDP token** section, click **Protect with token**, then **Copy CDP URL** to retrieve the generated token. It is not an editable field in **Edit settings**; the UI does not accept a custom token.
 4. Give the client the hub origin, profile ID, and CDP token if configured.
 
 There are three separate credentials:
@@ -197,7 +197,7 @@ There are three separate credentials:
 | --- | --- | --- |
 | CloakBrowser key | Server secret file | Download and run the browser |
 | CloakHub admin password | Operator / management API | Manage profiles and the server UI |
-| Profile CDP token | Client secret file or environment | Operate one profile's browser |
+| Profile CDP token | Client config, secret file, or environment | Operate one profile's browser |
 
 If CDP access is protected, the agent needs only the profile CDP token. An admin password does not replace it.
 A profile without a CDP token has **unprotected CDP endpoints**, even when admin
@@ -407,7 +407,7 @@ referenced by `compose.yml` are picked up from `.env`.
 | `CLOAKHUB_LICENSE_MODE` | `required`; set `none` to skip license loading and capacity checks (the free image sets `none`) |
 | `CLOAKHUB_LICENSE_KEYS_FILE` | Browser keys; see [multiple-key configuration](docs/cloakbrowser-151.md#configure-keys) |
 
-Pin a full image tag such as `0.8.0` for predictable upgrades. The `0.8` alias follows
+Pin a full image tag such as `0.8.1` for predictable upgrades. The `0.8` alias follows
 patch releases; `latest` follows releases, and `master` / `sha-*` are development tags.
 Browser builds stay pinned until you change the selected build or image. The free image,
 `ghcr.io/txchen/cloakhub_free`, follows the same tags.

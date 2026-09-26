@@ -166,6 +166,23 @@ test("refreshes lifecycle observations and confirms stopping active clients", as
   await expect(page.locator("#profile-rows")).toContainText("No connections");
 });
 
+test("profile actions open CDP token management directly", async ({ page }) => {
+  await seed(page);
+  await page.locator('summary[aria-label="Actions for Work"]').click();
+  await page.getByRole("button", { name: "Manage CDP token" }).click();
+  const access = page.locator("#cdp-access");
+  await expect(access).toBeVisible();
+  await expect(access).toBeFocused();
+  await expect(access.getByRole("heading", { name: /CDP token/ })).toBeVisible();
+  await access.getByRole("button", { name: "Protect with token" }).click();
+  await expect(access.getByRole("button", { name: "Regenerate token" })).toBeVisible();
+  await page.locator('#profile-detail [data-action="dismiss"]').click();
+  await page.locator('summary[aria-label="Actions for Work"]').click();
+  await page.getByRole("button", { name: "Manage CDP token" }).click();
+  await expect(page.locator("#cdp-access")).toBeFocused();
+  await expect(page.locator("#cdp-access")).toContainText("Protected");
+});
+
 test("token copying warns and falls back when clipboard permissions are blocked", async ({
   page
 }) => {

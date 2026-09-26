@@ -92,7 +92,7 @@ function renderRows(ordered: Profile[]) {
       <td class="memory-cell">${memory(profile.resource_usage.rss_bytes)}</td>
       <td class="activity-cell" title="${escape(profile.last_activity_at ?? "")}">${relativeTime(profile.last_activity_at)}</td>
       <td><div class="row-actions">${profile.headless ? action(profile, "start", "Start") : action(profile, "open", "Open ↗")}
-        <details class="row-menu"><summary class="icon-button" aria-label="Actions for ${escape(profile.display_name)}" title="Profile actions">···</summary><div class="menu-content">${action(profile, "edit", "Edit settings", "menu-button")}${action(profile, "copy", "Copy CDP URL", "menu-button")}${action(profile, "start", "Start", "menu-button")}${action(profile, "stop", "Stop", "menu-button")}${action(profile, "restart", "Restart", "menu-button")}${action(profile, "delete", "Delete profile", "menu-button text-danger")}</div></details></div></td>`
+        <details class="row-menu"><summary class="icon-button" aria-label="Actions for ${escape(profile.display_name)}" title="Profile actions">···</summary><div class="menu-content">${action(profile, "edit", "Edit settings", "menu-button")}${action(profile, "manage-token", "Manage CDP token", "menu-button")}${action(profile, "copy", "Copy CDP URL", "menu-button")}${action(profile, "start", "Start", "menu-button")}${action(profile, "stop", "Stop", "menu-button")}${action(profile, "restart", "Restart", "menu-button")}${action(profile, "delete", "Delete profile", "menu-button text-danger")}</div></details></div></td>`
     );
     if (rows.children[index] !== row)
       rows.insertBefore(row, rows.children[index] ?? null);
@@ -125,7 +125,7 @@ function renderDetail() {
     <section class="detail-section"><h3>Activity</h3><dl>${facts("Memory", memory(profile.resource_usage.rss_bytes))}${facts("Connections", `${profile.cdp_session_count} CDP · ${profile.manual_viewer_count} viewer`)}${facts("Last activity", relativeTime(profile.last_activity_at))}${facts("Manual input", relativeTime(profile.last_manual_input_at))}${facts("Idle policy", escape(profile.instance_status === "running" ? profile.sleep_status.replace("Sleep Countdown: ", "Stops in ").replace("Sleep Blocker: ", "Kept awake: ") : "Browser is stopped"))}${facts("Last stop", escape(profile.last_stop_reason ?? "—"))}</dl>
     ${profile.cdp_sessions.length ? `<ul class="sessions">${profile.cdp_sessions.map((session) => `<li><span class="live-dot"></span><span>${escape(session.remote_address ?? "Unknown client")}<small>${Math.floor(session.duration_ms / 60000)}m connected · ${escape(session.user_agent ?? "CDP client")}</small></span></li>`).join("")}</ul>` : ""}
     <div class="lifecycle-actions">${action(profile, "stop", "Stop")}${action(profile, "restart", "Restart")}</div></section>
-    <section class="detail-section"><h3>Automation access <span class="badge ${profile.cdp_token_configured ? "running" : "open"}">${profile.cdp_token_configured ? "Protected" : "Open"}</span></h3><p>${profile.cdp_token_configured ? "A profile token protects this CDP endpoint." : "Anyone who can reach this server can connect to this profile’s CDP endpoint."}</p><div class="access-actions">${action(profile, "copy", "Copy CDP URL")}${action(profile, profile.cdp_token_configured ? "regenerate-token" : "create-token", profile.cdp_token_configured ? "Regenerate token" : "Protect with token")}${profile.cdp_token_configured ? action(profile, "revoke-token", "Revoke token", "text-button text-danger") : ""}</div></section>
+    <section class="detail-section" id="cdp-access" tabindex="-1"><h3>CDP token <span class="badge ${profile.cdp_token_configured ? "running" : "open"}">${profile.cdp_token_configured ? "Protected" : "Open"}</span></h3><p>${profile.cdp_token_configured ? "A profile token protects this CDP endpoint." : "Anyone who can reach this server can connect to this profile’s CDP endpoint."}</p><div class="access-actions">${action(profile, "copy", "Copy CDP URL")}${action(profile, profile.cdp_token_configured ? "regenerate-token" : "create-token", profile.cdp_token_configured ? "Regenerate token" : "Protect with token")}${profile.cdp_token_configured ? action(profile, "revoke-token", "Revoke token", "text-button text-danger") : ""}</div></section>
     <section class="detail-section"><h3>Configuration</h3><dl>${facts("Mode", profile.headless ? "Headless" : "Browser with viewer")}${facts("Region", escape([profile.timezone, profile.locale].filter(Boolean).join(" · ") || "Browser default"))}${facts("Proxy", escape(profile.proxy || "Direct connection"))}${facts("Screen", `${profile.screen_width} × ${profile.screen_height}`)}</dl>${profile.notes ? `<p class="profile-notes">${escape(profile.notes)}</p>` : ""}</section>
     <footer class="detail-footer">${action(profile, "delete", "Delete profile", "text-button text-danger")}</footer>`
   );
@@ -232,6 +232,14 @@ async function perform(name: string, id: string) {
     openProfileEditor(profile, async () => {
       await refresh(true);
     });
+    return;
+  }
+  if (name === "manage-token") {
+    selectedId = id;
+    render();
+    const access = element<HTMLElement>("#cdp-access", detail);
+    access.focus({ preventScroll: true });
+    access.scrollIntoView({ block: "nearest" });
     return;
   }
   if (busy.has(id)) return;
