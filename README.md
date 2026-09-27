@@ -337,11 +337,16 @@ CDP-based tools such as Playwright and Puppeteer can connect directly: point the
 remote-browser connection at your profile's endpoint and, if configured, supply its CDP token.
 No CloakHub SDK, agent skill, or admin credential is required for browser operations.
 
-For example, install Playwright's client library on your client machine:
+Install Playwright and CloakBrowser's client package on your client machine to use
+its Humanize behavior layer with the remote browser:
 
 ```sh
-npm install playwright-core
+npm install playwright-core cloakbrowser
 ```
+
+`humanizeBrowser()` patches the connected browser's existing and new pages. It adds
+human-like behavior to supported mouse, keyboard, and scrolling actions; it does not
+turn navigation, DOM reads, or arbitrary `page.evaluate()` calls into human actions.
 
 Save this as `browse.mjs`. Replace the example origin and profile ID. If the profile
 has a CDP token, provide it through `CLOAKHUB_CDP_TOKEN`; otherwise leave that variable
@@ -351,6 +356,7 @@ prints its detection results, and saves a screenshot on the client:
 
 ```js
 import { chromium } from 'playwright-core';
+import { humanizeBrowser } from 'cloakbrowser';
 
 const token = process.env.CLOAKHUB_CDP_TOKEN;
 
@@ -363,6 +369,9 @@ const browser = await chromium.connectOverCDP(
 );
 
 try {
+  // Recommended for interactive automation: use CloakBrowser's Humanize behavior layer.
+  await humanizeBrowser(browser, { humanize: true, humanPreset: 'default' });
+
   const context = browser.contexts()[0]; // Reuse the profile's saved login state.
   const page = await context.newPage();
   try {
@@ -417,7 +426,8 @@ Multiple clients using the same profile share tabs and login state; aliases do n
 provide task isolation. Coordinate access or assign separate profiles for parallel work.
 Explicit Stop/Restart disconnects every client. Delete removes the profile's stored data.
 Launch-setting edits apply on the next start; deployment defaults affect new profiles only.
-Automatic GeoIP and SDK Humanize are not provided by this runtime.
+CloakHub itself does not apply automatic GeoIP or SDK Humanize. The example above opts
+into Humanize client-side; set timezone and locale explicitly for the browser profile.
 
 ## Server settings and upgrades
 
