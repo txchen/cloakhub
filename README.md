@@ -203,6 +203,34 @@ If CDP access is protected, the agent needs only the profile CDP token. An admin
 A profile without a CDP token has **unprotected CDP endpoints**, even when admin
 authentication is enabled.
 
+### Optional browser launch tips
+
+In a profile's **Edit settings** page, add arguments under **Custom launch arguments**,
+one per line. They apply the next time the browser starts, so restart the profile after
+changing them. These switches can affect site behavior or the browser fingerprint; test
+them on a separate profile if compatibility matters.
+
+| Argument | What it does | Notes |
+| --- | --- | --- |
+| `--blink-settings=imagesEnabled=false` | Prevents image loading and can reduce page bandwidth. | Image-dependent layouts, maps, CAPTCHA challenges, and buttons may not work correctly. |
+| `--disable-background-networking` | Reduces some browser background network activity. | Does not block requests made by websites; may affect browser background services. |
+| `--disable-notifications` | Suppresses website notification prompts. | Convenience only; does not reduce page traffic. |
+| `--mute-audio` | Mutes browser audio output. | Does not stop audio or video from downloading. |
+
+For automation, Playwright can block image requests for a task. Add the route before
+navigating; it applies to pages in that profile context while the client is connected:
+
+```js
+await context.route("**/*", route =>
+  route.request().resourceType() === "image"
+    ? route.abort()
+    : route.continue()
+);
+```
+
+This is per-client automation behavior, unlike a launch argument, and may change how
+browser caching works while routing is enabled.
+
 ## Install the agent skill
 
 On the **client machine**, install Node.js 20+ and run:
