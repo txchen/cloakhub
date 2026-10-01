@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
 describe("Docker-first packaging", () => {
-  test("Dockerfile pins the installer and does not redistribute the browser", async () => {
+  test("Dockerfile pins dependencies and bundles the public browser", async () => {
     const dockerfile = await Bun.file("Dockerfile").text();
 
     expect(dockerfile).toContain("FROM oven/bun:1.3.14-debian AS bun");
@@ -18,7 +18,7 @@ describe("Docker-first packaging", () => {
     expect(dockerfile).not.toMatch(/^ARG TARGETARCH=/m);
   });
 
-  test("Dockerfile exposes port 7788 and uses a persistent runtime browser cache", async () => {
+  test("Dockerfile exposes port 7788 and uses the bundled browser", async () => {
     const dockerfile = await Bun.file("Dockerfile").text();
 
     expect(dockerfile).toContain("CLOAKHUB_DATA_DIR=/data");
@@ -27,8 +27,11 @@ describe("Docker-first packaging", () => {
     expect(dockerfile).toContain("EXPOSE 7788");
     expect(dockerfile).toContain('VOLUME ["/data"]');
     expect(dockerfile).toContain("COPY --from=bun /usr/local/bin/bun /usr/local/bin/bun");
-    expect(dockerfile).toContain("CLOAKHUB_BROWSER_INSTALLER=bun");
-    expect(dockerfile).toContain("CLOAKHUB_BROWSER_VERSION=152.0.7977.82.1");
+    expect(dockerfile).toContain("CLOAKHUB_BROWSER_BIN=/opt/cloakbrowser/chrome");
+    expect(dockerfile).not.toContain("CLOAKHUB_BROWSER_INSTALLER");
+    expect(dockerfile).toContain("version=146.0.7680.177.5; platform=linux-x64");
+    expect(dockerfile).toContain("version=146.0.7680.177.4; platform=linux-arm64");
+    expect(dockerfile).toContain("sha256sum -c -");
     expect(dockerfile).toContain("kasmvncserver_bookworm");
     expect(dockerfile).toContain("xclip");
     expect(dockerfile).toContain('ENTRYPOINT ["/usr/bin/tini", "--"]');
@@ -37,10 +40,22 @@ describe("Docker-first packaging", () => {
     expect(dockerfile).not.toMatch(/CMD .*ensure_binary|ENTRYPOINT .*ensure_binary/i);
   });
 
+  test("both images install binaries before any project files", async () => {
+    for (const file of ["Dockerfile", "Dockerfile.free"]) {
+      const dockerfile = await Bun.file(file).text();
+      const binaryEnd = dockerfile.indexOf("HOME=/tmp /opt/cloakbrowser/chrome --version");
+      expect(binaryEnd).toBeGreaterThan(0);
+      for (const copy of dockerfile.matchAll(/^COPY (.*)$/gm)) {
+        if (copy[1]!.startsWith("--from=")) continue;
+        expect(copy.index!).toBeGreaterThan(binaryEnd);
+      }
+    }
+  });
+
   test("README documents deployment from the published image", async () => {
     const readme = await Bun.file("README.md").text();
 
-    expect(readme).toContain("image: ghcr.io/txchen/cloakhub:0.8.1");
+    expect(readme).toContain("image: ghcr.io/txchen/cloakhub:0.9.0");
     expect(readme).toContain("docker compose pull");
     expect(readme).toContain("restart: unless-stopped");
     expect(readme).toContain("shm_size: 2gb");
@@ -55,7 +70,7 @@ describe("Docker-first packaging", () => {
     const readme = await Bun.file("README.md").text();
 
     expect(readme).toContain("### Run the free image");
-    expect(readme).toContain("image: ghcr.io/txchen/cloakhub_free:0.8.1");
+    expect(readme).toContain("image: ghcr.io/txchen/cloakhub_free:0.9.0");
     expect(readme).toContain("CLOAKHUB_LICENSE_MODE=none");
     expect(readme).toContain("docker compose logs -f cloakhub-free");
   });
@@ -64,7 +79,7 @@ describe("Docker-first packaging", () => {
     const compose = await Bun.file("compose.arm64.yml").text();
 
     expect(compose).not.toContain("build:");
-    expect(compose).toContain("image: ghcr.io/txchen/cloakhub:0.8.1");
+    expect(compose).toContain("image: ghcr.io/txchen/cloakhub:0.9.0");
     expect(compose).toContain("CLOAKHUB_LICENSE_KEYS_FILE: /run/secrets/cloakbrowser-keys");
     expect(compose).toContain("platform: linux/arm64");
     expect(compose).toContain("restart: unless-stopped");
@@ -116,7 +131,8 @@ describe("Docker-first packaging", () => {
     expect(dockerfile).toContain("CLOAKHUB_BROWSER_BIN=/opt/cloakbrowser/chrome");
     expect(dockerfile).toContain("CLOAKHUB_MAX_RUNNING_INSTANCES=10");
     expect(dockerfile).toContain("CLOAKHUB_DEFAULT_PLATFORM=macos");
-    expect(dockerfile).toContain("cloakbrowser-152.0.7977.82.1-pro-linux-x64.tar.zst");
+    expect(dockerfile).toContain("cloakbrowser-154.0.8037.57.1-linux-x64-nolicense-patched.tar.zst");
+    expect(dockerfile).toContain("143476343497fe04e343fc0ace793c71e1fcfeb6328ad8530cb6c75665faf8ae");
     expect(dockerfile).toContain("sha256sum -c -");
     expect(dockerfile).not.toContain("CLOAKHUB_BROWSER_INSTALLER");
     expect(dockerfile).not.toMatch(/^(ARG|ENV) .*LICENSE_KEY/m);
@@ -134,7 +150,7 @@ describe("Docker-first packaging", () => {
   test("free compose example needs no license secret", async () => {
     const compose = await Bun.file("compose.free.yml").text();
 
-    expect(compose).toContain("image: ghcr.io/txchen/cloakhub_free:0.8.1");
+    expect(compose).toContain("image: ghcr.io/txchen/cloakhub_free:0.9.0");
     expect(compose).not.toMatch(/^\s*CLOAKHUB_LICENSE_MODE:/m);
     expect(compose).not.toContain("CLOAKHUB_LICENSE_KEYS_FILE");
     expect(compose).not.toContain("cloakbrowser-keys");

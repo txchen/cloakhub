@@ -1,6 +1,6 @@
 services:
   cloakhub:
-    image: ghcr.io/txchen/cloakhub:0.8.1
+    image: ghcr.io/txchen/cloakhub:0.9.0
     platform: linux/arm64
     restart: unless-stopped
     shm_size: 2gb

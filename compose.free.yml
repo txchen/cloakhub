@@ -5,7 +5,7 @@
 # and the browser path, so this file only sets what an operator typically customizes.
 services:
   cloakhub-free:
-    image: ghcr.io/txchen/cloakhub_free:0.8.1
+    image: ghcr.io/txchen/cloakhub_free:0.9.0
     restart: unless-stopped
     shm_size: 2gb
     environment:

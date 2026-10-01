@@ -9,9 +9,7 @@ WORKDIR /app
 ENV CLOAKHUB_DATA_DIR=/data \
     CLOAKHUB_HOST=0.0.0.0 \
     CLOAKHUB_PORT=7788 \
-    CLOAKHUB_BROWSER_INSTALLER=bun \
-    CLOAKHUB_BROWSER_VERSION=152.0.7977.82.1 \
-    CLOAKHUB_BROWSER_CHANNEL=preview \
+    CLOAKHUB_BROWSER_BIN=/opt/cloakbrowser/chrome \
     CLOAKHUB_DEFAULT_PLATFORM=macos \
     CLOAKHUB_MACOS_FONTCONFIG_FILE=/app/macos-fonts.conf \
     NODE_ENV=production
@@ -39,6 +37,23 @@ RUN wget -q https://github.com/kasmtech/KasmVNC/releases/download/v1.3.3/kasmvnc
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=bun /usr/local/bin/bun /usr/local/bin/bun
+
+# Install the public browser before any project files so code-only releases reuse
+# the binary layer. Upstream's latest public build differs by architecture.
+RUN set -eux; \
+    case "$TARGETARCH" in \
+      amd64) version=146.0.7680.177.5; platform=linux-x64; sha256=4a12bcde95fa1bb1beef2b41ab5e5c27c36be78e3be3d0dac8c64d705216670e ;; \
+      arm64) version=146.0.7680.177.4; platform=linux-arm64; sha256=8b71ce53b4fd131327331a31fba3835d71882d19bfaabde78dd0f5390bd16f45 ;; \
+      *) echo "Unsupported architecture: $TARGETARCH"; exit 1 ;; \
+    esac; \
+    wget -q -O /tmp/cloakbrowser.tar.gz \
+      "https://github.com/CloakHQ/cloakbrowser/releases/download/chromium-v${version}/cloakbrowser-${platform}.tar.gz"; \
+    echo "${sha256}  /tmp/cloakbrowser.tar.gz" | sha256sum -c -; \
+    mkdir -p /opt/cloakbrowser; \
+    tar -C /opt/cloakbrowser -xzf /tmp/cloakbrowser.tar.gz; \
+    rm /tmp/cloakbrowser.tar.gz; \
+    chmod +x /opt/cloakbrowser/chrome; \
+    HOME=/tmp /opt/cloakbrowser/chrome --version
 
 COPY package.json bun.lock ./
 # Downloader-only use: exclude optional automation peers resolved by the dev lockfile.
