@@ -231,3 +231,87 @@ In the same environment, stock Chromium headless was run as a control: Device In
 - **Unknown feature gating**: static scanning shows no symbol other than `LicenseRuntime` references license state, so it is inferred there is no "unlock features by license" logic; but this is a static inference and a round of representative CloakBrowser business functionality (fingerprint, proxy, extensions, etc.) black-box acceptance should be added.
 - **Hub consistency**: after removing native validation, `LicenseCapacityError`, capacity reservation, and `browser-license.ts` seat queries need to be adjusted together, otherwise the Hub will refuse to start because the count endpoint fails.
 - **Compliance**: bypassing license checks most likely violates the vendor's license/terms of service, and the vendor can change the public key, protocol, or check point at any time. To eliminate external dependency long-term and maintainably, the correct path is to obtain a formal offline/self-hosted license or agree on an internal license endpoint with the vendor, rather than patching on every upgrade.
+
+## Update: CloakBrowser 154.0.8037.57.1 (Linux x64, 2026-09-30)
+
+The 154 preview build keeps the same overall shape but moves every address and adds a
+new **fingerprint-table** handshake. `LicenseRuntime::Start` still gates the session
+flow behind a "started" flag, but now, after start, the browser waits in
+`BlockUntilFingerprintTableKeyResolved` for a wrapped 32-byte fingerprint-table key
+that the server returns inside the session/start response. Without that key the
+renderer cannot decrypt the embedded table used to spoof voices and GPU strings, and
+startup stalls for 25 seconds.
+
+| Item | Value |
+| --- | --- |
+| original binary | `.cloakhub/cloak154-evaluation/released-cache/chromium-154.0.8037.57.1-pro/chrome` |
+| original SHA-256 | `10328e43b999f9ec3aecb5c153f2f5273aef674ed66d1dd865898330031bd467` |
+| patched binary | `.cloakhub/cloak154-evaluation/patched-nolicense/chrome` |
+| patched SHA-256 | `fd16760d2e311e552b29ebbb179cf475cea4cd460bee4e13c31417dbd31d9d95` |
+| reproducible script | [`scripts/patch-cloakbrowser-154-nolicense.sh`](../scripts/patch-cloakbrowser-154-nolicense.sh) |
+
+### Relevant 154 symbols
+
+| Symbol | vaddr | Role |
+| --- | --- | --- |
+| `LicenseRuntime::Start` | `0xd8c1490` | Entry; branch on the started flag at `cmpb $0x0,0x122(%rdi); je 0xd8c1537` |
+| `LicenseRuntime::BlockUntilFingerprintTableKeyResolved` | `0xd8c0ba0` | Waits for the table key (timeout `0x17d7840` = 25,000,000 us) |
+| `ungoogled::SetFingerprintTableKey` | `0xd8be8e0` | Requires a 32-byte span; decrypts `kFingerprintTableCiphertext` and populates `Table()` |
+| `LicenseRuntime::UnwrapTableKey` | `0xd8c4fa0` | X25519 + HKDF + AES-CTR-HMAC-SHA256 unwrap of the server-supplied key |
+| `renderer_preferences_util::UpdateFromSystemSettings` | `0x8b0f3e0` | Copies `LicenseRuntime+0xb0` into `RendererPreferences+0x1f0` |
+| `kFingerprintTableCiphertext` | `0x2beb8f0` | Static ciphertext: 12-byte nonce + `0x3d8ad` bytes ciphertext+tag (AES-CTR-HMAC-SHA256) |
+| `LicenseRuntime` singleton | `0x14bf96e0` | `+0xb0` = fingerprint-table-key pointer, `+0xb8` = length |
+| `Table()` singleton | `0x14bf9568` | `+0x168` = loaded flag (`0x14bf96d0`) |
+| renderer consumers | `0x126d3790` (`SpeechSynthesis::PopulateSpoofedVoiceList`), `0x127a6080` (`GetWindowsGpuInfoList`) | Spoofed voice/GPU data built from `Table()` |
+
+### Patch points
+
+For this ELF, `.text` maps with `file_offset = vaddr - 0x1000`.
+
+| # | Target | vaddr | file offset | original bytes | patched |
+| --- | --- | --- | --- | --- | --- |
+| A | `Start` gate | `0xd8c14ae` | `0xd8c04ae` | `0f 84 83 00 00 00` | `90 90 90 90 90 90` |
+| B | `BlockUntilFingerprintTableKeyResolved` entry | `0xd8c0ba0` | `0xd8bfba0` | `55 …` | `lea rdi,[rip+key]; mov esi,0x20; jmp SetFingerprintTableKey` |
+| B | baked-in key (unused tail) | `0xd8c0bc0` | `0xd8bfbc0` | (unused code) | 32-byte key |
+| C | `UpdateFromSystemSettings` key load | `0x8b0f452` | `0x8b0e452` | `48 8b 35 …` + `48 8b 0d …` | `lea rsi,[rip+key]; mov ecx,0x20; nop nop` |
+
+Patch A alone stops the phone-home. Patch B prevents the 25-second startup block. Patch
+C keeps RendererPreferences carrying the key, so renderers still decrypt the fingerprint
+table even though the native license path was cut.
+
+The baked-in key is the plaintext that successfully decrypts the static
+`kFingerprintTableCiphertext` blob. It was captured once by breaking at
+`SetFingerprintTableKey` on a live licensed session; because the ciphertext is a
+compile-time constant, the same key decrypts it for every run of this build.
+
+```
+60 b7 8d 61 59 1f 48 04 09 f5 7d c4 07 c0 d0 a3
+14 09 60 b0 b4 e1 7c 8d 16 43 f0 3c 8e 67 b7 5a
+```
+
+### Verification results
+
+| Check | Result |
+| --- | --- |
+| Start patch only, offline, `--dump-dom` | exit 0, but ~26 s startup (waiting on the missing table key) |
+| A+B+C patched, offline, `--dump-dom` | exit 0, **0.58 s** startup |
+| Table actually decrypted | gdb breakpoint on the `Table()+0x168` "loaded" store is hit (`TABLE_LOADED_OK`) |
+| Renderer receives key | gdb on a `--single-process` run shows `SetFingerprintTableKey` called from `blink::WebViewImpl::UpdateRendererPreferences` with a 32-byte span |
+| Offline multi-instance ("多开") | 3 instances in one `unshare -rn` namespaces, separate profiles/CDP ports, all report `Chrome/154.0.8037.57` (3/3) |
+| Default Linux anti-detection | Sannysoft 0 failed rows; Device Info `isBot=false`, all details false; Fingerprint `bot=not_detected`, `tampering=false`, `anti_detect_browser=false` |
+
+These results match the documented 154 preview baseline for the Linux persona
+(`sannysoft []`, `deviceinfo {'isBot': False, 'positive': []}`) and show that cutting the
+phone-home does not regress the anti-detection path once the table key is replayed.
+
+### Reproducing
+
+```
+scripts/patch-cloakbrowser-154-nolicense.sh \
+  .cloakhub/cloak154-evaluation/released-cache/chromium-154.0.8037.57.1-pro/chrome \
+  .cloakhub/cloak154-evaluation/patched-nolicense
+```
+
+The script re-checks the original bytes at every patch point before writing, copies the
+binary with `cp --reflink=auto`, and symlinks the sibling resources into the output
+directory. Re-running it reproduces SHA-256 `fd16760d…` exactly.
