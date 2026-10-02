@@ -1,0 +1,86 @@
+lightpanda-default sannysoft 200 saved
+lightpanda-default sannysoft exit=0
+lightpanda-resources sannysoft 200 saved
+lightpanda-resources sannysoft exit=0
+cloak154 sannysoft 200 saved
+lightpanda-resources rebrowser 200 saved
+lightpanda-default rebrowser 200 saved
+lightpanda-resources rebrowser exit=0
+lightpanda-default rebrowser exit=0
+cloak154 rebrowser 200 saved
+lightpanda-default creepjs 200 saved
+lightpanda-default creepjs exit=0
+lightpanda-resources creepjs 200 saved
+lightpanda-resources creepjs exit=0
+cloak154 creepjs 200 saved
+lightpanda-default deviceinfo 200 saved
+lightpanda-default deviceinfo exit=0
+lightpanda-resources deviceinfo 200 saved
+lightpanda-resources deviceinfo exit=0
+cloak154 deviceinfo 200 saved
+lightpanda-default incolumitas 200 saved
+lightpanda-default incolumitas exit=0
+lightpanda-resources incolumitas 200 saved
+lightpanda-resources incolumitas exit=0
+cloak154 incolumitas 200 saved
+lightpanda-default browserscan 200 saved
+lightpanda-default browserscan exit=0
+lightpanda-resources browserscan 200 saved
+lightpanda-resources browserscan exit=0
+cloak154 browserscan 200 saved
+lightpanda-default fingerprint 200 saved
+lightpanda-default fingerprint exit=0
+lightpanda-resources fingerprint 200 saved
+lightpanda-resources fingerprint exit=0
+node:internal/process/promises:394
+    triggerUncaughtException(err, true /* fromPromise */);
+    ^
+
+ProtocolError: Protocol error (Page.handleJavaScriptDialog): No dialog is showing
+    at /home/txchen/code/vibe/cloakhub/node_modules/playwright-core/lib/coreBundle.js:34996:61
+    at new Promise (<anonymous>)
+    at _CRSession.send (/home/txchen/code/vibe/cloakhub/node_modules/playwright-core/lib/coreBundle.js:34995:16)
+    at Dialog._onHandle (/home/txchen/code/vibe/cloakhub/node_modules/playwright-core/lib/coreBundle.js:37907:32)
+    at Dialog._dismiss (/home/txchen/code/vibe/cloakhub/node_modules/playwright-core/lib/coreBundle.js:13274:20)
+    at Dialog._close (/home/txchen/code/vibe/cloakhub/node_modules/playwright-core/lib/coreBundle.js:13287:22)
+    at DialogManager.dialogDidOpen (/home/txchen/code/vibe/cloakhub/node_modules/playwright-core/lib/coreBundle.js:13308:18)
+    at _FrameSession._onDialog (/home/txchen/code/vibe/cloakhub/node_modules/playwright-core/lib/coreBundle.js:37900:49)
+    at _CRSession.<anonymous> (/home/txchen/code/vibe/cloakhub/node_modules/playwright-core/lib/coreBundle.js:37557:103)
+    at _CRSession.emit (node:events:508:28) {
+  type: 'error',
+  method: 'Page.handleJavaScriptDialog',
+  logs: undefined
+}
+
+Node.js v24.13.0
+lightpanda-default iphey exit=1
+node:internal/process/promises:394
+    triggerUncaughtException(err, true /* fromPromise */);
+    ^
+
+ProtocolError: Protocol error (Page.handleJavaScriptDialog): No dialog is showing
+    at /home/txchen/code/vibe/cloakhub/node_modules/playwright-core/lib/coreBundle.js:34996:61
+    at new Promise (<anonymous>)
+    at _CRSession.send (/home/txchen/code/vibe/cloakhub/node_modules/playwright-core/lib/coreBundle.js:34995:16)
+    at Dialog._onHandle (/home/txchen/code/vibe/cloakhub/node_modules/playwright-core/lib/coreBundle.js:37907:32)
+    at Dialog._dismiss (/home/txchen/code/vibe/cloakhub/node_modules/playwright-core/lib/coreBundle.js:13274:20)
+    at Dialog._close (/home/txchen/code/vibe/cloakhub/node_modules/playwright-core/lib/coreBundle.js:13287:22)
+    at DialogManager.dialogDidOpen (/home/txchen/code/vibe/cloakhub/node_modules/playwright-core/lib/coreBundle.js:13308:18)
+    at _FrameSession._onDialog (/home/txchen/code/vibe/cloakhub/node_modules/playwright-core/lib/coreBundle.js:37900:49)
+    at _CRSession.<anonymous> (/home/txchen/code/vibe/cloakhub/node_modules/playwright-core/lib/coreBundle.js:37557:103)
+    at _CRSession.emit (node:events:508:28) {
+  type: 'error',
+  method: 'Page.handleJavaScriptDialog',
+  logs: undefined
+}
+
+Node.js v24.13.0
+lightpanda-resources iphey exit=1
+cloak154 fingerprint 200 saved
+lightpanda-default recaptcha 200 saved
+lightpanda-default recaptcha exit=0
+lightpanda-resources recaptcha 200 saved
+lightpanda-resources recaptcha exit=0
+cloak154 iphey 200 saved
+cloak154 recaptcha 200 saved
+COMPLETE

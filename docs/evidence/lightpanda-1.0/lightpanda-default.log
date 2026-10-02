@@ -1,0 +1,46 @@
+$time=1790960067777 $scope=note $level=note $msg="server running" address=127.0.0.1:9223 max_connections=16208 max_browser_connections=16
+$time=1790960070621 $scope=disabled $level=warn $msg="iframes disabled" $page=1 hint="enable via --load-resources iframe"
+$time=1790960082846 $scope=frame $level=warn $msg="navigation done" $page=1 url=https://bot.sannysoft.com/
+$time=1790960082936 $scope=note $level=note $msg="server running" address=127.0.0.1:9223 max_connections=16208 max_browser_connections=16
+$time=1790960091112 $scope=note $level=note $msg="server running" address=127.0.0.1:9223 max_connections=16208 max_browser_connections=16
+$time=1790960093561 $scope=disabled $level=warn $msg="iframes disabled" $page=1 hint="enable via --load-resources iframe"
+$time=1790960093562 $scope=js $level=warn $msg="console.error" $page=1 param.0=TypeError: Cannot read properties of undefined (reading 'document')
+$time=1790960093715 $scope=disabled $level=warn $msg="workers disabled" $page=1 hint="enable via --load-resources worker"
+$time=1790960093720 $scope=js $level=warn $msg="console.error" $page=1 param.0=TypeError: Cannot read properties of undefined (reading 'family')
+$time=1790960093740 $scope=js $level=warn $msg="console.error" $page=1 param.0=TypeError: svgElems[0].getExtentOfChar is not a function
+$time=1790960099717 $scope=js $level=warn $msg="console.error" $page=1 param.0=TypeError: Cannot read properties of undefined (reading 'platform')
+$time=1790960099721 $scope=js $level=warn $msg="console.error" $page=1 param.0=TypeError: Cannot read properties of undefined (reading 'userAgent')
+$time=1790960099723 $scope=js $level=warn $msg="console.error" $page=1 param.0=TypeError: Cannot read properties of undefined (reading 'deviceMemory')
+$time=1790960099724 $scope=js $level=warn $msg="console.error" $page=1 param.0=TypeError: Cannot read properties of undefined (reading 'hardwareConcurrency')
+$time=1790960099726 $scope=js $level=warn $msg="console.error" $page=1 param.0=TypeError: Cannot convert undefined or null to object
+$time=1790960099736 $scope=js $level=warn $msg="console.error" $page=1 param.0=ReferenceError: outerHeight is not defined
+$time=1790960099746 $scope=js $level=warn $msg="console.error" $page=1 param.0=TypeError: Cannot read properties of null (reading 'removeChild')
+$time=1790960113881 $scope=frame $level=warn $msg="navigation done" $page=1 url=https://abrahamjuliot.github.io/creepjs/
+$time=1790960113980 $scope=note $level=note $msg="server running" address=127.0.0.1:9223 max_connections=16208 max_browser_connections=16
+$time=1790960117717 $scope=disabled $level=warn $msg="workers disabled" $page=1 hint="enable via --load-resources worker"
+$time=1790960120834 $scope=disabled $level=warn $msg="iframes disabled" $page=1 hint="enable via --load-resources iframe"
+$time=1790960132830 $scope=frame $level=warn $msg="navigation done" $page=1 url=https://deviceandbrowserinfo.com/are_you_a_bot
+$time=1790960132925 $scope=note $level=note $msg="server running" address=127.0.0.1:9223 max_connections=16208 max_browser_connections=16
+$time=1790960136454 $scope=disabled $level=warn $msg="workers disabled" $page=1 hint="enable via --load-resources worker"
+$time=1790960136454 $scope=js $level=warn $msg="console.error" $page=1 param.0=this browser does not support service workers
+$time=1790960136491 $scope=disabled $level=warn $msg="iframes disabled" $page=1 hint="enable via --load-resources iframe"
+$time=1790960136616 $scope=js $level=warn $msg="console.error" $page=1 param.0=TypeError: fetch error
+$time=1790960154597 $scope=frame $level=warn $msg="navigation done" $page=1 url=https://bot.incolumitas.com/
+$time=1790960154669 $scope=note $level=note $msg="server running" address=127.0.0.1:9223 max_connections=16208 max_browser_connections=16
+$time=1790960157254 $scope=disabled $level=warn $msg="iframes disabled" $page=1 hint="enable via --load-resources iframe"
+$time=1790960157303 $scope=disabled $level=warn $msg="workers disabled" $page=1 hint="enable via --load-resources worker"
+$time=1790960157905 $scope=js $level=warn $msg="console.error" $page=1 param.0=TypeError
+$time=1790960158296 $scope=js $level=warn $msg="console.error" $page=1 param.0=TypeError
+$time=1790960158298 $scope=js $level=warn $msg="console.error" $page=1 param.0=TypeError
+$time=1790960175153 $scope=frame $level=warn $msg="navigation done" $page=1 url=https://www.browserscan.net/bot-detection
+$time=1790960175367 $scope=note $level=note $msg="server running" address=127.0.0.1:9223 max_connections=16208 max_browser_connections=16
+$time=1790960178419 $scope=disabled $level=warn $msg="workers disabled" $page=1 hint="enable via --load-resources worker"
+$time=1790960178431 $scope=disabled $level=warn $msg="iframes disabled" $page=1 hint="enable via --load-resources iframe"
+$time=1790960190461 $scope=js $level=warn $msg="console.error" $page=1 param.0=Failed to fetch visitor data on mount: FingerprintError: Client timeout
+$time=1790960190461 $scope=js $level=warn $msg="console.error" $page=1 param.0=Failed to fetch visitor data on mount: FingerprintError: Client timeout
+$time=1790960190461 $scope=js $level=warn $msg="console.error" $page=1 param.0=Failed to fetch visitor data on mount: FingerprintError: Client timeout
+$time=1790960197420 $scope=frame $level=warn $msg="navigation done" $page=1 url=https://demo.fingerprint.com/playground
+$time=1790960197619 $scope=note $level=note $msg="server running" address=127.0.0.1:9223 max_connections=16208 max_browser_connections=16
+$time=1790960205613 $scope=disabled $level=warn $msg="workers disabled" $page=1 hint="enable via --load-resources worker"
+$time=1790960205627 $scope=frame $level=warn $msg="navigation done" $page=1 url=https://iphey.com/
+$time=1790960205733 $scope=note $level=note $msg="server running" address=127.0.0.1:9223 max_connections=16208 max_browser_connections=16

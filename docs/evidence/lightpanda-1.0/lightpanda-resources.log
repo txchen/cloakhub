@@ -1,0 +1,21 @@
+$time=1790960067777 $scope=note $level=note $msg="server running" address=127.0.0.1:9224 max_connections=16208 max_browser_connections=16
+$time=1790960083130 $scope=note $level=note $msg="server running" address=127.0.0.1:9224 max_connections=16208 max_browser_connections=16
+$time=1790960091102 $scope=note $level=note $msg="server running" address=127.0.0.1:9224 max_connections=16208 max_browser_connections=16
+$time=1790960093762 $scope=js $level=warn $msg="console.error" $page=1 param.0=TypeError: Cannot read properties of undefined (reading 'family')
+$time=1790960093778 $scope=js $level=warn $msg="console.error" $page=1 param.0=TypeError: svgElems[0].getExtentOfChar is not a function
+$time=1790960093835 $scope=js $level=warn $msg="console.error" $page=1 param.0=TypeError: Cannot convert undefined or null to object
+$time=1790960093838 $scope=js $level=warn $msg="console.error" $page=1 param.0=ReferenceError: outerHeight is not defined
+$time=1790960113943 $scope=frame $level=warn $msg="navigation done" $page=1 url=https://abrahamjuliot.github.io/creepjs/
+$time=1790960114024 $scope=note $level=note $msg="server running" address=127.0.0.1:9224 max_connections=16208 max_browser_connections=16
+$time=1790960133277 $scope=note $level=note $msg="server running" address=127.0.0.1:9224 max_connections=16208 max_browser_connections=16
+$time=1790960136763 $scope=js $level=warn $msg="console.error" $page=1 param.0=this browser does not support service workers
+$time=1790960136931 $scope=js $level=warn $msg="console.error" $page=1 param.0=TypeError: fetch error
+$time=1790960154928 $scope=frame $level=warn $msg="navigation done" $page=1 url=https://bot.incolumitas.com/
+$time=1790960155002 $scope=note $level=note $msg="server running" address=127.0.0.1:9224 max_connections=16208 max_browser_connections=16
+$time=1790960175825 $scope=note $level=note $msg="server running" address=127.0.0.1:9224 max_connections=16208 max_browser_connections=16
+$time=1790960181129 $scope=js $level=warn $msg="console.error" $page=1 param.0=Failed to fetch visitor data on mount: FingerprintError: bad request
+$time=1790960181129 $scope=js $level=warn $msg="console.error" $page=1 param.0=Failed to fetch visitor data on mount: FingerprintError: bad request
+$time=1790960181129 $scope=js $level=warn $msg="console.error" $page=1 param.0=Failed to fetch visitor data on mount: FingerprintError: bad request
+$time=1790960198164 $scope=frame $level=warn $msg="navigation done" $page=1 url=https://demo.fingerprint.com/playground
+$time=1790960198298 $scope=note $level=note $msg="server running" address=127.0.0.1:9224 max_connections=16208 max_browser_connections=16
+$time=1790960206313 $scope=note $level=note $msg="server running" address=127.0.0.1:9224 max_connections=16208 max_browser_connections=16
