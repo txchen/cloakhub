@@ -1,0 +1,1044 @@
+[
+  {
+    "label": "cloak154",
+    "site": "browserscan",
+    "url": "https://www.browserscan.net/bot-detection",
+    "date": "2026-10-02T16:56:09.608Z",
+    "version": "154.0.8037.57",
+    "status": 200,
+    "finished": "2026-10-02T16:56:30.356Z",
+    "fingerprint": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+      "platform": "MacIntel",
+      "webdriver": false,
+      "languages": [
+        "en-US",
+        "en"
+      ],
+      "hardwareConcurrency": 4,
+      "deviceMemory": 16,
+      "timezone": "UTC",
+      "plugins": [
+        "PDF Viewer",
+        "Chrome PDF Viewer",
+        "Chromium PDF Viewer",
+        "Microsoft Edge PDF Viewer",
+        "WebKit built-in PDF"
+      ],
+      "screen": {
+        "width": 1366,
+        "height": 768
+      },
+      "window": {
+        "innerWidth": 1366,
+        "innerHeight": 647,
+        "outerWidth": 1366,
+        "outerHeight": 738,
+        "devicePixelRatio": 2
+      },
+      "webgl": [
+        "Google Inc. (Apple)",
+        "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)"
+      ]
+    },
+    "excerpt": "blog\nAntidetect Browser\nUtilities\nEN\nSign In\nHome\n>\nBot Detection\nTest Results:\nNormal\nWebdriver\nUser-Agent\nCDP\nNavigator\nBrowser bot detection guide\n\nBrowserScan detects automated activities on scripts or browsers. It analyzes various browser properties to determine whether the browser environment is controlled by a robot. Various human-machine verification products such as Cloudflare Turnstile and Google reCAPTCHA include this aspect of detection, which is usually divided into three categories:Explore Web Apps\n\nNormal bots - usually bots belonging to well-known search engines (Google, Bing, Baidu). It crawls websites to create a searchable index of content. A good bot can also be a monitoring or uptime checking tool.\nMalicious bots - Usually automated tools like Selenium, Puppeteer, Playwright or anything that pretends to be a good search bot. It can take over accounts, submit spam, steal passwords, scrape data, waste resources, and more.Discord bots.\nNo bots detected - the visitor could be a human using a regular browser.\nAd\nIdentification and bot detection\n\nThe combination of fingerprinting and bot detection gives you a powerful tool to protect against online fraud and produces the best results when used together.Gyroscope sensor tester\n\nWebDriver\nNormal\nWebDriver Advance\nNormal\nSelenium\nNormal\nNightmareJS\nNormal\nPhantomJS\nNormal\nAwesomium\nNormal\nCef\nNormal\nCefSharp\nNormal\nCoaches\nNormal\nFMiner\nNormal\nBorn\nNormal\nPhantomas\nNormal\nRhino\nNormal\nWebdriverio\nNormal\nHeadless Chrome\nNormal\nDiscover more\nprogramming interface\nrobots\nBuild Robots\nTry Cloud Tools\nsoftware\nClaim ",
+    "pageErrors": []
+  },
+  {
+    "label": "cloak154",
+    "site": "creepjs",
+    "url": "https://abrahamjuliot.github.io/creepjs/",
+    "date": "2026-10-02T16:54:58.276Z",
+    "version": "154.0.8037.57",
+    "status": 200,
+    "finished": "2026-10-02T16:55:20.612Z",
+    "fingerprint": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+      "platform": "MacIntel",
+      "webdriver": false,
+      "languages": [
+        "en-US",
+        "en"
+      ],
+      "hardwareConcurrency": 4,
+      "deviceMemory": 16,
+      "timezone": "UTC",
+      "plugins": [
+        "PDF Viewer",
+        "Chrome PDF Viewer",
+        "Chromium PDF Viewer",
+        "Microsoft Edge PDF Viewer",
+        "WebKit built-in PDF"
+      ],
+      "screen": {
+        "width": 1366,
+        "height": 768
+      },
+      "window": {
+        "innerWidth": 1366,
+        "innerHeight": 647,
+        "outerWidth": 1366,
+        "outerHeight": 738,
+        "devicePixelRatio": 2
+      },
+      "webgl": [
+        "Google Inc. (Apple)",
+        "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)"
+      ]
+    },
+    "excerpt": "Headless82e0ca71\nchromium: true\n31% like headless: 7a8c8814\n0% headless: 52defe05\n0% stealth: 0c019315\nplatform hints:\nArial\n9:82:91:100:82\n\n0.90ms\n",
+    "pageErrors": []
+  },
+  {
+    "label": "cloak154",
+    "site": "deviceinfo",
+    "url": "https://deviceandbrowserinfo.com/are_you_a_bot",
+    "date": "2026-10-02T16:55:22.805Z",
+    "version": "154.0.8037.57",
+    "status": 200,
+    "finished": "2026-10-02T16:55:42.793Z",
+    "fingerprint": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+      "platform": "MacIntel",
+      "webdriver": false,
+      "languages": [
+        "en-US",
+        "en"
+      ],
+      "hardwareConcurrency": 4,
+      "deviceMemory": 16,
+      "timezone": "UTC",
+      "plugins": [
+        "PDF Viewer",
+        "Chrome PDF Viewer",
+        "Chromium PDF Viewer",
+        "Microsoft Edge PDF Viewer",
+        "WebKit built-in PDF"
+      ],
+      "screen": {
+        "width": 1366,
+        "height": 768
+      },
+      "window": {
+        "innerWidth": 1366,
+        "innerHeight": 647,
+        "outerWidth": 1366,
+        "outerHeight": 738,
+        "devicePixelRatio": 2
+      },
+      "webgl": [
+        "Google Inc. (Apple)",
+        "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)"
+      ]
+    },
+    "excerpt": "Search proxy IP\nProxy Detection Database\nPricing\nMy Device\nAPIs\nData\nBlog\nLogin\n\n🔥 New: Bot detection & fingerprinting playground — test your browser signals\n\nAre you a bot?\n✅\nYou are human!\nRaw detection details\nCopy\n{\n  \"isBot\": false,\n  \"details\": {\n    \"hasBotUserAgent\": false,\n    \"hasWebdriverTrue\": false,\n    \"hasWebdriverInFrameTrue\": false,\n    \"isPlaywright\": false,\n    \"hasInconsistentChromeObject\": false,\n    \"isPhantom\": false,\n    \"isNightmare\": false,\n    \"isSequentum\": false,\n    \"isSeleniumChromeDefault\": false,\n    \"isHeadlessChrome\": false,\n    \"isWebGLInconsistent\": false,\n    \"hasInconsistentWebGLShaderLang\": false,\n    \"hasInconsistentTimingResolution\": false,\n    \"isAutomatedWithCDP\": false,\n    \"isAutomatedWithCDPInWebWorker\": false,\n    \"hasInconsistentClientHints\": false,\n    \"hasInconsistentGPUFeatures\": false,\n    \"isIframeOverridden\": false,\n    \"hasInconsistentWorkerValues\": false,\n    \"hasHighHardwareConcurrency\": false,\n    \"hasHeadlessChromeDefaultScreenResolution\": false,\n    \"hasSuspiciousWeakSignals\": false\n  }\n}\nHow does this test work?\n\nYou can use this page to test whether or not your bot is detected. The test is based only on fingerprinting signals:\n\nClient-side signals: Browser fingerprinting (requires JavaScript)\nServer-side signals: HTTP headers (future: TCP/TLS fingerprinting)\n\nThis test does not use IP reputation or user behavior. You can run several tests in a row; it won't affect the result.\n\nNew: We have added a new test that detects suspicious client-side behavior, such as mouse movements, typing speed, and form submission. I",
+    "pageErrors": []
+  },
+  {
+    "label": "cloak154",
+    "site": "fingerprint",
+    "url": "https://demo.fingerprint.com/playground",
+    "date": "2026-10-02T16:56:32.628Z",
+    "version": "154.0.8037.57",
+    "status": 200,
+    "finished": "2026-10-02T16:56:55.034Z",
+    "fingerprint": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+      "platform": "MacIntel",
+      "webdriver": false,
+      "languages": [
+        "en-US",
+        "en"
+      ],
+      "hardwareConcurrency": 4,
+      "deviceMemory": 16,
+      "timezone": "UTC",
+      "plugins": [
+        "PDF Viewer",
+        "Chrome PDF Viewer",
+        "Chromium PDF Viewer",
+        "Microsoft Edge PDF Viewer",
+        "WebKit built-in PDF"
+      ],
+      "screen": {
+        "width": 1366,
+        "height": 768
+      },
+      "window": {
+        "innerWidth": 1366,
+        "innerHeight": 647,
+        "outerWidth": 1366,
+        "outerHeight": 738,
+        "devicePixelRatio": 2
+      },
+      "webgl": [
+        "Google Inc. (Apple)",
+        "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)"
+      ]
+    },
+    "excerpt": "Home\nPlayground\nUse cases\nContact sales\nGet started\nFingerprint Pro Playground\n\nAnalyze your browser with Fingerprint Pro and see all the available signals.\n\nAnalyze my browser again\nIDENTIFICATION\n\nYour Visitor ID is \n\n[Visitor ID redacted]\nBrowser\t\nChrome 154.0.0\n\nOperating System\t\nMac OS X 10.15.7\n\nIP Address\t\n[IP redacted]\n\nLast Seen\t\n21 hours ago\n\nConfidence Score\t\n0.95\nSMART SIGNALS\nGeolocation\nSeattle, Washington, United States\n\t\n\nIncognito Mode\t\nNot detected\n\nBot\t\nNot detected\n\nVPN\t\nYou are using a VPN 🌐 (OS mismatch)\n\nBrowser Tampering\t\nNot detected\n\nDeveloper Tools\t\nNot detected\n\nVirtual Machine\t\nNot detected\n\nPrivacy Settings\t\nNot detected\n\nIP Blocklist\t\nNot detected\n\nProxy Detection\t\nNot detected\n\nHigh-Activity Device\t\nNot detected\n\nRare Device\t\nNot detected\n\nVelocity Signals\t\n1 IP, 5 Linked IDs in the past 24 hours\n\nSuspect Score\t\n4\n\nRaw Device Attributes\t\nSee the JSON below\nMOBILE SMART SIGNALS\nTRY OUR DEMO FOR MOBILE DEVICES\n\nApp is instrumented by Frida\tAvailable in native iOS and Android SDKs\nFactory Reset Timestamp\tAvailable in native iOS and Android SDKs\nProximity Detection\tAvailable in native iOS and Android SDKs\nLocation Spoofing\tAvailable in native iOS and Android SDKs\nVPN (Mobile)\tAvailable in native iOS and Android SDKs\nMan-in-the-middle attack\tAvailable in native iOS and Android SDKs\nTampered Request\tAvailable in native iOS and Android SDKs\nActive Call Detection\tAvailable in native iOS and Android SDKs\nDeveloper Tools (Mobile)\tAvailable in native iOS and Android SDKs\nCloned App\tAvailable in the native Android SDK\nEmulator\tAvailable in the native Andr",
+    "pageErrors": []
+  },
+  {
+    "label": "cloak154",
+    "site": "incolumitas",
+    "url": "https://bot.incolumitas.com/",
+    "date": "2026-10-02T16:55:44.973Z",
+    "version": "154.0.8037.57",
+    "status": 200,
+    "finished": "2026-10-02T16:56:07.441Z",
+    "fingerprint": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+      "platform": "MacIntel",
+      "webdriver": false,
+      "languages": [
+        "en-US",
+        "en"
+      ],
+      "hardwareConcurrency": 4,
+      "deviceMemory": 16,
+      "timezone": "UTC",
+      "plugins": [
+        "PDF Viewer",
+        "Chrome PDF Viewer",
+        "Chromium PDF Viewer",
+        "Microsoft Edge PDF Viewer",
+        "WebKit built-in PDF"
+      ],
+      "screen": {
+        "width": 1366,
+        "height": 768
+      },
+      "window": {
+        "innerWidth": 1366,
+        "innerHeight": 647,
+        "outerWidth": 1366,
+        "outerHeight": 738,
+        "devicePixelRatio": 2
+      },
+      "webgl": [
+        "Google Inc. (Apple)",
+        "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)"
+      ]
+    },
+    "excerpt": "New Detection Tests [1] [2] [3] [4]\n{\n  \"puppeteerEvaluationScript\": \"OK\",\n  \"webdriverPresent\": \"OK\",\n  \"connectionRTT\": \"OK\",\n  \"refMatch\": \"OK\",\n  \"overrideTest\": \"OK\",\n  \"overflowTest\": \"OK\",\n  \"puppeteerExtraStealthUsed\": \"OK\",\n  \"inconsistentWebWorkerNavigatorPropery\": \"OK\",\n  \"inconsistentServiceWorkerNavigatorPropery\": \"OK\"\n}\nOld Bot Detection Tests (Intoli.com tests + additions, Fingerprint Scanner tests)\n{\n  \"intoli\": {\n    \"userAgent\": \"OK\",\n    \"webDriver\": \"OK\",\n    \"webDriverAdvanced\": \"OK\",\n    \"pluginsLength\": \"OK\",\n    \"pluginArray\": \"OK\",\n    \"languages\": \"OK\"\n  },\n  \"fpscanner\": {\n    \"PHANTOM_UA\": \"OK\",\n    \"PHANTOM_PROPERTIES\": \"OK\",\n    \"PHANTOM_ETSL\": \"OK\",\n    \"PHANTOM_LANGUAGE\": \"OK\",\n    \"PHANTOM_WEBSOCKET\": \"OK\",\n    \"MQ_SCREEN\": \"OK\",\n    \"PHANTOM_OVERFLOW\": \"OK\",\n    \"PHANTOM_WINDOW_HEIGHT\": \"OK\",\n    \"HEADCHR_UA\": \"OK\",\n    \"WEBDRIVER\": \"FAIL\",\n    \"HEADCHR_CHROME_OBJ\": \"OK\",\n    \"HEADCHR_PERMISSIONS\": \"OK\",\n    \"HEADCHR_PLUGINS\": \"OK\",\n    \"HEADCHR_IFRAME\": \"OK\",\n    \"CHR_DEBUG_TOOLS\": \"OK\",\n    \"SELENIUM_DRIVER\": \"OK\",\n    \"CHR_BATTERY\": \"OK\",\n    \"CHR_MEMORY\": \"OK\",\n    \"TRANSPARENT_PIXEL\": \"OK\",\n    \"SEQUENTUM\": \"OK\",\n    \"VIDEO_CODECS\": \"OK\"\n  }\n}\n",
+    "pageErrors": []
+  },
+  {
+    "label": "cloak154",
+    "site": "iphey",
+    "url": "https://iphey.com/",
+    "date": "2026-10-02T16:56:57.296Z",
+    "version": "154.0.8037.57",
+    "status": 200,
+    "finished": "2026-10-02T16:57:25.014Z",
+    "fingerprint": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+      "platform": "MacIntel",
+      "webdriver": false,
+      "languages": [
+        "en-US",
+        "en"
+      ],
+      "hardwareConcurrency": 4,
+      "deviceMemory": 16,
+      "timezone": "UTC",
+      "plugins": [
+        "PDF Viewer",
+        "Chrome PDF Viewer",
+        "Chromium PDF Viewer",
+        "Microsoft Edge PDF Viewer",
+        "WebKit built-in PDF"
+      ],
+      "screen": {
+        "width": 1366,
+        "height": 768
+      },
+      "window": {
+        "innerWidth": 1366,
+        "innerHeight": 647,
+        "outerWidth": 1366,
+        "outerHeight": 738,
+        "devicePixelRatio": 2
+      },
+      "webgl": [
+        "Google Inc. (Apple)",
+        "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)"
+      ]
+    },
+    "excerpt": "Blog\nYour Digital Identity Looks \n\nSee what your browser reveals about you. Run a real-time browser fingerprinting test  to detect tracking risks and hidden leaks.\n\nLearn more\nRestart Test\nBROWSER\n\nTemporary value\n\nLOCATION\n\nTemporary value\n\nIP ADDRESS\n\nTemporary value\n\nHARDWARE\n\nTemporary value\n\nSOFTWARE\n\nTemporary value\n\n0\nMX SCORE\n\nHow trustworthy is your identity\n\nFingerprint technology powered by\nMixVisit\nHow is this determined?\n\nWe take all browser settings from our databases of browser fingerprints, collected from real people from all over the world, so that you are not banned by the servers with whom you plan to work.\n\nGitHub\nResidential Proxies  at Just $1/GB\nGO\nAny Check You Need\n\nRun all essential browser fingerprint checks from one place to stay undetected\n\nFingerprint check\n\nRun a full browser fingerprint check to see how uniquely your browser  can be identified across the web.\n\nIP Check\n\nTest your IP with our reliable IP tester and run an IP address leak test to detect unwanted exposure.\n\nVPN Checker\n\nUse our proxy checker to detect leaks and confirm your proxy or VPN is working as expected. \n\nBot Check\n\nCheck if your browser behavior triggers bot detection systems. Stay under the radar by testing how websites classify your activity.\n\nDNS Leak Test\n\nFind out if your DNS queries reveal your true location or ISP. Ensure your browsing stays private and your DNS traffic doesn’t bypass your proxy or VPN. \n\nIP Blacklist Test\n\nRun a fast IP blacklist check to see if your IP address is flagged in spam, threat, or security databases.\n\nStay ahead of detection with updat",
+    "pageErrors": []
+  },
+  {
+    "label": "cloak154",
+    "site": "rebrowser",
+    "url": "https://bot-detector.rebrowser.net/",
+    "date": "2026-10-02T16:54:45.492Z",
+    "version": "154.0.8037.57",
+    "status": 200,
+    "detections": "[\n  {\n    \"type\": \"dummyFn\",\n    \"rating\": -1,\n    \"note\": \"<code>window.dummyFn()</code> was called! It means you can interact with main world objects.\",\n    \"msSinceLoad\": 5038.8\n  },\n  {\n    \"type\": \"sourceUrlLeak\",\n    \"rating\": -1,\n    \"note\": \"Error stack doesn't contain anything suspicious.\",\n    \"debug\": \"Error: Detection Error\\n    at testSourceUrlError (https://bot-detector.rebrowser.net/index.js?2:373:19)\\n    at HTMLDocument.getElementById (https://bot-detector.rebrowser.net/index.js?2:401:7)\\n    at eval (eval at evaluate (:311:30), <anonymous>:1:16)\\n    at Object.evaluate (<anonymous>:313:16)\\n    at Object.<anonymous> (<anonymous>:1:44)\",\n    \"msSinceLoad\": 5262.7\n  },\n  {\n    \"type\": \"mainWorldExecution\",\n    \"rating\": 1,\n    \"note\": \"You've called <code>document.getElementsByClassName()</code> in the main world. Use <a href=\\\"https://github.com/rebrowser/rebrowser-patches\\\" target=\\\"_blank\\\">rebrowser-patches</a> to run your scripts in an isolated world.\",\n    \"debug\": {\n      \"args\": [\n        \"div\"\n      ]\n    },\n    \"msSinceLoad\": 5288.6\n  },\n  {\n    \"type\": \"runtimeEnableLeak\",\n    \"rating\": -1,\n    \"note\": \"No leak detected.\",\n    \"msSinceLoad\": 7.3\n  },\n  {\n    \"type\": \"exposeFunctionLeak\",\n    \"note\": \"\\n            <div>You're using unpatched Playwright and method <code>page.exposeFunction</code> as it creates <code>window.__playwright__binding__</code> object.</div>\\n            <div>No fix available. Follow <a href=\\\"https://github.com/rebrowser/rebrowser-patches\\\" target=\\\"_blank\\\">rebrowser-patches</a> to stay up-to-date.</div>\\n            <div>Remove <code>page.exposeFunction</code> from your code to avoid this leak.</div>\\n          \",\n    \"rating\": 1,\n    \"debug\": {\n      \"windowKey\": \"__playwright__binding__\"\n    },\n    \"msSinceLoad\": 5315.9\n  },\n  {\n    \"type\": \"navigatorWebdriver\",\n    \"rating\": -1,\n    \"note\": \"No webdriver presented.\",\n    \"msSinceLoad\": 11.6\n  },\n  {\n    \"type\": \"viewport\",\n    \"rating\": -1,\n    \"debug\": {\n      \"width\": 1366,\n      \"height\": 647\n    },\n    \"note\": \"Viewport is different from default values used in automation libraries.\",\n    \"msSinceLoad\": 98.3\n  },\n  {\n    \"type\": \"pwInitScripts\",\n    \"rating\": -1,\n    \"note\": \"No <code>window.__pwInitScripts</code> detected.\",\n    \"msSinceLoad\": 100\n  },\n  {\n    \"type\": \"bypassCsp\",\n    \"rating\": -1,\n    \"note\": \"Content Security Policy (CSP) is enabled, it's expected behavior.\",\n    \"msSinceLoad\": 135.2\n  },\n  {\n    \"type\": \"useragent\",\n    \"rating\": -1,\n    \"debug\": {\n      \"useragentVersionItems\": [\n        {\n          \"brand\": \"Chromium\",\n          \"version\": \"154.0.8037.58\"\n        },\n        {\n          \"brand\": \"Google Chrome\",\n          \"version\": \"154.0.8037.58\"\n        }\n      ],\n      \"latestStableRelease\": {\n        \"version\": \"154.0.8037.98\",\n        \"date\": \"2026-10-02T00:56:08.341Z\"\n      }\n    },\n    \"note\": \"Google Chrome version is not higher than the latest stable release version which is fine.\",\n    \"msSinceLoad\": 324.3\n  }\n]",
+    "finished": "2026-10-02T16:54:56.098Z",
+    "fingerprint": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+      "platform": "MacIntel",
+      "webdriver": false,
+      "languages": [
+        "en-US",
+        "en"
+      ],
+      "hardwareConcurrency": 4,
+      "deviceMemory": 16,
+      "timezone": "UTC",
+      "plugins": [
+        "PDF Viewer",
+        "Chrome PDF Viewer",
+        "Chromium PDF Viewer",
+        "Microsoft Edge PDF Viewer",
+        "WebKit built-in PDF"
+      ],
+      "screen": {
+        "width": 1366,
+        "height": 768
+      },
+      "window": {
+        "innerWidth": 1366,
+        "innerHeight": 647,
+        "outerWidth": 1366,
+        "outerHeight": 738,
+        "devicePixelRatio": 2
+      },
+      "webgl": [
+        "Google Inc. (Apple)",
+        "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)"
+      ]
+    },
+    "excerpt": "🕵️ rebrowser-bot-detector\nModern tests to detect automated browser behavior. See github repo for more details. How to properly run the tests?\nTest name\tTime since load\tNotes\n🟢 dummyFn\t5038.8 ms\twindow.dummyFn() was called! It means you can interact with main world objects.\n🟢 sourceUrlLeak\t5262.7 ms\tError stack doesn't contain anything suspicious.\nError: Detection Error\n    at testSourceUrlError (https://bot-detector.rebrowser.net/index.js?2:373:19)\n    at HTMLDocument.getElementById (https://bot-detector.rebrowser.net/index.js?2:401:7)\n    at eval (eval at evaluate (:311:30), :1:16)\n    at Object.evaluate (:313:16)\n    at Object. (:1:44)\n\n🔴 mainWorldExecution\t5288.6 ms\tYou've called document.getElementsByClassName() in the main world. Use rebrowser-patches to run your scripts in an isolated world.\n{\n  \"args\": [\n    \"div\"\n  ]\n}\n\n🟢 runtimeEnableLeak\t7.3 ms\tNo leak detected.\n🔴 exposeFunctionLeak\t5315.9 ms\t\nYou're using unpatched Playwright and method page.exposeFunction as it creates window.__playwright__binding__ object.\nNo fix available. Follow rebrowser-patches to stay up-to-date.\nRemove page.exposeFunction from your code to avoid this leak.\n{\n  \"windowKey\": \"__playwright__binding__\"\n}\n\n🟢 navigatorWebdriver\t11.6 ms\tNo webdriver presented.\n🟢 viewport\t98.3 ms\tViewport is different from default values used in automation libraries.\n{\n  \"width\": 1366,\n  \"height\": 647\n}\n\n🟢 pwInitScripts\t100 ms\tNo window.__pwInitScripts detected.\n🟢 bypassCsp\t135.2 ms\tContent Security Policy (CSP) is enabled, it's expected behavior.\n🟢 useragent\t324.3 ms\tGoogle Chrome version is not higher than the ",
+    "pageErrors": []
+  },
+  {
+    "label": "cloak154",
+    "site": "recaptcha",
+    "url": "https://recaptcha-demo.appspot.com/recaptcha-v3-request-scores.php",
+    "date": "2026-10-02T16:57:27.262Z",
+    "version": "154.0.8037.57",
+    "status": 200,
+    "finished": "2026-10-02T16:57:41.659Z",
+    "fingerprint": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+      "platform": "MacIntel",
+      "webdriver": false,
+      "languages": [
+        "en-US",
+        "en"
+      ],
+      "hardwareConcurrency": 4,
+      "deviceMemory": 16,
+      "timezone": "UTC",
+      "plugins": [
+        "PDF Viewer",
+        "Chrome PDF Viewer",
+        "Chromium PDF Viewer",
+        "Microsoft Edge PDF Viewer",
+        "WebKit built-in PDF"
+      ],
+      "screen": {
+        "width": 1366,
+        "height": 768
+      },
+      "window": {
+        "innerWidth": 1366,
+        "innerHeight": 647,
+        "outerWidth": 1366,
+        "outerHeight": 738,
+        "devicePixelRatio": 2
+      },
+      "webgl": [
+        "Google Inc. (Apple)",
+        "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)"
+      ]
+    },
+    "excerpt": "Received response from our backend:\n{\n  \"success\": true,\n  \"hostname\": \"recaptcha-demo.appspot.com\",\n  \"challenge_ts\": \"2026-10-02T16:57:29Z\",\n  \"apk_package_name\": null,\n  \"score\": 0.9,\n  \"action\": \"examples/v3scores\",\n  \"error-codes\": []\n}\n\n⤴️ Try again",
+    "pageErrors": []
+  },
+  {
+    "label": "cloak154",
+    "site": "sannysoft",
+    "url": "https://bot.sannysoft.com/",
+    "date": "2026-10-02T16:54:28.285Z",
+    "version": "154.0.8037.57",
+    "status": 200,
+    "finished": "2026-10-02T16:54:43.310Z",
+    "fingerprint": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+      "platform": "MacIntel",
+      "webdriver": false,
+      "languages": [
+        "en-US",
+        "en"
+      ],
+      "hardwareConcurrency": 4,
+      "deviceMemory": 16,
+      "timezone": "UTC",
+      "plugins": [
+        "PDF Viewer",
+        "Chrome PDF Viewer",
+        "Chromium PDF Viewer",
+        "Microsoft Edge PDF Viewer",
+        "WebKit built-in PDF"
+      ],
+      "screen": {
+        "width": 1366,
+        "height": 768
+      },
+      "window": {
+        "innerWidth": 1366,
+        "innerHeight": 647,
+        "outerWidth": 1366,
+        "outerHeight": 738,
+        "devicePixelRatio": 2
+      },
+      "webgl": [
+        "Google Inc. (Apple)",
+        "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)"
+      ]
+    },
+    "failedRows": [],
+    "excerpt": "Intoli.com tests + additions\nTest Name\tResult\nUser Agent\n(Old)\n\tMozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36\nWebDriver\n(New)\n\tmissing (passed)\nWebDriver Advanced\tpassed\nChrome\n(New)\n\tpresent (passed)\nPermissions\n(New)\n\tprompt\nPlugins Length\n(Old)\n\t5\nPlugins is of type PluginArray\tpassed\nLanguages\n(Old)\n\ten-US,en\nWebGL Vendor\tGoogle Inc. (Apple)\nWebGL Renderer\tANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)\nBroken Image Dimensions\t16x16\nFingerprint Scanner tests\nPHANTOM_UA\tok\t\n{\n     \"userAgent\": \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36\"\n}\n\nPHANTOM_PROPERTIES\tok\t\n{\n     \"attributesFound\": [\n          false,\n          false,\n          false\n     ]\n}\n\nPHANTOM_ETSL\tok\t\n{\n     \"etsl\": 33\n}\n\nPHANTOM_LANGUAGE\tok\t\n{\n     \"languages\": [\n          \"en-US\",\n          \"en\"\n     ]\n}\n\nPHANTOM_WEBSOCKET\tok\t\n{}\n\nMQ_SCREEN\tok\t\n{}\n\nPHANTOM_OVERFLOW\tok\t\n{\n     \"depth\": 10145,\n     \"errorMessage\": \"Maximum call stack size exceeded\",\n     \"errorName\": \"RangeError\",\n     \"errorStacklength\": 846\n}\n\nPHANTOM_WINDOW_HEIGHT\tok\t\n{\n     \"wInnerHeight\": 647,\n     \"wOuterHeight\": 738,\n     \"wOuterWidth\": 1366,\n     \"wInnerWidth\": 1366,\n     \"wScreenX\": 0,\n     \"wPageXOffset\": 0,\n     \"wPageYOffset\": 0,\n     \"cWidth\": 1335,\n     \"cHeight\": 1636,\n     \"sWidth\": 1366,\n     \"sHeight\": 768,\n     \"sAvailWidth\": 1366,\n     \"sAvailHeight\": 738,\n     \"sColorDepth\": 30,\n     \"sPixelDepth\": 30,\n     \"wDevicePixelRatio\": 2\n}\n\nHEADCHR_UA\tok\t\n{\n     \"",
+    "pageErrors": []
+  },
+  {
+    "label": "lightpanda-default",
+    "site": "browserscan",
+    "url": "https://www.browserscan.net/bot-detection",
+    "date": "2026-10-02T16:55:56.251Z",
+    "version": "124.0.6367.29",
+    "status": 200,
+    "finished": "2026-10-02T16:56:15.149Z",
+    "fingerprint": {
+      "userAgent": "Lightpanda/1.0",
+      "platform": "Linux x86_64",
+      "webdriver": false,
+      "languages": [
+        "en-US",
+        "en"
+      ],
+      "hardwareConcurrency": 4,
+      "deviceMemory": 8,
+      "timezone": "America/Los_Angeles",
+      "plugins": [],
+      "screen": {
+        "width": 1920,
+        "height": 1080
+      },
+      "window": {
+        "error": "ReferenceError: outerWidth is not defined"
+      },
+      "webgl": null
+    },
+    "excerpt": "blog Antidetect Browser\nUtilities\nEN\nSign In\nHome>Bot Detection\nTest Results:\nWebdriver\nUser-Agent\nCDP\nNavigator\nBrowser bot detection guide\n\nBrowserScan detects automated activities on scripts or browsers. It analyzes various browser properties to determine whether the browser environment is controlled by a robot. Various human-machine verification products such as Cloudflare Turnstile and Google reCAPTCHA include this aspect of detection, which is usually divided into three categories:\n\nNormal bots - usually bots belonging to well-known search engines (Google, Bing, Baidu). It crawls websites to create a searchable index of content. A good bot can also be a monitoring or uptime checking tool.\nMalicious bots - Usually automated tools like Selenium, Puppeteer, Playwright or anything that pretends to be a good search bot. It can take over accounts, submit spam, steal passwords, scrape data, waste resources, and more.Discord bots.\nNo bots detected - the visitor could be a human using a regular browser.\nAd\nIdentification and bot detection\n\nThe combination of fingerprinting and bot detection gives you a powerful tool to protect against online fraud and produces the best results when used together.\n\nWebDriver\nWebDriver Advance\nSelenium\nNightmareJS\nPhantomJS\nAwesomium\nCef\nCefSharp\nCoaches\nFMiner\nBorn\nPhantomas\nRhino\nWebdriverio\nHeadless Chrome\nChrome DevTools Protocol Detection\n\nDetectable use of developer tools to simulate browsers or control them via related developer protocols.\n\nCDP\nDev Tool\nNative Navigator\n\nDetect whether the Navigator is deceptive. Some browser plug-ins or ",
+    "pageErrors": []
+  },
+  {
+    "label": "lightpanda-default",
+    "site": "creepjs",
+    "url": "https://abrahamjuliot.github.io/creepjs/",
+    "date": "2026-10-02T16:54:52.923Z",
+    "version": "124.0.6367.29",
+    "status": 200,
+    "finished": "2026-10-02T16:55:13.877Z",
+    "fingerprint": {
+      "userAgent": "Lightpanda/1.0",
+      "platform": "Linux x86_64",
+      "webdriver": false,
+      "languages": [
+        "en-US",
+        "en"
+      ],
+      "hardwareConcurrency": 4,
+      "deviceMemory": 8,
+      "timezone": "America/Los_Angeles",
+      "plugins": [],
+      "screen": {
+        "width": 1920,
+        "height": 1080
+      },
+      "window": {
+        "error": "ReferenceError: outerWidth is not defined"
+      },
+      "webgl": null
+    },
+    "excerpt": "",
+    "pageErrors": []
+  },
+  {
+    "label": "lightpanda-default",
+    "site": "deviceinfo",
+    "url": "https://deviceandbrowserinfo.com/are_you_a_bot",
+    "date": "2026-10-02T16:55:15.645Z",
+    "version": "124.0.6367.29",
+    "status": 200,
+    "finished": "2026-10-02T16:55:32.818Z",
+    "fingerprint": {
+      "userAgent": "Lightpanda/1.0",
+      "platform": "Linux x86_64",
+      "webdriver": false,
+      "languages": [
+        "en-US",
+        "en"
+      ],
+      "hardwareConcurrency": 4,
+      "deviceMemory": 8,
+      "timezone": "America/Los_Angeles",
+      "plugins": [],
+      "screen": {
+        "width": 1920,
+        "height": 1080
+      },
+      "window": {
+        "error": "ReferenceError: outerWidth is not defined"
+      },
+      "webgl": null
+    },
+    "excerpt": "Search proxy IP\nProxy Detection Database\nPricing\nMy Device\nFingerprinting bot test\nBehavioral bot test\nMy fingerprint\nAPIs\nMy IP address\nMy HTTP headers\nList of user agents\nEmail domain verification\nTor IP addresses\nDisposable email domains\nTemporary phone numbers\nData\nList of user agentsTor IP addressesEmail domain verificationProxies IPs lookupTemporary email providersTemporary phone numbers\nBlog\nLogin\n\n🔥 New: Bot detection & fingerprinting playground — test your browser signals\n\nAre you a bot?\nRaw detection details\nCopy\nHow does this test work?\n\nYou can use this page to test whether or not your bot is detected. The test is based only on fingerprinting signals:\n\nClient-side signals: Browser fingerprinting (requires JavaScript)\nServer-side signals: HTTP headers (future: TCP/TLS fingerprinting)\n\nThis test does not use IP reputation or user behavior. You can run several tests in a row; it won't affect the result.\n\nNew: We have added a new test that detects suspicious client-side behavior, such as mouse movements, typing speed, and form submission. It also detects CDP mouse leak. You can find it here.\n\n▶Detection signals explained\n\nhasBotUserAgent: True if the User-Agent string (navigator.userAgent) matches known bot, crawler, or automation tool patterns.\n\nhasWebdriverTrue: True if navigator.webdriver is set to true, which is a direct indicator of browser automation (e.g., Selenium, Puppeteer, Playwright).\n\nhasWebdriverInFrameTrue: True if navigator.webdriver is detected as true inside an iframe.\n\nisPlaywright: True if Playwright-specific global variables or bindings (such as",
+    "pageErrors": []
+  },
+  {
+    "label": "lightpanda-default",
+    "site": "fingerprint",
+    "url": "https://demo.fingerprint.com/playground",
+    "date": "2026-10-02T16:56:16.873Z",
+    "version": "124.0.6367.29",
+    "status": 200,
+    "finished": "2026-10-02T16:56:37.414Z",
+    "fingerprint": {
+      "userAgent": "Lightpanda/1.0",
+      "platform": "Linux x86_64",
+      "webdriver": false,
+      "languages": [
+        "en-US",
+        "en"
+      ],
+      "hardwareConcurrency": 4,
+      "deviceMemory": 8,
+      "timezone": "America/Los_Angeles",
+      "plugins": [],
+      "screen": {
+        "width": 1920,
+        "height": 1080
+      },
+      "window": {
+        "error": "ReferenceError: outerWidth is not defined"
+      },
+      "webgl": null
+    },
+    "excerpt": "JavaScript Agent Error: Client timeout.",
+    "pageErrors": []
+  },
+  {
+    "label": "lightpanda-default",
+    "site": "incolumitas",
+    "url": "https://bot.incolumitas.com/",
+    "date": "2026-10-02T16:55:34.530Z",
+    "version": "124.0.6367.29",
+    "status": 200,
+    "finished": "2026-10-02T16:55:54.594Z",
+    "fingerprint": {
+      "userAgent": "Lightpanda/1.0",
+      "platform": "Linux x86_64",
+      "webdriver": false,
+      "languages": [
+        "en-US",
+        "en"
+      ],
+      "hardwareConcurrency": 4,
+      "deviceMemory": 8,
+      "timezone": "America/Los_Angeles",
+      "plugins": [],
+      "screen": {
+        "width": 1920,
+        "height": 1080
+      },
+      "window": {
+        "error": "ReferenceError: outerWidth is not defined"
+      },
+      "webgl": null
+    },
+    "excerpt": "New Detection Tests [1] [2] [3] [4]\n{\n  \"puppeteerEvaluationScript\": \"OK\",\n  \"webdriverPresent\": \"OK\",\n  \"connectionRTT\": \"UNKNOWN\",\n  \"puppeteerExtraStealthUsed\": \"OK\"\n}\nOld Bot Detection Tests (Intoli.com tests + additions, Fingerprint Scanner tests)\n{\n  \"intoli\": {\n    \"userAgent\": \"OK\",\n    \"webDriver\": \"OK\",\n    \"webDriverAdvanced\": \"FAIL\",\n    \"pluginsLength\": \"FAIL\",\n    \"pluginArray\": \"FAIL\",\n    \"languages\": \"OK\"\n  },\n  \"fpscanner\": {\n    \"PHANTOM_UA\": \"OK\",\n    \"PHANTOM_PROPERTIES\": \"OK\",\n    \"PHANTOM_ETSL\": \"OK\",\n    \"PHANTOM_LANGUAGE\": \"OK\",\n    \"PHANTOM_WEBSOCKET\": \"OK\",\n    \"MQ_SCREEN\": \"OK\",\n    \"PHANTOM_OVERFLOW\": \"OK\",\n    \"PHANTOM_WINDOW_HEIGHT\": \"OK\",\n    \"HEADCHR_UA\": \"OK\",\n    \"WEBDRIVER\": \"OK\",\n    \"HEADCHR_CHROME_OBJ\": \"OK\",\n    \"HEADCHR_PERMISSIONS\": \"OK\",\n    \"HEADCHR_PLUGINS\": \"OK\",\n    \"HEADCHR_IFRAME\": \"OK\",\n    \"CHR_DEBUG_TOOLS\": \"OK\",\n    \"SELENIUM_DRIVER\": \"OK\",\n    \"CHR_BATTERY\": \"OK\",\n    \"CHR_MEMORY\": \"FAIL\",\n    \"TRANSPARENT_PIXEL\": \"OK\",\n    \"SEQUENTUM\": \"OK\",\n    \"VIDEO_CODECS\": \"OK\"\n  }\n}\n",
+    "pageErrors": []
+  },
+  {
+    "label": "lightpanda-default",
+    "site": "iphey",
+    "url": "https://iphey.com/",
+    "date": "2026-10-02T16:56:39.801Z",
+    "version": "124.0.6367.29",
+    "status": 200,
+    "fingerprint": {},
+    "processFailure": "Playwright unhandled ProtocolError: Page.handleJavaScriptDialog: No dialog is showing (exit 1); see run.log",
+    "excerpt": "",
+    "pageErrors": []
+  },
+  {
+    "label": "lightpanda-default",
+    "site": "rebrowser",
+    "url": "https://bot-detector.rebrowser.net/",
+    "date": "2026-10-02T16:54:44.587Z",
+    "version": "124.0.6367.29",
+    "status": 200,
+    "detectionsError": "Error: page.evaluate: TypeError: window.dummyFn is not a function\n    at eval (eval at evaluate (:311:30), <anonymous>:1:14)\n    at UtilityScript.evaluate (<anonymous>:313:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)",
+    "finished": "2026-10-02T16:54:50.935Z",
+    "fingerprint": {
+      "userAgent": "Lightpanda/1.0",
+      "platform": "Linux x86_64",
+      "webdriver": false,
+      "languages": [
+        "en-US",
+        "en"
+      ],
+      "hardwareConcurrency": 4,
+      "deviceMemory": 8,
+      "timezone": "America/Los_Angeles",
+      "plugins": [],
+      "screen": {
+        "width": 1920,
+        "height": 1080
+      },
+      "window": {
+        "error": "ReferenceError: outerWidth is not defined"
+      },
+      "webgl": null
+    },
+    "excerpt": "🕵️ rebrowser-bot-detector\nModern tests to detect automated browser behavior. See github repo for more details. How to properly run the tests?\n\nThese tests are designed for Chromium based browsers only.\n\nTo properly trigger all the tests you need to add the code below to your automation script and open this page again.\n\n                /* puppeteer & playwright */\n                // dummyFn - must be called in the main context\n                await page.evaluate(() => window.dummyFn())\n                \n                // exposeFunctionLeak\n                await page.exposeFunction('exposedFn', () => { console.log('exposedFn call') })\n                \n                // sourceUrlLeak\n                await page.evaluate(() => document.getElementById('detections-json'))\n                \n                // mainWorldExecution - must be called in an isolated context\n                /* puppeteer */\n                await page.mainFrame().isolatedRealm().evaluate(() => document.getElementsByClassName('div'))\n                \n                /* \n                playwright - there is no way to explicitly evaluate script in an isolated context\n                follow rebrowser-patches on github for the fix\n                */\n                await page.evaluate(() => document.getElementsByClassName('div'))\n            \nTest name\tTime since load\tNotes\nJSON\nSponsored by rebrowser.net — the ultimate stealth browser and scraping solution fueled by AI.",
+    "pageErrors": []
+  },
+  {
+    "label": "lightpanda-default",
+    "site": "recaptcha",
+    "url": "https://recaptcha-demo.appspot.com/recaptcha-v3-request-scores.php",
+    "date": "2026-10-02T16:56:47.258Z",
+    "version": "124.0.6367.29",
+    "status": 200,
+    "finished": "2026-10-02T16:57:00.298Z",
+    "fingerprint": {
+      "userAgent": "Lightpanda/1.0",
+      "platform": "Linux x86_64",
+      "webdriver": false,
+      "languages": [
+        "en-US",
+        "en"
+      ],
+      "hardwareConcurrency": 4,
+      "deviceMemory": 8,
+      "timezone": "America/Los_Angeles",
+      "plugins": [],
+      "screen": {
+        "width": 1920,
+        "height": 1080
+      },
+      "window": {
+        "error": "ReferenceError: outerWidth is not defined"
+      },
+      "webgl": null
+    },
+    "excerpt": "reCAPTCHA demo\nRequest scores\n\n↩️ Home\n\nThe reCAPTCHA v3 API provides a confidence score for each request.\n\nNOTE:This is a sample implementation, the score returned here is not a reflection on your Google account or type of traffic. In production, refer to the distribution of scores shown in your admin interface and adjust your own threshold accordingly. Do not raise issues regarding the score you see here.\n\nreCAPTCHA script loading\ngrecaptcha.ready() fired, calling\ngrecaptcha.execute('6LdKlZEpAAAAAAOQjzC2v_d36tWxCl6dWsozdSy9', {action: 'examples/v3scores'})'\nReceived token from reCAPTCHA service, sending to our backend with:\nfetch('/recaptcha-v3-verify.php?token=abc123\nReceived response from our backend:\n{\"json\": \"from-backend\"}\n\n⤴️ Try again",
+    "pageErrors": []
+  },
+  {
+    "label": "lightpanda-default",
+    "site": "sannysoft",
+    "url": "https://bot.sannysoft.com/",
+    "date": "2026-10-02T16:54:29.677Z",
+    "version": "124.0.6367.29",
+    "status": 200,
+    "finished": "2026-10-02T16:54:42.843Z",
+    "fingerprint": {
+      "userAgent": "Lightpanda/1.0",
+      "platform": "Linux x86_64",
+      "webdriver": false,
+      "languages": [
+        "en-US",
+        "en"
+      ],
+      "hardwareConcurrency": 4,
+      "deviceMemory": 8,
+      "timezone": "America/Los_Angeles",
+      "plugins": [],
+      "screen": {
+        "width": 1920,
+        "height": 1080
+      },
+      "window": {
+        "error": "ReferenceError: outerWidth is not defined"
+      },
+      "webgl": null
+    },
+    "failedRows": [
+      {
+        "text": "Chrome (New)\tmissing (failed)",
+        "classes": [
+          "",
+          "failed result"
+        ]
+      },
+      {
+        "text": "Plugins Length (Old)\t0",
+        "classes": [
+          "",
+          "failed result"
+        ]
+      },
+      {
+        "text": "Plugins is of type PluginArray\tfailed",
+        "classes": [
+          "",
+          "failed result"
+        ]
+      },
+      {
+        "text": "WebGL Vendor\tCanvas has no webgl context",
+        "classes": [
+          "",
+          "failed"
+        ]
+      },
+      {
+        "text": "WebGL Renderer\tCanvas has no webgl context",
+        "classes": [
+          "",
+          "failed"
+        ]
+      },
+      {
+        "text": "CHR_MEMORY\tFAIL\t\n{}",
+        "classes": [
+          "",
+          "failed",
+          ""
+        ]
+      }
+    ],
+    "excerpt": "Intoli.com tests + additions\nTest Name\tResult\nUser Agent (Old)\tLightpanda/1.0\nWebDriver (New)\tmissing (passed)\nWebDriver Advanced\tpassed\nChrome (New)\tmissing (failed)\nPermissions (New)\tprompt\nPlugins Length (Old)\t0\nPlugins is of type PluginArray\tfailed\nLanguages (Old)\ten-US,en\nWebGL Vendor\tCanvas has no webgl context\nWebGL Renderer\tCanvas has no webgl context\nBroken Image Dimensions\t\nFingerprint Scanner tests\nPHANTOM_UA\tok\t\n{\n     \"userAgent\": \"Lightpanda/1.0\"\n}\n\nPHANTOM_PROPERTIES\tok\t\n{\n     \"attributesFound\": [\n          false,\n          false,\n          false\n     ]\n}\n\nPHANTOM_ETSL\tok\t\n{\n     \"etsl\": 33\n}\n\nPHANTOM_LANGUAGE\tok\t\n{\n     \"languages\": [\n          \"en-US\",\n          \"en\"\n     ]\n}\n\nPHANTOM_WEBSOCKET\tok\t\n{}\n\nMQ_SCREEN\tok\t\n{}\n\nPHANTOM_OVERFLOW\tok\t\n{\n     \"depth\": 10728,\n     \"errorMessage\": \"Maximum call stack size exceeded\",\n     \"errorName\": \"RangeError\",\n     \"errorStacklength\": 846\n}\n\nPHANTOM_WINDOW_HEIGHT\tok\t\n{\n     \"wInnerHeight\": 1080,\n     \"wInnerWidth\": 1920,\n     \"wPageXOffset\": 0,\n     \"wPageYOffset\": 0,\n     \"cWidth\": 1920,\n     \"cHeight\": 2425,\n     \"sWidth\": 1920,\n     \"sHeight\": 1080,\n     \"sAvailWidth\": 1920,\n     \"sAvailHeight\": 1040,\n     \"sColorDepth\": 24,\n     \"sPixelDepth\": 24,\n     \"wDevicePixelRatio\": 1\n}\n\nHEADCHR_UA\tok\t\n{\n     \"userAgent\": \"Lightpanda/1.0\"\n}\n\nHEADCHR_CHROME_OBJ\tok\t\n{}\n\nHEADCHR_PERMISSIONS\tok\t\n{}\n\nHEADCHR_PLUGINS\tok\t\n{\n     \"plugins\": []\n}\n\nHEADCHR_IFRAME\tok\t\n{}\n\nCHR_DEBUG_TOOLS\tok\t\n{}\n\nSELENIUM_DRIVER\tok\t\n{\n     \"attributesFound\": [\n          false,\n          false,\n          false,\n          false,\n          false,\n      ",
+    "pageErrors": []
+  },
+  {
+    "label": "lightpanda-resources",
+    "site": "browserscan",
+    "url": "https://www.browserscan.net/bot-detection",
+    "date": "2026-10-02T16:55:56.641Z",
+    "version": "124.0.6367.29",
+    "status": 200,
+    "finished": "2026-10-02T16:56:15.677Z",
+    "fingerprint": {
+      "userAgent": "Lightpanda/1.0",
+      "platform": "Linux x86_64",
+      "webdriver": false,
+      "languages": [
+        "en-US",
+        "en"
+      ],
+      "hardwareConcurrency": 4,
+      "deviceMemory": 8,
+      "timezone": "America/Los_Angeles",
+      "plugins": [],
+      "screen": {
+        "width": 1920,
+        "height": 1080
+      },
+      "window": {
+        "error": "ReferenceError: outerWidth is not defined"
+      },
+      "webgl": null
+    },
+    "excerpt": "blog Antidetect Browser\nUtilities\nEN\nSign In\nHome>Bot Detection\nTest Results:\nWebdriver\nUser-Agent\nCDP\nNavigator\nBrowser bot detection guide\n\nBrowserScan detects automated activities on scripts or browsers. It analyzes various browser properties to determine whether the browser environment is controlled by a robot. Various human-machine verification products such as Cloudflare Turnstile and Google reCAPTCHA include this aspect of detection, which is usually divided into three categories:\n\nNormal bots - usually bots belonging to well-known search engines (Google, Bing, Baidu). It crawls websites to create a searchable index of content. A good bot can also be a monitoring or uptime checking tool.\nMalicious bots - Usually automated tools like Selenium, Puppeteer, Playwright or anything that pretends to be a good search bot. It can take over accounts, submit spam, steal passwords, scrape data, waste resources, and more.Discord bots.\nNo bots detected - the visitor could be a human using a regular browser.\nAd\nIdentification and bot detection\n\nThe combination of fingerprinting and bot detection gives you a powerful tool to protect against online fraud and produces the best results when used together.\n\nWebDriver\nWebDriver Advance\nSelenium\nNightmareJS\nPhantomJS\nAwesomium\nCef\nCefSharp\nCoaches\nFMiner\nBorn\nPhantomas\nRhino\nWebdriverio\nHeadless Chrome\nChrome DevTools Protocol Detection\n\nDetectable use of developer tools to simulate browsers or control them via related developer protocols.\n\nCDP\nDev Tool\nNative Navigator\n\nDetect whether the Navigator is deceptive. Some browser plug-ins or ",
+    "pageErrors": []
+  },
+  {
+    "label": "lightpanda-resources",
+    "site": "creepjs",
+    "url": "https://abrahamjuliot.github.io/creepjs/",
+    "date": "2026-10-02T16:54:52.922Z",
+    "version": "124.0.6367.29",
+    "status": 200,
+    "finished": "2026-10-02T16:55:13.939Z",
+    "fingerprint": {
+      "userAgent": "Lightpanda/1.0",
+      "platform": "Linux x86_64",
+      "webdriver": false,
+      "languages": [
+        "en-US",
+        "en"
+      ],
+      "hardwareConcurrency": 4,
+      "deviceMemory": 8,
+      "timezone": "America/Los_Angeles",
+      "plugins": [],
+      "screen": {
+        "width": 1920,
+        "height": 1080
+      },
+      "window": {
+        "error": "ReferenceError: outerWidth is not defined"
+      },
+      "webgl": null
+    },
+    "excerpt": "FP ID: Computing...\nFuzzy: 0000000000000000000000000000000000000000000000000000000000000000\n0 ms\nWebRTC\nhost connection:\nfoundation/ip:\nsdp capabilities:\nstun connection:\ndevices (0):\nTimezone\nIntl\nHeadless\nchromium:\n0% like headless:\n0% headless:\n0% stealth:\nplatform hints:\nResistance\nprivacy:\nsecurity:\nmode:\nextension:\nWorker\nlang/timezone:\ngpu:\nuserAgent:\ndevice:\nuserAgentData:\nWebGL\nimages:\npixels:\nparams (0):\nexts (0):\ngpu:\nScreen\n...screen:\n....avail:\ntouch:\ndepth:\nviewport:\nCanvas 2d\ndata:\nrendering:\ntextMetrics:\nFonts\nload (0):\napps:\nDOMRect\nelems A:\nelems B:\nrange A:\nrange B:\nSVGRect\nbBox:\nchar:\nsubs:\ntext:\nAudio\nsum:\ngain:\nfreq:\ntime:\ntrap:\nunique:\ndata:\ncopy:\nvalues:\nSpeech\nlocal (0):\nremote (0):\nlang (0):\ndefault:\nMedia\nmimes (0):\ndevices (0):\nFeatures:\nJS/DOM:\nCSS:\nWindow:\nCSS Media Queries\n@media:\nmatchMedia:\ntouch device:\nscreen query:\nComputed Style\nkeys (0):\nsystem styles:\nsystem\nMath\nresults:\n0% of engine\nError\nresults:\n0% of engine\nWindow\nkeys (0):\n0% of version\nHTMLElement\nkeys (0):\n0% engine\nNavigator\nproperties (0):\ndnt:\ngpc:\nlang:\nmimeTypes (0):\npermissions (0):\nplugins (0):\nvendor:\nwebgpu:\nuserAgentData:\ndevice:\nua parsed:\nuserAgent:\nappVersion:\nStatus\nnetwork:\nbattery:\navailable:\nTests\nWorkers\nIframes\nFonts\nTimezone\nWindow Version\nScreen\nPrototype\nDOMRect\nEmojis\nMath\nMachine\nChrome Extensions\nJS Proxy",
+    "pageErrors": []
+  },
+  {
+    "label": "lightpanda-resources",
+    "site": "deviceinfo",
+    "url": "https://deviceandbrowserinfo.com/are_you_a_bot",
+    "date": "2026-10-02T16:55:15.735Z",
+    "version": "124.0.6367.29",
+    "status": 200,
+    "finished": "2026-10-02T16:55:33.198Z",
+    "fingerprint": {
+      "userAgent": "Lightpanda/1.0",
+      "platform": "Linux x86_64",
+      "webdriver": false,
+      "languages": [
+        "en-US",
+        "en"
+      ],
+      "hardwareConcurrency": 4,
+      "deviceMemory": 8,
+      "timezone": "America/Los_Angeles",
+      "plugins": [],
+      "screen": {
+        "width": 1920,
+        "height": 1080
+      },
+      "window": {
+        "error": "ReferenceError: outerWidth is not defined"
+      },
+      "webgl": null
+    },
+    "excerpt": "Search proxy IP\nProxy Detection Database\nPricing\nMy Device\nFingerprinting bot test\nBehavioral bot test\nMy fingerprint\nAPIs\nMy IP address\nMy HTTP headers\nList of user agents\nEmail domain verification\nTor IP addresses\nDisposable email domains\nTemporary phone numbers\nData\nList of user agentsTor IP addressesEmail domain verificationProxies IPs lookupTemporary email providersTemporary phone numbers\nBlog\nLogin\n\n🔥 New: Bot detection & fingerprinting playground — test your browser signals\n\nAre you a bot?\nRaw detection details\nCopy\nHow does this test work?\n\nYou can use this page to test whether or not your bot is detected. The test is based only on fingerprinting signals:\n\nClient-side signals: Browser fingerprinting (requires JavaScript)\nServer-side signals: HTTP headers (future: TCP/TLS fingerprinting)\n\nThis test does not use IP reputation or user behavior. You can run several tests in a row; it won't affect the result.\n\nNew: We have added a new test that detects suspicious client-side behavior, such as mouse movements, typing speed, and form submission. It also detects CDP mouse leak. You can find it here.\n\n▶Detection signals explained\n\nhasBotUserAgent: True if the User-Agent string (navigator.userAgent) matches known bot, crawler, or automation tool patterns.\n\nhasWebdriverTrue: True if navigator.webdriver is set to true, which is a direct indicator of browser automation (e.g., Selenium, Puppeteer, Playwright).\n\nhasWebdriverInFrameTrue: True if navigator.webdriver is detected as true inside an iframe.\n\nisPlaywright: True if Playwright-specific global variables or bindings (such as",
+    "pageErrors": []
+  },
+  {
+    "label": "lightpanda-resources",
+    "site": "fingerprint",
+    "url": "https://demo.fingerprint.com/playground",
+    "date": "2026-10-02T16:56:17.537Z",
+    "version": "124.0.6367.29",
+    "status": 200,
+    "finished": "2026-10-02T16:56:38.160Z",
+    "fingerprint": {
+      "userAgent": "Lightpanda/1.0",
+      "platform": "Linux x86_64",
+      "webdriver": false,
+      "languages": [
+        "en-US",
+        "en"
+      ],
+      "hardwareConcurrency": 4,
+      "deviceMemory": 8,
+      "timezone": "America/Los_Angeles",
+      "plugins": [],
+      "screen": {
+        "width": 1920,
+        "height": 1080
+      },
+      "window": {
+        "error": "ReferenceError: outerWidth is not defined"
+      },
+      "webgl": null
+    },
+    "excerpt": "JavaScript Agent Error: bad request.",
+    "pageErrors": []
+  },
+  {
+    "label": "lightpanda-resources",
+    "site": "incolumitas",
+    "url": "https://bot.incolumitas.com/",
+    "date": "2026-10-02T16:55:34.931Z",
+    "version": "124.0.6367.29",
+    "status": 200,
+    "finished": "2026-10-02T16:55:54.926Z",
+    "fingerprint": {
+      "userAgent": "Lightpanda/1.0",
+      "platform": "Linux x86_64",
+      "webdriver": false,
+      "languages": [
+        "en-US",
+        "en"
+      ],
+      "hardwareConcurrency": 4,
+      "deviceMemory": 8,
+      "timezone": "America/Los_Angeles",
+      "plugins": [],
+      "screen": {
+        "width": 1920,
+        "height": 1080
+      },
+      "window": {
+        "error": "ReferenceError: outerWidth is not defined"
+      },
+      "webgl": null
+    },
+    "excerpt": "New Detection Tests [1] [2] [3] [4]\n{\n  \"puppeteerEvaluationScript\": \"OK\",\n  \"webdriverPresent\": \"OK\",\n  \"connectionRTT\": \"UNKNOWN\",\n  \"puppeteerExtraStealthUsed\": \"OK\",\n  \"inconsistentWebWorkerNavigatorPropery\": \"OK\"\n}\nOld Bot Detection Tests (Intoli.com tests + additions, Fingerprint Scanner tests)\n{\n  \"intoli\": {\n    \"userAgent\": \"OK\",\n    \"webDriver\": \"OK\",\n    \"webDriverAdvanced\": \"FAIL\",\n    \"pluginsLength\": \"FAIL\",\n    \"pluginArray\": \"FAIL\",\n    \"languages\": \"OK\"\n  },\n  \"fpscanner\": {\n    \"PHANTOM_UA\": \"OK\",\n    \"PHANTOM_PROPERTIES\": \"OK\",\n    \"PHANTOM_ETSL\": \"OK\",\n    \"PHANTOM_LANGUAGE\": \"OK\",\n    \"PHANTOM_WEBSOCKET\": \"OK\",\n    \"MQ_SCREEN\": \"OK\",\n    \"PHANTOM_OVERFLOW\": \"OK\",\n    \"PHANTOM_WINDOW_HEIGHT\": \"OK\",\n    \"HEADCHR_UA\": \"OK\",\n    \"WEBDRIVER\": \"OK\",\n    \"HEADCHR_CHROME_OBJ\": \"OK\",\n    \"HEADCHR_PERMISSIONS\": \"OK\",\n    \"HEADCHR_PLUGINS\": \"OK\",\n    \"HEADCHR_IFRAME\": \"OK\",\n    \"CHR_DEBUG_TOOLS\": \"OK\",\n    \"SELENIUM_DRIVER\": \"OK\",\n    \"CHR_BATTERY\": \"OK\",\n    \"CHR_MEMORY\": \"FAIL\",\n    \"TRANSPARENT_PIXEL\": \"OK\",\n    \"SEQUENTUM\": \"OK\",\n    \"VIDEO_CODECS\": \"OK\"\n  }\n}\n",
+    "pageErrors": []
+  },
+  {
+    "label": "lightpanda-resources",
+    "site": "iphey",
+    "url": "https://iphey.com/",
+    "date": "2026-10-02T16:56:40.552Z",
+    "version": "124.0.6367.29",
+    "status": 200,
+    "fingerprint": {},
+    "processFailure": "Playwright unhandled ProtocolError: Page.handleJavaScriptDialog: No dialog is showing (exit 1); see run.log",
+    "excerpt": "",
+    "pageErrors": []
+  },
+  {
+    "label": "lightpanda-resources",
+    "site": "rebrowser",
+    "url": "https://bot-detector.rebrowser.net/",
+    "date": "2026-10-02T16:54:44.837Z",
+    "version": "124.0.6367.29",
+    "status": 200,
+    "detectionsError": "Error: page.evaluate: TypeError: window.dummyFn is not a function\n    at eval (eval at evaluate (:311:30), <anonymous>:1:14)\n    at UtilityScript.evaluate (<anonymous>:313:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)",
+    "finished": "2026-10-02T16:54:50.935Z",
+    "fingerprint": {
+      "userAgent": "Lightpanda/1.0",
+      "platform": "Linux x86_64",
+      "webdriver": false,
+      "languages": [
+        "en-US",
+        "en"
+      ],
+      "hardwareConcurrency": 4,
+      "deviceMemory": 8,
+      "timezone": "America/Los_Angeles",
+      "plugins": [],
+      "screen": {
+        "width": 1920,
+        "height": 1080
+      },
+      "window": {
+        "error": "ReferenceError: outerWidth is not defined"
+      },
+      "webgl": null
+    },
+    "excerpt": "🕵️ rebrowser-bot-detector\nModern tests to detect automated browser behavior. See github repo for more details. How to properly run the tests?\nTest name\tTime since load\tNotes\nJSON\nSponsored by rebrowser.net — the ultimate stealth browser and scraping solution fueled by AI.",
+    "pageErrors": []
+  },
+  {
+    "label": "lightpanda-resources",
+    "site": "recaptcha",
+    "url": "https://recaptcha-demo.appspot.com/recaptcha-v3-request-scores.php",
+    "date": "2026-10-02T16:56:47.876Z",
+    "version": "124.0.6367.29",
+    "status": 200,
+    "finished": "2026-10-02T16:57:00.834Z",
+    "fingerprint": {
+      "userAgent": "Lightpanda/1.0",
+      "platform": "Linux x86_64",
+      "webdriver": false,
+      "languages": [
+        "en-US",
+        "en"
+      ],
+      "hardwareConcurrency": 4,
+      "deviceMemory": 8,
+      "timezone": "America/Los_Angeles",
+      "plugins": [],
+      "screen": {
+        "width": 1920,
+        "height": 1080
+      },
+      "window": {
+        "error": "ReferenceError: outerWidth is not defined"
+      },
+      "webgl": null
+    },
+    "excerpt": "reCAPTCHA demo\nRequest scores\n\n↩️ Home\n\nThe reCAPTCHA v3 API provides a confidence score for each request.\n\nNOTE:This is a sample implementation, the score returned here is not a reflection on your Google account or type of traffic. In production, refer to the distribution of scores shown in your admin interface and adjust your own threshold accordingly. Do not raise issues regarding the score you see here.\n\nreCAPTCHA script loading\ngrecaptcha.ready() fired, calling\ngrecaptcha.execute('6LdKlZEpAAAAAAOQjzC2v_d36tWxCl6dWsozdSy9', {action: 'examples/v3scores'})'\n\n⤴️ Try again",
+    "pageErrors": []
+  },
+  {
+    "label": "lightpanda-resources",
+    "site": "sannysoft",
+    "url": "https://bot.sannysoft.com/",
+    "date": "2026-10-02T16:54:29.662Z",
+    "version": "124.0.6367.29",
+    "status": 200,
+    "finished": "2026-10-02T16:54:43.035Z",
+    "fingerprint": {
+      "userAgent": "Lightpanda/1.0",
+      "platform": "Linux x86_64",
+      "webdriver": false,
+      "languages": [
+        "en-US",
+        "en"
+      ],
+      "hardwareConcurrency": 4,
+      "deviceMemory": 8,
+      "timezone": "America/Los_Angeles",
+      "plugins": [],
+      "screen": {
+        "width": 1920,
+        "height": 1080
+      },
+      "window": {
+        "error": "ReferenceError: outerWidth is not defined"
+      },
+      "webgl": null
+    },
+    "failedRows": [
+      {
+        "text": "Chrome (New)\tmissing (failed)",
+        "classes": [
+          "",
+          "failed result"
+        ]
+      },
+      {
+        "text": "Plugins Length (Old)\t0",
+        "classes": [
+          "",
+          "failed result"
+        ]
+      },
+      {
+        "text": "Plugins is of type PluginArray\tfailed",
+        "classes": [
+          "",
+          "failed result"
+        ]
+      },
+      {
+        "text": "WebGL Vendor\tCanvas has no webgl context",
+        "classes": [
+          "",
+          "failed"
+        ]
+      },
+      {
+        "text": "WebGL Renderer\tCanvas has no webgl context",
+        "classes": [
+          "",
+          "failed"
+        ]
+      },
+      {
+        "text": "Broken Image Dimensions\t0x0",
+        "classes": [
+          "",
+          "failed"
+        ]
+      },
+      {
+        "text": "CHR_MEMORY\tFAIL\t\n{}",
+        "classes": [
+          "",
+          "failed",
+          ""
+        ]
+      }
+    ],
+    "excerpt": "Intoli.com tests + additions\nTest Name\tResult\nUser Agent (Old)\tLightpanda/1.0\nWebDriver (New)\tmissing (passed)\nWebDriver Advanced\tpassed\nChrome (New)\tmissing (failed)\nPermissions (New)\tprompt\nPlugins Length (Old)\t0\nPlugins is of type PluginArray\tfailed\nLanguages (Old)\ten-US,en\nWebGL Vendor\tCanvas has no webgl context\nWebGL Renderer\tCanvas has no webgl context\nBroken Image Dimensions\t0x0\nFingerprint Scanner tests\nPHANTOM_UA\tok\t\n{\n     \"userAgent\": \"Lightpanda/1.0\"\n}\n\nPHANTOM_PROPERTIES\tok\t\n{\n     \"attributesFound\": [\n          false,\n          false,\n          false\n     ]\n}\n\nPHANTOM_ETSL\tok\t\n{\n     \"etsl\": 33\n}\n\nPHANTOM_LANGUAGE\tok\t\n{\n     \"languages\": [\n          \"en-US\",\n          \"en\"\n     ]\n}\n\nPHANTOM_WEBSOCKET\tok\t\n{}\n\nMQ_SCREEN\tok\t\n{}\n\nPHANTOM_OVERFLOW\tok\t\n{\n     \"depth\": 9518,\n     \"errorMessage\": \"Maximum call stack size exceeded\",\n     \"errorName\": \"RangeError\",\n     \"errorStacklength\": 846\n}\n\nPHANTOM_WINDOW_HEIGHT\tok\t\n{\n     \"wInnerHeight\": 1080,\n     \"wInnerWidth\": 1920,\n     \"wPageXOffset\": 0,\n     \"wPageYOffset\": 0,\n     \"cWidth\": 1920,\n     \"cHeight\": 2425,\n     \"sWidth\": 1920,\n     \"sHeight\": 1080,\n     \"sAvailWidth\": 1920,\n     \"sAvailHeight\": 1040,\n     \"sColorDepth\": 24,\n     \"sPixelDepth\": 24,\n     \"wDevicePixelRatio\": 1\n}\n\nHEADCHR_UA\tok\t\n{\n     \"userAgent\": \"Lightpanda/1.0\"\n}\n\nHEADCHR_CHROME_OBJ\tok\t\n{}\n\nHEADCHR_PERMISSIONS\tok\t\n{}\n\nHEADCHR_PLUGINS\tok\t\n{\n     \"plugins\": []\n}\n\nHEADCHR_IFRAME\tok\t\n{}\n\nCHR_DEBUG_TOOLS\tok\t\n{}\n\nSELENIUM_DRIVER\tok\t\n{\n     \"attributesFound\": [\n          false,\n          false,\n          false,\n          false,\n          false,\n    ",
+    "pageErrors": []
+  }
+]
