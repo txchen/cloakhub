@@ -1,0 +1,3181 @@
+{
+  "date": "2026-10-01",
+  "sdkSha256": "1d5f6a401eac12840d3af187459105d42ecef522a99ecfbba4570b6dc9abc0ac",
+  "iphey": [
+    {
+      "version": "080",
+      "versionActual": "152.0.7977.82",
+      "label": "baseline",
+      "at": "2026-10-01T19:25:16.757Z",
+      "overrides": {},
+      "completed": true,
+      "elapsedMs": 9992,
+      "verdict": "Unreliable",
+      "score": 90,
+      "websockets": []
+    },
+    {
+      "version": "080",
+      "versionActual": "152.0.7977.82",
+      "label": "collected",
+      "at": "2026-10-01T19:33:33.929Z",
+      "overrides": {},
+      "completed": true,
+      "elapsedMs": 10217,
+      "verdict": "Unreliable",
+      "score": 90,
+      "websockets": [
+        {
+          "host": "api.iphey.com",
+          "sentBytes": [
+            80763
+          ],
+          "receivedBytes": [
+            43,
+            2406
+          ],
+          "closed": true,
+          "performanceError": false
+        }
+      ],
+      "missingCollectors": [],
+      "performancePresent": true,
+      "h3": false
+    },
+    {
+      "version": "080",
+      "versionActual": "152.0.7977.82",
+      "label": "fonts",
+      "at": "2026-10-01T19:37:24.896Z",
+      "overrides": {},
+      "completed": true,
+      "elapsedMs": 10336,
+      "fontTimings": [
+        {
+          "name": "W5",
+          "elapsedMs": 1313.1999998092651
+        },
+        {
+          "name": "Y5",
+          "elapsedMs": 910.4000000953674
+        },
+        {
+          "name": "G5",
+          "elapsedMs": 835.4000000953674
+        }
+      ],
+      "collectors": [
+        {
+          "key": "i0",
+          "start": 5789.099999904633,
+          "syncMs": 6.599999904632568,
+          "elapsedMs": 2669.4000000953674,
+          "missing": false
+        },
+        {
+          "key": "i1",
+          "start": 5796,
+          "syncMs": 12.099999904632568,
+          "elapsedMs": 3614.2999997138977,
+          "missing": false
+        },
+        {
+          "key": "i2",
+          "start": 5808.199999809265,
+          "syncMs": 2306.5,
+          "elapsedMs": 3486.5999999046326,
+          "missing": false
+        },
+        {
+          "key": "i3",
+          "start": 8114.799999713898,
+          "syncMs": 9.700000286102295,
+          "elapsedMs": 343.80000019073486,
+          "missing": false
+        },
+        {
+          "key": "i4",
+          "start": 8124.5,
+          "syncMs": 22.399999618530273,
+          "elapsedMs": 334.09999990463257,
+          "missing": false
+        },
+        {
+          "key": "i5",
+          "start": 8147,
+          "syncMs": 0.5999999046325684,
+          "elapsedMs": 1304.5999999046326,
+          "missing": false
+        },
+        {
+          "key": "i6",
+          "start": 8147.599999904633,
+          "syncMs": 0.40000009536743164,
+          "elapsedMs": 1273.5999999046326,
+          "missing": false
+        },
+        {
+          "key": "i7",
+          "start": 8148,
+          "syncMs": 140.09999990463257,
+          "elapsedMs": 310.59999990463257,
+          "missing": false
+        },
+        {
+          "key": "i8",
+          "start": 8288.199999809265,
+          "syncMs": 1,
+          "elapsedMs": 170.40000009536743,
+          "missing": false
+        },
+        {
+          "key": "i9",
+          "start": 8289.299999713898,
+          "syncMs": 0.5999999046325684,
+          "elapsedMs": 1130.3000001907349,
+          "missing": false
+        },
+        {
+          "key": "i10",
+          "start": 8289.89999961853,
+          "syncMs": 37.10000038146973,
+          "elapsedMs": 168.7000002861023,
+          "missing": false
+        },
+        {
+          "key": "i11",
+          "start": 8327.099999904633,
+          "syncMs": 0.6999998092651367,
+          "elapsedMs": 131.5,
+          "missing": false
+        },
+        {
+          "key": "i12",
+          "start": 8327.799999713898,
+          "syncMs": 2.0999999046325684,
+          "elapsedMs": 130.80000019073486,
+          "missing": false
+        },
+        {
+          "key": "i13",
+          "start": 8329.89999961853,
+          "syncMs": 90.90000009536743,
+          "elapsedMs": 128.7000002861023,
+          "missing": false
+        },
+        {
+          "key": "i14",
+          "start": 8421,
+          "syncMs": 4.599999904632568,
+          "elapsedMs": 969.7999997138977,
+          "missing": false
+        },
+        {
+          "key": "i15",
+          "start": 8425.599999904633,
+          "syncMs": 1.299999713897705,
+          "elapsedMs": 33,
+          "missing": false
+        },
+        {
+          "key": "i16",
+          "start": 8426.89999961853,
+          "syncMs": 3.700000286102295,
+          "elapsedMs": 31.700000286102295,
+          "missing": false
+        },
+        {
+          "key": "i17",
+          "start": 8430.599999904633,
+          "syncMs": 3.5,
+          "elapsedMs": 1030.1999998092651,
+          "missing": false
+        },
+        {
+          "key": "i18",
+          "start": 8434.099999904633,
+          "syncMs": 0.2999997138977051,
+          "elapsedMs": 971.5999999046326,
+          "missing": false
+        },
+        {
+          "key": "i19",
+          "start": 8434.39999961853,
+          "syncMs": 1.3000001907348633,
+          "elapsedMs": 24.200000286102295,
+          "missing": false
+        },
+        {
+          "key": "i20",
+          "start": 8435.699999809265,
+          "syncMs": 0.5999999046325684,
+          "elapsedMs": 1077.5999999046326,
+          "missing": false
+        },
+        {
+          "key": "i21",
+          "start": 8436.39999961853,
+          "syncMs": 1.6000003814697266,
+          "elapsedMs": 991.9000000953674,
+          "missing": false
+        },
+        {
+          "key": "i22",
+          "start": 8438,
+          "syncMs": 2.1999998092651367,
+          "elapsedMs": 20.59999990463257,
+          "missing": false
+        },
+        {
+          "key": "i23",
+          "start": 8440.199999809265,
+          "syncMs": 0.3000001907348633,
+          "elapsedMs": 18.40000009536743,
+          "missing": false
+        },
+        {
+          "key": "i24",
+          "start": 8440.5,
+          "syncMs": 0.09999990463256836,
+          "elapsedMs": 18.09999990463257,
+          "missing": false
+        },
+        {
+          "key": "i25",
+          "start": 8440.599999904633,
+          "syncMs": 0,
+          "elapsedMs": 18,
+          "missing": false
+        },
+        {
+          "key": "i26",
+          "start": 8440.599999904633,
+          "syncMs": 0.19999980926513672,
+          "elapsedMs": 18,
+          "missing": false
+        },
+        {
+          "key": "i27",
+          "start": 8440.799999713898,
+          "syncMs": 1,
+          "elapsedMs": 17.800000190734863,
+          "missing": false
+        },
+        {
+          "key": "i28",
+          "start": 8441.89999961853,
+          "syncMs": 0.7000002861022949,
+          "elapsedMs": 1119.7000002861023,
+          "missing": false
+        },
+        {
+          "key": "i29",
+          "start": 8442.699999809265,
+          "syncMs": 0.3000001907348633,
+          "elapsedMs": 15.900000095367432,
+          "missing": false
+        },
+        {
+          "key": "i30",
+          "start": 8443.099999904633,
+          "syncMs": 0.09999990463256836,
+          "elapsedMs": 15.5,
+          "missing": false
+        },
+        {
+          "key": "i31",
+          "start": 8443.199999809265,
+          "syncMs": 0.40000009536743164,
+          "elapsedMs": 1396.5999999046326,
+          "missing": false
+        },
+        {
+          "key": "i32",
+          "start": 8443.599999904633,
+          "syncMs": 5.299999713897705,
+          "elapsedMs": 15,
+          "missing": false
+        },
+        {
+          "key": "i33",
+          "start": 8449,
+          "syncMs": 0.2999997138977051,
+          "elapsedMs": 9.599999904632568,
+          "missing": false
+        }
+      ],
+      "verdict": "Unreliable",
+      "score": 90,
+      "websockets": [
+        {
+          "host": "api.iphey.com",
+          "sentBytes": [
+            80783
+          ],
+          "receivedBytes": [
+            43,
+            2407
+          ],
+          "closed": true,
+          "performanceError": false
+        }
+      ],
+      "missingCollectors": [],
+      "performancePresent": true,
+      "h3": false
+    },
+    {
+      "version": "080",
+      "versionActual": "152.0.7977.82",
+      "label": "trace",
+      "at": "2026-10-01T19:28:17.445Z",
+      "overrides": {},
+      "completed": true,
+      "elapsedMs": 10266,
+      "verdict": "Unreliable",
+      "score": 90,
+      "websockets": []
+    },
+    {
+      "version": "080",
+      "versionActual": "152.0.7977.82",
+      "label": "ws",
+      "at": "2026-10-01T19:31:36.184Z",
+      "overrides": {},
+      "completed": true,
+      "elapsedMs": 9996,
+      "verdict": "Unreliable",
+      "score": 90,
+      "websockets": [
+        {
+          "host": "api.iphey.com",
+          "sentBytes": [
+            80698
+          ],
+          "receivedBytes": [
+            43,
+            2406
+          ],
+          "closed": true,
+          "performanceError": false
+        }
+      ]
+    },
+    {
+      "version": "090",
+      "versionActual": "154.0.8037.57",
+      "label": "baseline",
+      "at": "2026-10-01T19:25:30.558Z",
+      "overrides": {},
+      "completed": false,
+      "elapsedMs": 20791,
+      "verdict": null,
+      "score": null,
+      "websockets": []
+    },
+    {
+      "version": "090",
+      "versionActual": "154.0.8037.57",
+      "label": "budget15",
+      "at": "2026-10-01T19:36:11.307Z",
+      "overrides": {},
+      "completed": true,
+      "elapsedMs": 21815,
+      "collectors": [
+        {
+          "key": "i0",
+          "start": 5774.89999961853,
+          "syncMs": 9,
+          "elapsedMs": 10406.700000286102,
+          "missing": false
+        },
+        {
+          "key": "i1",
+          "start": 5784.299999713898,
+          "syncMs": 15.400000095367432,
+          "elapsedMs": 15298.900000095367,
+          "missing": false
+        },
+        {
+          "key": "i2",
+          "start": 5799.799999713898,
+          "syncMs": 10001,
+          "elapsedMs": 15141.099999904633,
+          "missing": false
+        },
+        {
+          "key": "i3",
+          "start": 15800.799999713898,
+          "syncMs": 10,
+          "elapsedMs": 380.80000019073486,
+          "missing": false
+        },
+        {
+          "key": "i4",
+          "start": 15810.89999961853,
+          "syncMs": 29.700000286102295,
+          "elapsedMs": 370.7000002861023,
+          "missing": false
+        },
+        {
+          "key": "i5",
+          "start": 15840.799999713898,
+          "syncMs": 0.8000001907348633,
+          "elapsedMs": 5289.900000095367,
+          "missing": false
+        },
+        {
+          "key": "i6",
+          "start": 15841.599999904633,
+          "syncMs": 0.6999998092651367,
+          "elapsedMs": 5254.799999713898,
+          "missing": false
+        },
+        {
+          "key": "i7",
+          "start": 15842.39999961853,
+          "syncMs": 147.7000002861023,
+          "elapsedMs": 339.2000002861023,
+          "missing": false
+        },
+        {
+          "key": "i8",
+          "start": 15990.299999713898,
+          "syncMs": 1.200000286102295,
+          "elapsedMs": 191.30000019073486,
+          "missing": false
+        },
+        {
+          "key": "i9",
+          "start": 15991.599999904633,
+          "syncMs": 0.9000000953674316,
+          "elapsedMs": 5101.400000095367,
+          "missing": false
+        },
+        {
+          "key": "i10",
+          "start": 15992.5,
+          "syncMs": 46.09999990463257,
+          "elapsedMs": 189.09999990463257,
+          "missing": false
+        },
+        {
+          "key": "i11",
+          "start": 16038.599999904633,
+          "syncMs": 0.6999998092651367,
+          "elapsedMs": 143,
+          "missing": false
+        },
+        {
+          "key": "i12",
+          "start": 16039.299999713898,
+          "syncMs": 2.0999999046325684,
+          "elapsedMs": 142.30000019073486,
+          "missing": false
+        },
+        {
+          "key": "i13",
+          "start": 16041.39999961853,
+          "syncMs": 95,
+          "elapsedMs": 140.2000002861023,
+          "missing": false
+        },
+        {
+          "key": "i14",
+          "start": 16136.39999961853,
+          "syncMs": 4.800000190734863,
+          "elapsedMs": 4921.400000095367,
+          "missing": false
+        },
+        {
+          "key": "i15",
+          "start": 16141.299999713898,
+          "syncMs": 1.4000000953674316,
+          "elapsedMs": 40.30000019073486,
+          "missing": false
+        },
+        {
+          "key": "i16",
+          "start": 16142.699999809265,
+          "syncMs": 4.099999904632568,
+          "elapsedMs": 38.90000009536743,
+          "missing": false
+        },
+        {
+          "key": "i17",
+          "start": 16146.799999713898,
+          "syncMs": 4.200000286102295,
+          "elapsedMs": 4991.900000095367,
+          "missing": false
+        },
+        {
+          "key": "i18",
+          "start": 16151,
+          "syncMs": 0.39999961853027344,
+          "elapsedMs": 4925.39999961853,
+          "missing": false
+        },
+        {
+          "key": "i19",
+          "start": 16151.5,
+          "syncMs": 1.5,
+          "elapsedMs": 30.09999990463257,
+          "missing": false
+        },
+        {
+          "key": "i20",
+          "start": 16153,
+          "syncMs": 0.6999998092651367,
+          "elapsedMs": 5042.799999713898,
+          "missing": false
+        },
+        {
+          "key": "i21",
+          "start": 16153.799999713898,
+          "syncMs": 1.8000001907348633,
+          "elapsedMs": 4950.800000190735,
+          "missing": false
+        },
+        {
+          "key": "i22",
+          "start": 16155.599999904633,
+          "syncMs": 2.1999998092651367,
+          "elapsedMs": 26.09999990463257,
+          "missing": false
+        },
+        {
+          "key": "i23",
+          "start": 16157.799999713898,
+          "syncMs": 0.40000009536743164,
+          "elapsedMs": 23.90000009536743,
+          "missing": false
+        },
+        {
+          "key": "i24",
+          "start": 16158.199999809265,
+          "syncMs": 0.09999990463256836,
+          "elapsedMs": 23.5,
+          "missing": false
+        },
+        {
+          "key": "i25",
+          "start": 16158.39999961853,
+          "syncMs": 0,
+          "elapsedMs": 23.300000190734863,
+          "missing": false
+        },
+        {
+          "key": "i26",
+          "start": 16158.39999961853,
+          "syncMs": 0.20000028610229492,
+          "elapsedMs": 23.300000190734863,
+          "missing": false
+        },
+        {
+          "key": "i27",
+          "start": 16158.599999904633,
+          "syncMs": 1.6999998092651367,
+          "elapsedMs": 23.09999990463257,
+          "missing": false
+        },
+        {
+          "key": "i28",
+          "start": 16160.39999961853,
+          "syncMs": 1,
+          "elapsedMs": 5083.400000095367,
+          "missing": false
+        },
+        {
+          "key": "i29",
+          "start": 16161.39999961853,
+          "syncMs": 0.5,
+          "elapsedMs": 20.300000190734863,
+          "missing": false
+        },
+        {
+          "key": "i30",
+          "start": 16161.89999961853,
+          "syncMs": 0.10000038146972656,
+          "elapsedMs": 19.800000190734863,
+          "missing": false
+        },
+        {
+          "key": "i31",
+          "start": 16162.099999904633,
+          "syncMs": 0.2999997138977051,
+          "elapsedMs": 4780,
+          "missing": false
+        },
+        {
+          "key": "i32",
+          "start": 16162.39999961853,
+          "syncMs": 5.900000095367432,
+          "elapsedMs": 19.300000190734863,
+          "missing": false
+        },
+        {
+          "key": "i33",
+          "start": 16168.39999961853,
+          "syncMs": 0.3000001907348633,
+          "elapsedMs": 13.300000190734863,
+          "missing": false
+        }
+      ],
+      "verdict": "Unreliable",
+      "score": 90,
+      "websockets": [
+        {
+          "host": "api.iphey.com",
+          "sentBytes": [
+            79560
+          ],
+          "receivedBytes": [
+            43,
+            2407
+          ],
+          "closed": true,
+          "performanceError": false
+        }
+      ],
+      "missingCollectors": [],
+      "performancePresent": true,
+      "h3": false
+    },
+    {
+      "version": "090",
+      "versionActual": "154.0.8037.57",
+      "label": "collected-linux",
+      "at": "2026-10-01T19:34:27.656Z",
+      "overrides": {
+        "platform": "linux"
+      },
+      "completed": true,
+      "elapsedMs": 8178,
+      "verdict": "Unreliable",
+      "score": 90,
+      "websockets": [
+        {
+          "host": "api.iphey.com",
+          "sentBytes": [
+            40810
+          ],
+          "receivedBytes": [
+            43,
+            2447
+          ],
+          "closed": true,
+          "performanceError": false
+        }
+      ],
+      "missingCollectors": [],
+      "performancePresent": true,
+      "h3": false
+    },
+    {
+      "version": "090",
+      "versionActual": "154.0.8037.57",
+      "label": "collected",
+      "at": "2026-10-01T19:33:47.564Z",
+      "overrides": {},
+      "completed": false,
+      "elapsedMs": 36089,
+      "verdict": null,
+      "score": null,
+      "websockets": [
+        {
+          "host": "api.iphey.com",
+          "sentBytes": [
+            73394
+          ],
+          "receivedBytes": [
+            43,
+            54
+          ],
+          "closed": false,
+          "performanceError": true
+        }
+      ],
+      "missingCollectors": [
+        "i5",
+        "i17",
+        "i20",
+        "i21",
+        "i28"
+      ],
+      "performancePresent": false,
+      "h3": null
+    },
+    {
+      "version": "090",
+      "versionActual": "154.0.8037.57",
+      "label": "fonts-linux",
+      "at": "2026-10-01T19:38:18.570Z",
+      "overrides": {
+        "platform": "linux"
+      },
+      "completed": true,
+      "elapsedMs": 8169,
+      "fontTimings": [
+        {
+          "name": "W5",
+          "elapsedMs": 574.3000001907349
+        },
+        {
+          "name": "Y5",
+          "elapsedMs": 353.69999980926514
+        },
+        {
+          "name": "G5",
+          "elapsedMs": 361.90000009536743
+        }
+      ],
+      "collectors": [
+        {
+          "key": "i0",
+          "start": 5442.5,
+          "syncMs": 6.900000095367432,
+          "elapsedMs": 1324.9000000953674,
+          "missing": false
+        },
+        {
+          "key": "i1",
+          "start": 5449.800000190735,
+          "syncMs": 12.900000095367432,
+          "elapsedMs": 1781.5999999046326,
+          "missing": false
+        },
+        {
+          "key": "i2",
+          "start": 5462.900000095367,
+          "syncMs": 978.7000002861023,
+          "elapsedMs": 1667.5,
+          "missing": false
+        },
+        {
+          "key": "i3",
+          "start": 6441.60000038147,
+          "syncMs": 9.299999713897705,
+          "elapsedMs": 325.8999996185303,
+          "missing": false
+        },
+        {
+          "key": "i4",
+          "start": 6450.900000095367,
+          "syncMs": 25.200000286102295,
+          "elapsedMs": 316.59999990463257,
+          "missing": false
+        },
+        {
+          "key": "i5",
+          "start": 6476.300000190735,
+          "syncMs": 0.5999999046325684,
+          "elapsedMs": 785.5999999046326,
+          "missing": false
+        },
+        {
+          "key": "i6",
+          "start": 6476.900000095367,
+          "syncMs": 0.3000001907348633,
+          "elapsedMs": 760.8000001907349,
+          "missing": false
+        },
+        {
+          "key": "i7",
+          "start": 6477.300000190735,
+          "syncMs": 131.80000019073486,
+          "elapsedMs": 290.19999980926514,
+          "missing": false
+        },
+        {
+          "key": "i8",
+          "start": 6609.10000038147,
+          "syncMs": 1.0999999046325684,
+          "elapsedMs": 158.39999961853027,
+          "missing": false
+        },
+        {
+          "key": "i9",
+          "start": 6610.200000286102,
+          "syncMs": 0.6999998092651367,
+          "elapsedMs": 1001,
+          "missing": false
+        },
+        {
+          "key": "i10",
+          "start": 6610.900000095367,
+          "syncMs": 40.700000286102295,
+          "elapsedMs": 156.7000002861023,
+          "missing": false
+        },
+        {
+          "key": "i11",
+          "start": 6651.60000038147,
+          "syncMs": 0.6999998092651367,
+          "elapsedMs": 116,
+          "missing": false
+        },
+        {
+          "key": "i12",
+          "start": 6652.300000190735,
+          "syncMs": 1.9000000953674316,
+          "elapsedMs": 115.30000019073486,
+          "missing": false
+        },
+        {
+          "key": "i13",
+          "start": 6654.300000190735,
+          "syncMs": 76.5,
+          "elapsedMs": 113.30000019073486,
+          "missing": false
+        },
+        {
+          "key": "i14",
+          "start": 6730.800000190735,
+          "syncMs": 4.599999904632568,
+          "elapsedMs": 481.5,
+          "missing": false
+        },
+        {
+          "key": "i15",
+          "start": 6735.5,
+          "syncMs": 1.1000003814697266,
+          "elapsedMs": 32.10000038146973,
+          "missing": false
+        },
+        {
+          "key": "i16",
+          "start": 6736.60000038147,
+          "syncMs": 3.1999998092651367,
+          "elapsedMs": 31,
+          "missing": false
+        },
+        {
+          "key": "i17",
+          "start": 6739.900000095367,
+          "syncMs": 3.0999999046325684,
+          "elapsedMs": 527.5,
+          "missing": false
+        },
+        {
+          "key": "i18",
+          "start": 6743,
+          "syncMs": 0.40000009536743164,
+          "elapsedMs": 483.90000009536743,
+          "missing": false
+        },
+        {
+          "key": "i19",
+          "start": 6743.400000095367,
+          "syncMs": 1.0999999046325684,
+          "elapsedMs": 24.200000286102295,
+          "missing": false
+        },
+        {
+          "key": "i20",
+          "start": 6744.60000038147,
+          "syncMs": 0.6999998092651367,
+          "elapsedMs": 573.2999997138977,
+          "missing": false
+        },
+        {
+          "key": "i21",
+          "start": 6745.300000190735,
+          "syncMs": 1.6999998092651367,
+          "elapsedMs": 497.30000019073486,
+          "missing": false
+        },
+        {
+          "key": "i22",
+          "start": 6747,
+          "syncMs": 2.1000003814697266,
+          "elapsedMs": 20.600000381469727,
+          "missing": false
+        },
+        {
+          "key": "i23",
+          "start": 6749.10000038147,
+          "syncMs": 0.19999980926513672,
+          "elapsedMs": 18.5,
+          "missing": false
+        },
+        {
+          "key": "i24",
+          "start": 6749.400000095367,
+          "syncMs": 0.09999990463256836,
+          "elapsedMs": 18.200000286102295,
+          "missing": false
+        },
+        {
+          "key": "i25",
+          "start": 6749.5,
+          "syncMs": 0,
+          "elapsedMs": 18.100000381469727,
+          "missing": false
+        },
+        {
+          "key": "i26",
+          "start": 6749.60000038147,
+          "syncMs": 0.09999990463256836,
+          "elapsedMs": 18,
+          "missing": false
+        },
+        {
+          "key": "i27",
+          "start": 6749.700000286102,
+          "syncMs": 1.0999999046325684,
+          "elapsedMs": 17.90000009536743,
+          "missing": false
+        },
+        {
+          "key": "i28",
+          "start": 6750.900000095367,
+          "syncMs": 0.7000002861022949,
+          "elapsedMs": 613,
+          "missing": false
+        },
+        {
+          "key": "i29",
+          "start": 6751.700000286102,
+          "syncMs": 0.2999997138977051,
+          "elapsedMs": 15.900000095367432,
+          "missing": false
+        },
+        {
+          "key": "i30",
+          "start": 6752,
+          "syncMs": 0.10000038146972656,
+          "elapsedMs": 15.600000381469727,
+          "missing": false
+        },
+        {
+          "key": "i31",
+          "start": 6752.10000038147,
+          "syncMs": 0.39999961853027344,
+          "elapsedMs": 1036.3999996185303,
+          "missing": false
+        },
+        {
+          "key": "i32",
+          "start": 6752.5,
+          "syncMs": 4.700000286102295,
+          "elapsedMs": 15.100000381469727,
+          "missing": false
+        },
+        {
+          "key": "i33",
+          "start": 6757.200000286102,
+          "syncMs": 0.2999997138977051,
+          "elapsedMs": 10.400000095367432,
+          "missing": false
+        }
+      ],
+      "verdict": "Unreliable",
+      "score": 90,
+      "websockets": [
+        {
+          "host": "api.iphey.com",
+          "sentBytes": [
+            40808
+          ],
+          "receivedBytes": [
+            43,
+            2448
+          ],
+          "closed": true,
+          "performanceError": false
+        }
+      ],
+      "missingCollectors": [],
+      "performancePresent": true,
+      "h3": false
+    },
+    {
+      "version": "090",
+      "versionActual": "154.0.8037.57",
+      "label": "fonts",
+      "at": "2026-10-01T19:37:38.643Z",
+      "overrides": {},
+      "completed": false,
+      "elapsedMs": 36174,
+      "fontTimings": [
+        {
+          "name": "W5",
+          "elapsedMs": 4991.099999904633
+        },
+        {
+          "name": "Y5",
+          "elapsedMs": 4599.800000190735
+        },
+        {
+          "name": "G5",
+          "elapsedMs": 4461.099999904633
+        }
+      ],
+      "collectors": [
+        {
+          "key": "i0",
+          "start": 5944.199999809265,
+          "syncMs": 7.700000286102295,
+          "elapsedMs": 10035.700000286102,
+          "missing": false
+        },
+        {
+          "key": "i1",
+          "start": 5952.199999809265,
+          "syncMs": 17.300000190734863,
+          "elapsedMs": 14620.5,
+          "missing": false
+        },
+        {
+          "key": "i2",
+          "start": 5969.599999904633,
+          "syncMs": 9660.800000190735,
+          "elapsedMs": 14472.699999809265,
+          "missing": false
+        },
+        {
+          "key": "i3",
+          "start": 15630.400000095367,
+          "syncMs": 10.199999809265137,
+          "elapsedMs": 349.5,
+          "missing": false
+        },
+        {
+          "key": "i4",
+          "start": 15640.699999809265,
+          "syncMs": 26.09999990463257,
+          "elapsedMs": 339.2000002861023,
+          "missing": false
+        },
+        {
+          "key": "i5",
+          "start": 15666.900000095367,
+          "syncMs": 0.5,
+          "elapsedMs": 4920.599999904633,
+          "missing": true
+        },
+        {
+          "key": "i6",
+          "start": 15667.5,
+          "syncMs": 0.2999997138977051,
+          "elapsedMs": 4916.299999713898,
+          "missing": false
+        },
+        {
+          "key": "i7",
+          "start": 15667.900000095367,
+          "syncMs": 135.39999961853027,
+          "elapsedMs": 312,
+          "missing": false
+        },
+        {
+          "key": "i8",
+          "start": 15803.400000095367,
+          "syncMs": 1.1999998092651367,
+          "elapsedMs": 176.5,
+          "missing": false
+        },
+        {
+          "key": "i9",
+          "start": 15804.799999713898,
+          "syncMs": 0.6000003814697266,
+          "elapsedMs": 4782.10000038147,
+          "missing": false
+        },
+        {
+          "key": "i10",
+          "start": 15805.5,
+          "syncMs": 44.09999990463257,
+          "elapsedMs": 174.40000009536743,
+          "missing": false
+        },
+        {
+          "key": "i11",
+          "start": 15849.599999904633,
+          "syncMs": 0.6999998092651367,
+          "elapsedMs": 130.30000019073486,
+          "missing": false
+        },
+        {
+          "key": "i12",
+          "start": 15850.299999713898,
+          "syncMs": 1.9000000953674316,
+          "elapsedMs": 129.60000038146973,
+          "missing": false
+        },
+        {
+          "key": "i13",
+          "start": 15852.299999713898,
+          "syncMs": 89,
+          "elapsedMs": 127.60000038146973,
+          "missing": false
+        },
+        {
+          "key": "i14",
+          "start": 15941.400000095367,
+          "syncMs": 5,
+          "elapsedMs": 4605.799999713898,
+          "missing": false
+        },
+        {
+          "key": "i15",
+          "start": 15946.400000095367,
+          "syncMs": 1.299999713897705,
+          "elapsedMs": 33.59999990463257,
+          "missing": false
+        },
+        {
+          "key": "i16",
+          "start": 15947.699999809265,
+          "syncMs": 3.8000001907348633,
+          "elapsedMs": 32.30000019073486,
+          "missing": false
+        },
+        {
+          "key": "i17",
+          "start": 15951.5,
+          "syncMs": 3.299999713897705,
+          "elapsedMs": 4636.400000095367,
+          "missing": true
+        },
+        {
+          "key": "i18",
+          "start": 15954.799999713898,
+          "syncMs": 0.3000001907348633,
+          "elapsedMs": 4610.60000038147,
+          "missing": false
+        },
+        {
+          "key": "i19",
+          "start": 15955.099999904633,
+          "syncMs": 1.4000000953674316,
+          "elapsedMs": 24.90000009536743,
+          "missing": false
+        },
+        {
+          "key": "i20",
+          "start": 15956.5,
+          "syncMs": 0.5999999046325684,
+          "elapsedMs": 4631.799999713898,
+          "missing": true
+        },
+        {
+          "key": "i21",
+          "start": 15957.099999904633,
+          "syncMs": 1.5,
+          "elapsedMs": 4631.400000095367,
+          "missing": true
+        },
+        {
+          "key": "i22",
+          "start": 15958.599999904633,
+          "syncMs": 2.3000001907348633,
+          "elapsedMs": 21.40000009536743,
+          "missing": false
+        },
+        {
+          "key": "i23",
+          "start": 15960.900000095367,
+          "syncMs": 0.39999961853027344,
+          "elapsedMs": 19.09999990463257,
+          "missing": false
+        },
+        {
+          "key": "i24",
+          "start": 15961.400000095367,
+          "syncMs": 0,
+          "elapsedMs": 18.59999990463257,
+          "missing": false
+        },
+        {
+          "key": "i25",
+          "start": 15961.400000095367,
+          "syncMs": 0.09999990463256836,
+          "elapsedMs": 18.59999990463257,
+          "missing": false
+        },
+        {
+          "key": "i26",
+          "start": 15961.5,
+          "syncMs": 0.2999997138977051,
+          "elapsedMs": 18.5,
+          "missing": false
+        },
+        {
+          "key": "i27",
+          "start": 15961.799999713898,
+          "syncMs": 1.1000003814697266,
+          "elapsedMs": 18.200000286102295,
+          "missing": false
+        },
+        {
+          "key": "i28",
+          "start": 15962.900000095367,
+          "syncMs": 0.7999997138977051,
+          "elapsedMs": 4626.199999809265,
+          "missing": true
+        },
+        {
+          "key": "i29",
+          "start": 15963.799999713898,
+          "syncMs": 0.3000001907348633,
+          "elapsedMs": 16.200000286102295,
+          "missing": false
+        },
+        {
+          "key": "i30",
+          "start": 15964.199999809265,
+          "syncMs": 0,
+          "elapsedMs": 15.800000190734863,
+          "missing": false
+        },
+        {
+          "key": "i31",
+          "start": 15964.199999809265,
+          "syncMs": 0.40000009536743164,
+          "elapsedMs": 4479.200000286102,
+          "missing": false
+        },
+        {
+          "key": "i32",
+          "start": 15964.599999904633,
+          "syncMs": 5.300000190734863,
+          "elapsedMs": 15.400000095367432,
+          "missing": false
+        },
+        {
+          "key": "i33",
+          "start": 15969.900000095367,
+          "syncMs": 0.2999997138977051,
+          "elapsedMs": 10.099999904632568,
+          "missing": false
+        }
+      ],
+      "verdict": null,
+      "score": null,
+      "websockets": [
+        {
+          "host": "api.iphey.com",
+          "sentBytes": [
+            73394
+          ],
+          "receivedBytes": [
+            43,
+            54
+          ],
+          "closed": false,
+          "performanceError": true
+        }
+      ],
+      "missingCollectors": [
+        "i5",
+        "i17",
+        "i20",
+        "i21",
+        "i28"
+      ],
+      "performancePresent": false,
+      "h3": null
+    },
+    {
+      "version": "090",
+      "versionActual": "154.0.8037.57",
+      "label": "linux-region",
+      "at": "2026-10-01T19:39:03.102Z",
+      "overrides": {
+        "platform": "linux",
+        "timezone": "America/Los_Angeles"
+      },
+      "completed": true,
+      "elapsedMs": 7754,
+      "verdict": "Trustworthy",
+      "score": 100,
+      "websockets": [
+        {
+          "host": "api.iphey.com",
+          "sentBytes": [
+            40740
+          ],
+          "receivedBytes": [
+            43,
+            2326
+          ],
+          "closed": true,
+          "performanceError": false
+        }
+      ]
+    },
+    {
+      "version": "090",
+      "versionActual": "154.0.8037.57",
+      "label": "linux",
+      "at": "2026-10-01T19:27:07.927Z",
+      "overrides": {
+        "platform": "linux"
+      },
+      "completed": true,
+      "elapsedMs": 7883,
+      "verdict": "Unreliable",
+      "score": 90,
+      "websockets": []
+    },
+    {
+      "version": "090",
+      "versionActual": "154.0.8037.57",
+      "label": "repeat",
+      "at": "2026-10-01T19:25:56.309Z",
+      "overrides": {},
+      "completed": false,
+      "elapsedMs": 20753,
+      "verdict": null,
+      "score": null,
+      "websockets": []
+    },
+    {
+      "version": "090",
+      "versionActual": "154.0.8037.57",
+      "label": "system-fontconfig",
+      "at": "2026-10-01T19:40:15.111Z",
+      "overrides": {},
+      "completed": true,
+      "elapsedMs": 9120,
+      "fontTimings": [
+        {
+          "name": "W5",
+          "elapsedMs": 695.1999998092651
+        },
+        {
+          "name": "Y5",
+          "elapsedMs": 443.6000003814697
+        },
+        {
+          "name": "G5",
+          "elapsedMs": 354.09999990463257
+        }
+      ],
+      "collectors": [
+        {
+          "key": "i0",
+          "start": 5813.799999713898,
+          "syncMs": 6.200000286102295,
+          "elapsedMs": 1561.5999999046326,
+          "missing": false
+        },
+        {
+          "key": "i1",
+          "start": 5820.299999713898,
+          "syncMs": 12.200000286102295,
+          "elapsedMs": 2028.8000001907349,
+          "missing": false
+        },
+        {
+          "key": "i2",
+          "start": 5832.599999904633,
+          "syncMs": 1192.5999999046326,
+          "elapsedMs": 1898.0999999046326,
+          "missing": false
+        },
+        {
+          "key": "i3",
+          "start": 7025.299999713898,
+          "syncMs": 9.300000190734863,
+          "elapsedMs": 350.2000002861023,
+          "missing": false
+        },
+        {
+          "key": "i4",
+          "start": 7034.699999809265,
+          "syncMs": 26.09999990463257,
+          "elapsedMs": 340.80000019073486,
+          "missing": false
+        },
+        {
+          "key": "i5",
+          "start": 7060.799999713898,
+          "syncMs": 0.7000002861022949,
+          "elapsedMs": 825.9000000953674,
+          "missing": false
+        },
+        {
+          "key": "i6",
+          "start": 7061.5,
+          "syncMs": 0.2999997138977051,
+          "elapsedMs": 796.1999998092651,
+          "missing": false
+        },
+        {
+          "key": "i7",
+          "start": 7061.89999961853,
+          "syncMs": 142.90000009536743,
+          "elapsedMs": 313.90000009536743,
+          "missing": false
+        },
+        {
+          "key": "i8",
+          "start": 7204.89999961853,
+          "syncMs": 1.5,
+          "elapsedMs": 170.90000009536743,
+          "missing": false
+        },
+        {
+          "key": "i9",
+          "start": 7206.5,
+          "syncMs": 0.6999998092651367,
+          "elapsedMs": 1001.3999996185303,
+          "missing": false
+        },
+        {
+          "key": "i10",
+          "start": 7207.199999809265,
+          "syncMs": 46.30000019073486,
+          "elapsedMs": 168.59999990463257,
+          "missing": false
+        },
+        {
+          "key": "i11",
+          "start": 7253.599999904633,
+          "syncMs": 0.6999998092651367,
+          "elapsedMs": 122.19999980926514,
+          "missing": false
+        },
+        {
+          "key": "i12",
+          "start": 7254.299999713898,
+          "syncMs": 2.0999999046325684,
+          "elapsedMs": 121.5,
+          "missing": false
+        },
+        {
+          "key": "i13",
+          "start": 7256.5,
+          "syncMs": 78.09999990463257,
+          "elapsedMs": 119.39999961853027,
+          "missing": false
+        },
+        {
+          "key": "i14",
+          "start": 7334.699999809265,
+          "syncMs": 4.699999809265137,
+          "elapsedMs": 488.09999990463257,
+          "missing": false
+        },
+        {
+          "key": "i15",
+          "start": 7339.5,
+          "syncMs": 1.1999998092651367,
+          "elapsedMs": 36.39999961853027,
+          "missing": false
+        },
+        {
+          "key": "i16",
+          "start": 7340.699999809265,
+          "syncMs": 3.5,
+          "elapsedMs": 35.19999980926514,
+          "missing": false
+        },
+        {
+          "key": "i17",
+          "start": 7344.199999809265,
+          "syncMs": 3.4000000953674316,
+          "elapsedMs": 551.5999999046326,
+          "missing": false
+        },
+        {
+          "key": "i18",
+          "start": 7347.599999904633,
+          "syncMs": 0.40000009536743164,
+          "elapsedMs": 496,
+          "missing": false
+        },
+        {
+          "key": "i19",
+          "start": 7348,
+          "syncMs": 1.299999713897705,
+          "elapsedMs": 27.899999618530273,
+          "missing": false
+        },
+        {
+          "key": "i20",
+          "start": 7349.299999713898,
+          "syncMs": 0.7000002861022949,
+          "elapsedMs": 599,
+          "missing": false
+        },
+        {
+          "key": "i21",
+          "start": 7350,
+          "syncMs": 1.5999999046325684,
+          "elapsedMs": 513.6999998092651,
+          "missing": false
+        },
+        {
+          "key": "i22",
+          "start": 7351.599999904633,
+          "syncMs": 2.1999998092651367,
+          "elapsedMs": 24.299999713897705,
+          "missing": false
+        },
+        {
+          "key": "i23",
+          "start": 7353.89999961853,
+          "syncMs": 0.20000028610229492,
+          "elapsedMs": 22,
+          "missing": false
+        },
+        {
+          "key": "i24",
+          "start": 7354.199999809265,
+          "syncMs": 0.09999990463256836,
+          "elapsedMs": 21.699999809265137,
+          "missing": false
+        },
+        {
+          "key": "i25",
+          "start": 7354.299999713898,
+          "syncMs": 0.09999990463256836,
+          "elapsedMs": 21.59999990463257,
+          "missing": false
+        },
+        {
+          "key": "i26",
+          "start": 7354.39999961853,
+          "syncMs": 0.10000038146972656,
+          "elapsedMs": 21.5,
+          "missing": false
+        },
+        {
+          "key": "i27",
+          "start": 7354.599999904633,
+          "syncMs": 1.1999998092651367,
+          "elapsedMs": 21.299999713897705,
+          "missing": false
+        },
+        {
+          "key": "i28",
+          "start": 7355.89999961853,
+          "syncMs": 0.7000002861022949,
+          "elapsedMs": 633.2000002861023,
+          "missing": false
+        },
+        {
+          "key": "i29",
+          "start": 7356.599999904633,
+          "syncMs": 0.40000009536743164,
+          "elapsedMs": 19.299999713897705,
+          "missing": false
+        },
+        {
+          "key": "i30",
+          "start": 7357,
+          "syncMs": 0.19999980926513672,
+          "elapsedMs": 18.899999618530273,
+          "missing": false
+        },
+        {
+          "key": "i31",
+          "start": 7357.199999809265,
+          "syncMs": 0.5,
+          "elapsedMs": 1184.8000001907349,
+          "missing": false
+        },
+        {
+          "key": "i32",
+          "start": 7357.699999809265,
+          "syncMs": 5.800000190734863,
+          "elapsedMs": 18.199999809265137,
+          "missing": false
+        },
+        {
+          "key": "i33",
+          "start": 7363.5,
+          "syncMs": 0.39999961853027344,
+          "elapsedMs": 12.399999618530273,
+          "missing": false
+        }
+      ],
+      "verdict": "Unreliable",
+      "score": 60,
+      "websockets": [
+        {
+          "host": "api.iphey.com",
+          "sentBytes": [
+            78435
+          ],
+          "receivedBytes": [
+            43,
+            2546
+          ],
+          "closed": true,
+          "performanceError": false
+        }
+      ],
+      "missingCollectors": [],
+      "performancePresent": true,
+      "h3": false
+    },
+    {
+      "version": "090",
+      "versionActual": "154.0.8037.57",
+      "label": "timezone",
+      "at": "2026-10-01T19:27:18.928Z",
+      "overrides": {
+        "timezone": "America/Los_Angeles"
+      },
+      "completed": false,
+      "elapsedMs": 20832,
+      "verdict": null,
+      "score": null,
+      "websockets": []
+    },
+    {
+      "version": "090",
+      "versionActual": "154.0.8037.57",
+      "label": "timings",
+      "at": "2026-10-01T19:35:21.328Z",
+      "overrides": {},
+      "completed": false,
+      "elapsedMs": 46219,
+      "collectors": [
+        {
+          "key": "i0",
+          "start": 5953,
+          "syncMs": 7.699999809265137,
+          "elapsedMs": 10001.900000095367,
+          "missing": false
+        },
+        {
+          "key": "i1",
+          "start": 5961,
+          "syncMs": 14.900000095367432,
+          "elapsedMs": 14648.599999904633,
+          "missing": false
+        },
+        {
+          "key": "i2",
+          "start": 5976,
+          "syncMs": 9626,
+          "elapsedMs": 14502.699999809265,
+          "missing": false
+        },
+        {
+          "key": "i3",
+          "start": 15602.099999904633,
+          "syncMs": 10.900000095367432,
+          "elapsedMs": 354.19999980926514,
+          "missing": false
+        },
+        {
+          "key": "i4",
+          "start": 15613.099999904633,
+          "syncMs": 25.699999809265137,
+          "elapsedMs": 343.19999980926514,
+          "missing": false
+        },
+        {
+          "key": "i5",
+          "start": 15638.900000095367,
+          "syncMs": 0.6999998092651367,
+          "elapsedMs": 4985.199999809265,
+          "missing": true
+        },
+        {
+          "key": "i6",
+          "start": 15639.699999809265,
+          "syncMs": 0.3000001907348633,
+          "elapsedMs": 4983.300000190735,
+          "missing": false
+        },
+        {
+          "key": "i7",
+          "start": 15640.099999904633,
+          "syncMs": 136.09999990463257,
+          "elapsedMs": 316.19999980926514,
+          "missing": false
+        },
+        {
+          "key": "i8",
+          "start": 15776.299999713898,
+          "syncMs": 1.1000003814697266,
+          "elapsedMs": 180,
+          "missing": false
+        },
+        {
+          "key": "i9",
+          "start": 15777.5,
+          "syncMs": 0.6999998092651367,
+          "elapsedMs": 4846.400000095367,
+          "missing": false
+        },
+        {
+          "key": "i10",
+          "start": 15778.199999809265,
+          "syncMs": 44.90000009536743,
+          "elapsedMs": 178.09999990463257,
+          "missing": false
+        },
+        {
+          "key": "i11",
+          "start": 15823.099999904633,
+          "syncMs": 0.6999998092651367,
+          "elapsedMs": 133.19999980926514,
+          "missing": false
+        },
+        {
+          "key": "i12",
+          "start": 15823.799999713898,
+          "syncMs": 2.200000286102295,
+          "elapsedMs": 132.5,
+          "missing": false
+        },
+        {
+          "key": "i13",
+          "start": 15826,
+          "syncMs": 88.90000009536743,
+          "elapsedMs": 130.2999997138977,
+          "missing": false
+        },
+        {
+          "key": "i14",
+          "start": 15915,
+          "syncMs": 4.599999904632568,
+          "elapsedMs": 4669.900000095367,
+          "missing": false
+        },
+        {
+          "key": "i15",
+          "start": 15919.599999904633,
+          "syncMs": 1.1999998092651367,
+          "elapsedMs": 36.69999980926514,
+          "missing": false
+        },
+        {
+          "key": "i16",
+          "start": 15920.799999713898,
+          "syncMs": 3.6000003814697266,
+          "elapsedMs": 35.60000038146973,
+          "missing": false
+        },
+        {
+          "key": "i17",
+          "start": 15924.400000095367,
+          "syncMs": 3.5,
+          "elapsedMs": 4701,
+          "missing": true
+        },
+        {
+          "key": "i18",
+          "start": 15927.900000095367,
+          "syncMs": 0.39999961853027344,
+          "elapsedMs": 4673.599999904633,
+          "missing": false
+        },
+        {
+          "key": "i19",
+          "start": 15928.400000095367,
+          "syncMs": 1.1999998092651367,
+          "elapsedMs": 28,
+          "missing": false
+        },
+        {
+          "key": "i20",
+          "start": 15929.599999904633,
+          "syncMs": 0.5999999046325684,
+          "elapsedMs": 4696,
+          "missing": true
+        },
+        {
+          "key": "i21",
+          "start": 15930.299999713898,
+          "syncMs": 1.6000003814697266,
+          "elapsedMs": 4695.300000190735,
+          "missing": true
+        },
+        {
+          "key": "i22",
+          "start": 15932,
+          "syncMs": 2.0999999046325684,
+          "elapsedMs": 24.40000009536743,
+          "missing": false
+        },
+        {
+          "key": "i23",
+          "start": 15934.099999904633,
+          "syncMs": 0.3000001907348633,
+          "elapsedMs": 22.300000190734863,
+          "missing": false
+        },
+        {
+          "key": "i24",
+          "start": 15934.400000095367,
+          "syncMs": 0.09999990463256836,
+          "elapsedMs": 22,
+          "missing": false
+        },
+        {
+          "key": "i25",
+          "start": 15934.599999904633,
+          "syncMs": 0,
+          "elapsedMs": 21.800000190734863,
+          "missing": false
+        },
+        {
+          "key": "i26",
+          "start": 15934.599999904633,
+          "syncMs": 0.19999980926513672,
+          "elapsedMs": 21.800000190734863,
+          "missing": false
+        },
+        {
+          "key": "i27",
+          "start": 15934.799999713898,
+          "syncMs": 1.1000003814697266,
+          "elapsedMs": 21.600000381469727,
+          "missing": false
+        },
+        {
+          "key": "i28",
+          "start": 15935.900000095367,
+          "syncMs": 0.6999998092651367,
+          "elapsedMs": 4690.199999809265,
+          "missing": true
+        },
+        {
+          "key": "i29",
+          "start": 15936.699999809265,
+          "syncMs": 0.3000001907348633,
+          "elapsedMs": 19.700000286102295,
+          "missing": false
+        },
+        {
+          "key": "i30",
+          "start": 15937,
+          "syncMs": 0.09999990463256836,
+          "elapsedMs": 19.40000009536743,
+          "missing": false
+        },
+        {
+          "key": "i31",
+          "start": 15937.099999904633,
+          "syncMs": 0.40000009536743164,
+          "elapsedMs": 4542.599999904633,
+          "missing": false
+        },
+        {
+          "key": "i32",
+          "start": 15937.5,
+          "syncMs": 5.799999713897705,
+          "elapsedMs": 18.90000009536743,
+          "missing": false
+        },
+        {
+          "key": "i33",
+          "start": 15943.299999713898,
+          "syncMs": 0.5,
+          "elapsedMs": 13.100000381469727,
+          "missing": false
+        }
+      ],
+      "verdict": null,
+      "score": null,
+      "websockets": [
+        {
+          "host": "api.iphey.com",
+          "sentBytes": [
+            73394
+          ],
+          "receivedBytes": [
+            43,
+            54
+          ],
+          "closed": false,
+          "performanceError": true
+        }
+      ],
+      "missingCollectors": [
+        "i5",
+        "i17",
+        "i20",
+        "i21",
+        "i28"
+      ],
+      "performancePresent": false,
+      "h3": null
+    },
+    {
+      "version": "090",
+      "versionActual": "154.0.8037.57",
+      "label": "trace-long",
+      "at": "2026-10-01T19:29:51.289Z",
+      "overrides": {},
+      "completed": false,
+      "elapsedMs": 66070,
+      "verdict": null,
+      "score": null,
+      "websockets": []
+    },
+    {
+      "version": "090",
+      "versionActual": "154.0.8037.57",
+      "label": "trace",
+      "at": "2026-10-01T19:28:31.099Z",
+      "overrides": {},
+      "completed": false,
+      "elapsedMs": 22107,
+      "verdict": null,
+      "score": null,
+      "websockets": []
+    },
+    {
+      "version": "090",
+      "versionActual": "154.0.8037.57",
+      "label": "windows",
+      "at": "2026-10-01T19:39:13.932Z",
+      "overrides": {
+        "platform": "windows"
+      },
+      "completed": true,
+      "elapsedMs": 7867,
+      "verdict": "Unreliable",
+      "score": 70,
+      "websockets": [
+        {
+          "host": "api.iphey.com",
+          "sentBytes": [
+            45227
+          ],
+          "receivedBytes": [
+            43,
+            2588
+          ],
+          "closed": true,
+          "performanceError": false
+        }
+      ]
+    },
+    {
+      "version": "090",
+      "versionActual": "154.0.8037.57",
+      "label": "ws",
+      "at": "2026-10-01T19:31:49.481Z",
+      "overrides": {},
+      "completed": false,
+      "elapsedMs": 35927,
+      "verdict": null,
+      "score": null,
+      "websockets": [
+        {
+          "host": "api.iphey.com",
+          "sentBytes": [
+            69884
+          ],
+          "receivedBytes": [
+            43,
+            54
+          ],
+          "closed": false,
+          "performanceError": true
+        }
+      ]
+    }
+  ],
+  "fonts": [
+    {
+      "label": "080-macos",
+      "fonts": 310,
+      "measurements": [
+        {
+          "round": 0,
+          "taskMs": 780.3000001907349,
+          "timerDelayMs": 781.0999999046326,
+          "detected": 16,
+          "slowest": [
+            {
+              "font": "BlinkMacSystemFont",
+              "available": true,
+              "ms": 16.09999990463257
+            },
+            {
+              "font": "Lucida Grande",
+              "available": true,
+              "ms": 8.699999809265137
+            },
+            {
+              "font": "Arial Hebrew",
+              "available": true,
+              "ms": 7.800000190734863
+            },
+            {
+              "font": "Avenir Next Condensed",
+              "available": false,
+              "ms": 4.900000095367432
+            },
+            {
+              "font": "Comic Sans MS",
+              "available": true,
+              "ms": 4.700000286102295
+            },
+            {
+              "font": "Toppan Bunkyu Mincho",
+              "available": false,
+              "ms": 4.699999809265137
+            },
+            {
+              "font": "Ayuthaya",
+              "available": false,
+              "ms": 4.399999618530273
+            },
+            {
+              "font": "Georgia",
+              "available": true,
+              "ms": 4.300000190734863
+            },
+            {
+              "font": "Symbol",
+              "available": false,
+              "ms": 4.200000286102295
+            },
+            {
+              "font": "Toppan Bunkyu Midashi Mincho",
+              "available": false,
+              "ms": 4.200000286102295
+            }
+          ]
+        },
+        {
+          "round": 1,
+          "taskMs": 686.8999996185303,
+          "timerDelayMs": 687,
+          "detected": 16,
+          "slowest": [
+            {
+              "font": "Symbol",
+              "available": false,
+              "ms": 4.900000095367432
+            },
+            {
+              "font": "Apple Chancery",
+              "available": false,
+              "ms": 4.099999904632568
+            },
+            {
+              "font": "Al Tarikh",
+              "available": false,
+              "ms": 3.9000000953674316
+            },
+            {
+              "font": "American Typewriter",
+              "available": false,
+              "ms": 3.8999996185302734
+            },
+            {
+              "font": "Rockwell",
+              "available": false,
+              "ms": 3.8999996185302734
+            },
+            {
+              "font": "Academy Engraved LET",
+              "available": false,
+              "ms": 3.8000001907348633
+            },
+            {
+              "font": "Al Nile",
+              "available": false,
+              "ms": 3.8000001907348633
+            },
+            {
+              "font": "AppleGothic",
+              "available": false,
+              "ms": 3.8000001907348633
+            },
+            {
+              "font": "Al Bayan",
+              "available": false,
+              "ms": 3.799999713897705
+            },
+            {
+              "font": "Apple Color Emoji",
+              "available": false,
+              "ms": 3.799999713897705
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "090-linux",
+      "fonts": 310,
+      "measurements": [
+        {
+          "round": 0,
+          "taskMs": 296,
+          "timerDelayMs": 296.7999997138977,
+          "detected": 2,
+          "slowest": [
+            {
+              "font": "aakar",
+              "available": false,
+              "ms": 2.0999999046325684
+            },
+            {
+              "font": "MS PGothic",
+              "available": true,
+              "ms": 1.9000000953674316
+            },
+            {
+              "font": "MS Gothic",
+              "available": true,
+              "ms": 1.799999713897705
+            },
+            {
+              "font": "Comic Sans MS",
+              "available": false,
+              "ms": 1.5
+            },
+            {
+              "font": "Yu Gothic UI",
+              "available": false,
+              "ms": 1.5
+            },
+            {
+              "font": "Impact",
+              "available": false,
+              "ms": 1.4000000953674316
+            },
+            {
+              "font": "Bahnschrift",
+              "available": false,
+              "ms": 1.4000000953674316
+            },
+            {
+              "font": "Segoe UI",
+              "available": false,
+              "ms": 1.3999996185302734
+            },
+            {
+              "font": "Calibri",
+              "available": false,
+              "ms": 1.3000001907348633
+            },
+            {
+              "font": "Ebrima",
+              "available": false,
+              "ms": 1.3000001907348633
+            }
+          ]
+        },
+        {
+          "round": 1,
+          "taskMs": 283.69999980926514,
+          "timerDelayMs": 283.90000009536743,
+          "detected": 2,
+          "slowest": [
+            {
+              "font": "aakar",
+              "available": false,
+              "ms": 1.9000000953674316
+            },
+            {
+              "font": "Comic Sans MS",
+              "available": false,
+              "ms": 1.4000000953674316
+            },
+            {
+              "font": "Segoe UI",
+              "available": false,
+              "ms": 1.4000000953674316
+            },
+            {
+              "font": "Impact",
+              "available": false,
+              "ms": 1.3000001907348633
+            },
+            {
+              "font": "Consolas",
+              "available": false,
+              "ms": 1.299999713897705
+            },
+            {
+              "font": "Yu Gothic UI",
+              "available": false,
+              "ms": 1.1999998092651367
+            },
+            {
+              "font": "Ayuthaya",
+              "available": false,
+              "ms": 1.1000003814697266
+            },
+            {
+              "font": "Bangla MN",
+              "available": false,
+              "ms": 1.1000003814697266
+            },
+            {
+              "font": "Calibri",
+              "available": false,
+              "ms": 1.0999999046325684
+            },
+            {
+              "font": "Cambria Math",
+              "available": false,
+              "ms": 1.0999999046325684
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "090-macos",
+      "fonts": 310,
+      "measurements": [
+        {
+          "round": 0,
+          "taskMs": 4190.89999961853,
+          "timerDelayMs": 4191.699999809265,
+          "detected": 17,
+          "slowest": [
+            {
+              "font": "Trattatello",
+              "available": false,
+              "ms": 31.299999713897705
+            },
+            {
+              "font": "Tsukushi A Round Gothic",
+              "available": false,
+              "ms": 29.40000009536743
+            },
+            {
+              "font": "Tsukushi B Round Gothic",
+              "available": false,
+              "ms": 26.800000190734863
+            },
+            {
+              "font": "Al Bayan",
+              "available": false,
+              "ms": 23.90000009536743
+            },
+            {
+              "font": "Al Nile",
+              "available": false,
+              "ms": 23.40000009536743
+            },
+            {
+              "font": "Arial Rounded MT Bold",
+              "available": false,
+              "ms": 22.59999990463257
+            },
+            {
+              "font": "Papyrus",
+              "available": false,
+              "ms": 22.40000009536743
+            },
+            {
+              "font": "Academy Engraved LET",
+              "available": false,
+              "ms": 22.40000009536743
+            },
+            {
+              "font": "Malayalam MN",
+              "available": false,
+              "ms": 22.40000009536743
+            },
+            {
+              "font": "Apple Chancery",
+              "available": false,
+              "ms": 22.199999809265137
+            }
+          ]
+        },
+        {
+          "round": 1,
+          "taskMs": 4156.400000095367,
+          "timerDelayMs": 4156.5,
+          "detected": 17,
+          "slowest": [
+            {
+              "font": "Tsukushi A Round Gothic",
+              "available": false,
+              "ms": 37.299999713897705
+            },
+            {
+              "font": "Trattatello",
+              "available": false,
+              "ms": 37.10000038146973
+            },
+            {
+              "font": "Cochin",
+              "available": false,
+              "ms": 30.09999990463257
+            },
+            {
+              "font": "Copperplate",
+              "available": false,
+              "ms": 28.90000009536743
+            },
+            {
+              "font": "Corsiva Hebrew",
+              "available": false,
+              "ms": 27.300000190734863
+            },
+            {
+              "font": "BIZ UDGothic",
+              "available": false,
+              "ms": 24.300000190734863
+            },
+            {
+              "font": "Apple LiGothic",
+              "available": false,
+              "ms": 24.09999990463257
+            },
+            {
+              "font": "Tsukushi B Round Gothic",
+              "available": false,
+              "ms": 23.600000381469727
+            },
+            {
+              "font": "Apple LiSung",
+              "available": false,
+              "ms": 23
+            },
+            {
+              "font": "Hiragino Kaku Gothic Std",
+              "available": false,
+              "ms": 22.5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "090-system-fontconfig",
+      "fonts": 310,
+      "measurements": [
+        {
+          "round": 0,
+          "taskMs": 319.59999990463257,
+          "timerDelayMs": 320.30000019073486,
+          "detected": 3,
+          "slowest": [
+            {
+              "font": "aakar",
+              "available": false,
+              "ms": 2.1999998092651367
+            },
+            {
+              "font": "Avenir Black",
+              "available": false,
+              "ms": 1.799999713897705
+            },
+            {
+              "font": "MS Gothic",
+              "available": true,
+              "ms": 1.6999998092651367
+            },
+            {
+              "font": "MS PGothic",
+              "available": true,
+              "ms": 1.5999999046325684
+            },
+            {
+              "font": "Segoe UI",
+              "available": false,
+              "ms": 1.5
+            },
+            {
+              "font": "Avenir Heavy",
+              "available": false,
+              "ms": 1.5
+            },
+            {
+              "font": "Consolas",
+              "available": false,
+              "ms": 1.4000000953674316
+            },
+            {
+              "font": "Bahnschrift",
+              "available": false,
+              "ms": 1.4000000953674316
+            },
+            {
+              "font": "Calibri",
+              "available": false,
+              "ms": 1.4000000953674316
+            },
+            {
+              "font": "Avenir",
+              "available": false,
+              "ms": 1.4000000953674316
+            }
+          ]
+        },
+        {
+          "round": 1,
+          "taskMs": 306.09999990463257,
+          "timerDelayMs": 306.30000019073486,
+          "detected": 3,
+          "slowest": [
+            {
+              "font": "aakar",
+              "available": false,
+              "ms": 1.8000001907348633
+            },
+            {
+              "font": "Consolas",
+              "available": false,
+              "ms": 1.4000000953674316
+            },
+            {
+              "font": "Comic Sans MS",
+              "available": false,
+              "ms": 1.4000000953674316
+            },
+            {
+              "font": "Segoe UI",
+              "available": false,
+              "ms": 1.3000001907348633
+            },
+            {
+              "font": "Impact",
+              "available": false,
+              "ms": 1.299999713897705
+            },
+            {
+              "font": "Segoe UI Symbol",
+              "available": false,
+              "ms": 1.200000286102295
+            },
+            {
+              "font": "Hiragino Sans W1",
+              "available": false,
+              "ms": 1.200000286102295
+            },
+            {
+              "font": "STIXNonUnicode",
+              "available": false,
+              "ms": 1.200000286102295
+            },
+            {
+              "font": "Bahnschrift",
+              "available": false,
+              "ms": 1.1999998092651367
+            },
+            {
+              "font": "Palatino Linotype",
+              "available": false,
+              "ms": 1.1999998092651367
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "network": [
+    {
+      "version": "080",
+      "platform": "linux",
+      "timezone": "UTC",
+      "at": "2026-10-01T19:40:54.479Z",
+      "completed": true,
+      "signals": {
+        "bot": "\"not_detected\"",
+        "vpn": "true",
+        "os_mismatch": "true",
+        "timezone_mismatch": "false",
+        "public_vpn": "false",
+        "relay": "false",
+        "proxy": "false",
+        "tampering": "false",
+        "tampering_ml_score": "0",
+        "anti_detect_browser": "false",
+        "suspect_score": "4",
+        "developer_tools": "false"
+      },
+      "surface": {
+        "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36",
+        "platform": "Linux x86_64",
+        "timezone": "UTC",
+        "languages": [
+          "en-US",
+          "en-GB",
+          "en-US",
+          "en"
+        ]
+      },
+      "tls": {
+        "httpVersion": "h2",
+        "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36",
+        "ja3Hash": "2a7a9e1234b4e43e7ea288cf6aeecc5e",
+        "ja4": "t13d1517h2_8daaf6152771_cb7bf5808d99",
+        "akamaiFingerprintHash": "52d84b11737d980aef856699f885ca86"
+      },
+      "vpnDetails": "vpn: true\nvpn_confidence: \"low\"\nvpn_ml_score: 0.045\nvpn_origin_timezone: \"UTC\"\nvpn_origin_country: \"unknown\"\nvpn_methods: {\ntimezone_mismatch: false\npublic_vpn: false\nauxiliary_mobile: false\nos_mismatch: true\nrelay: false\nml_prediction: false\n}"
+    },
+    {
+      "version": "090",
+      "platform": "linux",
+      "timezone": "America/Los_Angeles",
+      "at": "2026-10-01T19:40:48.292Z",
+      "completed": true,
+      "signals": {
+        "bot": "\"not_detected\"",
+        "vpn": "true",
+        "os_mismatch": "true",
+        "timezone_mismatch": "false",
+        "public_vpn": "false",
+        "relay": "false",
+        "proxy": "false",
+        "tampering": "false",
+        "tampering_ml_score": "0",
+        "anti_detect_browser": "false",
+        "suspect_score": "4",
+        "developer_tools": "false"
+      },
+      "surface": {
+        "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+        "platform": "Linux x86_64",
+        "timezone": "America/Los_Angeles",
+        "languages": [
+          "en-US",
+          "en-GB",
+          "en-US",
+          "en"
+        ]
+      },
+      "tls": {
+        "httpVersion": "h2",
+        "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+        "ja3Hash": "b71a27f67e7d293c9997e19131aab9b8",
+        "ja4": "t13d1517h2_8daaf6152771_cb7bf5808d99",
+        "akamaiFingerprintHash": "52d84b11737d980aef856699f885ca86"
+      },
+      "vpnDetails": "vpn: true\nvpn_confidence: \"low\"\nvpn_ml_score: 0.039\nvpn_origin_timezone: \"America/Los_Angeles\"\nvpn_origin_country: \"unknown\"\nvpn_methods: {\ntimezone_mismatch: false\npublic_vpn: false\nauxiliary_mobile: false\nos_mismatch: true\nrelay: false\nml_prediction: false\n}"
+    },
+    {
+      "version": "090",
+      "platform": "linux",
+      "timezone": "UTC",
+      "at": "2026-10-01T19:40:34.982Z",
+      "completed": true,
+      "signals": {
+        "bot": "\"not_detected\"",
+        "vpn": "true",
+        "os_mismatch": "true",
+        "timezone_mismatch": "false",
+        "public_vpn": "false",
+        "relay": "false",
+        "proxy": "false",
+        "tampering": "false",
+        "tampering_ml_score": "0",
+        "anti_detect_browser": "false",
+        "suspect_score": "4",
+        "developer_tools": "false"
+      },
+      "surface": {
+        "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+        "platform": "Linux x86_64",
+        "timezone": "UTC",
+        "languages": [
+          "en-US",
+          "en-GB",
+          "en-US",
+          "en"
+        ]
+      },
+      "tls": {
+        "httpVersion": "h2",
+        "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+        "ja3Hash": "e09e7bad1363b692035c6dfb9ab4af5e",
+        "ja4": "t13d1517h2_8daaf6152771_cb7bf5808d99",
+        "akamaiFingerprintHash": "52d84b11737d980aef856699f885ca86"
+      },
+      "vpnDetails": "vpn: true\nvpn_confidence: \"low\"\nvpn_ml_score: 0.046\nvpn_origin_timezone: \"UTC\"\nvpn_origin_country: \"unknown\"\nvpn_methods: {\ntimezone_mismatch: false\npublic_vpn: false\nauxiliary_mobile: false\nos_mismatch: true\nrelay: false\nml_prediction: false\n}"
+    },
+    {
+      "version": "090",
+      "platform": "macos",
+      "timezone": "America/Los_Angeles",
+      "at": "2026-10-01T19:40:41.131Z",
+      "completed": true,
+      "signals": {
+        "bot": "\"not_detected\"",
+        "vpn": "true",
+        "os_mismatch": "true",
+        "timezone_mismatch": "false",
+        "public_vpn": "false",
+        "relay": "false",
+        "proxy": "false",
+        "tampering": "false",
+        "tampering_ml_score": "0.1379",
+        "anti_detect_browser": "false",
+        "suspect_score": "4",
+        "developer_tools": "false"
+      },
+      "surface": {
+        "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+        "platform": "MacIntel",
+        "timezone": "America/Los_Angeles",
+        "languages": [
+          "en-US",
+          "en"
+        ]
+      },
+      "tls": {
+        "httpVersion": "h2",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+        "ja3Hash": "7fdf753c80785a44e7372bbe02e51a09",
+        "ja4": "t13d1517h2_8daaf6152771_cb7bf5808d99",
+        "akamaiFingerprintHash": "52d84b11737d980aef856699f885ca86"
+      },
+      "vpnDetails": "vpn: true\nvpn_confidence: \"low\"\nvpn_ml_score: 0.042\nvpn_origin_timezone: \"America/Los_Angeles\"\nvpn_origin_country: \"unknown\"\nvpn_methods: {\ntimezone_mismatch: false\npublic_vpn: false\nauxiliary_mobile: false\nos_mismatch: true\nrelay: false\nml_prediction: false\n}"
+    },
+    {
+      "version": "090",
+      "platform": "macos",
+      "timezone": "UTC",
+      "at": "2026-10-01T19:40:27.556Z",
+      "completed": true,
+      "signals": {
+        "bot": "\"not_detected\"",
+        "vpn": "true",
+        "os_mismatch": "true",
+        "timezone_mismatch": "false",
+        "public_vpn": "false",
+        "relay": "false",
+        "proxy": "false",
+        "tampering": "false",
+        "tampering_ml_score": "0.2567",
+        "anti_detect_browser": "false",
+        "suspect_score": "4",
+        "developer_tools": "false"
+      },
+      "surface": {
+        "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+        "platform": "MacIntel",
+        "timezone": "UTC",
+        "languages": [
+          "en-US",
+          "en"
+        ]
+      },
+      "tls": {
+        "httpVersion": "h2",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+        "ja3Hash": "83911517e41d924432be8313bdce49d6",
+        "ja4": "t13d1517h2_8daaf6152771_cb7bf5808d99",
+        "akamaiFingerprintHash": "52d84b11737d980aef856699f885ca86"
+      },
+      "vpnDetails": "vpn: true\nvpn_confidence: \"low\"\nvpn_ml_score: 0.058\nvpn_origin_timezone: \"UTC\"\nvpn_origin_country: \"unknown\"\nvpn_methods: {\ntimezone_mismatch: false\npublic_vpn: false\nauxiliary_mobile: false\nos_mismatch: true\nrelay: false\nml_prediction: false\n}"
+    },
+    {
+      "control": "host-stock-google-chrome-headless",
+      "at": "2026-10-01T19:45:31.166Z",
+      "browserVersion": "144.0.7559.96",
+      "signals": {
+        "bot": "\"bad\"",
+        "vpn": "true",
+        "vpn_confidence": "\"low\"",
+        "os_mismatch": "true",
+        "timezone_mismatch": "false",
+        "proxy": "false",
+        "tampering": "false",
+        "suspect_score": "23"
+      },
+      "surface": {
+        "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/144.0.0.0 Safari/537.36",
+        "platform": "Linux x86_64",
+        "timezone": "America/Los_Angeles"
+      },
+      "vpnDetails": ""
+    }
+  ],
+  "clients": [
+    {
+      "variant": "expose-function",
+      "at": "2026-10-01T19:44:01.397Z",
+      "probes": [
+        {
+          "type": "dummyFn",
+          "rating": 0
+        },
+        {
+          "type": "sourceUrlLeak",
+          "rating": 0
+        },
+        {
+          "type": "mainWorldExecution",
+          "rating": 0
+        },
+        {
+          "type": "runtimeEnableLeak",
+          "rating": -1
+        },
+        {
+          "type": "exposeFunctionLeak",
+          "rating": 1
+        },
+        {
+          "type": "navigatorWebdriver",
+          "rating": -1
+        },
+        {
+          "type": "viewport",
+          "rating": -1
+        },
+        {
+          "type": "pwInitScripts",
+          "rating": -1
+        },
+        {
+          "type": "bypassCsp",
+          "rating": -1
+        },
+        {
+          "type": "useragent",
+          "rating": -1
+        }
+      ],
+      "windowMarkers": {
+        "binding": true,
+        "initScripts": false,
+        "diagnosticMarker": false
+      }
+    },
+    {
+      "variant": "helper-noDefaults",
+      "at": "2026-10-01T19:43:39.381Z",
+      "probes": [
+        {
+          "type": "dummyFn",
+          "rating": 0
+        },
+        {
+          "type": "sourceUrlLeak",
+          "rating": 0
+        },
+        {
+          "type": "mainWorldExecution",
+          "rating": 0
+        },
+        {
+          "type": "runtimeEnableLeak",
+          "rating": -1
+        },
+        {
+          "type": "exposeFunctionLeak",
+          "rating": 0
+        },
+        {
+          "type": "navigatorWebdriver",
+          "rating": -1
+        },
+        {
+          "type": "viewport",
+          "rating": -1
+        },
+        {
+          "type": "pwInitScripts",
+          "rating": -1
+        },
+        {
+          "type": "bypassCsp",
+          "rating": -1
+        },
+        {
+          "type": "useragent",
+          "rating": -1
+        }
+      ],
+      "windowMarkers": {
+        "binding": false,
+        "initScripts": false,
+        "diagnosticMarker": false
+      }
+    },
+    {
+      "variant": "init-script",
+      "at": "2026-10-01T19:44:06.916Z",
+      "probes": [
+        {
+          "type": "dummyFn",
+          "rating": 0
+        },
+        {
+          "type": "sourceUrlLeak",
+          "rating": 0
+        },
+        {
+          "type": "mainWorldExecution",
+          "rating": 0
+        },
+        {
+          "type": "runtimeEnableLeak",
+          "rating": -1
+        },
+        {
+          "type": "exposeFunctionLeak",
+          "rating": 0
+        },
+        {
+          "type": "navigatorWebdriver",
+          "rating": -1
+        },
+        {
+          "type": "viewport",
+          "rating": -1
+        },
+        {
+          "type": "pwInitScripts",
+          "rating": -1
+        },
+        {
+          "type": "bypassCsp",
+          "rating": -1
+        },
+        {
+          "type": "useragent",
+          "rating": -1
+        }
+      ],
+      "windowMarkers": {
+        "binding": false,
+        "initScripts": false,
+        "diagnosticMarker": true
+      }
+    },
+    {
+      "variant": "isolated-world",
+      "at": "2026-10-01T19:43:55.910Z",
+      "probes": [
+        {
+          "type": "dummyFn",
+          "rating": 0
+        },
+        {
+          "type": "sourceUrlLeak",
+          "rating": 0
+        },
+        {
+          "type": "mainWorldExecution",
+          "rating": 0
+        },
+        {
+          "type": "runtimeEnableLeak",
+          "rating": -1
+        },
+        {
+          "type": "exposeFunctionLeak",
+          "rating": 0
+        },
+        {
+          "type": "navigatorWebdriver",
+          "rating": -1
+        },
+        {
+          "type": "viewport",
+          "rating": -1
+        },
+        {
+          "type": "pwInitScripts",
+          "rating": -1
+        },
+        {
+          "type": "bypassCsp",
+          "rating": -1
+        },
+        {
+          "type": "useragent",
+          "rating": -1
+        }
+      ],
+      "windowMarkers": {
+        "binding": false,
+        "initScripts": false,
+        "diagnosticMarker": false
+      }
+    },
+    {
+      "variant": "locator",
+      "at": "2026-10-01T19:43:44.832Z",
+      "probes": [
+        {
+          "type": "dummyFn",
+          "rating": 0
+        },
+        {
+          "type": "sourceUrlLeak",
+          "rating": 0
+        },
+        {
+          "type": "mainWorldExecution",
+          "rating": 0
+        },
+        {
+          "type": "runtimeEnableLeak",
+          "rating": -1
+        },
+        {
+          "type": "exposeFunctionLeak",
+          "rating": 0
+        },
+        {
+          "type": "navigatorWebdriver",
+          "rating": -1
+        },
+        {
+          "type": "viewport",
+          "rating": -1
+        },
+        {
+          "type": "pwInitScripts",
+          "rating": -1
+        },
+        {
+          "type": "bypassCsp",
+          "rating": -1
+        },
+        {
+          "type": "useragent",
+          "rating": -1
+        }
+      ],
+      "windowMarkers": {
+        "binding": false,
+        "initScripts": false,
+        "diagnosticMarker": false
+      }
+    },
+    {
+      "variant": "main-world",
+      "at": "2026-10-01T19:43:50.495Z",
+      "probes": [
+        {
+          "type": "dummyFn",
+          "rating": 0
+        },
+        {
+          "type": "sourceUrlLeak",
+          "rating": 0
+        },
+        {
+          "type": "mainWorldExecution",
+          "rating": 1
+        },
+        {
+          "type": "runtimeEnableLeak",
+          "rating": -1
+        },
+        {
+          "type": "exposeFunctionLeak",
+          "rating": 0
+        },
+        {
+          "type": "navigatorWebdriver",
+          "rating": -1
+        },
+        {
+          "type": "viewport",
+          "rating": -1
+        },
+        {
+          "type": "pwInitScripts",
+          "rating": -1
+        },
+        {
+          "type": "bypassCsp",
+          "rating": -1
+        },
+        {
+          "type": "useragent",
+          "rating": -1
+        }
+      ],
+      "windowMarkers": {
+        "binding": false,
+        "initScripts": false,
+        "diagnosticMarker": false
+      }
+    },
+    {
+      "variant": "playwright-default",
+      "at": "2026-10-01T19:43:33.778Z",
+      "probes": [
+        {
+          "type": "dummyFn",
+          "rating": 0
+        },
+        {
+          "type": "sourceUrlLeak",
+          "rating": 0
+        },
+        {
+          "type": "mainWorldExecution",
+          "rating": 0
+        },
+        {
+          "type": "runtimeEnableLeak",
+          "rating": -1
+        },
+        {
+          "type": "exposeFunctionLeak",
+          "rating": 0
+        },
+        {
+          "type": "navigatorWebdriver",
+          "rating": -1
+        },
+        {
+          "type": "viewport",
+          "rating": -1
+        },
+        {
+          "type": "pwInitScripts",
+          "rating": -1
+        },
+        {
+          "type": "bypassCsp",
+          "rating": -1
+        },
+        {
+          "type": "useragent",
+          "rating": -1
+        }
+      ],
+      "windowMarkers": {
+        "binding": false,
+        "initScripts": false,
+        "diagnosticMarker": false
+      }
+    },
+    {
+      "variant": "raw-cdp",
+      "at": "2026-10-01T19:43:29.855Z",
+      "probes": [
+        {
+          "type": "dummyFn",
+          "rating": 0
+        },
+        {
+          "type": "sourceUrlLeak",
+          "rating": 0
+        },
+        {
+          "type": "mainWorldExecution",
+          "rating": 0
+        },
+        {
+          "type": "runtimeEnableLeak",
+          "rating": -1
+        },
+        {
+          "type": "exposeFunctionLeak",
+          "rating": 0
+        },
+        {
+          "type": "navigatorWebdriver",
+          "rating": -1
+        },
+        {
+          "type": "viewport",
+          "rating": -1
+        },
+        {
+          "type": "pwInitScripts",
+          "rating": -1
+        },
+        {
+          "type": "bypassCsp",
+          "rating": -1
+        },
+        {
+          "type": "useragent",
+          "rating": -1
+        }
+      ]
+    }
+  ],
+  "regression": {
+    "final-font-080": {
+      "browserVersion": "152.0.7977.82",
+      "fontCount": 310,
+      "limitMs": 3000,
+      "passed": true,
+      "rounds": [
+        {
+          "round": 0,
+          "taskMs": 790.5999999046326,
+          "timerDelayMs": 791.3999996185303,
+          "available": 16
+        },
+        {
+          "round": 1,
+          "taskMs": 686.5,
+          "timerDelayMs": 686.6999998092651,
+          "available": 16
+        }
+      ]
+    },
+    "final-font-090": {
+      "browserVersion": "154.0.8037.57",
+      "fontCount": 310,
+      "limitMs": 3000,
+      "passed": false,
+      "rounds": [
+        {
+          "round": 0,
+          "taskMs": 4207.400000095367,
+          "timerDelayMs": 4208.299999713898,
+          "available": 17
+        },
+        {
+          "round": 1,
+          "taskMs": 4150.099999904633,
+          "timerDelayMs": 4150.199999809265,
+          "available": 17
+        }
+      ]
+    },
+    "final-iphey-090": {
+      "completed": false,
+      "serverErrors": [
+        "null is not an object (evaluating 'e?.performance.h3')"
+      ],
+      "pageErrors": [],
+      "sockets": [
+        {
+          "sentBytes": [
+            69884
+          ],
+          "receivedBytes": [
+            43,
+            54
+          ],
+          "closed": false
+        }
+      ],
+      "elapsedMs": 35943,
+      "browserVersion": "154.0.8037.57",
+      "verdict": "",
+      "score": null
+    },
+    "final-iphey-linux-region": {
+      "completed": true,
+      "serverErrors": [],
+      "pageErrors": [],
+      "sockets": [
+        {
+          "sentBytes": [
+            40738
+          ],
+          "receivedBytes": [
+            43,
+            2326
+          ],
+          "closed": true
+        }
+      ],
+      "elapsedMs": 7752,
+      "browserVersion": "154.0.8037.57",
+      "verdict": "Trustworthy",
+      "score": 100
+    }
+  }
+}

@@ -1,0 +1,26 @@
+import {chromium} from '@playwright/test';
+import {writeFile,mkdir} from 'node:fs/promises';
+const root='.cloakhub/free-080-090-comparison';
+const version=process.argv[2], hub=`http://127.0.0.1:${version==='080'?18080:18090}`;
+async function api(path,method='GET',body){const r=await fetch(hub+'/api/profiles'+path,{method,headers:{'content-type':'application/json'},body:body?JSON.stringify(body):undefined});if(!r.ok)throw Error(`${r.status} ${await r.text()}`);return r.status===204?null:r.json()}
+await mkdir(root+'/probes',{recursive:true});
+for(const seed of ['20261001','20261002'])for(const headless of [false,true]){
+ const id=`probe_${version}_${seed}_${headless?'hl':'hd'}`, result={version,seed,headless,date:new Date().toISOString()};let b;
+ try {
+ const profile=await api('','POST',{profile_id:id,fingerprint_seed:seed,headless}); result.profile=profile;
+ b=await chromium.connectOverCDP(profile.connection.cdp_url);result.browserVersion=b.version();const p=await b.contexts()[0].newPage();await p.goto('http://127.0.0.1:9633/');
+ result.surface=await p.evaluate(async()=>{
+  async function identity(){return {ua:navigator.userAgent,platform:navigator.platform,languages:[...navigator.languages],cpu:navigator.hardwareConcurrency,memory:navigator.deviceMemory,webdriver:String(navigator.webdriver),timezone:Intl.DateTimeFormat().resolvedOptions().timeZone,uaData:await navigator.userAgentData?.getHighEntropyValues(['architecture','bitness','platformVersion','fullVersionList'])};}
+  const worker=new Worker(URL.createObjectURL(new Blob([`(${identity.toString()})().then(postMessage)`],{type:'text/javascript'})));const workerIdentity=await new Promise((res,rej)=>{const t=setTimeout(()=>rej(Error('worker timeout')),10000);worker.onmessage=e=>{clearTimeout(t);res(e.data)};worker.onerror=e=>{clearTimeout(t);rej(Error(e.message))}});worker.terminate();
+  const gls={};for(const type of ['webgl','webgl2']){const gl=document.createElement('canvas').getContext(type);if(!gl){gls[type]=null;continue}const ext=gl.getExtension('WEBGL_debug_renderer_info');gl.clearColor(.25,.5,.75,1);gl.clear(gl.COLOR_BUFFER_BIT);const pixel=new Uint8Array(4);gl.readPixels(0,0,1,1,gl.RGBA,gl.UNSIGNED_BYTE,pixel);gls[type]={vendor:ext&&gl.getParameter(ext.UNMASKED_VENDOR_WEBGL),renderer:ext&&gl.getParameter(ext.UNMASKED_RENDERER_WEBGL),pixel:[...pixel],error:gl.getError()}}
+  const c=document.createElement('canvas');c.width=240;c.height=80;const ctx=c.getContext('2d');ctx.font='20px Arial';ctx.fillText('Fingerprint test 😀 123',5,30);const digest=async s=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s)))).map(n=>n.toString(16).padStart(2,'0')).join('');
+  return {main:await identity(),worker:workerIdentity,gls,canvasHash:await digest(c.toDataURL()),screen:{width:screen.width,height:screen.height,availWidth:screen.availWidth,availHeight:screen.availHeight,colorDepth:screen.colorDepth},window:{innerWidth,innerHeight,outerWidth,outerHeight,devicePixelRatio},headers:await(await fetch('/headers')).json()};
+ });
+ await p.evaluate(()=>new Promise(resolve=>{const f=document.createElement('iframe');f.src='http://localhost:9633/';f.onload=resolve;document.body.append(f)}));result.surface.frame=await p.frames().find(f=>f.url()==='http://localhost:9633/').evaluate(async()=>({ua:navigator.userAgent,platform:navigator.platform,cpu:navigator.hardwareConcurrency,languages:[...navigator.languages],uaData:await navigator.userAgentData.getHighEntropyValues(['architecture','bitness','platformVersion','fullVersionList'])}));
+ const s=result.surface;result.consistency={mainWorkerUa:s.main.ua===s.worker.ua,mainFrameUa:s.main.ua===s.frame.ua,httpUa:s.main.ua===s.headers['user-agent'],mainWorkerPlatform:s.main.platform===s.worker.platform,mainFramePlatform:s.main.platform===s.frame.platform,mainWorkerUaData:JSON.stringify(s.main.uaData)===JSON.stringify(s.worker.uaData),mainFrameUaData:JSON.stringify(s.main.uaData)===JSON.stringify(s.frame.uaData)};
+ if(seed==='20261001'){
+  const ip=await b.contexts()[0].newPage();const data={responses:[],failures:[],errors:[]};ip.on('response',r=>{const u=new URL(r.url());if(!/google|doubleclick/.test(u.hostname))data.responses.push({host:u.hostname,path:u.pathname,status:r.status()})});ip.on('requestfailed',r=>data.failures.push({host:new URL(r.url()).hostname,error:r.failure()?.errorText}));ip.on('pageerror',e=>data.errors.push(e.message));await ip.goto('https://iphey.com/',{waitUntil:'domcontentloaded',timeout:45000});data.completed=await ip.waitForFunction(()=>!document.body.innerText.includes('Temporary value')&&Boolean(document.querySelector('#hero-status')?.textContent.trim()),null,{timeout:90000}).then(()=>true).catch(()=>false);data.text=(await ip.locator('body').innerText()).slice(0,900).replace(/\b(?:\d{1,3}\.){3}\d{1,3}\b/g,'[IP redacted]');result.iphey=data;await ip.close();
+ }
+ console.log(id,JSON.stringify({consistency:result.consistency,gl:result.surface.gls,iphey:result.iphey?.text.slice(0,450)}));
+ }catch(e){result.error=String(e);console.error(id,result.error)}finally{await b?.close();await api('/'+id,'DELETE').catch(()=>{});await writeFile(root+'/probes/'+id+'.json',JSON.stringify(result,null,2))}
+}

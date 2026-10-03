@@ -1,0 +1,1 @@
+Bun.serve({hostname:'0.0.0.0',port:9633,fetch(req){return new Response(new URL(req.url).pathname==='/headers'?JSON.stringify(Object.fromEntries(req.headers)):'<!doctype html><title>Controlled fingerprint probe</title><p>Controlled fingerprint probe</p>',{headers:{'content-type':new URL(req.url).pathname==='/headers'?'application/json':'text/html'}})}});
