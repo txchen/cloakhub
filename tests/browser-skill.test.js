@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { listTargets, readConfig, resolveTarget, safeError, withBrowser } from "../skills/cloakhub-browser/scripts/browser.mjs";
 
 const roots = [];
@@ -64,6 +64,17 @@ describe("CloakHub browser skill client", () => {
       { name: "personal", url: "http://127.0.0.1:7788", profile: "personal", auth: "cdp_token", default: false }
     ]);
     await expect(resolveTarget(loaded, "work", {})).rejects.toThrow("Cannot read");
+  });
+
+  test("runs the CLI when invoked through a symlinked skill directory", async () => {
+    const loaded = await fixture();
+    const link = join(loaded.path, "..", "linked-skill");
+    await symlink(resolve(import.meta.dir, "../skills/cloakhub-browser"), link);
+    const proc = Bun.spawnSync(["node", join(link, "scripts/browser.mjs"), "targets"], {
+      env: { ...process.env, CLOAKHUB_CLIENT_CONFIG: loaded.path }
+    });
+    expect(proc.exitCode).toBe(0);
+    expect(JSON.parse(proc.stdout.toString()).map((t) => t.name)).toEqual(["work", "personal"]);
   });
 
   test("does not guess a target or accept inherited object properties", async () => {
