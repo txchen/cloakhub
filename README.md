@@ -419,8 +419,9 @@ only. The event log shows starts, failures, idle stops, and capacity events.
 
 Browsers wake automatically through their fixed profile connection URL. The skill
 disconnects after each script so idle sleep can work. An open CDP connection prevents
-automatic sleep; simply watching the viewer does not. Sleep retains browser storage
-and restores tabs, but does not preserve live JavaScript or unfinished operations.
+automatic sleep; simply watching the viewer does not. Sleep retains cookies and browser storage
+but closes all tabs; the next start opens a new tab. Live JavaScript and unfinished
+operations are lost.
 
 Multiple clients using the same profile share tabs and login state; aliases do not
 provide task isolation. Coordinate access or assign separate profiles for parallel work.

@@ -59,9 +59,9 @@ user confirms, list tabs, and verify the resulting page. No automatic user/agent
 ownership mechanism is provided; coordinate instead of racing the user's input.
 
 Server sleep preserves cookies and browser storage, not JS variables, unfinished
-forms, or in-flight operations. A later invocation automatically wakes the profile,
-but tab IDs may have changed. Freshly inspect the tabs and intended website state.
-If multiple tabs are plausible, obtain enough context to identify the correct one.
+forms, or in-flight operations. A later invocation automatically wakes the profile
+with a single new tab; earlier tabs are not reopened. Navigate again and inspect the
+intended website state.
 Only retry a side effect after determining whether the first attempt completed.
 
 ## Completion

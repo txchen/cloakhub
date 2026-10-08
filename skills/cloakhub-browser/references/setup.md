@@ -93,6 +93,15 @@ the client is ready for a browser task.
 - Cold start timeout: connecting allows 60 seconds; an expired timeout does not cancel
   server startup. Inspect server state before repeating. An operator can inspect the UI
   and event log without giving the client administrative credentials.
+- `connectOverCDP` timeout after `<ws connected>`: authentication and the WebSocket
+  upgrade succeeded. Playwright waits for every existing tab to answer its first CDP
+  commands. A tab whose host drops TCP packets, such as a stopped dev server on the
+  Docker host's LAN or Tailscale IP, may not answer until Chrome's connection timeout
+  (about 2.5 minutes). Rerun with
+  `DEBUG=pw:protocol` and find the `sessionId` whose `Page.enable` never gets a reply.
+  Its `Target.attachedToTarget` line gives the URL. Ask the operator to close that tab,
+  or close it yourself after the browser is warm. Do not increase the timeout. Close task
+  tabs that point at temporary hosts.
 - 503: do not retry just on status. When the server reports `CAPACITY_UNAVAILABLE`
   with `retryable: true`, use bounded backoff (at most three retries). Display or
   startup configuration errors require operator repair. A WebSocket error may hide
