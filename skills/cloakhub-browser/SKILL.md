@@ -48,7 +48,8 @@ JS
 
 Print the new tab's ID before navigating so it remains available after a timeout.
 Reuse that tab in subsequent rounds with `await tab('ID_FROM_PREVIOUS_OUTPUT')`.
-Each invocation has fresh JavaScript variables; server tabs and cookies persist.
+Each invocation has fresh JavaScript variables; server tabs persist while the
+browser runs; cookies persist across sleep.
 Use a user-owned tab only when the task calls for it. Multiple clients share the
 profile: a target alias is not a task lock or an isolated browser context.
 
@@ -80,8 +81,8 @@ It preserves all tabs you did not explicitly close. Avoid `context.close()`, raw
 other clients or stored data. Reuse the provided context to preserve the profile's login.
 
 After a disconnect or timeout, reconnect to the same alias and inspect `tabs()` and
-the application state before continuing. Tab IDs change across browser restarts;
-identify the intended page from fresh observations instead of silently using the first.
+the application state before continuing. Sleep and restarts close all tabs;
+reopen what you need and identify the intended page from fresh observations instead of silently using the first.
 Do not replay purchases, messages, or submissions just because their reply was lost.
 For authentication or startup errors, use the troubleshooting section in setup.md.
 

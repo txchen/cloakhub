@@ -150,7 +150,6 @@ function browserCommand(
     `--remote-debugging-port=${command.cdpPort}`,
     "--no-sandbox",
     "--no-first-run",
-    "--restore-last-session",
     "--no-default-browser-check",
     "--window-position=0,0",
     `--window-size=${command.screenWidth},${command.screenHeight}`,

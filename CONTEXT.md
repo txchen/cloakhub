@@ -49,7 +49,7 @@ Approximate CPU and memory consumption attributed to a Browser Instance through 
 _Avoid_: Exact billing, browser metrics
 
 **Browser Persistence**:
-The guarantee that cookies, local storage, cache, extension state, session restore data, and other browser user-data survive Browser Instance shutdown and later recovery. It does not preserve JavaScript heap, in-flight requests, unsaved form state, media playback, or other live runtime state.
+The guarantee that cookies, local storage, cache, extension state, and other browser user-data survive Browser Instance shutdown and later recovery. It does not reopen tabs or preserve session-only cookies, JavaScript heap, in-flight requests, unsaved form state, media playback, or other live runtime state.
 _Avoid_: Process persistence, always-on browser, runtime snapshot
 
 **Data Root**:

@@ -56,7 +56,6 @@ describe("BunBrowserProcessLauncher", () => {
       "--remote-debugging-port=5100",
       "--no-sandbox",
       "--no-first-run",
-      "--restore-last-session",
       "--no-default-browser-check",
       "--window-position=0,0",
       "--window-size=1920,1080",
