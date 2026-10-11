@@ -155,6 +155,7 @@ function makeKasmVncClipboard(text: string): Buffer {
   const value = Buffer.from(text, "utf8");
   const header = Buffer.alloc(7 + mime.length + 4);
   header[0] = 180;
+  header[1] = 1;
   header[6] = mime.length;
   mime.copy(header, 7);
   header.writeUInt32BE(value.length, 7 + mime.length);
