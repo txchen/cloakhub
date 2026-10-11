@@ -1,0 +1,60 @@
+name: Merge Image Manifest
+
+# Combine per-arch images into one multi-arch tag, e.g. make
+# cloakhub_free:0.8.2 serve both amd64 and arm64. Sources should be pinned by
+# digest. The current target tag is first copied to `backup_tag` for rollback.
+
+on:
+  workflow_dispatch:
+    inputs:
+      image:
+        description: Image repository
+        default: ghcr.io/txchen/cloakhub_free
+        required: true
+      target_tag:
+        description: Multi-arch tag to (re)write
+        default: "0.8.2"
+        required: true
+      backup_tag:
+        description: Tag to preserve the current target in (empty to skip)
+        default: 0.8.2-amd64
+        required: false
+      sources:
+        description: Space-separated source refs (tag or @sha256 digest)
+        default: "@sha256:1fa629504f726aace50256f9f20d3a0a39cb4a7676726117d7c2538da38ed624 @sha256:dbcb35f919feb3f1c0e0dc4f9aaf0ab6657ec3bc49f8be5c3de56dfa35b8efcf"
+        required: true
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  merge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Back up current target
+        if: inputs.backup_tag != ''
+        run: |
+          docker buildx imagetools create \
+            -t "${{ inputs.image }}:${{ inputs.backup_tag }}" \
+            "${{ inputs.image }}:${{ inputs.target_tag }}"
+
+      - name: Create multi-arch tag
+        run: |
+          refs=()
+          for s in ${{ inputs.sources }}; do
+            case "$s" in
+              @*) refs+=("${{ inputs.image }}$s") ;;
+              *)  refs+=("${{ inputs.image }}:$s") ;;
+            esac
+          done
+          docker buildx imagetools create -t "${{ inputs.image }}:${{ inputs.target_tag }}" "${refs[@]}"
+          docker buildx imagetools inspect "${{ inputs.image }}:${{ inputs.target_tag }}"
