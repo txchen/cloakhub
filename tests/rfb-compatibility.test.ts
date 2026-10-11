@@ -11,6 +11,7 @@ import {
   rfbServerMessageLength,
   translateClientFrame,
   translateServerChunk,
+  translateServerData,
   translateServerFrame
 } from "../src/rfb-compatibility";
 
@@ -141,8 +142,39 @@ describe("RFB compatibility proxy", () => {
     expect(translateServerChunk(clipboard.subarray(0, 12), state)).toEqual(Buffer.alloc(0));
     expect(translateServerChunk(clipboard.subarray(12), state)).toEqual(buildServerCutText("hello"));
 
-    expect(translateServerChunk(Buffer.concat([Buffer.from([2]), clipboard]), state)).toEqual(
-      Buffer.concat([Buffer.from([2]), buildServerCutText("hello")])
+    expect(translateServerChunk(Buffer.concat([clipboard, Buffer.from([2])]), state)).toEqual(
+      Buffer.concat([buildServerCutText("hello"), Buffer.from([2])])
+    );
+
+    // Only a chunk *starting* with a clipboard message is inspected: chunks are
+    // not RFB-aligned, so anything else is forwarded byte-for-byte.
+    const leading = Buffer.concat([Buffer.from([2]), clipboard]);
+    expect(translateServerChunk(leading, state)).toEqual(leading);
+  });
+
+  test("forwards framebuffer chunks that merely start with byte 180 unchanged", () => {
+    // Chunks are not aligned to RFB messages; pixel data can begin with 0xb4.
+    // Real samples captured from KasmVNC on tcoci-2.
+    for (const hex of [
+      "b49b5749bb5d2ecbb79eda82c6529535",
+      "b4a33ba94134d2b5f54aed77dee25084",
+      "b4084f117c07f8cda47c38d17c4be03b"
+    ]) {
+      const chunk = Buffer.concat([Buffer.from(hex, "hex"), Buffer.alloc(1000, 7)]);
+      const state = createRfbProxyState();
+      expect(translateServerData(chunk, state)).toEqual(chunk);
+      expect(state.pendingServerClipboard).toBeUndefined();
+      expect(translateServerFrame(chunk)).toEqual(chunk);
+    }
+    expect(translateServerFrame(Buffer.from([180]))).toEqual(Buffer.from([180]));
+    expect(translateServerFrame(Buffer.from([180, 1, 0]))).toEqual(Buffer.from([180, 1, 0]));
+  });
+
+  test("translates a captured KasmVNC clipboard and keeps trailing stream bytes", () => {
+    const clipboard = makeKasmVncClipboard([{ mime: "text/plain", text: "cloakhub" }]);
+    const trailing = Buffer.from([0, 0, 0, 1, 9, 9]);
+    expect(translateServerData(Buffer.concat([clipboard, trailing]), createRfbProxyState())).toEqual(
+      Buffer.concat([buildServerCutText("cloakhub"), trailing])
     );
   });
 
@@ -224,7 +256,8 @@ function makeExtension150(): Buffer {
 }
 
 function makeKasmVncClipboard(entries: Array<{ mime: string; text: string }>): Buffer {
-  const chunks = [Buffer.from([180, 0, 0, 0, 0, 0])];
+  // Real KasmVNC layout: [180][entry count][u32 sequence] then entries.
+  const chunks = [Buffer.from([180, entries.length, 0, 0, 0, 0])];
   for (const entry of entries) {
     const mime = Buffer.from(entry.mime, "utf8");
     const text = Buffer.from(entry.text, "utf8");

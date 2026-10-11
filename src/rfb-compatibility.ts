@@ -5,20 +5,15 @@ export interface RfbClientFrameResult {
 
 export interface RfbProxyState {
   clientHandshakeFrameCount: number;
-  serverFrameBuffer: Buffer;
+  /** A KasmVNC BinaryClipboard message split across upstream chunks. */
+  pendingServerClipboard?: Buffer;
 }
 
-interface KasmVncClipboardEntry {
-  dataEnd: number;
-  dataStart: number;
-  mimeType: string;
-}
-
-interface KasmVncClipboardRead {
-  complete: boolean;
-  endOffset: number;
-  entries: KasmVncClipboardEntry[];
-}
+export type ServerClipboardDecision =
+  | "passthrough"
+  | "translated"
+  | "buffered"
+  | "not-clipboard";
 
 const RFB_CLIENT_HANDSHAKE_WEBSOCKET_FRAMES = 3;
 const RFB_CLIENT_SET_PIXEL_FORMAT = 0;
@@ -66,7 +61,7 @@ const ALLOWED_ENCODINGS = new Set<number>([
 ]);
 
 export function createRfbProxyState(): RfbProxyState {
-  return { clientHandshakeFrameCount: 0, serverFrameBuffer: Buffer.alloc(0) };
+  return { clientHandshakeFrameCount: 0 };
 }
 
 export function translateClientFrame(
@@ -133,37 +128,123 @@ export function filterRfbClientMessages(
   return { data: Buffer.concat(chunks), manualInput };
 }
 
-export function translateServerFrame(data: Buffer): Buffer {
-  if (data[0] !== KASMVNC_BINARY_CLIPBOARD) {
+/**
+ * Translate one upstream KasmVNC websocket chunk for a stock noVNC client.
+ *
+ * KasmVNC websocket chunks are NOT aligned to RFB message boundaries: a chunk
+ * can start in the middle of framebuffer data, so a first byte of 180 is often
+ * just pixel data. Only a chunk that parses strictly as a KasmVNC
+ * BinaryClipboard message ([180][count][u32 seq] then count entries of
+ * [u8 mimeLen][mime][u32 len][data]) is rewritten; anything else is forwarded
+ * byte-for-byte. Dropping stream bytes desynchronizes RFB and disconnects the
+ * client.
+ */
+export function translateServerData(
+  data: Buffer,
+  state: RfbProxyState,
+  onDecision?: (decision: ServerClipboardDecision, detail: string) => void
+): Buffer {
+  let input = data;
+  if (state.pendingServerClipboard) {
+    input = Buffer.concat([state.pendingServerClipboard, data]);
+    state.pendingServerClipboard = undefined;
+  } else if (data[0] !== KASMVNC_BINARY_CLIPBOARD) {
     return data;
   }
 
-  const text = parseKasmVncClipboard(data);
-  return text === undefined ? Buffer.alloc(0) : buildServerCutText(text);
+  const parsed = readKasmVncServerClipboard(input);
+  if (parsed.status === "incomplete") {
+    state.pendingServerClipboard = input;
+    onDecision?.("buffered", `have=${input.length}`);
+    return Buffer.alloc(0);
+  }
+
+  if (parsed.status === "invalid") {
+    onDecision?.("not-clipboard", `len=${input.length} reason=${parsed.reason}`);
+    return input;
+  }
+
+  const rest = input.subarray(parsed.end);
+  const cutText =
+    parsed.text === undefined ? Buffer.alloc(0) : buildServerCutText(parsed.text);
+  onDecision?.("translated", `clipboard=${parsed.end} rest=${rest.length}`);
+  return rest.length > 0 ? Buffer.concat([cutText, rest]) : cutText;
 }
 
+/** Stateless form of {@link translateServerData} for a single chunk. */
+export function translateServerFrame(data: Buffer): Buffer {
+  const state = createRfbProxyState();
+  const translated = translateServerData(data, state);
+  return state.pendingServerClipboard ? data : translated;
+}
+
+/** @deprecated use translateServerData; kept for existing callers. */
 export function translateServerChunk(
   data: Buffer,
   state: RfbProxyState
 ): Buffer {
-  state.serverFrameBuffer = Buffer.concat([state.serverFrameBuffer, data]);
-  const chunks: Buffer[] = [];
+  return translateServerData(data, state);
+}
 
-  while (state.serverFrameBuffer.length > 0) {
-    const messageLength = rfbServerMessageLength(state.serverFrameBuffer, 0);
-    if (messageLength === undefined) {
-      break;
-    }
+const MAX_CLIPBOARD_ENTRIES = 16;
+const MAX_CLIPBOARD_ENTRY_BYTES = 16 * 1024 * 1024;
+const MIME_TYPE_PATTERN = /^[a-z]+\/[a-z0-9.+-]+$/i;
+const MIME_PREFIX_PATTERN = /^[a-z]*(\/[a-z0-9.+-]*)?$/i;
 
-    const message = state.serverFrameBuffer.subarray(0, messageLength);
-    state.serverFrameBuffer = state.serverFrameBuffer.subarray(messageLength);
-    const translated = translateServerFrame(message);
-    if (translated.length > 0) {
-      chunks.push(translated);
+type KasmVncServerClipboardParse =
+  | { status: "complete"; end: number; text?: string }
+  | { status: "incomplete" }
+  | { status: "invalid"; reason: string };
+
+export function readKasmVncServerClipboard(
+  data: Buffer
+): KasmVncServerClipboardParse {
+  if (data[0] !== KASMVNC_BINARY_CLIPBOARD) {
+    return { status: "invalid", reason: "type" };
+  }
+  // "incomplete" only delays bytes: if later data proves this is not a
+  // clipboard message, the buffered bytes are forwarded unchanged.
+  if (data.length < 2) return { status: "incomplete" };
+  const count = data[1]!;
+  if (count < 1 || count > MAX_CLIPBOARD_ENTRIES) {
+    return { status: "invalid", reason: `count=${count}` };
+  }
+  if (data.length < 7) return { status: "incomplete" };
+
+  let cursor = 6;
+  let text: string | undefined;
+  for (let index = 0; index < count; index += 1) {
+    if (cursor + 1 > data.length) return { status: "incomplete" };
+    const mimeLength = data[cursor]!;
+    if (mimeLength < 3 || mimeLength > 64) {
+      return { status: "invalid", reason: `mimeLength=${mimeLength}` };
     }
+    cursor += 1;
+    if (cursor + mimeLength > data.length) {
+      const prefix = data.subarray(cursor).toString("latin1");
+      return MIME_PREFIX_PATTERN.test(prefix)
+        ? { status: "incomplete" }
+        : { status: "invalid", reason: "mime" };
+    }
+    const mimeType = data.subarray(cursor, cursor + mimeLength).toString("latin1");
+    if (!MIME_TYPE_PATTERN.test(mimeType)) {
+      return { status: "invalid", reason: "mime" };
+    }
+    cursor += mimeLength;
+    if (cursor + 4 > data.length) return { status: "incomplete" };
+    const entryLength = data.readUInt32BE(cursor);
+    if (entryLength > MAX_CLIPBOARD_ENTRY_BYTES) {
+      return { status: "invalid", reason: `entryLength=${entryLength}` };
+    }
+    cursor += 4;
+    if (cursor + entryLength > data.length) return { status: "incomplete" };
+    if (text === undefined && mimeType === "text/plain") {
+      text = data.subarray(cursor, cursor + entryLength).toString("utf8");
+    }
+    cursor += entryLength;
   }
 
-  return Buffer.concat(chunks);
+  return { status: "complete", end: cursor, text };
 }
 
 export function rfbClientMessageLength(
@@ -219,7 +300,8 @@ export function rfbServerMessageLength(
   }
 
   if (messageType === KASMVNC_BINARY_CLIPBOARD) {
-    return kasmVncClipboardMessageLength(data, offset);
+    const parsed = readKasmVncServerClipboard(data.subarray(offset));
+    return parsed.status === "complete" ? parsed.end : undefined;
   }
 
   if (messageType === RFB_SERVER_FRAMEBUFFER_UPDATE) {
@@ -270,12 +352,8 @@ export function rewritePointerEvent(data: Buffer, offset: number): Buffer {
 }
 
 export function parseKasmVncClipboard(data: Buffer): string | undefined {
-  const textEntry = readKasmVncClipboard(data, 0).entries.find(
-    (entry) => entry.mimeType === "text/plain"
-  );
-  return textEntry
-    ? data.subarray(textEntry.dataStart, textEntry.dataEnd).toString("utf8")
-    : undefined;
+  const parsed = readKasmVncServerClipboard(data);
+  return parsed.status === "complete" ? parsed.text : undefined;
 }
 
 export function buildServerCutText(text: string): Buffer {
@@ -296,16 +374,6 @@ function isStandardClientMessage(messageType: number): boolean {
     messageType === RFB_CLIENT_POINTER_EVENT ||
     messageType === RFB_CLIENT_CUT_TEXT
   );
-}
-
-function kasmVncClipboardMessageLength(
-  data: Buffer,
-  offset: number
-): number | undefined {
-  const clipboard = readKasmVncClipboard(data, offset, {
-    stopAtPotentialNextServerMessage: true
-  });
-  return clipboard.complete ? clipboard.endOffset - offset : undefined;
 }
 
 function kasmVncClientClipboardMessageLength(
@@ -340,67 +408,6 @@ function kasmVncClientClipboardMessageLength(
   }
 
   return cursor - offset;
-}
-
-function readKasmVncClipboard(
-  data: Buffer,
-  offset: number,
-  options: { stopAtPotentialNextServerMessage?: boolean } = {}
-): KasmVncClipboardRead {
-  if (data.length - offset < 7) {
-    return { complete: false, endOffset: offset, entries: [] };
-  }
-
-  const entries: KasmVncClipboardEntry[] = [];
-  let cursor = offset + 6;
-  while (cursor < data.length) {
-    if (
-      options.stopAtPotentialNextServerMessage &&
-      entries.length > 0 &&
-      startsKnownServerMessage(data[cursor]!)
-    ) {
-      return { complete: true, endOffset: cursor, entries };
-    }
-
-    const mimeLength = data[cursor]!;
-    cursor += 1;
-    if (cursor + mimeLength > data.length) {
-      return { complete: false, endOffset: cursor, entries };
-    }
-
-    const mimeType = data
-      .subarray(cursor, cursor + mimeLength)
-      .toString("utf8");
-    cursor += mimeLength;
-    if (cursor + 4 > data.length) {
-      return { complete: false, endOffset: cursor, entries };
-    }
-
-    const entryLength = data.readUInt32BE(cursor);
-    cursor += 4;
-    if (cursor + entryLength > data.length) {
-      return { complete: false, endOffset: cursor, entries };
-    }
-
-    entries.push({
-      dataEnd: cursor + entryLength,
-      dataStart: cursor,
-      mimeType
-    });
-    cursor += entryLength;
-  }
-
-  return { complete: true, endOffset: cursor, entries };
-}
-
-function startsKnownServerMessage(messageType: number): boolean {
-  return (
-    messageType === RFB_SERVER_FRAMEBUFFER_UPDATE ||
-    messageType === RFB_SERVER_SET_COLOR_MAP_ENTRIES ||
-    messageType === RFB_SERVER_BELL ||
-    messageType === RFB_SERVER_CUT_TEXT ||
-    messageType === KASMVNC_BINARY_CLIPBOARD
-  );
 }
 
 function integerRange(start: number, endInclusive: number): number[] {

@@ -2,11 +2,19 @@ import type { BrowserRuntimeManualViewer } from "./browser-runtime";
 import {
   createRfbProxyState,
   translateClientFrame,
-  translateServerFrame,
+  translateServerData,
   type RfbProxyState
 } from "./rfb-compatibility";
 
 type VncWebSocketMessage = string | Bun.BufferSource;
+
+const vncDebug = process.env.CLOAKHUB_VNC_DEBUG === "1";
+
+function debugLog(profileId: string, message: string): void {
+  if (vncDebug) {
+    console.log(`[vnc] ${new Date().toISOString()} profile=${profileId} ${message}`);
+  }
+}
 
 export interface VncWebSocketData {
   profileId: string;
@@ -122,7 +130,11 @@ export function createVncWebSocketHandler(
   const factory = options.factory ?? defaultVncSocketFactory;
 
   return {
-    close(ws): void {
+    close(ws, code, reason): void {
+      debugLog(
+        ws.data.profileId,
+        `client closed code=${code} reason=${JSON.stringify(reason)}`
+      );
       ws.data.session?.close();
       ws.data.upstream?.close();
     },
@@ -150,18 +162,33 @@ export function createVncWebSocketHandler(
       const upstream = factory.connect(ws.data.targetHost, ws.data.targetPort);
       ws.data.upstream = upstream;
 
+      debugLog(ws.data.profileId, "viewer connected");
+      const rfb = ws.data.rfb;
       upstream.ondata = (data) => {
-        const translated = translateServerFrame(data);
-        if (translated.length > 0) {
-          ws.send(translated);
+        const translated = translateServerData(data, rfb, (decision, detail) =>
+          debugLog(ws.data.profileId, `server chunk ${decision} ${detail}`)
+        );
+        if (translated.length === 0) {
+          return;
+        }
+        // 0 means Bun dropped the message. RFB is a byte stream, so a silent
+        // drop corrupts it; close so the viewer reconnects cleanly instead.
+        if (ws.send(translated) === 0) {
+          debugLog(
+            ws.data.profileId,
+            `send dropped len=${translated.length} buffered=${ws.getBufferedAmount()}`
+          );
+          ws.close(1011, "VNC stream backpressure");
         }
       };
 
       upstream.onerror = () => {
+        debugLog(ws.data.profileId, "upstream error");
         ws.close(1011, "VNC websocket proxy error");
       };
 
       upstream.onclose = () => {
+        debugLog(ws.data.profileId, "upstream closed");
         ws.close();
       };
     }
