@@ -85,20 +85,41 @@ an app's JS object). None of this makes a profile anonymous or untrackable.
 ## Background tabs
 
 Observed on CloakHub's headed browser on 2026-10-01: only the frontmost tab of the
-frontmost window renders. In other tabs, and in tabs of separate windows,
-`document.visibilityState` is `hidden` and `requestAnimationFrame` and
-`IntersectionObserver` never fire. As a result:
+frontmost window renders. Every other tab, including tabs in other windows, reports
+`document.visibilityState: hidden`; `requestAnimationFrame` and `IntersectionObserver`
+callbacks never run, and timers are throttled (a 50 ms interval ran twice per second).
 
-- `click`, `hover`, and other pointer actions time out at "waiting for element to be stable".
-- `fill`, `pressSequentially`, `selectOption`, `dispatchEvent`, aria snapshots,
-  screenshots, and reloads still work.
-- Lazy lists and some SPAs (React rendering, request scheduling) stall until visible.
+| Works in a background tab | Needs `bringToFront()` |
+| --- | --- |
+| `goto`, `reload` | `click`, `dblclick`, `hover`, `check`, `tap`, `dragTo` |
+| `observe`, aria snapshots, `captureResponses`, `detectChallenge` | `scrollIntoViewIfNeeded`, `locator.screenshot` |
+| `fill`, `pressSequentially`, `selectOption`, `dispatchEvent` | Lazy loading, infinite scroll, `IntersectionObserver` |
+| Full-page `page.screenshot` | CSS animations/transitions that gate the next UI step |
+| Waiting for network responses | Pages that pause or skip rendering while hidden |
 
-Call `await page.bringToFront()` before pointer work or infinite scrolling. It changes
-what the user sees in the viewer, and concurrent clients on one profile compete for the
-foreground: coordinate rather than flipping tabs repeatedly. `force: true` skips the
-stability wait but also the visibility and hit-target checks; use it only for a target
+Observed: `click`, `hover`, and `scrollIntoViewIfNeeded` timed out; the left column
+worked. The other pointer actions follow from Playwright's actionability rules, and the
+rendering rows from Chrome's background-tab behaviour.
+
+Pointer actions wait for two animation frames to check that the element is stable, so
+in a background tab they time out at "waiting for element to be stable". The `run`
+error then carries a hint.
+
+Cost of `bringToFront()`: the viewer switches to this tab, and any other client's tab on
+the profile becomes hidden. Bring the tab forward immediately before the steps that
+need it and finish them in the same script; another client that later fails a pointer
+action brings its own tab forward. Avoid flipping tabs back and forth in a loop.
+
+Input in a hidden page is an automation signal: real users cannot type into a tab they
+cannot see, and hidden tabs also report inconsistent window geometry (`outerHeight`
+equal to `innerHeight`). On sites that watch for automation, bring the tab forward
+before typing too. `force: true` skips the stability wait but also the visibility and
+hit-target checks, and it still sends input to a hidden page; use it only for a target
 you have already verified.
+
+Opening a tab (`newPage`, `target="_blank"`, `window.open`) activates the new tab, so
+the previous foreground tab, possibly another client's, becomes hidden. After a popup
+closes, bring your original tab forward before pointer work.
 
 ## Scrolling and lazy loading
 

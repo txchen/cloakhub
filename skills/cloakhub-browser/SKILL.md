@@ -62,10 +62,18 @@ Use a user-owned tab only when the task calls for it. Multiple clients share the
 profile: a target alias is not a task lock or an isolated browser context. When work is
 split across subagents, hand each one its target alias, tab ID, label, and account context.
 
-Only the foreground tab renders. In a background tab, `click`, `hover`, and other pointer
-actions time out waiting for animation frames, and lazy loading stalls. `tabs()` reports
-`visible`; call `await page.bringToFront()` before pointer work in a tab that is not
-visible. This switches the tab shown in the CloakHub viewer.
+**Only one tab renders: the foreground tab.** `tabs()` reports it as `visible`. Many steps
+work in a background tab: navigation, `observe`, `captureResponses`, `fill`, typing,
+`selectOption`, and screenshots. Bring the tab to the front only when a step needs rendering:
+
+- `click`, `hover`, `check`, `dragTo`, and `scrollIntoViewIfNeeded` (they otherwise time out at
+  "waiting for element to be stable");
+- lazy loading, infinite scroll, animations, or a page that renders only while visible;
+- input on sites that watch for automation, since typing into a hidden page is a signal.
+
+Call `await page.bringToFront()` right before such a step. It moves the viewer and every other
+client on the profile to this tab, and their tabs stop rendering, so keep foreground work
+short. Details: Background tabs in [references/operations.md](references/operations.md).
 
 Work in three layers, in this order:
 
