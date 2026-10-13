@@ -80,32 +80,52 @@ authenticates over CDP, reports connection metadata, and disconnects. It does no
 navigate, create tabs, or test a website's login state. A successful check means
 the client is ready for a browser task.
 
+## Site learnings
+
+`browser.mjs learnings DOMAIN` reads `~/.config/cloakhub/learnings/<site>.md`, and
+`learnings DOMAIN --append` adds a dated section from stdin. `learnings` alone lists
+the saved sites. Set `CLOAKHUB_LEARNINGS_DIR` to use another directory, for example
+one shared by several agents on this client. The notes stay on this machine; review
+them before sharing, since agents write them during real tasks.
+
 ## Troubleshooting
 
-- Missing config/default/alias: obtain the intended URL and profile from the operator;
-  configure them once. Do not discover and choose arbitrary server profiles.
-- Missing package: install dependencies in this skill's directory, not an unrelated
-  project's directory.
-- 401: check the selected profile's CDP token. The admin token is a different credential.
-- 404: verify the exact profile ID. Connecting does not create a missing profile.
-- Connection refused or TLS/upgrade failure: check client reachability, server binding,
-  HTTPS certificate, and proxy WebSocket support. Never fall back to a local browser.
-- Cold start timeout: connecting allows 60 seconds; an expired timeout does not cancel
-  server startup. Inspect server state before repeating. An operator can inspect the UI
-  and event log without giving the client administrative credentials.
-- `connectOverCDP` timeout after `<ws connected>`: authentication and the WebSocket
-  upgrade succeeded. Playwright waits for every existing tab to answer its first CDP
-  commands. A tab whose host drops TCP packets, such as a stopped dev server on the
-  Docker host's LAN or Tailscale IP, may not answer until Chrome's connection timeout
-  (about 2.5 minutes). Rerun with
-  `DEBUG=pw:protocol` and find the `sessionId` whose `Page.enable` never gets a reply.
-  Its `Target.attachedToTarget` line gives the URL. Ask the operator to close that tab,
-  or close it yourself after the browser is warm. Do not increase the timeout. Close task
-  tabs that point at temporary hosts.
-- 503: do not retry just on status. When the server reports `CAPACITY_UNAVAILABLE`
-  with `retryable: true`, use bounded backoff (at most three retries). Display or
-  startup configuration errors require operator repair. A WebSocket error may hide
-  the structured response; the operator can inspect the UI/API error instead.
+When `check` or `run` cannot connect, the helper queries the profile's HTTP discovery
+endpoint and appends a `Diagnosis:` line. Work through the chain in order: the hub is
+reachable → the credential is right → the profile exists → the browser can start →
+CDP attaches.
+
+| Diagnosis or symptom | Action |
+| --- | --- |
+| Missing config, default, or alias | Obtain the intended URL and profile from the operator and configure them once. Do not discover and choose arbitrary server profiles. |
+| Missing package | Install dependencies in this skill's directory, not an unrelated project's directory. |
+| Hub unreachable (`ECONNREFUSED`, `ENOTFOUND`, TLS error) | Check client reachability, server binding, HTTPS certificate, and proxy. Never fall back to a local browser. |
+| `UNAUTHORIZED` (401) | Check the selected profile's CDP token. The admin token is a different credential. |
+| `PROFILE_NOT_FOUND` (404) | Verify the exact profile ID. Connecting does not create a missing profile. |
+| `CAPACITY_UNAVAILABLE` (503, retryable) | Use bounded backoff, at most three retries, or ask the operator to free capacity. |
+| `DISPLAY_UNAVAILABLE`, `BROWSER_START_FAILED`, `CDP_UNAVAILABLE` | Operator repair is required; the UI and event log show the cause. Do not loop. |
+| Discovery works but the WebSocket fails | The reverse proxy must support WebSocket upgrades. |
+| HTTP error without a CloakHub code | The URL is probably not the CloakHub origin, or a proxy answered first. |
+
+A 503 alone is not a retry signal; only `retryable: true` is.
+
+Cold start timeout: connecting allows 60 seconds; an expired timeout does not cancel
+server startup. Inspect server state before repeating. An operator can inspect the UI
+and event log without giving the client administrative credentials.
+
+`connectOverCDP` timeout after `<ws connected>`: authentication and the WebSocket
+upgrade succeeded. Playwright waits for every existing tab to answer its first CDP
+commands. A tab whose host drops TCP packets, such as a stopped dev server on the
+Docker host's LAN or Tailscale IP, may not answer until Chrome's connection timeout
+(about 2.5 minutes). Rerun with
+`DEBUG=pw:protocol` and find the `sessionId` whose `Page.enable` never gets a reply.
+Its `Target.attachedToTarget` line gives the URL. Ask the operator to close that tab,
+or close it yourself after the browser is warm. Do not increase the timeout. Close task
+tabs that point at temporary hosts.
+
+Pointer action timeout at "waiting for element to be stable": the tab is in the
+background and does not render. Call `page.bringToFront()`; see Background tabs in
+[operations.md](operations.md).
 
 Changing or revoking a token affects new connections; it is not a promise that an
 already-connected client has been disconnected. Admin stop/restart affects all clients.

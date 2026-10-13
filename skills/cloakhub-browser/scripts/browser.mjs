@@ -3,8 +3,15 @@ import { readFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
+import {
+  captureResponses, detectChallenge, errorHint, expectChange, installOutputFilter, observe, tabInfo
+} from "./helpers.mjs";
+import { appendLearning, formatLearnings, listLearnings, readLearnings } from "./learnings.mjs";
 
-const usage = "Usage: node browser.mjs targets | check [--target ALIAS] | run [--target ALIAS] < script.js";
+const usage = "Usage: node browser.mjs targets | check [--target ALIAS] | run [--target ALIAS] < script.js" +
+  " | learnings [DOMAIN [--append < note.md]]";
+// Names available to run scripts, in parameter order.
+const SCRIPT_API = ["browser", "context", "tabs", "tab", "tabId", "observe", "expectChange", "captureResponses", "detectChallenge"];
 
 function record(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value);
@@ -90,6 +97,42 @@ export function safeError(error, token) {
   return [token, encodeURIComponent(token)].reduce((text, secret) => text.split(secret).join("***"), message);
 }
 
+const ACTIONS = {
+  UNAUTHORIZED: "Check the selected target's CDP token. The admin password is a different credential.",
+  PROFILE_NOT_FOUND: "Verify the exact profile ID with the operator. Connecting never creates a profile.",
+  CAPACITY_UNAVAILABLE: "The running-instance limit is full. Retry with bounded backoff (at most three times) or ask the operator to free capacity.",
+  DISPLAY_UNAVAILABLE: "The server's display runtime is unavailable. The operator must repair the deployment.",
+  BROWSER_START_FAILED: "The browser failed to start. Ask the operator to check the profile error and event log; do not loop.",
+  CDP_UNAVAILABLE: "The browser is not serving CDP. Ask the operator to inspect the profile state; retrying unchanged will not help."
+};
+
+/** After a failed connection, ask the HTTP discovery endpoint for a structured error. */
+export async function diagnoseConnection(target, error, fetchImpl = fetch) {
+  const message = error instanceof Error ? error.message : String(error);
+  if (message.includes("<ws connected>")) {
+    return "Diagnosis: authentication and the WebSocket upgrade succeeded, but an existing tab did not answer Playwright. See the connectOverCDP timeout entry in references/setup.md.";
+  }
+  const { url, profile } = target.metadata;
+  let response;
+  try {
+    response = await fetchImpl(`${url}/api/profiles/${profile}/cdp/json/version`, {
+      headers: target.token ? { Authorization: `Bearer ${target.token}` } : {},
+      signal: AbortSignal.timeout(20_000)
+    });
+  } catch (cause) {
+    const reason = cause?.cause?.code ?? cause?.name ?? "network error";
+    return `Diagnosis: the hub at ${url} is unreachable from this client (${reason}). Check the address, server binding, TLS, and proxy.`;
+  }
+  if (response.ok) {
+    return "Diagnosis: the HTTP discovery endpoint works, so the WebSocket connection failed. Check reverse-proxy WebSocket upgrade support.";
+  }
+  let body;
+  try { body = await response.json(); } catch { body = null; }
+  if (!body?.code) return `Diagnosis: the hub answered HTTP ${response.status} without a CloakHub error code. Check that the URL is the CloakHub origin.`;
+  const action = ACTIONS[body.code] ?? "See the error table in references/setup.md.";
+  return `Diagnosis: server reported ${body.code} (HTTP ${response.status}, retryable=${Boolean(body.retryable)}): ${body.message ?? ""} ${action}`.trim();
+}
+
 export async function withBrowser(target, action, connect) {
   if (!connect) {
     let chromium;
@@ -99,11 +142,16 @@ export async function withBrowser(target, action, connect) {
   }
   let browser;
   try {
-    browser = await connect(target.endpoint, {
-      headers: target.token ? { Authorization: `Bearer ${target.token}` } : {},
-      timeout: 60_000,
-      noDefaults: true
-    });
+    try {
+      browser = await connect(target.endpoint, {
+        headers: target.token ? { Authorization: `Bearer ${target.token}` } : {},
+        timeout: 60_000,
+        noDefaults: true
+      });
+    } catch (error) {
+      if (error && typeof error === "object") error.phase = "connect";
+      throw error;
+    }
     const context = browser.contexts()[0];
     if (!context) throw new Error("The remote profile has no default browser context.");
     context.setDefaultTimeout(20_000);
@@ -113,14 +161,13 @@ export async function withBrowser(target, action, connect) {
       try { return (await session.send("Target.getTargetInfo")).targetInfo.targetId; }
       finally { await session.detach(); }
     };
-    const tabs = async () => Promise.all(context.pages().map(async (page) => ({
-      id: await tabId(page), url: page.url()
-    })));
+    // `visible` marks the foreground tab: only it renders, so pointer actions elsewhere stall.
+    const tabs = async () => Promise.all(context.pages().map((page) => tabInfo(context, page)));
     const tab = async (id) => {
       for (const page of context.pages()) if (await tabId(page) === id) return page;
       throw new Error("Tab no longer exists. List tabs again; browser restart changes tab IDs.");
     };
-    return await action({ browser, context, tabs, tab, tabId });
+    return await action({ browser, context, tabs, tab, tabId, observe, expectChange, captureResponses, detectChallenge });
   } finally {
     // Playwright's attached-browser close disconnects, not CDP Browser.close.
     if (browser) await browser.close();
@@ -129,6 +176,7 @@ export async function withBrowser(target, action, connect) {
 
 async function main() {
   const [command, ...args] = process.argv.slice(2);
+  if (command === "learnings") return learningsCommand(args);
   if (!["targets", "check", "run"].includes(command) ||
       (args.length && (command === "targets" || args.length !== 2 || args[0] !== "--target" || !args[1]))) {
     throw new Error(usage);
@@ -147,17 +195,42 @@ async function main() {
     const source = Buffer.concat(chunks).toString("utf8");
     if (!source.trim()) throw new Error("Pass a nonempty JavaScript body on stdin.");
     const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
-    const execute = new AsyncFunction("browser", "context", "tabs", "tab", "tabId", source);
-    action = ({ browser, context, tabs, tab, tabId }) => execute(browser, context, tabs, tab, tabId);
+    const execute = new AsyncFunction(...SCRIPT_API, source);
+    action = (api) => execute(...SCRIPT_API.map((name) => api[name]));
   }
   const target = await resolveTarget(loaded, args[1]);
+  let restore = () => {};
   try {
-    await withBrowser(target, action ?? (async () => {
-      console.log(JSON.stringify({ ok: true, ...target.metadata }));
-    }));
+    await withBrowser(target, async (api) => {
+      if (!action) return console.log(JSON.stringify({ ok: true, ...target.metadata }));
+      restore = installOutputFilter([target.token]);
+      try { return await action(api); } finally { restore(); }
+    });
   } catch (error) {
-    throw new Error(safeError(error, target.token));
+    restore();
+    let message = error instanceof Error ? error.message : String(error);
+    if (error?.phase === "connect") message += `\n${await diagnoseConnection(target, error)}`;
+    const hint = errorHint(message);
+    if (hint) message += `\n${hint}`;
+    throw new Error(safeError(message, target.token));
   }
+}
+
+async function learningsCommand(args) {
+  if (args.length === 0) {
+    console.log(JSON.stringify(await listLearnings(), null, 2));
+    return;
+  }
+  if (args.length > 2 || (args.length === 2 && args[1] !== "--append")) throw new Error(usage);
+  if (args[1] === "--append") {
+    if (process.stdin.isTTY) throw new Error("Pass the note on stdin.");
+    const chunks = [];
+    for await (const chunk of process.stdin) chunks.push(chunk);
+    const saved = await appendLearning(args[0], Buffer.concat(chunks).toString("utf8"));
+    console.log(JSON.stringify({ ok: true, ...saved }));
+    return;
+  }
+  console.log(formatLearnings(await readLearnings(args[0])));
 }
 
 // Skill installs are often symlinked; compare real paths so a symlinked invocation still runs main().
