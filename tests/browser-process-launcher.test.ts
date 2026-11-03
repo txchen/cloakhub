@@ -74,6 +74,9 @@ describe("BunBrowserProcessLauncher", () => {
       "--lang=en-US"
     ]);
     expect(spawn.commands[0]).not.toContain("--disable-gpu");
+    expect(spawn.commands[0]).not.toContain("--disable-dev-shm-usage");
+    expect(spawn.commands[0]).not.toContain("--use-gl=angle");
+    expect(spawn.commands[0]).not.toContain("--use-angle=swiftshader");
     expect(spawn.options[0]).toMatchObject({
       detached: true,
       env: {
@@ -134,10 +137,10 @@ describe("BunBrowserProcessLauncher", () => {
     expect(spawn.commands[0]).not.toContain("--headless=new");
     expect(spawn.commands[0]).toContain("--window-position=0,0");
     expect(spawn.commands[0]).toContain("--window-size=1600,900");
-    expect(spawn.commands[0]).toContain("--disable-gpu");
-    expect(spawn.commands[0]).toContain("--disable-dev-shm-usage");
-    expect(spawn.commands[0]).toContain("--use-gl=angle");
-    expect(spawn.commands[0]).toContain("--use-angle=swiftshader");
+    expect(spawn.commands[0]).not.toContain("--disable-gpu");
+    expect(spawn.commands[0]).not.toContain("--disable-dev-shm-usage");
+    expect(spawn.commands[0]).not.toContain("--use-gl=angle");
+    expect(spawn.commands[0]).not.toContain("--use-angle=swiftshader");
     expect(spawn.options[0]?.env).toMatchObject({ DISPLAY: ":100" });
   });
 

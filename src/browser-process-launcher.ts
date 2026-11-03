@@ -168,11 +168,6 @@ function browserCommand(
         ]
       : []),
     ...(proxyUrl ? [`--proxy-server=${proxyUrl}`] : []),
-    // ANGLE's software backend works with the virtual display without a host GPU.
-    // Native headless uses a separate display path; do not silently change its mode.
-    ...(!command.headless
-      ? ["--disable-gpu", "--disable-dev-shm-usage", "--use-gl=angle", "--use-angle=swiftshader"]
-      : []),
     ...(command.headless ? ["--headless=new"] : []),
     ...command.customLaunchArgs
   ];
