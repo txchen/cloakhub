@@ -1,0 +1,21 @@
+== libvk_swiftshader ==
+	linux-vdso.so.1 (0x00007fc0763c3000)
+	libdl.so.2 => /lib/x86_64-linux-gnu/libdl.so.2 (0x00007fc0763b2000)
+	libpthread.so.0 => /lib/x86_64-linux-gnu/libpthread.so.0 (0x00007fc0763ad000)
+	libm.so.6 => /lib/x86_64-linux-gnu/libm.so.6 (0x00007fc0762cd000)
+	libgcc_s.so.1 => /lib/x86_64-linux-gnu/libgcc_s.so.1 (0x00007fc0762ad000)
+	libc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00007fc075c1e000)
+	/lib64/ld-linux-x86-64.so.2 (0x00007fc0763c5000)
+== libGLESv2 ==
+	linux-vdso.so.1 (0x00007fe9ec746000)
+	libpthread.so.0 => /lib/x86_64-linux-gnu/libpthread.so.0 (0x00007fe9ec6f2000)
+	libgcc_s.so.1 => /lib/x86_64-linux-gnu/libgcc_s.so.1 (0x00007fe9ec6d2000)
+	libc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00007fe9ec4f0000)
+	/lib64/ld-linux-x86-64.so.2 (0x00007fe9ec748000)
+== packages ==
+ii  libgl1-mesa-dri:amd64             22.3.6-1+deb12u2        amd64        free implementation of the OpenGL API -- DRI modules
+ii  libglapi-mesa:amd64               22.3.6-1+deb12u2        amd64        free implementation of the GL API -- shared library
+ii  libglx-mesa0:amd64                22.3.6-1+deb12u2        amd64        free implementation of the OpenGL API -- GLX vendor library
+== environment ==
+VK_ICD_FILENAMES=<unset>
+VK_DRIVER_FILES=<unset>

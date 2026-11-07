@@ -1,0 +1,3671 @@
+{
+ "note": "Paired 154.0.8037.57.1 vs 57.2, 2026-10-06 UTC. Visitor IDs are SHA-256 truncated; no IPs or tokens.",
+ "builds": {
+  "v571": "154.0.8037.57.1",
+  "v572": "154.0.8037.57.2"
+ },
+ "order": [
+  "r1/v571",
+  "r1/v572",
+  "r2/v572",
+  "r2/v571"
+ ],
+ "steps": {
+  "v571/r1": [
+   {
+    "step": "audit-macos-20260909-headed",
+    "exit": 0,
+    "start": "2026-10-06T19:25:57.797861+00:00",
+    "seconds": 187
+   },
+   {
+    "step": "audit-macos-20260910-headed",
+    "exit": 0,
+    "start": "2026-10-06T19:29:05.042152+00:00",
+    "seconds": 58
+   },
+   {
+    "step": "audit-macos-20260911-headed",
+    "exit": 0,
+    "start": "2026-10-06T19:30:03.061794+00:00",
+    "seconds": 60
+   },
+   {
+    "step": "audit-macos-20260909-headless",
+    "exit": 0,
+    "start": "2026-10-06T19:31:03.180349+00:00",
+    "seconds": 176
+   },
+   {
+    "step": "audit-linux-20260909-headed",
+    "exit": 0,
+    "start": "2026-10-06T19:33:58.716049+00:00",
+    "seconds": 76
+   },
+   {
+    "step": "audit-windows-20260909-headed",
+    "exit": 0,
+    "start": "2026-10-06T19:35:14.530345+00:00",
+    "seconds": 72
+   },
+   {
+    "step": "font-probe-macos",
+    "exit": 1,
+    "start": "2026-10-06T19:36:26.782945+00:00",
+    "seconds": 18
+   },
+   {
+    "step": "font-probe-linux",
+    "exit": 0,
+    "start": "2026-10-06T19:36:44.839338+00:00",
+    "seconds": 4
+   },
+   {
+    "step": "iphey-probe-macos",
+    "exit": 1,
+    "start": "2026-10-06T19:36:49.216728+00:00",
+    "seconds": 40
+   }
+  ],
+  "v571/r2": [
+   {
+    "step": "audit-macos-20260909-headed",
+    "exit": 0,
+    "start": "2026-10-06T20:01:32.063182+00:00",
+    "seconds": 183
+   },
+   {
+    "step": "audit-macos-20260910-headed",
+    "exit": 0,
+    "start": "2026-10-06T20:04:34.748608+00:00",
+    "seconds": 56
+   },
+   {
+    "step": "audit-macos-20260911-headed",
+    "exit": 0,
+    "start": "2026-10-06T20:05:31.055699+00:00",
+    "seconds": 57
+   },
+   {
+    "step": "audit-macos-20260909-headless",
+    "exit": 0,
+    "start": "2026-10-06T20:06:28.181804+00:00",
+    "seconds": 157
+   },
+   {
+    "step": "audit-linux-20260909-headed",
+    "exit": 0,
+    "start": "2026-10-06T20:09:04.994541+00:00",
+    "seconds": 71
+   },
+   {
+    "step": "audit-windows-20260909-headed",
+    "exit": 0,
+    "start": "2026-10-06T20:10:16.007951+00:00",
+    "seconds": 72
+   },
+   {
+    "step": "font-probe-macos",
+    "exit": 1,
+    "start": "2026-10-06T20:11:27.785195+00:00",
+    "seconds": 18
+   },
+   {
+    "step": "font-probe-linux",
+    "exit": 0,
+    "start": "2026-10-06T20:11:46.122763+00:00",
+    "seconds": 5
+   },
+   {
+    "step": "iphey-probe-macos",
+    "exit": 1,
+    "start": "2026-10-06T20:11:51.471699+00:00",
+    "seconds": 44
+   }
+  ],
+  "v572/r1": [
+   {
+    "step": "audit-macos-20260909-headed",
+    "exit": 0,
+    "start": "2026-10-06T19:37:33.558832+00:00",
+    "seconds": 184
+   },
+   {
+    "step": "audit-macos-20260910-headed",
+    "exit": 0,
+    "start": "2026-10-06T19:40:37.756789+00:00",
+    "seconds": 59
+   },
+   {
+    "step": "audit-macos-20260911-headed",
+    "exit": 0,
+    "start": "2026-10-06T19:41:36.431589+00:00",
+    "seconds": 60
+   },
+   {
+    "step": "audit-macos-20260909-headless",
+    "exit": 0,
+    "start": "2026-10-06T19:42:36.639779+00:00",
+    "seconds": 246
+   },
+   {
+    "step": "audit-linux-20260909-headed",
+    "exit": 0,
+    "start": "2026-10-06T19:46:42.712975+00:00",
+    "seconds": 81
+   },
+   {
+    "step": "audit-windows-20260909-headed",
+    "exit": 0,
+    "start": "2026-10-06T19:48:03.509246+00:00",
+    "seconds": 72
+   },
+   {
+    "step": "font-probe-macos",
+    "exit": 1,
+    "start": "2026-10-06T19:49:15.587274+00:00",
+    "seconds": 17
+   },
+   {
+    "step": "font-probe-linux",
+    "exit": 0,
+    "start": "2026-10-06T19:49:32.772308+00:00",
+    "seconds": 5
+   },
+   {
+    "step": "iphey-probe-macos",
+    "exit": 1,
+    "start": "2026-10-06T19:49:37.914382+00:00",
+    "seconds": 43
+   }
+  ],
+  "v572/r2": [
+   {
+    "step": "audit-macos-20260909-headed",
+    "exit": 0,
+    "start": "2026-10-06T19:50:25.174935+00:00",
+    "seconds": 188
+   },
+   {
+    "step": "audit-macos-20260910-headed",
+    "exit": 0,
+    "start": "2026-10-06T19:53:32.907187+00:00",
+    "seconds": 68
+   },
+   {
+    "step": "audit-macos-20260911-headed",
+    "exit": 0,
+    "start": "2026-10-06T19:54:40.656998+00:00",
+    "seconds": 62
+   },
+   {
+    "step": "audit-macos-20260909-headless",
+    "exit": 0,
+    "start": "2026-10-06T19:55:42.324094+00:00",
+    "seconds": 149
+   },
+   {
+    "step": "audit-linux-20260909-headed",
+    "exit": 0,
+    "start": "2026-10-06T19:58:11.362899+00:00",
+    "seconds": 70
+   },
+   {
+    "step": "audit-windows-20260909-headed",
+    "exit": 0,
+    "start": "2026-10-06T19:59:21.092762+00:00",
+    "seconds": 69
+   },
+   {
+    "step": "font-probe-macos",
+    "exit": 1,
+    "start": "2026-10-06T20:00:30.583497+00:00",
+    "seconds": 13
+   },
+   {
+    "step": "font-probe-linux",
+    "exit": 0,
+    "start": "2026-10-06T20:00:43.732826+00:00",
+    "seconds": 4
+   },
+   {
+    "step": "iphey-probe-macos",
+    "exit": 1,
+    "start": "2026-10-06T20:00:48.111458+00:00",
+    "seconds": 40
+   }
+  ]
+ },
+ "runs": [
+  {
+   "label": "v571",
+   "round": "r1",
+   "case": "linux_20260909_default_headed",
+   "version": "154.0.8037.57",
+   "sites": {
+    "sannysoft": {
+     "http_status": 200,
+     "error": null,
+     "failed_rows": []
+    },
+    "deviceinfo": {
+     "http_status": 200,
+     "error": null,
+     "isBot": false,
+     "positive": []
+    },
+    "fingerprint": {
+     "http_status": 200,
+     "error": null,
+     "signals": {
+      "bot": "not_detected",
+      "tampering": false,
+      "tampering_confidence": "high",
+      "tampering_ml_score": 0,
+      "anomaly_score": 0.0089,
+      "anti_detect_browser": false,
+      "developer_tools": false,
+      "virtual_machine": false,
+      "vpn": false,
+      "vpn_confidence": "medium",
+      "os_mismatch": false,
+      "suspect_score": 0
+     },
+     "suspect_score_text": 0,
+     "visitor_hash": "815f36dfaa73f813"
+    }
+   },
+   "consistency": {
+    "mainWorkerUa": true,
+    "mainFrameUa": true,
+    "mainWorkerPlatform": true,
+    "mainFramePlatform": true,
+    "uaMatchesHttp": true,
+    "mainWorkerUaData": true,
+    "mainFrameUaData": true,
+    "httpUaDataFields": true,
+    "httpFullVersions": true,
+    "mainWorkerLanguage": true
+   },
+   "surface": {
+    "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "platform": "Linux x86_64",
+    "languages": [
+     "en-US",
+     "en-GB",
+     "en-US",
+     "en"
+    ],
+    "uaFull": [
+     {
+      "brand": "Chromium",
+      "version": "154.0.8037.58"
+     },
+     {
+      "brand": "Google Chrome",
+      "version": "154.0.8037.58"
+     }
+    ],
+    "platformVersion": "6.11.0",
+    "gl": {
+     "webgl": {
+      "renderer": "ANGLE (NVIDIA Corporation, NVIDIA GeForce RTX 2050/PCIe/SSE2, OpenGL ES 3.2)",
+      "pixel": [
+       64,
+       128,
+       191,
+       255
+      ],
+      "error": 0
+     },
+     "webgl2": {
+      "renderer": "ANGLE (NVIDIA Corporation, NVIDIA GeForce RTX 2050/PCIe/SSE2, OpenGL ES 3.2)",
+      "pixel": [
+       64,
+       128,
+       191,
+       255
+      ],
+      "error": 0
+     }
+    },
+    "fontMetricsHash": "feb968c57a6f2ad6",
+    "screen": {
+     "width": 1366,
+     "height": 768,
+     "availWidth": 1366,
+     "availHeight": 768,
+     "colorDepth": 24
+    },
+    "window": {
+     "innerWidth": 1365,
+     "innerHeight": 646,
+     "outerWidth": 1365,
+     "outerHeight": 767,
+     "devicePixelRatio": 1
+    }
+   }
+  },
+  {
+   "label": "v571",
+   "round": "r1",
+   "case": "macos_20260909_default_headed",
+   "version": "154.0.8037.57",
+   "sites": {
+    "sannysoft": {
+     "http_status": 200,
+     "error": null,
+     "failed_rows": []
+    },
+    "rebrowser": {
+     "http_status": 200,
+     "error": null,
+     "red": [
+      "mainWorldExecution",
+      "exposeFunctionLeak"
+     ],
+     "n": 10
+    },
+    "creepjs": {
+     "http_status": 200,
+     "error": null,
+     "headless_metrics": [
+      "31% like headless",
+      "0% headless",
+      "0% stealth"
+     ],
+     "font_load": "2/51"
+    },
+    "deviceinfo": {
+     "http_status": 200,
+     "error": null,
+     "isBot": false,
+     "positive": []
+    },
+    "incolumitas": {
+     "http_status": 200,
+     "error": null,
+     "fail_keys": [
+      "WEBDRIVER"
+     ]
+    },
+    "browserscan": {
+     "http_status": 200,
+     "error": null,
+     "result": "Normal"
+    },
+    "fingerprint": {
+     "http_status": 200,
+     "error": null,
+     "signals": {
+      "bot": "not_detected",
+      "tampering": false,
+      "tampering_confidence": "high",
+      "tampering_ml_score": 0.0973,
+      "anomaly_score": 0,
+      "anti_detect_browser": false,
+      "developer_tools": false,
+      "virtual_machine": false,
+      "vpn": false,
+      "vpn_confidence": "medium",
+      "os_mismatch": false,
+      "suspect_score": 0
+     },
+     "suspect_score_text": 0,
+     "visitor_hash": "cd9a037cf1af476f"
+    },
+    "iphey": {
+     "http_status": 200,
+     "error": null,
+     "score": 0,
+     "verdict": "See",
+     "incomplete": true
+    },
+    "recaptcha": {
+     "http_status": 200,
+     "error": null,
+     "score": 0.9
+    }
+   },
+   "consistency": {
+    "mainWorkerUa": true,
+    "mainFrameUa": true,
+    "mainWorkerPlatform": true,
+    "mainFramePlatform": true,
+    "uaMatchesHttp": true,
+    "mainWorkerUaData": true,
+    "mainFrameUaData": true,
+    "httpUaDataFields": true,
+    "httpFullVersions": true,
+    "mainWorkerLanguage": true
+   },
+   "surface": {
+    "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "platform": "MacIntel",
+    "languages": [
+     "en-US",
+     "en"
+    ],
+    "uaFull": [
+     {
+      "brand": "Chromium",
+      "version": "154.0.8037.58"
+     },
+     {
+      "brand": "Google Chrome",
+      "version": "154.0.8037.58"
+     }
+    ],
+    "platformVersion": "26.5.2",
+    "gl": {
+     "webgl": {
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Unspecified Version)",
+      "pixel": [
+       64,
+       128,
+       191,
+       255
+      ],
+      "error": 0
+     },
+     "webgl2": {
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Unspecified Version)",
+      "pixel": [
+       64,
+       128,
+       191,
+       255
+      ],
+      "error": 0
+     }
+    },
+    "fontMetricsHash": "5767b701186cacb5",
+    "screen": {
+     "width": 1366,
+     "height": 768,
+     "availWidth": 1366,
+     "availHeight": 735,
+     "colorDepth": 30
+    },
+    "window": {
+     "innerWidth": 1365,
+     "innerHeight": 646,
+     "outerWidth": 1365,
+     "outerHeight": 735,
+     "devicePixelRatio": 1
+    }
+   }
+  },
+  {
+   "label": "v571",
+   "round": "r1",
+   "case": "macos_20260909_default_headless",
+   "version": "154.0.8037.57",
+   "sites": {
+    "sannysoft": {
+     "http_status": 200,
+     "error": null,
+     "failed_rows": []
+    },
+    "rebrowser": {
+     "http_status": 200,
+     "error": null,
+     "red": [
+      "mainWorldExecution",
+      "exposeFunctionLeak"
+     ],
+     "n": 10
+    },
+    "creepjs": {
+     "http_status": 200,
+     "error": null,
+     "headless_metrics": [
+      "31% like headless",
+      "0% headless",
+      "0% stealth"
+     ],
+     "font_load": "2/51"
+    },
+    "deviceinfo": {
+     "http_status": 200,
+     "error": null,
+     "isBot": false,
+     "positive": []
+    },
+    "browserscan": {
+     "http_status": 200,
+     "error": null,
+     "result": "Normal"
+    },
+    "fingerprint": {
+     "http_status": 200,
+     "error": null,
+     "signals": {
+      "bot": "not_detected",
+      "tampering": false,
+      "tampering_confidence": "high",
+      "tampering_ml_score": 0.2809,
+      "anomaly_score": 0,
+      "anti_detect_browser": false,
+      "developer_tools": false,
+      "virtual_machine": false,
+      "vpn": false,
+      "vpn_confidence": "medium",
+      "os_mismatch": false,
+      "suspect_score": 0
+     },
+     "suspect_score_text": 0,
+     "visitor_hash": "6b3956afaa85e31c"
+    },
+    "iphey": {
+     "http_status": 200,
+     "error": null,
+     "score": 0,
+     "verdict": "See",
+     "incomplete": true
+    }
+   },
+   "consistency": {
+    "mainWorkerUa": true,
+    "mainFrameUa": true,
+    "mainWorkerPlatform": true,
+    "mainFramePlatform": true,
+    "uaMatchesHttp": true,
+    "mainWorkerUaData": true,
+    "mainFrameUaData": true,
+    "httpUaDataFields": true,
+    "httpFullVersions": true,
+    "mainWorkerLanguage": true
+   },
+   "surface": {
+    "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "platform": "MacIntel",
+    "languages": [
+     "en-US",
+     "en"
+    ],
+    "uaFull": [
+     {
+      "brand": "Chromium",
+      "version": "154.0.8037.58"
+     },
+     {
+      "brand": "Google Chrome",
+      "version": "154.0.8037.58"
+     }
+    ],
+    "platformVersion": "26.5.2",
+    "gl": {
+     "webgl": {
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Unspecified Version)",
+      "pixel": [
+       64,
+       128,
+       191,
+       255
+      ],
+      "error": 0
+     },
+     "webgl2": {
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Unspecified Version)",
+      "pixel": [
+       64,
+       128,
+       191,
+       255
+      ],
+      "error": 0
+     }
+    },
+    "fontMetricsHash": "5767b701186cacb5",
+    "screen": {
+     "width": 1366,
+     "height": 768,
+     "availWidth": 1366,
+     "availHeight": 735,
+     "colorDepth": 30
+    },
+    "window": {
+     "innerWidth": 1366,
+     "innerHeight": 647,
+     "outerWidth": 1366,
+     "outerHeight": 735,
+     "devicePixelRatio": 2
+    }
+   }
+  },
+  {
+   "label": "v571",
+   "round": "r1",
+   "case": "macos_20260910_default_headed",
+   "version": "154.0.8037.57",
+   "sites": {
+    "deviceinfo": {
+     "http_status": 200,
+     "error": null,
+     "isBot": false,
+     "positive": []
+    },
+    "fingerprint": {
+     "http_status": 200,
+     "error": null,
+     "signals": {
+      "bot": "not_detected",
+      "tampering": false,
+      "tampering_confidence": "high",
+      "tampering_ml_score": 0.0299,
+      "anomaly_score": 0,
+      "anti_detect_browser": false,
+      "developer_tools": false,
+      "virtual_machine": false,
+      "vpn": false,
+      "vpn_confidence": "medium",
+      "os_mismatch": false,
+      "suspect_score": 0
+     },
+     "suspect_score_text": 0,
+     "visitor_hash": "0e490da246107ae1"
+    }
+   },
+   "consistency": {
+    "mainWorkerUa": true,
+    "mainFrameUa": true,
+    "mainWorkerPlatform": true,
+    "mainFramePlatform": true,
+    "uaMatchesHttp": true,
+    "mainWorkerUaData": true,
+    "mainFrameUaData": true,
+    "httpUaDataFields": true,
+    "httpFullVersions": true,
+    "mainWorkerLanguage": true
+   },
+   "surface": {
+    "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "platform": "MacIntel",
+    "languages": [
+     "en-US",
+     "en"
+    ],
+    "uaFull": [
+     {
+      "brand": "Chromium",
+      "version": "154.0.8037.58"
+     },
+     {
+      "brand": "Google Chrome",
+      "version": "154.0.8037.58"
+     }
+    ],
+    "platformVersion": "15.7.9",
+    "gl": {
+     "webgl": {
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+      "pixel": [
+       64,
+       128,
+       191,
+       255
+      ],
+      "error": 0
+     },
+     "webgl2": {
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+      "pixel": [
+       64,
+       128,
+       191,
+       255
+      ],
+      "error": 0
+     }
+    },
+    "fontMetricsHash": "5767b701186cacb5",
+    "screen": {
+     "width": 1366,
+     "height": 768,
+     "availWidth": 1366,
+     "availHeight": 738,
+     "colorDepth": 24
+    },
+    "window": {
+     "innerWidth": 1365,
+     "innerHeight": 646,
+     "outerWidth": 1365,
+     "outerHeight": 738,
+     "devicePixelRatio": 1
+    }
+   }
+  },
+  {
+   "label": "v571",
+   "round": "r1",
+   "case": "macos_20260911_default_headed",
+   "version": "154.0.8037.57",
+   "sites": {
+    "deviceinfo": {
+     "http_status": 200,
+     "error": null,
+     "isBot": false,
+     "positive": []
+    },
+    "fingerprint": {
+     "http_status": 200,
+     "error": null,
+     "signals": {
+      "bot": "not_detected",
+      "tampering": false,
+      "tampering_confidence": "high",
+      "tampering_ml_score": 0.0535,
+      "anomaly_score": 0,
+      "anti_detect_browser": false,
+      "developer_tools": false,
+      "virtual_machine": false,
+      "vpn": false,
+      "vpn_confidence": "medium",
+      "os_mismatch": false,
+      "suspect_score": 0
+     },
+     "suspect_score_text": 0,
+     "visitor_hash": "cd9a037cf1af476f"
+    }
+   },
+   "consistency": {
+    "mainWorkerUa": true,
+    "mainFrameUa": true,
+    "mainWorkerPlatform": true,
+    "mainFramePlatform": true,
+    "uaMatchesHttp": true,
+    "mainWorkerUaData": true,
+    "mainFrameUaData": true,
+    "httpUaDataFields": true,
+    "httpFullVersions": true,
+    "mainWorkerLanguage": true
+   },
+   "surface": {
+    "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "platform": "MacIntel",
+    "languages": [
+     "en-US",
+     "en"
+    ],
+    "uaFull": [
+     {
+      "brand": "Chromium",
+      "version": "154.0.8037.58"
+     },
+     {
+      "brand": "Google Chrome",
+      "version": "154.0.8037.58"
+     }
+    ],
+    "platformVersion": "15.5.0",
+    "gl": {
+     "webgl": {
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Pro, Unspecified Version)",
+      "pixel": [
+       64,
+       128,
+       191,
+       255
+      ],
+      "error": 0
+     },
+     "webgl2": {
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Pro, Unspecified Version)",
+      "pixel": [
+       64,
+       128,
+       191,
+       255
+      ],
+      "error": 0
+     }
+    },
+    "fontMetricsHash": "5767b701186cacb5",
+    "screen": {
+     "width": 1366,
+     "height": 768,
+     "availWidth": 1366,
+     "availHeight": 729,
+     "colorDepth": 30
+    },
+    "window": {
+     "innerWidth": 1365,
+     "innerHeight": 646,
+     "outerWidth": 1365,
+     "outerHeight": 729,
+     "devicePixelRatio": 1
+    }
+   }
+  },
+  {
+   "label": "v571",
+   "round": "r1",
+   "case": "windows_20260909_default_headed",
+   "version": "154.0.8037.57",
+   "sites": {
+    "sannysoft": {
+     "http_status": 200,
+     "error": null,
+     "failed_rows": []
+    },
+    "deviceinfo": {
+     "http_status": 200,
+     "error": null,
+     "isBot": false,
+     "positive": []
+    },
+    "fingerprint": {
+     "http_status": 200,
+     "error": null,
+     "signals": {
+      "bot": "not_detected",
+      "tampering": true,
+      "tampering_confidence": "medium",
+      "tampering_ml_score": 0.9997,
+      "anomaly_score": 0.0553,
+      "anti_detect_browser": true,
+      "developer_tools": false,
+      "virtual_machine": false,
+      "vpn": false,
+      "vpn_confidence": "medium",
+      "os_mismatch": false,
+      "suspect_score": 8
+     },
+     "suspect_score_text": 8,
+     "visitor_hash": "35776ff881fd0174"
+    }
+   },
+   "consistency": {
+    "mainWorkerUa": true,
+    "mainFrameUa": true,
+    "mainWorkerPlatform": true,
+    "mainFramePlatform": true,
+    "uaMatchesHttp": true,
+    "mainWorkerUaData": true,
+    "mainFrameUaData": true,
+    "httpUaDataFields": true,
+    "httpFullVersions": true,
+    "mainWorkerLanguage": true
+   },
+   "surface": {
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "platform": "Win32",
+    "languages": [
+     "en-US",
+     "en"
+    ],
+    "uaFull": [
+     {
+      "brand": "Chromium",
+      "version": "154.0.8037.58"
+     },
+     {
+      "brand": "Google Chrome",
+      "version": "154.0.8037.58"
+     }
+    ],
+    "platformVersion": "19.0.0",
+    "gl": {
+     "webgl": {
+      "renderer": "ANGLE (Intel, Intel(R) UHD Graphics (0x0000A7A8) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "pixel": [
+       64,
+       128,
+       191,
+       255
+      ],
+      "error": 0
+     },
+     "webgl2": {
+      "renderer": "ANGLE (Intel, Intel(R) UHD Graphics (0x0000A7A8) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "pixel": [
+       64,
+       128,
+       191,
+       255
+      ],
+      "error": 0
+     }
+    },
+    "fontMetricsHash": "fd8774cd07254ee0",
+    "screen": {
+     "width": 1366,
+     "height": 768,
+     "availWidth": 1366,
+     "availHeight": 720,
+     "colorDepth": 24
+    },
+    "window": {
+     "innerWidth": 1365,
+     "innerHeight": 646,
+     "outerWidth": 1365,
+     "outerHeight": 720,
+     "devicePixelRatio": 1
+    }
+   }
+  },
+  {
+   "label": "v571",
+   "round": "r2",
+   "case": "linux_20260909_default_headed",
+   "version": "154.0.8037.57",
+   "sites": {
+    "sannysoft": {
+     "http_status": 200,
+     "error": null,
+     "failed_rows": []
+    },
+    "deviceinfo": {
+     "http_status": 200,
+     "error": null,
+     "isBot": false,
+     "positive": []
+    },
+    "fingerprint": {
+     "http_status": 200,
+     "error": null,
+     "signals": {
+      "bot": "not_detected",
+      "tampering": false,
+      "tampering_confidence": "high",
+      "tampering_ml_score": 0,
+      "anomaly_score": 0.0089,
+      "anti_detect_browser": false,
+      "developer_tools": false,
+      "virtual_machine": false,
+      "vpn": true,
+      "vpn_confidence": "low",
+      "os_mismatch": true,
+      "suspect_score": 4
+     },
+     "suspect_score_text": 4,
+     "visitor_hash": "815f36dfaa73f813"
+    }
+   },
+   "consistency": {
+    "mainWorkerUa": true,
+    "mainFrameUa": true,
+    "mainWorkerPlatform": true,
+    "mainFramePlatform": true,
+    "uaMatchesHttp": true,
+    "mainWorkerUaData": true,
+    "mainFrameUaData": true,
+    "httpUaDataFields": true,
+    "httpFullVersions": true,
+    "mainWorkerLanguage": true
+   },
+   "surface": {
+    "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "platform": "Linux x86_64",
+    "languages": [
+     "en-US",
+     "en-GB",
+     "en-US",
+     "en"
+    ],
+    "uaFull": [
+     {
+      "brand": "Chromium",
+      "version": "154.0.8037.58"
+     },
+     {
+      "brand": "Google Chrome",
+      "version": "154.0.8037.58"
+     }
+    ],
+    "platformVersion": "6.11.0",
+    "gl": {
+     "webgl": {
+      "renderer": "ANGLE (NVIDIA Corporation, NVIDIA GeForce RTX 2050/PCIe/SSE2, OpenGL ES 3.2)",
+      "pixel": [
+       64,
+       128,
+       191,
+       255
+      ],
+      "error": 0
+     },
+     "webgl2": {
+      "renderer": "ANGLE (NVIDIA Corporation, NVIDIA GeForce RTX 2050/PCIe/SSE2, OpenGL ES 3.2)",
+      "pixel": [
+       64,
+       128,
+       191,
+       255
+      ],
+      "error": 0
+     }
+    },
+    "fontMetricsHash": "feb968c57a6f2ad6",
+    "screen": {
+     "width": 1366,
+     "height": 768,
+     "availWidth": 1366,
+     "availHeight": 768,
+     "colorDepth": 24
+    },
+    "window": {
+     "innerWidth": 1365,
+     "innerHeight": 646,
+     "outerWidth": 1365,
+     "outerHeight": 767,
+     "devicePixelRatio": 1
+    }
+   }
+  },
+  {
+   "label": "v571",
+   "round": "r2",
+   "case": "macos_20260909_default_headed",
+   "version": "154.0.8037.57",
+   "sites": {
+    "sannysoft": {
+     "http_status": 200,
+     "error": null,
+     "failed_rows": []
+    },
+    "rebrowser": {
+     "http_status": 200,
+     "error": null,
+     "red": [
+      "mainWorldExecution",
+      "exposeFunctionLeak"
+     ],
+     "n": 10
+    },
+    "creepjs": {
+     "http_status": 200,
+     "error": null,
+     "headless_metrics": [
+      "31% like headless",
+      "0% headless",
+      "0% stealth"
+     ],
+     "font_load": "2/51"
+    },
+    "deviceinfo": {
+     "http_status": 200,
+     "error": null,
+     "isBot": false,
+     "positive": []
+    },
+    "incolumitas": {
+     "http_status": 200,
+     "error": null,
+     "fail_keys": [
+      "WEBDRIVER"
+     ]
+    },
+    "browserscan": {
+     "http_status": 200,
+     "error": null,
+     "result": "Normal"
+    },
+    "fingerprint": {
+     "http_status": 200,
+     "error": null,
+     "signals": {
+      "bot": "not_detected",
+      "tampering": false,
+      "tampering_confidence": "high",
+      "tampering_ml_score": 0.0973,
+      "anomaly_score": 0,
+      "anti_detect_browser": false,
+      "developer_tools": false,
+      "virtual_machine": false,
+      "vpn": true,
+      "vpn_confidence": "low",
+      "os_mismatch": true,
+      "suspect_score": 4
+     },
+     "suspect_score_text": 4,
+     "visitor_hash": "cd9a037cf1af476f"
+    },
+    "iphey": {
+     "http_status": 200,
+     "error": null,
+     "score": 0,
+     "verdict": "See",
+     "incomplete": true
+    },
+    "recaptcha": {
+     "http_status": 200,
+     "error": null,
+     "score": 0.9
+    }
+   },
+   "consistency": {
+    "mainWorkerUa": true,
+    "mainFrameUa": true,
+    "mainWorkerPlatform": true,
+    "mainFramePlatform": true,
+    "uaMatchesHttp": true,
+    "mainWorkerUaData": true,
+    "mainFrameUaData": true,
+    "httpUaDataFields": true,
+    "httpFullVersions": true,
+    "mainWorkerLanguage": true
+   },
+   "surface": {
+    "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "platform": "MacIntel",
+    "languages": [
+     "en-US",
+     "en"
+    ],
+    "uaFull": [
+     {
+      "brand": "Chromium",
+      "version": "154.0.8037.58"
+     },
+     {
+      "brand": "Google Chrome",
+      "version": "154.0.8037.58"
+     }
+    ],
+    "platformVersion": "26.5.2",
+    "gl": {
+     "webgl": {
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Unspecified Version)",
+      "pixel": [
+       64,
+       128,
+       191,
+       255
+      ],
+      "error": 0
+     },
+     "webgl2": {
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Unspecified Version)",
+      "pixel": [
+       64,
+       128,
+       191,
+       255
+      ],
+      "error": 0
+     }
+    },
+    "fontMetricsHash": "5767b701186cacb5",
+    "screen": {
+     "width": 1366,
+     "height": 768,
+     "availWidth": 1366,
+     "availHeight": 735,
+     "colorDepth": 30
+    },
+    "window": {
+     "innerWidth": 1365,
+     "innerHeight": 646,
+     "outerWidth": 1365,
+     "outerHeight": 735,
+     "devicePixelRatio": 1
+    }
+   }
+  },
+  {
+   "label": "v571",
+   "round": "r2",
+   "case": "macos_20260909_default_headless",
+   "version": "154.0.8037.57",
+   "sites": {
+    "sannysoft": {
+     "http_status": 200,
+     "error": null,
+     "failed_rows": []
+    },
+    "rebrowser": {
+     "http_status": 200,
+     "error": null,
+     "red": [
+      "mainWorldExecution",
+      "exposeFunctionLeak"
+     ],
+     "n": 10
+    },
+    "creepjs": {
+     "http_status": 200,
+     "error": null,
+     "headless_metrics": [
+      "31% like headless",
+      "0% headless",
+      "0% stealth"
+     ],
+     "font_load": "2/51"
+    },
+    "deviceinfo": {
+     "http_status": 200,
+     "error": null,
+     "isBot": false,
+     "positive": []
+    },
+    "browserscan": {
+     "http_status": 200,
+     "error": null,
+     "result": "Normal"
+    },
+    "fingerprint": {
+     "http_status": 200,
+     "error": null,
+     "signals": {
+      "bot": "not_detected",
+      "tampering": false,
+      "tampering_confidence": "high",
+      "tampering_ml_score": 0.2809,
+      "anomaly_score": 0,
+      "anti_detect_browser": false,
+      "developer_tools": false,
+      "virtual_machine": false,
+      "vpn": true,
+      "vpn_confidence": "low",
+      "os_mismatch": true,
+      "suspect_score": 4
+     },
+     "suspect_score_text": 4,
+     "visitor_hash": "6b3956afaa85e31c"
+    },
+    "iphey": {
+     "http_status": 200,
+     "error": null,
+     "score": 0,
+     "verdict": "See",
+     "incomplete": true
+    }
+   },
+   "consistency": {
+    "mainWorkerUa": true,
+    "mainFrameUa": true,
+    "mainWorkerPlatform": true,
+    "mainFramePlatform": true,
+    "uaMatchesHttp": true,
+    "mainWorkerUaData": true,
+    "mainFrameUaData": true,
+    "httpUaDataFields": true,
+    "httpFullVersions": true,
+    "mainWorkerLanguage": true
+   },
+   "surface": {
+    "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "platform": "MacIntel",
+    "languages": [
+     "en-US",
+     "en"
+    ],
+    "uaFull": [
+     {
+      "brand": "Chromium",
+      "version": "154.0.8037.58"
+     },
+     {
+      "brand": "Google Chrome",
+      "version": "154.0.8037.58"
+     }
+    ],
+    "platformVersion": "26.5.2",
+    "gl": {
+     "webgl": {
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Unspecified Version)",
+      "pixel": [
+       64,
+       128,
+       191,
+       255
+      ],
+      "error": 0
+     },
+     "webgl2": {
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Unspecified Version)",
+      "pixel": [
+       64,
+       128,
+       191,
+       255
+      ],
+      "error": 0
+     }
+    },
+    "fontMetricsHash": "5767b701186cacb5",
+    "screen": {
+     "width": 1366,
+     "height": 768,
+     "availWidth": 1366,
+     "availHeight": 735,
+     "colorDepth": 30
+    },
+    "window": {
+     "innerWidth": 1366,
+     "innerHeight": 647,
+     "outerWidth": 1366,
+     "outerHeight": 735,
+     "devicePixelRatio": 2
+    }
+   }
+  },
+  {
+   "label": "v571",
+   "round": "r2",
+   "case": "macos_20260910_default_headed",
+   "version": "154.0.8037.57",
+   "sites": {
+    "deviceinfo": {
+     "http_status": 200,
+     "error": null,
+     "isBot": false,
+     "positive": []
+    },
+    "fingerprint": {
+     "http_status": 200,
+     "error": null,
+     "signals": {
+      "bot": "not_detected",
+      "tampering": false,
+      "tampering_confidence": "high",
+      "tampering_ml_score": 0.0299,
+      "anomaly_score": 0,
+      "anti_detect_browser": false,
+      "developer_tools": false,
+      "virtual_machine": false,
+      "vpn": true,
+      "vpn_confidence": "low",
+      "os_mismatch": true,
+      "suspect_score": 4
+     },
+     "suspect_score_text": 4,
+     "visitor_hash": "0e490da246107ae1"
+    }
+   },
+   "consistency": {
+    "mainWorkerUa": true,
+    "mainFrameUa": true,
+    "mainWorkerPlatform": true,
+    "mainFramePlatform": true,
+    "uaMatchesHttp": true,
+    "mainWorkerUaData": true,
+    "mainFrameUaData": true,
+    "httpUaDataFields": true,
+    "httpFullVersions": true,
+    "mainWorkerLanguage": true
+   },
+   "surface": {
+    "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "platform": "MacIntel",
+    "languages": [
+     "en-US",
+     "en"
+    ],
+    "uaFull": [
+     {
+      "brand": "Chromium",
+      "version": "154.0.8037.58"
+     },
+     {
+      "brand": "Google Chrome",
+      "version": "154.0.8037.58"
+     }
+    ],
+    "platformVersion": "15.7.9",
+    "gl": {
+     "webgl": {
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+      "pixel": [
+       64,
+       128,
+       191,
+       255
+      ],
+      "error": 0
+     },
+     "webgl2": {
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+      "pixel": [
+       64,
+       128,
+       191,
+       255
+      ],
+      "error": 0
+     }
+    },
+    "fontMetricsHash": "5767b701186cacb5",
+    "screen": {
+     "width": 1366,
+     "height": 768,
+     "availWidth": 1366,
+     "availHeight": 738,
+     "colorDepth": 24
+    },
+    "window": {
+     "innerWidth": 1365,
+     "innerHeight": 646,
+     "outerWidth": 1365,
+     "outerHeight": 738,
+     "devicePixelRatio": 1
+    }
+   }
+  },
+  {
+   "label": "v571",
+   "round": "r2",
+   "case": "macos_20260911_default_headed",
+   "version": "154.0.8037.57",
+   "sites": {
+    "deviceinfo": {
+     "http_status": 200,
+     "error": null,
+     "isBot": false,
+     "positive": []
+    },
+    "fingerprint": {
+     "http_status": 200,
+     "error": null,
+     "signals": {
+      "bot": "not_detected",
+      "tampering": false,
+      "tampering_confidence": "high",
+      "tampering_ml_score": 0.0535,
+      "anomaly_score": 0,
+      "anti_detect_browser": false,
+      "developer_tools": false,
+      "virtual_machine": false,
+      "vpn": true,
+      "vpn_confidence": "low",
+      "os_mismatch": true,
+      "suspect_score": 4
+     },
+     "suspect_score_text": 4,
+     "visitor_hash": "cd9a037cf1af476f"
+    }
+   },
+   "consistency": {
+    "mainWorkerUa": true,
+    "mainFrameUa": true,
+    "mainWorkerPlatform": true,
+    "mainFramePlatform": true,
+    "uaMatchesHttp": true,
+    "mainWorkerUaData": true,
+    "mainFrameUaData": true,
+    "httpUaDataFields": true,
+    "httpFullVersions": true,
+    "mainWorkerLanguage": true
+   },
+   "surface": {
+    "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "platform": "MacIntel",
+    "languages": [
+     "en-US",
+     "en"
+    ],
+    "uaFull": [
+     {
+      "brand": "Chromium",
+      "version": "154.0.8037.58"
+     },
+     {
+      "brand": "Google Chrome",
+      "version": "154.0.8037.58"
+     }
+    ],
+    "platformVersion": "15.5.0",
+    "gl": {
+     "webgl": {
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Pro, Unspecified Version)",
+      "pixel": [
+       64,
+       128,
+       191,
+       255
+      ],
+      "error": 0
+     },
+     "webgl2": {
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Pro, Unspecified Version)",
+      "pixel": [
+       64,
+       128,
+       191,
+       255
+      ],
+      "error": 0
+     }
+    },
+    "fontMetricsHash": "5767b701186cacb5",
+    "screen": {
+     "width": 1366,
+     "height": 768,
+     "availWidth": 1366,
+     "availHeight": 729,
+     "colorDepth": 30
+    },
+    "window": {
+     "innerWidth": 1365,
+     "innerHeight": 646,
+     "outerWidth": 1365,
+     "outerHeight": 729,
+     "devicePixelRatio": 1
+    }
+   }
+  },
+  {
+   "label": "v571",
+   "round": "r2",
+   "case": "windows_20260909_default_headed",
+   "version": "154.0.8037.57",
+   "sites": {
+    "sannysoft": {
+     "http_status": 200,
+     "error": null,
+     "failed_rows": []
+    },
+    "deviceinfo": {
+     "http_status": 200,
+     "error": null,
+     "isBot": false,
+     "positive": []
+    },
+    "fingerprint": {
+     "http_status": 200,
+     "error": null,
+     "signals": {
+      "bot": "not_detected",
+      "tampering": true,
+      "tampering_confidence": "medium",
+      "tampering_ml_score": 0.9997,
+      "anomaly_score": 0.0553,
+      "anti_detect_browser": true,
+      "developer_tools": false,
+      "virtual_machine": false,
+      "vpn": true,
+      "vpn_confidence": "low",
+      "os_mismatch": true,
+      "suspect_score": 12
+     },
+     "suspect_score_text": 12,
+     "visitor_hash": "35776ff881fd0174"
+    }
+   },
+   "consistency": {
+    "mainWorkerUa": true,
+    "mainFrameUa": true,
+    "mainWorkerPlatform": true,
+    "mainFramePlatform": true,
+    "uaMatchesHttp": true,
+    "mainWorkerUaData": true,
+    "mainFrameUaData": true,
+    "httpUaDataFields": true,
+    "httpFullVersions": true,
+    "mainWorkerLanguage": true
+   },
+   "surface": {
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "platform": "Win32",
+    "languages": [
+     "en-US",
+     "en"
+    ],
+    "uaFull": [
+     {
+      "brand": "Chromium",
+      "version": "154.0.8037.58"
+     },
+     {
+      "brand": "Google Chrome",
+      "version": "154.0.8037.58"
+     }
+    ],
+    "platformVersion": "19.0.0",
+    "gl": {
+     "webgl": {
+      "renderer": "ANGLE (Intel, Intel(R) UHD Graphics (0x0000A7A8) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "pixel": [
+       64,
+       128,
+       191,
+       255
+      ],
+      "error": 0
+     },
+     "webgl2": {
+      "renderer": "ANGLE (Intel, Intel(R) UHD Graphics (0x0000A7A8) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "pixel": [
+       64,
+       128,
+       191,
+       255
+      ],
+      "error": 0
+     }
+    },
+    "fontMetricsHash": "fd8774cd07254ee0",
+    "screen": {
+     "width": 1366,
+     "height": 768,
+     "availWidth": 1366,
+     "availHeight": 720,
+     "colorDepth": 24
+    },
+    "window": {
+     "innerWidth": 1365,
+     "innerHeight": 646,
+     "outerWidth": 1365,
+     "outerHeight": 720,
+     "devicePixelRatio": 1
+    }
+   }
+  },
+  {
+   "label": "v572",
+   "round": "r1",
+   "case": "linux_20260909_default_headed",
+   "version": "154.0.8037.57",
+   "sites": {
+    "sannysoft": {
+     "http_status": 200,
+     "error": null,
+     "failed_rows": []
+    },
+    "deviceinfo": {
+     "http_status": 200,
+     "error": null,
+     "isBot": false,
+     "positive": []
+    },
+    "fingerprint": {
+     "http_status": 200,
+     "error": null,
+     "signals": {
+      "bot": "not_detected",
+      "tampering": false,
+      "tampering_confidence": "high",
+      "tampering_ml_score": 0,
+      "anomaly_score": 0.0089,
+      "anti_detect_browser": false,
+      "developer_tools": false,
+      "virtual_machine": false,
+      "vpn": true,
+      "vpn_confidence": "low",
+      "os_mismatch": true,
+      "suspect_score": 4
+     },
+     "suspect_score_text": 4,
+     "visitor_hash": "815f36dfaa73f813"
+    }
+   },
+   "consistency": {
+    "mainWorkerUa": true,
+    "mainFrameUa": true,
+    "mainWorkerPlatform": true,
+    "mainFramePlatform": true,
+    "uaMatchesHttp": true,
+    "mainWorkerUaData": true,
+    "mainFrameUaData": true,
+    "httpUaDataFields": true,
+    "httpFullVersions": true,
+    "mainWorkerLanguage": true
+   },
+   "surface": {
+    "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "platform": "Linux x86_64",
+    "languages": [
+     "en-US",
+     "en-GB",
+     "en-US",
+     "en"
+    ],
+    "uaFull": [
+     {
+      "brand": "Chromium",
+      "version": "154.0.8037.58"
+     },
+     {
+      "brand": "Google Chrome",
+      "version": "154.0.8037.58"
+     }
+    ],
+    "platformVersion": "6.11.0",
+    "gl": {
+     "webgl": {
+      "renderer": "ANGLE (NVIDIA Corporation, NVIDIA GeForce RTX 2050/PCIe/SSE2, OpenGL ES 3.2)",
+      "pixel": [
+       64,
+       128,
+       191,
+       255
+      ],
+      "error": 0
+     },
+     "webgl2": {
+      "renderer": "ANGLE (NVIDIA Corporation, NVIDIA GeForce RTX 2050/PCIe/SSE2, OpenGL ES 3.2)",
+      "pixel": [
+       64,
+       128,
+       191,
+       255
+      ],
+      "error": 0
+     }
+    },
+    "fontMetricsHash": "feb968c57a6f2ad6",
+    "screen": {
+     "width": 1366,
+     "height": 768,
+     "availWidth": 1366,
+     "availHeight": 768,
+     "colorDepth": 24
+    },
+    "window": {
+     "innerWidth": 1365,
+     "innerHeight": 646,
+     "outerWidth": 1365,
+     "outerHeight": 767,
+     "devicePixelRatio": 1
+    }
+   }
+  },
+  {
+   "label": "v572",
+   "round": "r1",
+   "case": "macos_20260909_default_headed",
+   "version": "154.0.8037.57",
+   "sites": {
+    "sannysoft": {
+     "http_status": 200,
+     "error": null,
+     "failed_rows": []
+    },
+    "rebrowser": {
+     "http_status": 200,
+     "error": null,
+     "red": [
+      "mainWorldExecution",
+      "exposeFunctionLeak"
+     ],
+     "n": 10
+    },
+    "creepjs": {
+     "http_status": 200,
+     "error": null,
+     "headless_metrics": [
+      "31% like headless",
+      "0% headless",
+      "0% stealth"
+     ],
+     "font_load": "2/51"
+    },
+    "deviceinfo": {
+     "http_status": 200,
+     "error": null,
+     "isBot": false,
+     "positive": []
+    },
+    "incolumitas": {
+     "http_status": 200,
+     "error": null,
+     "fail_keys": [
+      "WEBDRIVER"
+     ]
+    },
+    "browserscan": {
+     "http_status": 200,
+     "error": null,
+     "result": "Normal"
+    },
+    "fingerprint": {
+     "http_status": 200,
+     "error": null,
+     "signals": {
+      "bot": "not_detected",
+      "tampering": false,
+      "tampering_confidence": "high",
+      "tampering_ml_score": 0.1853,
+      "anomaly_score": 0,
+      "anti_detect_browser": false,
+      "developer_tools": false,
+      "virtual_machine": false,
+      "vpn": true,
+      "vpn_confidence": "high",
+      "os_mismatch": true,
+      "suspect_score": 4
+     },
+     "suspect_score_text": 4,
+     "visitor_hash": "cd9a037cf1af476f"
+    },
+    "iphey": {
+     "http_status": 200,
+     "error": null,
+     "score": 0,
+     "verdict": "See",
+     "incomplete": true
+    },
+    "recaptcha": {
+     "http_status": 200,
+     "error": null,
+     "score": 0.9
+    }
+   },
+   "consistency": {
+    "mainWorkerUa": true,
+    "mainFrameUa": true,
+    "mainWorkerPlatform": true,
+    "mainFramePlatform": true,
+    "uaMatchesHttp": true,
+    "mainWorkerUaData": true,
+    "mainFrameUaData": true,
+    "httpUaDataFields": true,
+    "httpFullVersions": true,
+    "mainWorkerLanguage": true
+   },
+   "surface": {
+    "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "platform": "MacIntel",
+    "languages": [
+     "en-US",
+     "en"
+    ],
+    "uaFull": [
+     {
+      "brand": "Chromium",
+      "version": "154.0.8037.58"
+     },
+     {
+      "brand": "Google Chrome",
+      "version": "154.0.8037.58"
+     }
+    ],
+    "platformVersion": "26.5.2",
+    "gl": {
+     "webgl": {
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Unspecified Version)",
+      "pixel": [
+       64,
+       128,
+       191,
+       255
+      ],
+      "error": 0
+     },
+     "webgl2": {
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Unspecified Version)",
+      "pixel": [
+       64,
+       128,
+       191,
+       255
+      ],
+      "error": 0
+     }
+    },
+    "fontMetricsHash": "5767b701186cacb5",
+    "screen": {
+     "width": 1366,
+     "height": 768,
+     "availWidth": 1366,
+     "availHeight": 735,
+     "colorDepth": 30
+    },
+    "window": {
+     "innerWidth": 1365,
+     "innerHeight": 646,
+     "outerWidth": 1365,
+     "outerHeight": 735,
+     "devicePixelRatio": 1
+    }
+   }
+  },
+  {
+   "label": "v572",
+   "round": "r1",
+   "case": "macos_20260909_default_headless",
+   "version": "154.0.8037.57",
+   "sites": {
+    "sannysoft": {
+     "http_status": 200,
+     "error": null,
+     "failed_rows": []
+    },
+    "rebrowser": {
+     "http_status": 200,
+     "error": null,
+     "red": [
+      "mainWorldExecution",
+      "exposeFunctionLeak"
+     ],
+     "n": 10
+    },
+    "creepjs": {
+     "http_status": 200,
+     "error": null,
+     "headless_metrics": [
+      "31% like headless",
+      "0% headless",
+      "0% stealth"
+     ],
+     "font_load": "2/51"
+    },
+    "deviceinfo": {
+     "http_status": 200,
+     "error": null,
+     "isBot": false,
+     "positive": []
+    },
+    "browserscan": {
+     "http_status": 200,
+     "error": null,
+     "result": "Normal"
+    },
+    "fingerprint": {
+     "http_status": 200,
+     "error": null,
+     "signals": {
+      "bot": "not_detected",
+      "tampering": false,
+      "tampering_confidence": "high",
+      "tampering_ml_score": 0.6015,
+      "anomaly_score": 0,
+      "anti_detect_browser": false,
+      "developer_tools": false,
+      "virtual_machine": false,
+      "vpn": true,
+      "vpn_confidence": "high",
+      "os_mismatch": true,
+      "suspect_score": 4
+     },
+     "suspect_score_text": 4,
+     "visitor_hash": "6b3956afaa85e31c"
+    },
+    "iphey": {
+     "http_status": 200,
+     "error": null,
+     "score": 0,
+     "verdict": "See",
+     "incomplete": true
+    }
+   },
+   "consistency": {
+    "mainWorkerUa": true,
+    "mainFrameUa": true,
+    "mainWorkerPlatform": true,
+    "mainFramePlatform": true,
+    "uaMatchesHttp": true,
+    "mainWorkerUaData": true,
+    "mainFrameUaData": true,
+    "httpUaDataFields": true,
+    "httpFullVersions": true,
+    "mainWorkerLanguage": true
+   },
+   "surface": {
+    "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "platform": "MacIntel",
+    "languages": [
+     "en-US",
+     "en"
+    ],
+    "uaFull": [
+     {
+      "brand": "Chromium",
+      "version": "154.0.8037.58"
+     },
+     {
+      "brand": "Google Chrome",
+      "version": "154.0.8037.58"
+     }
+    ],
+    "platformVersion": "26.5.2",
+    "gl": {
+     "webgl": {
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Unspecified Version)",
+      "pixel": [
+       64,
+       128,
+       191,
+       255
+      ],
+      "error": 0
+     },
+     "webgl2": {
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Unspecified Version)",
+      "pixel": [
+       64,
+       128,
+       191,
+       255
+      ],
+      "error": 0
+     }
+    },
+    "fontMetricsHash": "5767b701186cacb5",
+    "screen": {
+     "width": 1366,
+     "height": 768,
+     "availWidth": 1366,
+     "availHeight": 735,
+     "colorDepth": 30
+    },
+    "window": {
+     "innerWidth": 1366,
+     "innerHeight": 647,
+     "outerWidth": 1366,
+     "outerHeight": 735,
+     "devicePixelRatio": 2
+    }
+   }
+  },
+  {
+   "label": "v572",
+   "round": "r1",
+   "case": "macos_20260910_default_headed",
+   "version": "154.0.8037.57",
+   "sites": {
+    "deviceinfo": {
+     "http_status": 200,
+     "error": null,
+     "isBot": false,
+     "positive": []
+    },
+    "fingerprint": {
+     "http_status": 200,
+     "error": null,
+     "signals": {
+      "bot": "not_detected",
+      "tampering": false,
+      "tampering_confidence": "high",
+      "tampering_ml_score": 0.0299,
+      "anomaly_score": 0,
+      "anti_detect_browser": false,
+      "developer_tools": false,
+      "virtual_machine": false,
+      "vpn": false,
+      "vpn_confidence": "medium",
+      "os_mismatch": false,
+      "suspect_score": 0
+     },
+     "suspect_score_text": 0,
+     "visitor_hash": "0e490da246107ae1"
+    }
+   },
+   "consistency": {
+    "mainWorkerUa": true,
+    "mainFrameUa": true,
+    "mainWorkerPlatform": true,
+    "mainFramePlatform": true,
+    "uaMatchesHttp": true,
+    "mainWorkerUaData": true,
+    "mainFrameUaData": true,
+    "httpUaDataFields": true,
+    "httpFullVersions": true,
+    "mainWorkerLanguage": true
+   },
+   "surface": {
+    "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "platform": "MacIntel",
+    "languages": [
+     "en-US",
+     "en"
+    ],
+    "uaFull": [
+     {
+      "brand": "Chromium",
+      "version": "154.0.8037.58"
+     },
+     {
+      "brand": "Google Chrome",
+      "version": "154.0.8037.58"
+     }
+    ],
+    "platformVersion": "15.7.9",
+    "gl": {
+     "webgl": {
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+      "pixel": [
+       64,
+       128,
+       191,
+       255
+      ],
+      "error": 0
+     },
+     "webgl2": {
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+      "pixel": [
+       64,
+       128,
+       191,
+       255
+      ],
+      "error": 0
+     }
+    },
+    "fontMetricsHash": "5767b701186cacb5",
+    "screen": {
+     "width": 1366,
+     "height": 768,
+     "availWidth": 1366,
+     "availHeight": 738,
+     "colorDepth": 24
+    },
+    "window": {
+     "innerWidth": 1365,
+     "innerHeight": 646,
+     "outerWidth": 1365,
+     "outerHeight": 738,
+     "devicePixelRatio": 1
+    }
+   }
+  },
+  {
+   "label": "v572",
+   "round": "r1",
+   "case": "macos_20260911_default_headed",
+   "version": "154.0.8037.57",
+   "sites": {
+    "deviceinfo": {
+     "http_status": 200,
+     "error": null,
+     "isBot": false,
+     "positive": []
+    },
+    "fingerprint": {
+     "http_status": 200,
+     "error": null,
+     "signals": {
+      "bot": "not_detected",
+      "tampering": false,
+      "tampering_confidence": "high",
+      "tampering_ml_score": 0.0537,
+      "anomaly_score": 0,
+      "anti_detect_browser": false,
+      "developer_tools": false,
+      "virtual_machine": false,
+      "vpn": false,
+      "vpn_confidence": "medium",
+      "os_mismatch": false,
+      "suspect_score": 0
+     },
+     "suspect_score_text": 0,
+     "visitor_hash": "cd9a037cf1af476f"
+    }
+   },
+   "consistency": {
+    "mainWorkerUa": true,
+    "mainFrameUa": true,
+    "mainWorkerPlatform": true,
+    "mainFramePlatform": true,
+    "uaMatchesHttp": true,
+    "mainWorkerUaData": true,
+    "mainFrameUaData": true,
+    "httpUaDataFields": true,
+    "httpFullVersions": true,
+    "mainWorkerLanguage": true
+   },
+   "surface": {
+    "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "platform": "MacIntel",
+    "languages": [
+     "en-US",
+     "en"
+    ],
+    "uaFull": [
+     {
+      "brand": "Chromium",
+      "version": "154.0.8037.58"
+     },
+     {
+      "brand": "Google Chrome",
+      "version": "154.0.8037.58"
+     }
+    ],
+    "platformVersion": "15.5.0",
+    "gl": {
+     "webgl": {
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Pro, Unspecified Version)",
+      "pixel": [
+       64,
+       128,
+       191,
+       255
+      ],
+      "error": 0
+     },
+     "webgl2": {
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Pro, Unspecified Version)",
+      "pixel": [
+       64,
+       128,
+       191,
+       255
+      ],
+      "error": 0
+     }
+    },
+    "fontMetricsHash": "5767b701186cacb5",
+    "screen": {
+     "width": 1366,
+     "height": 768,
+     "availWidth": 1366,
+     "availHeight": 729,
+     "colorDepth": 30
+    },
+    "window": {
+     "innerWidth": 1365,
+     "innerHeight": 646,
+     "outerWidth": 1365,
+     "outerHeight": 729,
+     "devicePixelRatio": 1
+    }
+   }
+  },
+  {
+   "label": "v572",
+   "round": "r1",
+   "case": "windows_20260909_default_headed",
+   "version": "154.0.8037.57",
+   "sites": {
+    "sannysoft": {
+     "http_status": 200,
+     "error": null,
+     "failed_rows": []
+    },
+    "deviceinfo": {
+     "http_status": 200,
+     "error": null,
+     "isBot": false,
+     "positive": []
+    },
+    "fingerprint": {
+     "http_status": 200,
+     "error": null,
+     "signals": {
+      "bot": "not_detected",
+      "tampering": true,
+      "tampering_confidence": "medium",
+      "tampering_ml_score": 0.9997,
+      "anomaly_score": 0.0553,
+      "anti_detect_browser": true,
+      "developer_tools": false,
+      "virtual_machine": false,
+      "vpn": true,
+      "vpn_confidence": "low",
+      "os_mismatch": true,
+      "suspect_score": 12
+     },
+     "suspect_score_text": 12,
+     "visitor_hash": "35776ff881fd0174"
+    }
+   },
+   "consistency": {
+    "mainWorkerUa": true,
+    "mainFrameUa": true,
+    "mainWorkerPlatform": true,
+    "mainFramePlatform": true,
+    "uaMatchesHttp": true,
+    "mainWorkerUaData": true,
+    "mainFrameUaData": true,
+    "httpUaDataFields": true,
+    "httpFullVersions": true,
+    "mainWorkerLanguage": true
+   },
+   "surface": {
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "platform": "Win32",
+    "languages": [
+     "en-US",
+     "en"
+    ],
+    "uaFull": [
+     {
+      "brand": "Chromium",
+      "version": "154.0.8037.58"
+     },
+     {
+      "brand": "Google Chrome",
+      "version": "154.0.8037.58"
+     }
+    ],
+    "platformVersion": "19.0.0",
+    "gl": {
+     "webgl": {
+      "renderer": "ANGLE (Intel, Intel(R) UHD Graphics (0x0000A7A8) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "pixel": [
+       64,
+       128,
+       191,
+       255
+      ],
+      "error": 0
+     },
+     "webgl2": {
+      "renderer": "ANGLE (Intel, Intel(R) UHD Graphics (0x0000A7A8) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "pixel": [
+       64,
+       128,
+       191,
+       255
+      ],
+      "error": 0
+     }
+    },
+    "fontMetricsHash": "fd8774cd07254ee0",
+    "screen": {
+     "width": 1366,
+     "height": 768,
+     "availWidth": 1366,
+     "availHeight": 720,
+     "colorDepth": 24
+    },
+    "window": {
+     "innerWidth": 1365,
+     "innerHeight": 646,
+     "outerWidth": 1365,
+     "outerHeight": 720,
+     "devicePixelRatio": 1
+    }
+   }
+  },
+  {
+   "label": "v572",
+   "round": "r2",
+   "case": "linux_20260909_default_headed",
+   "version": "154.0.8037.57",
+   "sites": {
+    "sannysoft": {
+     "http_status": 200,
+     "error": null,
+     "failed_rows": []
+    },
+    "deviceinfo": {
+     "http_status": 200,
+     "error": null,
+     "isBot": false,
+     "positive": []
+    },
+    "fingerprint": {
+     "http_status": 200,
+     "error": null,
+     "signals": {
+      "bot": "not_detected",
+      "tampering": false,
+      "tampering_confidence": "high",
+      "tampering_ml_score": 0,
+      "anomaly_score": 0.0089,
+      "anti_detect_browser": false,
+      "developer_tools": false,
+      "virtual_machine": false,
+      "vpn": false,
+      "vpn_confidence": "medium",
+      "os_mismatch": false,
+      "suspect_score": 0
+     },
+     "suspect_score_text": 0,
+     "visitor_hash": "815f36dfaa73f813"
+    }
+   },
+   "consistency": {
+    "mainWorkerUa": true,
+    "mainFrameUa": true,
+    "mainWorkerPlatform": true,
+    "mainFramePlatform": true,
+    "uaMatchesHttp": true,
+    "mainWorkerUaData": true,
+    "mainFrameUaData": true,
+    "httpUaDataFields": true,
+    "httpFullVersions": true,
+    "mainWorkerLanguage": true
+   },
+   "surface": {
+    "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "platform": "Linux x86_64",
+    "languages": [
+     "en-US",
+     "en-GB",
+     "en-US",
+     "en"
+    ],
+    "uaFull": [
+     {
+      "brand": "Chromium",
+      "version": "154.0.8037.58"
+     },
+     {
+      "brand": "Google Chrome",
+      "version": "154.0.8037.58"
+     }
+    ],
+    "platformVersion": "6.11.0",
+    "gl": {
+     "webgl": {
+      "renderer": "ANGLE (NVIDIA Corporation, NVIDIA GeForce RTX 2050/PCIe/SSE2, OpenGL ES 3.2)",
+      "pixel": [
+       64,
+       128,
+       191,
+       255
+      ],
+      "error": 0
+     },
+     "webgl2": {
+      "renderer": "ANGLE (NVIDIA Corporation, NVIDIA GeForce RTX 2050/PCIe/SSE2, OpenGL ES 3.2)",
+      "pixel": [
+       64,
+       128,
+       191,
+       255
+      ],
+      "error": 0
+     }
+    },
+    "fontMetricsHash": "feb968c57a6f2ad6",
+    "screen": {
+     "width": 1366,
+     "height": 768,
+     "availWidth": 1366,
+     "availHeight": 768,
+     "colorDepth": 24
+    },
+    "window": {
+     "innerWidth": 1365,
+     "innerHeight": 646,
+     "outerWidth": 1365,
+     "outerHeight": 767,
+     "devicePixelRatio": 1
+    }
+   }
+  },
+  {
+   "label": "v572",
+   "round": "r2",
+   "case": "macos_20260909_default_headed",
+   "version": "154.0.8037.57",
+   "sites": {
+    "sannysoft": {
+     "http_status": 200,
+     "error": null,
+     "failed_rows": []
+    },
+    "rebrowser": {
+     "http_status": 200,
+     "error": null,
+     "red": [
+      "mainWorldExecution",
+      "exposeFunctionLeak"
+     ],
+     "n": 10
+    },
+    "creepjs": {
+     "http_status": 200,
+     "error": null,
+     "headless_metrics": [
+      "31% like headless",
+      "0% headless",
+      "0% stealth"
+     ],
+     "font_load": "2/51"
+    },
+    "deviceinfo": {
+     "http_status": 200,
+     "error": null,
+     "isBot": false,
+     "positive": []
+    },
+    "incolumitas": {
+     "http_status": 200,
+     "error": null,
+     "fail_keys": [
+      "WEBDRIVER"
+     ]
+    },
+    "browserscan": {
+     "http_status": 200,
+     "error": null,
+     "result": "Normal"
+    },
+    "fingerprint": {
+     "http_status": 200,
+     "error": null,
+     "signals": {
+      "bot": "not_detected",
+      "tampering": false,
+      "tampering_confidence": "high",
+      "tampering_ml_score": 0.0973,
+      "anomaly_score": 0,
+      "anti_detect_browser": false,
+      "developer_tools": false,
+      "virtual_machine": false,
+      "vpn": true,
+      "vpn_confidence": "low",
+      "os_mismatch": true,
+      "suspect_score": 4
+     },
+     "suspect_score_text": 4,
+     "visitor_hash": "cd9a037cf1af476f"
+    },
+    "iphey": {
+     "http_status": 200,
+     "error": null,
+     "score": 0,
+     "verdict": "See",
+     "incomplete": true
+    },
+    "recaptcha": {
+     "http_status": 200,
+     "error": null,
+     "score": 0.9
+    }
+   },
+   "consistency": {
+    "mainWorkerUa": true,
+    "mainFrameUa": true,
+    "mainWorkerPlatform": true,
+    "mainFramePlatform": true,
+    "uaMatchesHttp": true,
+    "mainWorkerUaData": true,
+    "mainFrameUaData": true,
+    "httpUaDataFields": true,
+    "httpFullVersions": true,
+    "mainWorkerLanguage": true
+   },
+   "surface": {
+    "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "platform": "MacIntel",
+    "languages": [
+     "en-US",
+     "en"
+    ],
+    "uaFull": [
+     {
+      "brand": "Chromium",
+      "version": "154.0.8037.58"
+     },
+     {
+      "brand": "Google Chrome",
+      "version": "154.0.8037.58"
+     }
+    ],
+    "platformVersion": "26.5.2",
+    "gl": {
+     "webgl": {
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Unspecified Version)",
+      "pixel": [
+       64,
+       128,
+       191,
+       255
+      ],
+      "error": 0
+     },
+     "webgl2": {
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Unspecified Version)",
+      "pixel": [
+       64,
+       128,
+       191,
+       255
+      ],
+      "error": 0
+     }
+    },
+    "fontMetricsHash": "5767b701186cacb5",
+    "screen": {
+     "width": 1366,
+     "height": 768,
+     "availWidth": 1366,
+     "availHeight": 735,
+     "colorDepth": 30
+    },
+    "window": {
+     "innerWidth": 1365,
+     "innerHeight": 646,
+     "outerWidth": 1365,
+     "outerHeight": 735,
+     "devicePixelRatio": 1
+    }
+   }
+  },
+  {
+   "label": "v572",
+   "round": "r2",
+   "case": "macos_20260909_default_headless",
+   "version": "154.0.8037.57",
+   "sites": {
+    "sannysoft": {
+     "http_status": 200,
+     "error": null,
+     "failed_rows": []
+    },
+    "rebrowser": {
+     "http_status": 200,
+     "error": null,
+     "red": [
+      "mainWorldExecution",
+      "exposeFunctionLeak"
+     ],
+     "n": 10
+    },
+    "creepjs": {
+     "http_status": 200,
+     "error": null,
+     "headless_metrics": [
+      "31% like headless",
+      "0% headless",
+      "0% stealth"
+     ],
+     "font_load": "2/51"
+    },
+    "deviceinfo": {
+     "http_status": 200,
+     "error": null,
+     "isBot": false,
+     "positive": []
+    },
+    "browserscan": {
+     "http_status": 200,
+     "error": null,
+     "result": "Normal"
+    },
+    "fingerprint": {
+     "http_status": 200,
+     "error": null,
+     "signals": {
+      "bot": "not_detected",
+      "tampering": false,
+      "tampering_confidence": "high",
+      "tampering_ml_score": 0.2809,
+      "anomaly_score": 0,
+      "anti_detect_browser": false,
+      "developer_tools": false,
+      "virtual_machine": false,
+      "vpn": false,
+      "vpn_confidence": "medium",
+      "os_mismatch": false,
+      "suspect_score": 0
+     },
+     "suspect_score_text": 0,
+     "visitor_hash": "6b3956afaa85e31c"
+    },
+    "iphey": {
+     "http_status": 200,
+     "error": null,
+     "score": 0,
+     "verdict": "See",
+     "incomplete": true
+    }
+   },
+   "consistency": {
+    "mainWorkerUa": true,
+    "mainFrameUa": true,
+    "mainWorkerPlatform": true,
+    "mainFramePlatform": true,
+    "uaMatchesHttp": true,
+    "mainWorkerUaData": true,
+    "mainFrameUaData": true,
+    "httpUaDataFields": true,
+    "httpFullVersions": true,
+    "mainWorkerLanguage": true
+   },
+   "surface": {
+    "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "platform": "MacIntel",
+    "languages": [
+     "en-US",
+     "en"
+    ],
+    "uaFull": [
+     {
+      "brand": "Chromium",
+      "version": "154.0.8037.58"
+     },
+     {
+      "brand": "Google Chrome",
+      "version": "154.0.8037.58"
+     }
+    ],
+    "platformVersion": "26.5.2",
+    "gl": {
+     "webgl": {
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Unspecified Version)",
+      "pixel": [
+       64,
+       128,
+       191,
+       255
+      ],
+      "error": 0
+     },
+     "webgl2": {
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Unspecified Version)",
+      "pixel": [
+       64,
+       128,
+       191,
+       255
+      ],
+      "error": 0
+     }
+    },
+    "fontMetricsHash": "5767b701186cacb5",
+    "screen": {
+     "width": 1366,
+     "height": 768,
+     "availWidth": 1366,
+     "availHeight": 735,
+     "colorDepth": 30
+    },
+    "window": {
+     "innerWidth": 1366,
+     "innerHeight": 647,
+     "outerWidth": 1366,
+     "outerHeight": 735,
+     "devicePixelRatio": 2
+    }
+   }
+  },
+  {
+   "label": "v572",
+   "round": "r2",
+   "case": "macos_20260910_default_headed",
+   "version": "154.0.8037.57",
+   "sites": {
+    "deviceinfo": {
+     "http_status": 200,
+     "error": null,
+     "isBot": false,
+     "positive": []
+    },
+    "fingerprint": {
+     "http_status": 200,
+     "error": null,
+     "signals": {
+      "bot": "not_detected",
+      "tampering": false,
+      "tampering_confidence": "high",
+      "tampering_ml_score": 0.0299,
+      "anomaly_score": 0,
+      "anti_detect_browser": false,
+      "developer_tools": false,
+      "virtual_machine": false,
+      "vpn": true,
+      "vpn_confidence": "low",
+      "os_mismatch": true,
+      "suspect_score": 4
+     },
+     "suspect_score_text": 4,
+     "visitor_hash": "0e490da246107ae1"
+    }
+   },
+   "consistency": {
+    "mainWorkerUa": true,
+    "mainFrameUa": true,
+    "mainWorkerPlatform": true,
+    "mainFramePlatform": true,
+    "uaMatchesHttp": true,
+    "mainWorkerUaData": true,
+    "mainFrameUaData": true,
+    "httpUaDataFields": true,
+    "httpFullVersions": true,
+    "mainWorkerLanguage": true
+   },
+   "surface": {
+    "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "platform": "MacIntel",
+    "languages": [
+     "en-US",
+     "en"
+    ],
+    "uaFull": [
+     {
+      "brand": "Chromium",
+      "version": "154.0.8037.58"
+     },
+     {
+      "brand": "Google Chrome",
+      "version": "154.0.8037.58"
+     }
+    ],
+    "platformVersion": "15.7.9",
+    "gl": {
+     "webgl": {
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+      "pixel": [
+       64,
+       128,
+       191,
+       255
+      ],
+      "error": 0
+     },
+     "webgl2": {
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5 Max, Unspecified Version)",
+      "pixel": [
+       64,
+       128,
+       191,
+       255
+      ],
+      "error": 0
+     }
+    },
+    "fontMetricsHash": "5767b701186cacb5",
+    "screen": {
+     "width": 1366,
+     "height": 768,
+     "availWidth": 1366,
+     "availHeight": 738,
+     "colorDepth": 24
+    },
+    "window": {
+     "innerWidth": 1365,
+     "innerHeight": 646,
+     "outerWidth": 1365,
+     "outerHeight": 738,
+     "devicePixelRatio": 1
+    }
+   }
+  },
+  {
+   "label": "v572",
+   "round": "r2",
+   "case": "macos_20260911_default_headed",
+   "version": "154.0.8037.57",
+   "sites": {
+    "deviceinfo": {
+     "http_status": 200,
+     "error": null,
+     "isBot": false,
+     "positive": []
+    },
+    "fingerprint": {
+     "http_status": 200,
+     "error": null,
+     "signals": {
+      "bot": "not_detected",
+      "tampering": false,
+      "tampering_confidence": "high",
+      "tampering_ml_score": 0.0535,
+      "anomaly_score": 0,
+      "anti_detect_browser": false,
+      "developer_tools": false,
+      "virtual_machine": false,
+      "vpn": true,
+      "vpn_confidence": "low",
+      "os_mismatch": true,
+      "suspect_score": 4
+     },
+     "suspect_score_text": 4,
+     "visitor_hash": "cd9a037cf1af476f"
+    }
+   },
+   "consistency": {
+    "mainWorkerUa": true,
+    "mainFrameUa": true,
+    "mainWorkerPlatform": true,
+    "mainFramePlatform": true,
+    "uaMatchesHttp": true,
+    "mainWorkerUaData": true,
+    "mainFrameUaData": true,
+    "httpUaDataFields": true,
+    "httpFullVersions": true,
+    "mainWorkerLanguage": true
+   },
+   "surface": {
+    "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "platform": "MacIntel",
+    "languages": [
+     "en-US",
+     "en"
+    ],
+    "uaFull": [
+     {
+      "brand": "Chromium",
+      "version": "154.0.8037.58"
+     },
+     {
+      "brand": "Google Chrome",
+      "version": "154.0.8037.58"
+     }
+    ],
+    "platformVersion": "15.5.0",
+    "gl": {
+     "webgl": {
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Pro, Unspecified Version)",
+      "pixel": [
+       64,
+       128,
+       191,
+       255
+      ],
+      "error": 0
+     },
+     "webgl2": {
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Pro, Unspecified Version)",
+      "pixel": [
+       64,
+       128,
+       191,
+       255
+      ],
+      "error": 0
+     }
+    },
+    "fontMetricsHash": "5767b701186cacb5",
+    "screen": {
+     "width": 1366,
+     "height": 768,
+     "availWidth": 1366,
+     "availHeight": 729,
+     "colorDepth": 30
+    },
+    "window": {
+     "innerWidth": 1365,
+     "innerHeight": 646,
+     "outerWidth": 1365,
+     "outerHeight": 729,
+     "devicePixelRatio": 1
+    }
+   }
+  },
+  {
+   "label": "v572",
+   "round": "r2",
+   "case": "windows_20260909_default_headed",
+   "version": "154.0.8037.57",
+   "sites": {
+    "sannysoft": {
+     "http_status": 200,
+     "error": null,
+     "failed_rows": []
+    },
+    "deviceinfo": {
+     "http_status": 200,
+     "error": null,
+     "isBot": false,
+     "positive": []
+    },
+    "fingerprint": {
+     "http_status": 200,
+     "error": null,
+     "signals": {
+      "bot": "not_detected",
+      "tampering": true,
+      "tampering_confidence": "medium",
+      "tampering_ml_score": 0.9998,
+      "anomaly_score": 0.0553,
+      "anti_detect_browser": true,
+      "developer_tools": false,
+      "virtual_machine": false,
+      "vpn": true,
+      "vpn_confidence": "high",
+      "os_mismatch": true,
+      "suspect_score": 12
+     },
+     "suspect_score_text": 12,
+     "visitor_hash": "35776ff881fd0174"
+    }
+   },
+   "consistency": {
+    "mainWorkerUa": true,
+    "mainFrameUa": true,
+    "mainWorkerPlatform": true,
+    "mainFramePlatform": true,
+    "uaMatchesHttp": true,
+    "mainWorkerUaData": true,
+    "mainFrameUaData": true,
+    "httpUaDataFields": true,
+    "httpFullVersions": true,
+    "mainWorkerLanguage": true
+   },
+   "surface": {
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "platform": "Win32",
+    "languages": [
+     "en-US",
+     "en"
+    ],
+    "uaFull": [
+     {
+      "brand": "Chromium",
+      "version": "154.0.8037.58"
+     },
+     {
+      "brand": "Google Chrome",
+      "version": "154.0.8037.58"
+     }
+    ],
+    "platformVersion": "19.0.0",
+    "gl": {
+     "webgl": {
+      "renderer": "ANGLE (Intel, Intel(R) UHD Graphics (0x0000A7A8) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "pixel": [
+       64,
+       128,
+       191,
+       255
+      ],
+      "error": 0
+     },
+     "webgl2": {
+      "renderer": "ANGLE (Intel, Intel(R) UHD Graphics (0x0000A7A8) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "pixel": [
+       64,
+       128,
+       191,
+       255
+      ],
+      "error": 0
+     }
+    },
+    "fontMetricsHash": "fd8774cd07254ee0",
+    "screen": {
+     "width": 1366,
+     "height": 768,
+     "availWidth": 1366,
+     "availHeight": 720,
+     "colorDepth": 24
+    },
+    "window": {
+     "innerWidth": 1365,
+     "innerHeight": 646,
+     "outerWidth": 1365,
+     "outerHeight": 720,
+     "devicePixelRatio": 1
+    }
+   }
+  }
+ ],
+ "probes": {
+  "v571": {
+   "font": {
+    "r1-macos": [
+     7277,
+     5212,
+     17
+    ],
+    "r1-linux": [
+     308,
+     315,
+     2
+    ],
+    "r2-macos": [
+     6481,
+     6401,
+     17
+    ],
+    "r2-linux": [
+     516,
+     432,
+     2
+    ]
+   },
+   "iphey": {
+    "r1": {
+     "completed": false,
+     "serverErrors": [
+      "null is not an object (evaluating 'e?.performance.h3')"
+     ],
+     "score": null,
+     "verdict": ""
+    },
+    "r2": {
+     "completed": false,
+     "serverErrors": [
+      "null is not an object (evaluating 'e?.performance.h3')"
+     ],
+     "score": null,
+     "verdict": ""
+    }
+   },
+   "canvas": {},
+   "cpu": []
+  },
+  "v572": {
+   "font": {
+    "r1-macos": [
+     6026,
+     6026,
+     17
+    ],
+    "r1-linux": [
+     436,
+     434,
+     2
+    ],
+    "r2-macos": [
+     4421,
+     4305,
+     17
+    ],
+    "r2-linux": [
+     348,
+     304,
+     2
+    ]
+   },
+   "iphey": {
+    "r1": {
+     "completed": false,
+     "serverErrors": [
+      "null is not an object (evaluating 'e?.performance.h3')"
+     ],
+     "score": null,
+     "verdict": ""
+    },
+    "r2": {
+     "completed": false,
+     "serverErrors": [
+      "null is not an object (evaluating 'e?.performance.h3')"
+     ],
+     "score": null,
+     "verdict": ""
+    }
+   },
+   "canvas": {},
+   "cpu": []
+  }
+ },
+ "canvas_probes": {
+  "probe_v571_20261001_hd": {
+   "canvasHash16": "493f4f97cf16cee1",
+   "consistency": {
+    "mainWorkerUa": true,
+    "mainFrameUa": true,
+    "httpUa": true,
+    "mainWorkerPlatform": true,
+    "mainFramePlatform": true,
+    "mainWorkerUaData": true,
+    "mainFrameUaData": true
+   },
+   "webgl": {
+    "webgl": {
+     "vendor": "Google Inc. (Apple)",
+     "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3, Unspecified Version)",
+     "pixel": [
+      64,
+      128,
+      191,
+      255
+     ],
+     "error": 0
+    },
+    "webgl2": {
+     "vendor": "Google Inc. (Apple)",
+     "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3, Unspecified Version)",
+     "pixel": [
+      64,
+      128,
+      191,
+      255
+     ],
+     "error": 0
+    }
+   },
+   "window": {
+    "innerWidth": 1365,
+    "innerHeight": 646,
+    "outerWidth": 1365,
+    "outerHeight": 738,
+    "devicePixelRatio": 1
+   },
+   "iphey_completed": false
+  },
+  "probe_v571_20261001_hl": {
+   "canvasHash16": "4c2b84da3dccbbeb",
+   "consistency": {
+    "mainWorkerUa": true,
+    "mainFrameUa": true,
+    "httpUa": true,
+    "mainWorkerPlatform": true,
+    "mainFramePlatform": true,
+    "mainWorkerUaData": true,
+    "mainFrameUaData": true
+   },
+   "webgl": {
+    "webgl": {
+     "vendor": "Google Inc. (Apple)",
+     "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3, Unspecified Version)",
+     "pixel": [
+      64,
+      128,
+      191,
+      255
+     ],
+     "error": 0
+    },
+    "webgl2": {
+     "vendor": "Google Inc. (Apple)",
+     "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3, Unspecified Version)",
+     "pixel": [
+      64,
+      128,
+      191,
+      255
+     ],
+     "error": 0
+    }
+   },
+   "window": {
+    "innerWidth": 1366,
+    "innerHeight": 647,
+    "outerWidth": 1366,
+    "outerHeight": 738,
+    "devicePixelRatio": 2
+   },
+   "iphey_completed": false
+  },
+  "probe_v571_20261002_hd": {
+   "canvasHash16": "83bd2e121a945b9d",
+   "consistency": {
+    "mainWorkerUa": true,
+    "mainFrameUa": true,
+    "httpUa": true,
+    "mainWorkerPlatform": true,
+    "mainFramePlatform": true,
+    "mainWorkerUaData": true,
+    "mainFrameUaData": true
+   },
+   "webgl": {
+    "webgl": {
+     "vendor": "Google Inc. (Apple)",
+     "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+     "pixel": [
+      64,
+      128,
+      191,
+      255
+     ],
+     "error": 0
+    },
+    "webgl2": {
+     "vendor": "Google Inc. (Apple)",
+     "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+     "pixel": [
+      64,
+      128,
+      191,
+      255
+     ],
+     "error": 0
+    }
+   },
+   "window": {
+    "innerWidth": 1365,
+    "innerHeight": 646,
+    "outerWidth": 1365,
+    "outerHeight": 738,
+    "devicePixelRatio": 1
+   },
+   "iphey_completed": null
+  },
+  "probe_v571_20261002_hl": {
+   "canvasHash16": "14386d8b2fa293fc",
+   "consistency": {
+    "mainWorkerUa": true,
+    "mainFrameUa": true,
+    "httpUa": true,
+    "mainWorkerPlatform": true,
+    "mainFramePlatform": true,
+    "mainWorkerUaData": true,
+    "mainFrameUaData": true
+   },
+   "webgl": {
+    "webgl": {
+     "vendor": "Google Inc. (Apple)",
+     "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+     "pixel": [
+      64,
+      128,
+      191,
+      255
+     ],
+     "error": 0
+    },
+    "webgl2": {
+     "vendor": "Google Inc. (Apple)",
+     "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+     "pixel": [
+      64,
+      128,
+      191,
+      255
+     ],
+     "error": 0
+    }
+   },
+   "window": {
+    "innerWidth": 1366,
+    "innerHeight": 647,
+    "outerWidth": 1366,
+    "outerHeight": 738,
+    "devicePixelRatio": 2
+   },
+   "iphey_completed": null
+  },
+  "probe_v572_20261001_hd": {
+   "canvasHash16": "493f4f97cf16cee1",
+   "consistency": {
+    "mainWorkerUa": true,
+    "mainFrameUa": true,
+    "httpUa": true,
+    "mainWorkerPlatform": true,
+    "mainFramePlatform": true,
+    "mainWorkerUaData": true,
+    "mainFrameUaData": true
+   },
+   "webgl": {
+    "webgl": {
+     "vendor": "Google Inc. (Apple)",
+     "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3, Unspecified Version)",
+     "pixel": [
+      64,
+      128,
+      191,
+      255
+     ],
+     "error": 0
+    },
+    "webgl2": {
+     "vendor": "Google Inc. (Apple)",
+     "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3, Unspecified Version)",
+     "pixel": [
+      64,
+      128,
+      191,
+      255
+     ],
+     "error": 0
+    }
+   },
+   "window": {
+    "innerWidth": 1365,
+    "innerHeight": 646,
+    "outerWidth": 1365,
+    "outerHeight": 738,
+    "devicePixelRatio": 1
+   },
+   "iphey_completed": false
+  },
+  "probe_v572_20261001_hl": {
+   "canvasHash16": "4c2b84da3dccbbeb",
+   "consistency": {
+    "mainWorkerUa": true,
+    "mainFrameUa": true,
+    "httpUa": true,
+    "mainWorkerPlatform": true,
+    "mainFramePlatform": true,
+    "mainWorkerUaData": true,
+    "mainFrameUaData": true
+   },
+   "webgl": {
+    "webgl": {
+     "vendor": "Google Inc. (Apple)",
+     "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3, Unspecified Version)",
+     "pixel": [
+      64,
+      128,
+      191,
+      255
+     ],
+     "error": 0
+    },
+    "webgl2": {
+     "vendor": "Google Inc. (Apple)",
+     "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M3, Unspecified Version)",
+     "pixel": [
+      64,
+      128,
+      191,
+      255
+     ],
+     "error": 0
+    }
+   },
+   "window": {
+    "innerWidth": 1366,
+    "innerHeight": 647,
+    "outerWidth": 1366,
+    "outerHeight": 738,
+    "devicePixelRatio": 2
+   },
+   "iphey_completed": false
+  },
+  "probe_v572_20261002_hd": {
+   "canvasHash16": "83bd2e121a945b9d",
+   "consistency": {
+    "mainWorkerUa": true,
+    "mainFrameUa": true,
+    "httpUa": true,
+    "mainWorkerPlatform": true,
+    "mainFramePlatform": true,
+    "mainWorkerUaData": true,
+    "mainFrameUaData": true
+   },
+   "webgl": {
+    "webgl": {
+     "vendor": "Google Inc. (Apple)",
+     "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+     "pixel": [
+      64,
+      128,
+      191,
+      255
+     ],
+     "error": 0
+    },
+    "webgl2": {
+     "vendor": "Google Inc. (Apple)",
+     "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+     "pixel": [
+      64,
+      128,
+      191,
+      255
+     ],
+     "error": 0
+    }
+   },
+   "window": {
+    "innerWidth": 1365,
+    "innerHeight": 646,
+    "outerWidth": 1365,
+    "outerHeight": 738,
+    "devicePixelRatio": 1
+   },
+   "iphey_completed": null
+  },
+  "probe_v572_20261002_hl": {
+   "canvasHash16": "14386d8b2fa293fc",
+   "consistency": {
+    "mainWorkerUa": true,
+    "mainFrameUa": true,
+    "httpUa": true,
+    "mainWorkerPlatform": true,
+    "mainFramePlatform": true,
+    "mainWorkerUaData": true,
+    "mainFrameUaData": true
+   },
+   "webgl": {
+    "webgl": {
+     "vendor": "Google Inc. (Apple)",
+     "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+     "pixel": [
+      64,
+      128,
+      191,
+      255
+     ],
+     "error": 0
+    },
+    "webgl2": {
+     "vendor": "Google Inc. (Apple)",
+     "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+     "pixel": [
+      64,
+      128,
+      191,
+      255
+     ],
+     "error": 0
+    }
+   },
+   "window": {
+    "innerWidth": 1366,
+    "innerHeight": 647,
+    "outerWidth": 1366,
+    "outerHeight": 738,
+    "devicePixelRatio": 2
+   },
+   "iphey_completed": null
+  }
+ },
+ "cpu": {
+  "v571": [
+   {
+    "label": "v571",
+    "samples": [
+     {
+      "page": "static",
+      "i": 0,
+      "cpuPctOneCore": 1.1260306593243041
+     },
+     {
+      "page": "static",
+      "i": 1,
+      "cpuPctOneCore": 0.5922337830437597
+     },
+     {
+      "page": "static",
+      "i": 2,
+      "cpuPctOneCore": 0.9106425106425107
+     },
+     {
+      "page": "animation",
+      "i": 0,
+      "cpuPctOneCore": 42.13735393147158
+     },
+     {
+      "page": "animation",
+      "i": 1,
+      "cpuPctOneCore": 42.22234874740073
+     },
+     {
+      "page": "animation",
+      "i": 2,
+      "cpuPctOneCore": 42.15442079207921
+     }
+    ],
+    "browserVersion": "154.0.8037.57",
+    "fps": 60.4
+   },
+   {
+    "label": "v571",
+    "samples": [
+     {
+      "page": "static",
+      "i": 0,
+      "cpuPctOneCore": 1.2539932619896947
+     },
+     {
+      "page": "static",
+      "i": 1,
+      "cpuPctOneCore": 0.4882215482523741
+     },
+     {
+      "page": "static",
+      "i": 2,
+      "cpuPctOneCore": 0.7038055914834345
+     },
+     {
+      "page": "animation",
+      "i": 0,
+      "cpuPctOneCore": 30.467442090675114
+     },
+     {
+      "page": "animation",
+      "i": 1,
+      "cpuPctOneCore": 30.429148493259316
+     },
+     {
+      "page": "animation",
+      "i": 2,
+      "cpuPctOneCore": 30.278397109054005
+     }
+    ],
+    "browserVersion": "154.0.8037.57",
+    "fps": 60.4
+   }
+  ],
+  "v572": [
+   {
+    "label": "v572",
+    "samples": [
+     {
+      "page": "static",
+      "i": 0,
+      "cpuPctOneCore": 1.0690594304990575
+     },
+     {
+      "page": "static",
+      "i": 1,
+      "cpuPctOneCore": 0.5098855359001041
+     },
+     {
+      "page": "static",
+      "i": 2,
+      "cpuPctOneCore": 0.7155203171456888
+     },
+     {
+      "page": "animation",
+      "i": 0,
+      "cpuPctOneCore": 30.382223322604602
+     },
+     {
+      "page": "animation",
+      "i": 1,
+      "cpuPctOneCore": 31.688778992136886
+     },
+     {
+      "page": "animation",
+      "i": 2,
+      "cpuPctOneCore": 36.49272325809617
+     }
+    ],
+    "browserVersion": "154.0.8037.57",
+    "fps": 60.6
+   },
+   {
+    "label": "v572",
+    "samples": [
+     {
+      "page": "static",
+      "i": 0,
+      "cpuPctOneCore": 1.8913523323686663
+     },
+     {
+      "page": "static",
+      "i": 1,
+      "cpuPctOneCore": 0.6405456162894139
+     },
+     {
+      "page": "static",
+      "i": 2,
+      "cpuPctOneCore": 0.831562314833103
+     },
+     {
+      "page": "animation",
+      "i": 0,
+      "cpuPctOneCore": 37.302280858676205
+     },
+     {
+      "page": "animation",
+      "i": 1,
+      "cpuPctOneCore": 38.27417536224717
+     },
+     {
+      "page": "animation",
+      "i": 2,
+      "cpuPctOneCore": 41.29334158415841
+     }
+    ],
+    "browserVersion": "154.0.8037.57",
+    "fps": 60.4
+   }
+  ]
+ }
+}

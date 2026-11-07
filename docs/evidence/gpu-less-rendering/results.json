@@ -1,0 +1,952 @@
+[
+  {
+    "label": "legacy",
+    "headed": [
+      {
+        "contexts": {
+          "webgl": {
+            "available": true,
+            "linked": true,
+            "pixel": [
+              0,
+              255,
+              0,
+              255
+            ],
+            "error": 0
+          },
+          "webgl2": {
+            "available": true,
+            "linked": true,
+            "pixel": [
+              0,
+              255,
+              0,
+              255
+            ],
+            "error": 0
+          }
+        },
+        "platform": "MacIntel",
+        "dpr": 1
+      },
+      {
+        "contexts": {
+          "webgl": {
+            "available": true,
+            "linked": true,
+            "pixel": [
+              0,
+              255,
+              0,
+              255
+            ],
+            "error": 0
+          },
+          "webgl2": {
+            "available": true,
+            "linked": true,
+            "pixel": [
+              0,
+              255,
+              0,
+              255
+            ],
+            "error": 0
+          }
+        },
+        "platform": "MacIntel",
+        "dpr": 1
+      }
+    ],
+    "headless": [
+      {
+        "contexts": {
+          "webgl": {
+            "available": true,
+            "linked": true,
+            "pixel": [
+              0,
+              255,
+              0,
+              255
+            ],
+            "error": 0
+          },
+          "webgl2": {
+            "available": true,
+            "linked": true,
+            "pixel": [
+              0,
+              255,
+              0,
+              255
+            ],
+            "error": 0
+          }
+        },
+        "platform": "MacIntel",
+        "dpr": 2
+      },
+      {
+        "contexts": {
+          "webgl": {
+            "available": true,
+            "linked": true,
+            "pixel": [
+              0,
+              255,
+              0,
+              255
+            ],
+            "error": 0
+          },
+          "webgl2": {
+            "available": true,
+            "linked": true,
+            "pixel": [
+              0,
+              255,
+              0,
+              255
+            ],
+            "error": 0
+          }
+        },
+        "platform": "MacIntel",
+        "dpr": 2
+      }
+    ],
+    "vnc": {
+      "pixels": true,
+      "mouse": true,
+      "clipboard": true
+    },
+    "version": "152.0.7977.82",
+    "persisted": true,
+    "pass": true,
+    "environment": {
+      "image": "sha256:81a416c5731d5c470213426002ab8d1c38115cbef075682d67ea786dcd7f5741",
+      "gpuDevicesAbsent": true,
+      "privileged": false,
+      "deviceRequests": null,
+      "flags": [
+        "--disable-gpu",
+        "--disable-dev-shm-usage",
+        "--use-gl=angle",
+        "--use-angle=swiftshader"
+      ],
+      "exit": 0
+    }
+  },
+  {
+    "label": "auto",
+    "headed": [
+      {
+        "contexts": {
+          "webgl": {
+            "available": true,
+            "linked": true,
+            "pixel": [
+              0,
+              255,
+              0,
+              255
+            ],
+            "error": 0
+          },
+          "webgl2": {
+            "available": true,
+            "linked": true,
+            "pixel": [
+              0,
+              255,
+              0,
+              255
+            ],
+            "error": 0
+          }
+        },
+        "platform": "MacIntel",
+        "dpr": 1
+      },
+      {
+        "contexts": {
+          "webgl": {
+            "available": true,
+            "linked": true,
+            "pixel": [
+              0,
+              255,
+              0,
+              255
+            ],
+            "error": 0
+          },
+          "webgl2": {
+            "available": true,
+            "linked": true,
+            "pixel": [
+              0,
+              255,
+              0,
+              255
+            ],
+            "error": 0
+          }
+        },
+        "platform": "MacIntel",
+        "dpr": 1
+      }
+    ],
+    "headless": [
+      {
+        "contexts": {
+          "webgl": {
+            "available": true,
+            "linked": true,
+            "pixel": [
+              0,
+              255,
+              0,
+              255
+            ],
+            "error": 0
+          },
+          "webgl2": {
+            "available": true,
+            "linked": true,
+            "pixel": [
+              0,
+              255,
+              0,
+              255
+            ],
+            "error": 0
+          }
+        },
+        "platform": "MacIntel",
+        "dpr": 2
+      },
+      {
+        "contexts": {
+          "webgl": {
+            "available": true,
+            "linked": true,
+            "pixel": [
+              0,
+              255,
+              0,
+              255
+            ],
+            "error": 0
+          },
+          "webgl2": {
+            "available": true,
+            "linked": true,
+            "pixel": [
+              0,
+              255,
+              0,
+              255
+            ],
+            "error": 0
+          }
+        },
+        "platform": "MacIntel",
+        "dpr": 2
+      }
+    ],
+    "vnc": {
+      "pixels": true,
+      "mouse": true,
+      "clipboard": true
+    },
+    "version": "152.0.7977.82",
+    "persisted": true,
+    "pass": true,
+    "environment": {
+      "image": "sha256:81a416c5731d5c470213426002ab8d1c38115cbef075682d67ea786dcd7f5741",
+      "gpuDevicesAbsent": true,
+      "privileged": false,
+      "deviceRequests": null,
+      "flags": [],
+      "exit": 0
+    }
+  },
+  {
+    "label": "angle",
+    "headed": [
+      {
+        "contexts": {
+          "webgl": {
+            "available": true,
+            "linked": true,
+            "pixel": [
+              0,
+              255,
+              0,
+              255
+            ],
+            "error": 0
+          },
+          "webgl2": {
+            "available": true,
+            "linked": true,
+            "pixel": [
+              0,
+              255,
+              0,
+              255
+            ],
+            "error": 0
+          }
+        },
+        "platform": "MacIntel",
+        "dpr": 1
+      },
+      {
+        "contexts": {
+          "webgl": {
+            "available": true,
+            "linked": true,
+            "pixel": [
+              0,
+              255,
+              0,
+              255
+            ],
+            "error": 0
+          },
+          "webgl2": {
+            "available": true,
+            "linked": true,
+            "pixel": [
+              0,
+              255,
+              0,
+              255
+            ],
+            "error": 0
+          }
+        },
+        "platform": "MacIntel",
+        "dpr": 1
+      }
+    ],
+    "headless": [
+      {
+        "contexts": {
+          "webgl": {
+            "available": true,
+            "linked": true,
+            "pixel": [
+              0,
+              255,
+              0,
+              255
+            ],
+            "error": 0
+          },
+          "webgl2": {
+            "available": true,
+            "linked": true,
+            "pixel": [
+              0,
+              255,
+              0,
+              255
+            ],
+            "error": 0
+          }
+        },
+        "platform": "MacIntel",
+        "dpr": 2
+      },
+      {
+        "contexts": {
+          "webgl": {
+            "available": true,
+            "linked": true,
+            "pixel": [
+              0,
+              255,
+              0,
+              255
+            ],
+            "error": 0
+          },
+          "webgl2": {
+            "available": true,
+            "linked": true,
+            "pixel": [
+              0,
+              255,
+              0,
+              255
+            ],
+            "error": 0
+          }
+        },
+        "platform": "MacIntel",
+        "dpr": 2
+      }
+    ],
+    "vnc": {
+      "pixels": true,
+      "mouse": true,
+      "clipboard": true
+    },
+    "version": "152.0.7977.82",
+    "persisted": true,
+    "pass": true,
+    "environment": {
+      "image": "sha256:81a416c5731d5c470213426002ab8d1c38115cbef075682d67ea786dcd7f5741",
+      "gpuDevicesAbsent": true,
+      "privileged": false,
+      "deviceRequests": null,
+      "flags": [
+        "--use-gl=angle",
+        "--use-angle=swiftshader"
+      ],
+      "exit": 0
+    }
+  },
+  {
+    "label": "no_disable_gpu",
+    "headed": [
+      {
+        "contexts": {
+          "webgl": {
+            "available": true,
+            "linked": true,
+            "pixel": [
+              0,
+              255,
+              0,
+              255
+            ],
+            "error": 0
+          },
+          "webgl2": {
+            "available": true,
+            "linked": true,
+            "pixel": [
+              0,
+              255,
+              0,
+              255
+            ],
+            "error": 0
+          }
+        },
+        "platform": "MacIntel",
+        "dpr": 1
+      },
+      {
+        "contexts": {
+          "webgl": {
+            "available": true,
+            "linked": true,
+            "pixel": [
+              0,
+              255,
+              0,
+              255
+            ],
+            "error": 0
+          },
+          "webgl2": {
+            "available": true,
+            "linked": true,
+            "pixel": [
+              0,
+              255,
+              0,
+              255
+            ],
+            "error": 0
+          }
+        },
+        "platform": "MacIntel",
+        "dpr": 1
+      }
+    ],
+    "headless": [
+      {
+        "contexts": {
+          "webgl": {
+            "available": true,
+            "linked": true,
+            "pixel": [
+              0,
+              255,
+              0,
+              255
+            ],
+            "error": 0
+          },
+          "webgl2": {
+            "available": true,
+            "linked": true,
+            "pixel": [
+              0,
+              255,
+              0,
+              255
+            ],
+            "error": 0
+          }
+        },
+        "platform": "MacIntel",
+        "dpr": 2
+      },
+      {
+        "contexts": {
+          "webgl": {
+            "available": true,
+            "linked": true,
+            "pixel": [
+              0,
+              255,
+              0,
+              255
+            ],
+            "error": 0
+          },
+          "webgl2": {
+            "available": true,
+            "linked": true,
+            "pixel": [
+              0,
+              255,
+              0,
+              255
+            ],
+            "error": 0
+          }
+        },
+        "platform": "MacIntel",
+        "dpr": 2
+      }
+    ],
+    "vnc": {
+      "pixels": true,
+      "mouse": true,
+      "clipboard": true
+    },
+    "version": "152.0.7977.82",
+    "persisted": true,
+    "pass": true,
+    "environment": {
+      "image": "sha256:81a416c5731d5c470213426002ab8d1c38115cbef075682d67ea786dcd7f5741",
+      "gpuDevicesAbsent": true,
+      "privileged": false,
+      "deviceRequests": null,
+      "flags": [
+        "--disable-dev-shm-usage",
+        "--use-gl=angle",
+        "--use-angle=swiftshader"
+      ],
+      "exit": 0
+    }
+  },
+  {
+    "label": "only_disable_gpu",
+    "headed": [
+      {
+        "contexts": {
+          "webgl": {
+            "available": false
+          },
+          "webgl2": {
+            "available": false
+          }
+        },
+        "platform": "MacIntel",
+        "dpr": 1
+      }
+    ],
+    "headless": [],
+    "vnc": {},
+    "version": "152.0.7977.82",
+    "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\nfalse !== true\n",
+    "environment": {
+      "image": "sha256:81a416c5731d5c470213426002ab8d1c38115cbef075682d67ea786dcd7f5741",
+      "gpuDevicesAbsent": true,
+      "privileged": false,
+      "deviceRequests": null,
+      "flags": [
+        "--disable-gpu"
+      ],
+      "exit": 1
+    }
+  },
+  {
+    "label": "auto_r2",
+    "headed": [
+      {
+        "contexts": {
+          "webgl": {
+            "available": true,
+            "linked": true,
+            "pixel": [
+              0,
+              255,
+              0,
+              255
+            ],
+            "error": 0
+          },
+          "webgl2": {
+            "available": true,
+            "linked": true,
+            "pixel": [
+              0,
+              255,
+              0,
+              255
+            ],
+            "error": 0
+          }
+        },
+        "platform": "MacIntel",
+        "dpr": 1
+      },
+      {
+        "contexts": {
+          "webgl": {
+            "available": true,
+            "linked": true,
+            "pixel": [
+              0,
+              255,
+              0,
+              255
+            ],
+            "error": 0
+          },
+          "webgl2": {
+            "available": true,
+            "linked": true,
+            "pixel": [
+              0,
+              255,
+              0,
+              255
+            ],
+            "error": 0
+          }
+        },
+        "platform": "MacIntel",
+        "dpr": 1
+      }
+    ],
+    "headless": [
+      {
+        "contexts": {
+          "webgl": {
+            "available": true,
+            "linked": true,
+            "pixel": [
+              0,
+              255,
+              0,
+              255
+            ],
+            "error": 0
+          },
+          "webgl2": {
+            "available": true,
+            "linked": true,
+            "pixel": [
+              0,
+              255,
+              0,
+              255
+            ],
+            "error": 0
+          }
+        },
+        "platform": "MacIntel",
+        "dpr": 2
+      },
+      {
+        "contexts": {
+          "webgl": {
+            "available": true,
+            "linked": true,
+            "pixel": [
+              0,
+              255,
+              0,
+              255
+            ],
+            "error": 0
+          },
+          "webgl2": {
+            "available": true,
+            "linked": true,
+            "pixel": [
+              0,
+              255,
+              0,
+              255
+            ],
+            "error": 0
+          }
+        },
+        "platform": "MacIntel",
+        "dpr": 2
+      }
+    ],
+    "vnc": {
+      "pixels": true,
+      "mouse": true,
+      "clipboard": true
+    },
+    "version": "152.0.7977.82",
+    "headedBackend": {
+      "implementation": "(gl=egl-angle,angle=opengl)",
+      "renderer": "ANGLE (Mesa/X.org, llvmpipe (LLVM 15.0.6 256 bits), OpenGL 4.5 (Core Profile) Mesa 22.3.6)",
+      "hardwareSupportsVulkan": false,
+      "featureStatus": {
+        "2d_canvas": "enabled",
+        "direct_rendering_display_compositor": "disabled_off_ok",
+        "gpu_compositing": "enabled",
+        "multiple_raster_threads": "enabled_on",
+        "opengl": "enabled_on",
+        "rasterization": "enabled",
+        "raw_draw": "disabled_off_ok",
+        "skia_graphite": "disabled_off",
+        "trees_in_viz": "disabled_off",
+        "video_decode": "enabled",
+        "video_encode": "disabled_software",
+        "vulkan": "disabled_off",
+        "webgl": "enabled",
+        "webgpu": "enabled",
+        "webgpu_on_vk_via_gl_interop": "enabled",
+        "webnn": "disabled_off"
+      }
+    },
+    "headlessBackend": {
+      "implementation": "(gl=egl-angle,angle=swiftshader)",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+      "hardwareSupportsVulkan": false,
+      "featureStatus": {
+        "2d_canvas": "unavailable_software",
+        "direct_rendering_display_compositor": "disabled_off_ok",
+        "gpu_compositing": "disabled_software",
+        "multiple_raster_threads": "enabled_on",
+        "opengl": "disabled_off",
+        "rasterization": "disabled_software",
+        "raw_draw": "disabled_off_ok",
+        "skia_graphite": "disabled_off",
+        "trees_in_viz": "disabled_off",
+        "video_decode": "disabled_software",
+        "video_encode": "disabled_software",
+        "vulkan": "disabled_off",
+        "webgl": "unavailable_software",
+        "webgpu": "unavailable_software",
+        "webgpu_on_vk_via_gl_interop": "disabled_off",
+        "webnn": "unavailable_software"
+      }
+    },
+    "persisted": true,
+    "pass": true,
+    "environment": {
+      "image": "sha256:81a416c5731d5c470213426002ab8d1c38115cbef075682d67ea786dcd7f5741",
+      "gpuDevicesAbsent": true,
+      "privileged": false,
+      "deviceRequests": null,
+      "flags": [],
+      "exit": 0
+    }
+  },
+  {
+    "label": "legacy_r2",
+    "headed": [
+      {
+        "contexts": {
+          "webgl": {
+            "available": true,
+            "linked": true,
+            "pixel": [
+              0,
+              255,
+              0,
+              255
+            ],
+            "error": 0
+          },
+          "webgl2": {
+            "available": true,
+            "linked": true,
+            "pixel": [
+              0,
+              255,
+              0,
+              255
+            ],
+            "error": 0
+          }
+        },
+        "platform": "MacIntel",
+        "dpr": 1
+      },
+      {
+        "contexts": {
+          "webgl": {
+            "available": true,
+            "linked": true,
+            "pixel": [
+              0,
+              255,
+              0,
+              255
+            ],
+            "error": 0
+          },
+          "webgl2": {
+            "available": true,
+            "linked": true,
+            "pixel": [
+              0,
+              255,
+              0,
+              255
+            ],
+            "error": 0
+          }
+        },
+        "platform": "MacIntel",
+        "dpr": 1
+      }
+    ],
+    "headless": [
+      {
+        "contexts": {
+          "webgl": {
+            "available": true,
+            "linked": true,
+            "pixel": [
+              0,
+              255,
+              0,
+              255
+            ],
+            "error": 0
+          },
+          "webgl2": {
+            "available": true,
+            "linked": true,
+            "pixel": [
+              0,
+              255,
+              0,
+              255
+            ],
+            "error": 0
+          }
+        },
+        "platform": "MacIntel",
+        "dpr": 2
+      },
+      {
+        "contexts": {
+          "webgl": {
+            "available": true,
+            "linked": true,
+            "pixel": [
+              0,
+              255,
+              0,
+              255
+            ],
+            "error": 0
+          },
+          "webgl2": {
+            "available": true,
+            "linked": true,
+            "pixel": [
+              0,
+              255,
+              0,
+              255
+            ],
+            "error": 0
+          }
+        },
+        "platform": "MacIntel",
+        "dpr": 2
+      }
+    ],
+    "vnc": {
+      "pixels": true,
+      "mouse": true,
+      "clipboard": true
+    },
+    "version": "152.0.7977.82",
+    "headedBackend": {
+      "implementation": "(gl=egl-angle,angle=swiftshader)",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+      "hardwareSupportsVulkan": false,
+      "featureStatus": {
+        "2d_canvas": "enabled",
+        "direct_rendering_display_compositor": "disabled_off_ok",
+        "gpu_compositing": "disabled_software",
+        "multiple_raster_threads": "enabled_on",
+        "opengl": "enabled_on",
+        "rasterization": "enabled",
+        "raw_draw": "disabled_off_ok",
+        "skia_graphite": "disabled_off",
+        "trees_in_viz": "disabled_off",
+        "video_decode": "enabled",
+        "video_encode": "disabled_software",
+        "vulkan": "disabled_off",
+        "webgl": "enabled_readback",
+        "webgpu": "unavailable_software",
+        "webgpu_on_vk_via_gl_interop": "disabled_off",
+        "webnn": "disabled_off"
+      }
+    },
+    "headlessBackend": {
+      "implementation": "(gl=egl-angle,angle=swiftshader)",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+      "hardwareSupportsVulkan": false,
+      "featureStatus": {
+        "2d_canvas": "unavailable_software",
+        "direct_rendering_display_compositor": "disabled_off_ok",
+        "gpu_compositing": "disabled_software",
+        "multiple_raster_threads": "enabled_on",
+        "opengl": "disabled_off",
+        "rasterization": "disabled_software",
+        "raw_draw": "disabled_off_ok",
+        "skia_graphite": "disabled_off",
+        "trees_in_viz": "disabled_off",
+        "video_decode": "disabled_software",
+        "video_encode": "disabled_software",
+        "vulkan": "disabled_off",
+        "webgl": "unavailable_software",
+        "webgpu": "unavailable_software",
+        "webgpu_on_vk_via_gl_interop": "disabled_off",
+        "webnn": "unavailable_software"
+      }
+    },
+    "persisted": true,
+    "pass": true,
+    "environment": {
+      "image": "sha256:81a416c5731d5c470213426002ab8d1c38115cbef075682d67ea786dcd7f5741",
+      "gpuDevicesAbsent": true,
+      "privileged": false,
+      "deviceRequests": null,
+      "flags": [
+        "--disable-gpu",
+        "--disable-dev-shm-usage",
+        "--use-gl=angle",
+        "--use-angle=swiftshader"
+      ],
+      "exit": 0
+    }
+  }
+]

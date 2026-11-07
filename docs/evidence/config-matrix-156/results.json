@@ -1,0 +1,1230 @@
+[
+  {
+    "id": "headed-default",
+    "headless": false,
+    "args": [],
+    "fonts": false,
+    "start": "2026-11-03T02:19:26.370Z",
+    "version": "156.0.8078.47",
+    "local": {
+      "platform": "Win32",
+      "languages": [
+        "en-US",
+        "en"
+      ],
+      "gl": {
+        "webgl": {
+          "renderer": "ANGLE (Intel, Intel(R) UHD Graphics (0x0000A788) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+          "error": 0
+        },
+        "webgl2": {
+          "renderer": "ANGLE (Intel, Intel(R) UHD Graphics (0x0000A788) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+          "error": 0
+        }
+      }
+    },
+    "fingerprint": {
+      "bot": "not_detected",
+      "tampering": true,
+      "anti_detect_browser": true,
+      "virtual_machine": true,
+      "tampering_ml_score": 0.8551,
+      "suspect_score": 29,
+      "vpn": false,
+      "os_mismatch": false
+    },
+    "iphey": {
+      "completed": true,
+      "responses": [
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "cdn.iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "ef.iphey.com",
+          "status": 200
+        },
+        {
+          "host": "ef.iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "ef.iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "ef.iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        }
+      ],
+      "failures": [],
+      "sockets": [
+        {
+          "sent": 1,
+          "received": 2,
+          "knownError": false
+        }
+      ],
+      "pageErrors": [],
+      "verdict": "Unreliable",
+      "score": 70
+    }
+  },
+  {
+    "id": "headed-mac-fonts-graphics",
+    "headless": false,
+    "args": [
+      "--fingerprint=20260909",
+      "--fingerprint-platform=macos",
+      "--disable-gpu",
+      "--disable-dev-shm-usage",
+      "--use-gl=angle",
+      "--use-angle=swiftshader"
+    ],
+    "fonts": true,
+    "start": "2026-11-03T02:50:47.385Z",
+    "version": "156.0.8078.47",
+    "local": {
+      "platform": "MacIntel",
+      "languages": [
+        "en-US",
+        "en"
+      ],
+      "gl": {
+        "webgl": null,
+        "webgl2": null
+      }
+    },
+    "fingerprint": {
+      "bot": "not_detected",
+      "tampering": false,
+      "anti_detect_browser": false,
+      "virtual_machine": true,
+      "tampering_ml_score": 0.4795,
+      "suspect_score": 18,
+      "vpn": false,
+      "os_mismatch": false
+    },
+    "iphey": {
+      "completed": false,
+      "responses": [
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "cdn.iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "ef.iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "ef.iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "ef.iphey.com",
+          "status": 200
+        },
+        {
+          "host": "ef.iphey.com",
+          "status": 200
+        }
+      ],
+      "failures": [],
+      "sockets": [
+        {
+          "sent": 1,
+          "received": 2,
+          "knownError": false
+        }
+      ],
+      "pageErrors": [],
+      "verdict": "",
+      "score": null
+    }
+  },
+  {
+    "id": "headed-mac-fonts",
+    "headless": false,
+    "args": [
+      "--fingerprint=20260909",
+      "--fingerprint-platform=macos"
+    ],
+    "fonts": true,
+    "start": "2026-11-03T02:50:08.316Z",
+    "version": "156.0.8078.47",
+    "local": {
+      "platform": "MacIntel",
+      "languages": [
+        "en-US",
+        "en"
+      ],
+      "gl": {
+        "webgl": {
+          "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Unspecified Version)",
+          "error": 0
+        },
+        "webgl2": {
+          "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Unspecified Version)",
+          "error": 0
+        }
+      }
+    },
+    "fingerprint": {
+      "bot": "not_detected",
+      "tampering": false,
+      "anti_detect_browser": false,
+      "virtual_machine": true,
+      "tampering_ml_score": 0.511,
+      "suspect_score": 18,
+      "vpn": false,
+      "os_mismatch": false
+    },
+    "iphey": {
+      "completed": true,
+      "responses": [
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "cdn.iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "ef.iphey.com",
+          "status": 200
+        },
+        {
+          "host": "ef.iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        }
+      ],
+      "failures": [],
+      "sockets": [
+        {
+          "sent": 1,
+          "received": 2,
+          "knownError": false
+        }
+      ],
+      "pageErrors": [],
+      "verdict": "Unreliable",
+      "score": 90
+    }
+  },
+  {
+    "id": "headed-mac",
+    "headless": false,
+    "args": [
+      "--fingerprint=20260909",
+      "--fingerprint-platform=macos"
+    ],
+    "fonts": false,
+    "start": "2026-11-03T02:20:36.506Z",
+    "version": "156.0.8078.47",
+    "local": {
+      "platform": "MacIntel",
+      "languages": [
+        "en-US",
+        "en"
+      ],
+      "gl": {
+        "webgl": {
+          "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Unspecified Version)",
+          "error": 0
+        },
+        "webgl2": {
+          "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Unspecified Version)",
+          "error": 0
+        }
+      }
+    },
+    "fingerprint": {
+      "bot": "not_detected",
+      "tampering": true,
+      "anti_detect_browser": true,
+      "virtual_machine": true,
+      "tampering_ml_score": 0.8172,
+      "suspect_score": 34,
+      "vpn": false,
+      "os_mismatch": false
+    },
+    "iphey": {
+      "completed": true,
+      "responses": [
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "cdn.iphey.com",
+          "status": 200
+        },
+        {
+          "host": "ef.iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "ef.iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "ef.iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "ef.iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        }
+      ],
+      "failures": [],
+      "sockets": [
+        {
+          "sent": 1,
+          "received": 2,
+          "knownError": false
+        }
+      ],
+      "pageErrors": [],
+      "verdict": "Unreliable",
+      "score": 90
+    }
+  },
+  {
+    "id": "headed-seed",
+    "headless": false,
+    "args": [
+      "--fingerprint=20260909"
+    ],
+    "fonts": false,
+    "start": "2026-11-03T02:20:02.131Z",
+    "version": "156.0.8078.47",
+    "local": {
+      "platform": "Win32",
+      "languages": [
+        "en-US",
+        "en"
+      ],
+      "gl": {
+        "webgl": {
+          "renderer": "ANGLE (Intel, Intel(R) UHD Graphics (0x0000A7A8) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+          "error": 0
+        },
+        "webgl2": {
+          "renderer": "ANGLE (Intel, Intel(R) UHD Graphics (0x0000A7A8) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+          "error": 0
+        }
+      }
+    },
+    "fingerprint": {
+      "bot": "not_detected",
+      "tampering": true,
+      "anti_detect_browser": true,
+      "virtual_machine": true,
+      "tampering_ml_score": 0.8882,
+      "suspect_score": 29,
+      "vpn": false,
+      "os_mismatch": false
+    },
+    "iphey": {
+      "completed": true,
+      "responses": [
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "cdn.iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "ef.iphey.com",
+          "status": 200
+        },
+        {
+          "host": "ef.iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "ef.iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "ef.iphey.com",
+          "status": 200
+        }
+      ],
+      "failures": [],
+      "sockets": [
+        {
+          "sent": 1,
+          "received": 2,
+          "knownError": false
+        }
+      ],
+      "pageErrors": [],
+      "verdict": "Unreliable",
+      "score": 70
+    }
+  },
+  {
+    "id": "headless-default",
+    "headless": true,
+    "args": [],
+    "fonts": false,
+    "start": "2026-11-03T02:52:19.838Z",
+    "version": "156.0.8078.47",
+    "local": {
+      "platform": "Win32",
+      "languages": [
+        "en-US",
+        "en"
+      ],
+      "gl": {
+        "webgl": null,
+        "webgl2": null
+      }
+    },
+    "fingerprint": {
+      "bot": "not_detected",
+      "tampering": true,
+      "anti_detect_browser": true,
+      "virtual_machine": true,
+      "tampering_ml_score": 0.916,
+      "suspect_score": 29,
+      "vpn": false,
+      "os_mismatch": false
+    },
+    "iphey": {
+      "completed": false,
+      "responses": [
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "cdn.iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "ef.iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "ef.iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "ef.iphey.com",
+          "status": 200
+        },
+        {
+          "host": "ef.iphey.com",
+          "status": 200
+        }
+      ],
+      "failures": [],
+      "sockets": [
+        {
+          "sent": 1,
+          "received": 2,
+          "knownError": false
+        }
+      ],
+      "pageErrors": [],
+      "verdict": "",
+      "score": null
+    }
+  },
+  {
+    "id": "headless-mac-fonts-graphics",
+    "headless": true,
+    "args": [
+      "--fingerprint=20260909",
+      "--fingerprint-platform=macos",
+      "--disable-gpu",
+      "--disable-dev-shm-usage",
+      "--use-gl=angle",
+      "--use-angle=swiftshader"
+    ],
+    "fonts": true,
+    "start": "2026-11-03T02:59:45.707Z",
+    "error": "CloakBrowserLicenseError"
+  },
+  {
+    "id": "headless-mac-fonts",
+    "headless": true,
+    "args": [
+      "--fingerprint=20260909",
+      "--fingerprint-platform=macos"
+    ],
+    "fonts": true,
+    "start": "2026-11-03T02:59:34.294Z",
+    "error": "CloakBrowserLicenseError"
+  },
+  {
+    "id": "headless-mac",
+    "headless": true,
+    "args": [
+      "--fingerprint=20260909",
+      "--fingerprint-platform=macos"
+    ],
+    "fonts": false,
+    "start": "2026-11-03T02:59:22.804Z",
+    "error": "CloakBrowserLicenseError"
+  },
+  {
+    "id": "headless-seed",
+    "headless": true,
+    "args": [
+      "--fingerprint=20260909"
+    ],
+    "fonts": false,
+    "start": "2026-11-03T02:53:52.357Z",
+    "version": "156.0.8078.47",
+    "local": {
+      "platform": "Win32",
+      "languages": [
+        "en-US",
+        "en"
+      ],
+      "gl": {
+        "webgl": null,
+        "webgl2": null
+      }
+    },
+    "fingerprint": {
+      "bot": "not_detected",
+      "tampering": true,
+      "anti_detect_browser": true,
+      "virtual_machine": true,
+      "tampering_ml_score": 0.9418,
+      "suspect_score": 29,
+      "vpn": false,
+      "os_mismatch": false
+    },
+    "iphey": {
+      "completed": false,
+      "responses": [
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "cdn.iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "ef.iphey.com",
+          "status": 200
+        },
+        {
+          "host": "ef.iphey.com",
+          "status": 200
+        },
+        {
+          "host": "iphey.com",
+          "status": 200
+        },
+        {
+          "host": "ef.iphey.com",
+          "status": 200
+        },
+        {
+          "host": "ef.iphey.com",
+          "status": 200
+        }
+      ],
+      "failures": [],
+      "sockets": [
+        {
+          "sent": 1,
+          "received": 2,
+          "knownError": false
+        }
+      ],
+      "pageErrors": [],
+      "error": "CloakBrowserLicenseError"
+    }
+  }
+]

@@ -1,0 +1,2534 @@
+{
+  "runs": [
+    {
+      "label": "v155",
+      "round": "r1",
+      "case": "linux_20260909_default_headed",
+      "version": "155.0.8059.39",
+      "sites": {
+        "sannysoft": {
+          "http_status": 200,
+          "error": null,
+          "failed_rows": [
+            "WebGL Vendor\tCanvas has no webgl context",
+            "WebGL Renderer\tCanvas has no webgl context"
+          ]
+        },
+        "deviceinfo": {
+          "http_status": 200,
+          "error": null,
+          "isBot": false,
+          "positive": []
+        },
+        "fingerprint": {
+          "http_status": 200,
+          "error": null,
+          "signals": {
+            "bot": "not_detected",
+            "tampering": false,
+            "tampering_confidence": "high",
+            "tampering_ml_score": 0,
+            "anomaly_score": 0,
+            "anti_detect_browser": false,
+            "developer_tools": false,
+            "virtual_machine": false,
+            "vpn": false,
+            "vpn_confidence": "medium",
+            "os_mismatch": false,
+            "suspect_score": 0
+          },
+          "suspect_score_text": 0,
+          "visitor_hash": "00c2f1f8ea596926"
+        }
+      },
+      "consistency": {
+        "mainWorkerUa": true,
+        "mainFrameUa": true,
+        "mainWorkerPlatform": true,
+        "mainFramePlatform": true,
+        "uaMatchesHttp": true,
+        "mainWorkerUaData": true,
+        "mainFrameUaData": true,
+        "httpUaDataFields": true,
+        "httpFullVersions": true,
+        "mainWorkerLanguage": true
+      },
+      "surface": {
+        "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+        "platform": "Linux x86_64",
+        "languages": [
+          "en-US",
+          "en-GB",
+          "en-US",
+          "en"
+        ],
+        "uaFull": [
+          {
+            "brand": "Google Chrome",
+            "version": "155.0.8059.40"
+          },
+          {
+            "brand": "Chromium",
+            "version": "155.0.8059.40"
+          }
+        ],
+        "platformVersion": "6.11.0",
+        "gl": {
+          "webgl": null,
+          "webgl2": null
+        },
+        "fontMetricsHash": "feb968c57a6f2ad6",
+        "screen": {
+          "width": 1366,
+          "height": 768,
+          "availWidth": 1366,
+          "availHeight": 768,
+          "colorDepth": 24
+        },
+        "window": {
+          "innerWidth": 1365,
+          "innerHeight": 646,
+          "outerWidth": 1365,
+          "outerHeight": 767,
+          "devicePixelRatio": 1
+        }
+      }
+    },
+    {
+      "label": "v155",
+      "round": "r1",
+      "case": "macos_20260909_default_headed",
+      "version": "155.0.8059.39",
+      "sites": {
+        "sannysoft": {
+          "http_status": 200,
+          "error": null,
+          "failed_rows": [
+            "WebGL Vendor\tCanvas has no webgl context",
+            "WebGL Renderer\tCanvas has no webgl context"
+          ]
+        },
+        "rebrowser": {
+          "http_status": 200,
+          "error": null,
+          "red": [
+            "mainWorldExecution",
+            "exposeFunctionLeak"
+          ],
+          "n": 20
+        },
+        "creepjs": {
+          "http_status": 200,
+          "error": null,
+          "headless_metrics": [
+            "31% like headless",
+            "0% headless",
+            "0% stealth"
+          ],
+          "font_load": "2/51"
+        },
+        "deviceinfo": {
+          "http_status": 200,
+          "error": null,
+          "isBot": false,
+          "positive": []
+        },
+        "incolumitas": {
+          "http_status": 200,
+          "error": null,
+          "fail_keys": [
+            "WEBDRIVER"
+          ]
+        },
+        "browserscan": {
+          "http_status": 200,
+          "error": null,
+          "result": "Normal"
+        },
+        "fingerprint": {
+          "http_status": 200,
+          "error": null,
+          "signals": {
+            "bot": "not_detected",
+            "tampering": false,
+            "tampering_confidence": "high",
+            "tampering_ml_score": 0.0995,
+            "anomaly_score": 0,
+            "anti_detect_browser": false,
+            "developer_tools": false,
+            "virtual_machine": true,
+            "vpn": false,
+            "vpn_confidence": "medium",
+            "os_mismatch": false,
+            "suspect_score": 11
+          },
+          "suspect_score_text": 11,
+          "visitor_hash": "9aee787be8106f3c"
+        },
+        "iphey": {
+          "http_status": 200,
+          "error": null,
+          "score": 0,
+          "verdict": "See",
+          "incomplete": true
+        },
+        "recaptcha": {
+          "http_status": 200,
+          "error": null,
+          "score": 0.9
+        }
+      },
+      "consistency": {
+        "mainWorkerUa": true,
+        "mainFrameUa": true,
+        "mainWorkerPlatform": true,
+        "mainFramePlatform": true,
+        "uaMatchesHttp": true,
+        "mainWorkerUaData": true,
+        "mainFrameUaData": true,
+        "httpUaDataFields": true,
+        "httpFullVersions": true,
+        "mainWorkerLanguage": true
+      },
+      "surface": {
+        "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+        "platform": "MacIntel",
+        "languages": [
+          "en-US",
+          "en"
+        ],
+        "uaFull": [
+          {
+            "brand": "Google Chrome",
+            "version": "155.0.8059.40"
+          },
+          {
+            "brand": "Chromium",
+            "version": "155.0.8059.40"
+          }
+        ],
+        "platformVersion": "26.5.2",
+        "gl": {
+          "webgl": null,
+          "webgl2": null
+        },
+        "fontMetricsHash": "5767b701186cacb5",
+        "screen": {
+          "width": 1366,
+          "height": 768,
+          "availWidth": 1366,
+          "availHeight": 735,
+          "colorDepth": 30
+        },
+        "window": {
+          "innerWidth": 1365,
+          "innerHeight": 646,
+          "outerWidth": 1365,
+          "outerHeight": 735,
+          "devicePixelRatio": 1
+        }
+      }
+    },
+    {
+      "label": "v155",
+      "round": "r1",
+      "case": "macos_20260909_default_headless",
+      "version": "155.0.8059.39",
+      "sites": {
+        "sannysoft": {
+          "http_status": 200,
+          "error": null,
+          "failed_rows": [
+            "WebGL Vendor\tCanvas has no webgl context",
+            "WebGL Renderer\tCanvas has no webgl context"
+          ]
+        },
+        "rebrowser": {
+          "http_status": 200,
+          "error": null,
+          "red": [
+            "mainWorldExecution",
+            "exposeFunctionLeak"
+          ],
+          "n": 20
+        },
+        "creepjs": {
+          "http_status": 200,
+          "error": null,
+          "headless_metrics": [
+            "31% like headless",
+            "0% headless",
+            "0% stealth"
+          ],
+          "font_load": "2/51"
+        },
+        "deviceinfo": {
+          "http_status": 200,
+          "error": null,
+          "isBot": false,
+          "positive": []
+        },
+        "browserscan": {
+          "http_status": 200,
+          "error": null,
+          "result": "Normal"
+        },
+        "fingerprint": {
+          "http_status": 200,
+          "error": null,
+          "signals": {
+            "bot": "not_detected",
+            "tampering": false,
+            "tampering_confidence": "high",
+            "tampering_ml_score": 0.6408,
+            "anomaly_score": 0,
+            "anti_detect_browser": false,
+            "developer_tools": false,
+            "virtual_machine": true,
+            "vpn": true,
+            "vpn_confidence": "low",
+            "os_mismatch": true,
+            "suspect_score": 18
+          },
+          "suspect_score_text": 18,
+          "visitor_hash": "9aee787be8106f3c"
+        },
+        "iphey": {
+          "http_status": 200,
+          "error": null,
+          "score": 0,
+          "verdict": "See",
+          "incomplete": true
+        }
+      },
+      "consistency": {
+        "mainWorkerUa": true,
+        "mainFrameUa": true,
+        "mainWorkerPlatform": true,
+        "mainFramePlatform": true,
+        "uaMatchesHttp": true,
+        "mainWorkerUaData": true,
+        "mainFrameUaData": true,
+        "httpUaDataFields": true,
+        "httpFullVersions": true,
+        "mainWorkerLanguage": true
+      },
+      "surface": {
+        "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+        "platform": "MacIntel",
+        "languages": [
+          "en-US",
+          "en"
+        ],
+        "uaFull": [
+          {
+            "brand": "Google Chrome",
+            "version": "155.0.8059.40"
+          },
+          {
+            "brand": "Chromium",
+            "version": "155.0.8059.40"
+          }
+        ],
+        "platformVersion": "26.5.2",
+        "gl": {
+          "webgl": null,
+          "webgl2": null
+        },
+        "fontMetricsHash": "5767b701186cacb5",
+        "screen": {
+          "width": 1366,
+          "height": 768,
+          "availWidth": 1366,
+          "availHeight": 735,
+          "colorDepth": 30
+        },
+        "window": {
+          "innerWidth": 1366,
+          "innerHeight": 647,
+          "outerWidth": 1366,
+          "outerHeight": 735,
+          "devicePixelRatio": 2
+        }
+      }
+    },
+    {
+      "label": "v155",
+      "round": "r1",
+      "case": "macos_20260910_default_headed",
+      "version": "155.0.8059.39",
+      "sites": {
+        "deviceinfo": {
+          "http_status": 200,
+          "error": null,
+          "isBot": false,
+          "positive": []
+        },
+        "fingerprint": {
+          "http_status": 200,
+          "error": null,
+          "signals": {
+            "bot": "not_detected",
+            "tampering": false,
+            "tampering_confidence": "high",
+            "tampering_ml_score": 0.0964,
+            "anomaly_score": 0,
+            "anti_detect_browser": false,
+            "developer_tools": false,
+            "virtual_machine": true,
+            "vpn": false,
+            "vpn_confidence": "medium",
+            "os_mismatch": false,
+            "suspect_score": 11
+          },
+          "suspect_score_text": 11,
+          "visitor_hash": "0e490da246107ae1"
+        }
+      },
+      "consistency": {
+        "mainWorkerUa": true,
+        "mainFrameUa": true,
+        "mainWorkerPlatform": true,
+        "mainFramePlatform": true,
+        "uaMatchesHttp": true,
+        "mainWorkerUaData": true,
+        "mainFrameUaData": true,
+        "httpUaDataFields": true,
+        "httpFullVersions": true,
+        "mainWorkerLanguage": true
+      },
+      "surface": {
+        "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+        "platform": "MacIntel",
+        "languages": [
+          "en-US",
+          "en"
+        ],
+        "uaFull": [
+          {
+            "brand": "Google Chrome",
+            "version": "155.0.8059.40"
+          },
+          {
+            "brand": "Chromium",
+            "version": "155.0.8059.40"
+          }
+        ],
+        "platformVersion": "15.7.9",
+        "gl": {
+          "webgl": null,
+          "webgl2": null
+        },
+        "fontMetricsHash": "5767b701186cacb5",
+        "screen": {
+          "width": 1366,
+          "height": 768,
+          "availWidth": 1366,
+          "availHeight": 738,
+          "colorDepth": 24
+        },
+        "window": {
+          "innerWidth": 1365,
+          "innerHeight": 646,
+          "outerWidth": 1365,
+          "outerHeight": 738,
+          "devicePixelRatio": 1
+        }
+      }
+    },
+    {
+      "label": "v155",
+      "round": "r1",
+      "case": "macos_20260911_default_headed",
+      "version": "155.0.8059.39",
+      "sites": {
+        "deviceinfo": {
+          "http_status": 200,
+          "error": null,
+          "isBot": false,
+          "positive": []
+        },
+        "fingerprint": {
+          "http_status": 200,
+          "error": null,
+          "signals": {
+            "bot": "not_detected",
+            "tampering": false,
+            "tampering_confidence": "high",
+            "tampering_ml_score": 0.1134,
+            "anomaly_score": 0,
+            "anti_detect_browser": false,
+            "developer_tools": false,
+            "virtual_machine": true,
+            "vpn": false,
+            "vpn_confidence": "medium",
+            "os_mismatch": false,
+            "suspect_score": 11
+          },
+          "suspect_score_text": 11,
+          "visitor_hash": "9aee787be8106f3c"
+        }
+      },
+      "consistency": {
+        "mainWorkerUa": true,
+        "mainFrameUa": true,
+        "mainWorkerPlatform": true,
+        "mainFramePlatform": true,
+        "uaMatchesHttp": true,
+        "mainWorkerUaData": true,
+        "mainFrameUaData": true,
+        "httpUaDataFields": true,
+        "httpFullVersions": true,
+        "mainWorkerLanguage": true
+      },
+      "surface": {
+        "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+        "platform": "MacIntel",
+        "languages": [
+          "en-US",
+          "en"
+        ],
+        "uaFull": [
+          {
+            "brand": "Google Chrome",
+            "version": "155.0.8059.40"
+          },
+          {
+            "brand": "Chromium",
+            "version": "155.0.8059.40"
+          }
+        ],
+        "platformVersion": "15.5.0",
+        "gl": {
+          "webgl": null,
+          "webgl2": null
+        },
+        "fontMetricsHash": "5767b701186cacb5",
+        "screen": {
+          "width": 1366,
+          "height": 768,
+          "availWidth": 1366,
+          "availHeight": 729,
+          "colorDepth": 30
+        },
+        "window": {
+          "innerWidth": 1365,
+          "innerHeight": 646,
+          "outerWidth": 1365,
+          "outerHeight": 729,
+          "devicePixelRatio": 1
+        }
+      }
+    },
+    {
+      "label": "v155",
+      "round": "r1",
+      "case": "windows_20260909_default_headed",
+      "version": "155.0.8059.39",
+      "sites": {
+        "sannysoft": {
+          "http_status": 200,
+          "error": null,
+          "failed_rows": [
+            "WebGL Vendor\tCanvas has no webgl context",
+            "WebGL Renderer\tCanvas has no webgl context"
+          ]
+        },
+        "deviceinfo": {
+          "http_status": 200,
+          "error": null,
+          "isBot": false,
+          "positive": []
+        },
+        "fingerprint": {
+          "http_status": 200,
+          "error": null,
+          "signals": {
+            "bot": "not_detected",
+            "tampering": true,
+            "tampering_confidence": "medium",
+            "tampering_ml_score": 0.9997,
+            "anomaly_score": 0.0466,
+            "anti_detect_browser": true,
+            "developer_tools": false,
+            "virtual_machine": true,
+            "vpn": false,
+            "vpn_confidence": "medium",
+            "os_mismatch": false,
+            "suspect_score": 16
+          },
+          "suspect_score_text": 16,
+          "visitor_hash": "35776ff881fd0174"
+        }
+      },
+      "consistency": {
+        "mainWorkerUa": true,
+        "mainFrameUa": true,
+        "mainWorkerPlatform": true,
+        "mainFramePlatform": true,
+        "uaMatchesHttp": true,
+        "mainWorkerUaData": true,
+        "mainFrameUaData": true,
+        "httpUaDataFields": true,
+        "httpFullVersions": true,
+        "mainWorkerLanguage": true
+      },
+      "surface": {
+        "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+        "platform": "Win32",
+        "languages": [
+          "en-US",
+          "en"
+        ],
+        "uaFull": [
+          {
+            "brand": "Google Chrome",
+            "version": "155.0.8059.40"
+          },
+          {
+            "brand": "Chromium",
+            "version": "155.0.8059.40"
+          }
+        ],
+        "platformVersion": "19.0.0",
+        "gl": {
+          "webgl": null,
+          "webgl2": null
+        },
+        "fontMetricsHash": "fd8774cd07254ee0",
+        "screen": {
+          "width": 1366,
+          "height": 768,
+          "availWidth": 1366,
+          "availHeight": 720,
+          "colorDepth": 24
+        },
+        "window": {
+          "innerWidth": 1365,
+          "innerHeight": 646,
+          "outerWidth": 1365,
+          "outerHeight": 720,
+          "devicePixelRatio": 1
+        }
+      }
+    },
+    {
+      "label": "v155",
+      "round": "r2",
+      "case": "linux_20260909_default_headed",
+      "version": "155.0.8059.39",
+      "sites": {
+        "sannysoft": {
+          "http_status": 200,
+          "error": null,
+          "failed_rows": [
+            "WebGL Vendor\tCanvas has no webgl context",
+            "WebGL Renderer\tCanvas has no webgl context"
+          ]
+        },
+        "deviceinfo": {
+          "http_status": 200,
+          "error": null,
+          "isBot": false,
+          "positive": []
+        },
+        "fingerprint": {
+          "http_status": 200,
+          "error": null,
+          "signals": {
+            "bot": "not_detected",
+            "tampering": false,
+            "tampering_confidence": "high",
+            "tampering_ml_score": 0,
+            "anomaly_score": 0,
+            "anti_detect_browser": false,
+            "developer_tools": false,
+            "virtual_machine": false,
+            "vpn": false,
+            "vpn_confidence": "medium",
+            "os_mismatch": false,
+            "suspect_score": 0
+          },
+          "suspect_score_text": 0,
+          "visitor_hash": "00c2f1f8ea596926"
+        }
+      },
+      "consistency": {
+        "mainWorkerUa": true,
+        "mainFrameUa": true,
+        "mainWorkerPlatform": true,
+        "mainFramePlatform": true,
+        "uaMatchesHttp": true,
+        "mainWorkerUaData": true,
+        "mainFrameUaData": true,
+        "httpUaDataFields": true,
+        "httpFullVersions": true,
+        "mainWorkerLanguage": true
+      },
+      "surface": {
+        "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+        "platform": "Linux x86_64",
+        "languages": [
+          "en-US",
+          "en-GB",
+          "en-US",
+          "en"
+        ],
+        "uaFull": [
+          {
+            "brand": "Google Chrome",
+            "version": "155.0.8059.40"
+          },
+          {
+            "brand": "Chromium",
+            "version": "155.0.8059.40"
+          }
+        ],
+        "platformVersion": "6.11.0",
+        "gl": {
+          "webgl": null,
+          "webgl2": null
+        },
+        "fontMetricsHash": "feb968c57a6f2ad6",
+        "screen": {
+          "width": 1366,
+          "height": 768,
+          "availWidth": 1366,
+          "availHeight": 768,
+          "colorDepth": 24
+        },
+        "window": {
+          "innerWidth": 1365,
+          "innerHeight": 646,
+          "outerWidth": 1365,
+          "outerHeight": 767,
+          "devicePixelRatio": 1
+        }
+      }
+    },
+    {
+      "label": "v155",
+      "round": "r2",
+      "case": "macos_20260909_default_headed",
+      "version": "155.0.8059.39",
+      "sites": {
+        "sannysoft": {
+          "http_status": 200,
+          "error": null,
+          "failed_rows": [
+            "WebGL Vendor\tCanvas has no webgl context",
+            "WebGL Renderer\tCanvas has no webgl context"
+          ]
+        },
+        "rebrowser": {
+          "http_status": 200,
+          "error": null,
+          "red": [
+            "mainWorldExecution",
+            "exposeFunctionLeak"
+          ],
+          "n": 20
+        },
+        "creepjs": {
+          "http_status": 200,
+          "error": null,
+          "headless_metrics": [
+            "31% like headless",
+            "0% headless",
+            "0% stealth"
+          ],
+          "font_load": "2/51"
+        },
+        "deviceinfo": {
+          "http_status": 200,
+          "error": null,
+          "isBot": false,
+          "positive": []
+        },
+        "incolumitas": {
+          "http_status": 200,
+          "error": null,
+          "fail_keys": [
+            "WEBDRIVER"
+          ]
+        },
+        "browserscan": {
+          "http_status": 200,
+          "error": null,
+          "result": "Normal"
+        },
+        "fingerprint": {
+          "http_status": 200,
+          "error": null,
+          "signals": {
+            "bot": "not_detected",
+            "tampering": false,
+            "tampering_confidence": "high",
+            "tampering_ml_score": 0.0995,
+            "anomaly_score": 0,
+            "anti_detect_browser": false,
+            "developer_tools": false,
+            "virtual_machine": true,
+            "vpn": false,
+            "vpn_confidence": "medium",
+            "os_mismatch": false,
+            "suspect_score": 11
+          },
+          "suspect_score_text": 11,
+          "visitor_hash": "9aee787be8106f3c"
+        },
+        "iphey": {
+          "http_status": 200,
+          "error": null,
+          "score": 0,
+          "verdict": "See",
+          "incomplete": true
+        },
+        "recaptcha": {
+          "http_status": 200,
+          "error": null,
+          "score": 0.9
+        }
+      },
+      "consistency": {
+        "mainWorkerUa": true,
+        "mainFrameUa": true,
+        "mainWorkerPlatform": true,
+        "mainFramePlatform": true,
+        "uaMatchesHttp": true,
+        "mainWorkerUaData": true,
+        "mainFrameUaData": true,
+        "httpUaDataFields": true,
+        "httpFullVersions": true,
+        "mainWorkerLanguage": true
+      },
+      "surface": {
+        "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+        "platform": "MacIntel",
+        "languages": [
+          "en-US",
+          "en"
+        ],
+        "uaFull": [
+          {
+            "brand": "Google Chrome",
+            "version": "155.0.8059.40"
+          },
+          {
+            "brand": "Chromium",
+            "version": "155.0.8059.40"
+          }
+        ],
+        "platformVersion": "26.5.2",
+        "gl": {
+          "webgl": null,
+          "webgl2": null
+        },
+        "fontMetricsHash": "5767b701186cacb5",
+        "screen": {
+          "width": 1366,
+          "height": 768,
+          "availWidth": 1366,
+          "availHeight": 735,
+          "colorDepth": 30
+        },
+        "window": {
+          "innerWidth": 1365,
+          "innerHeight": 646,
+          "outerWidth": 1365,
+          "outerHeight": 735,
+          "devicePixelRatio": 1
+        }
+      }
+    },
+    {
+      "label": "v155",
+      "round": "r2",
+      "case": "macos_20260909_default_headless",
+      "version": "155.0.8059.39",
+      "sites": {
+        "sannysoft": {
+          "http_status": 200,
+          "error": null,
+          "failed_rows": [
+            "WebGL Vendor\tCanvas has no webgl context",
+            "WebGL Renderer\tCanvas has no webgl context"
+          ]
+        },
+        "rebrowser": {
+          "http_status": 200,
+          "error": null,
+          "red": [
+            "mainWorldExecution",
+            "exposeFunctionLeak"
+          ],
+          "n": 20
+        },
+        "creepjs": {
+          "http_status": 200,
+          "error": null,
+          "headless_metrics": [
+            "31% like headless",
+            "0% headless",
+            "0% stealth"
+          ],
+          "font_load": "2/51"
+        },
+        "deviceinfo": {
+          "http_status": 200,
+          "error": null,
+          "isBot": false,
+          "positive": []
+        },
+        "browserscan": {
+          "http_status": 200,
+          "error": null,
+          "result": "Normal"
+        },
+        "fingerprint": {
+          "http_status": 200,
+          "error": null,
+          "signals": {
+            "bot": "not_detected",
+            "tampering": false,
+            "tampering_confidence": "high",
+            "tampering_ml_score": 0.3592,
+            "anomaly_score": 0,
+            "anti_detect_browser": false,
+            "developer_tools": false,
+            "virtual_machine": true,
+            "vpn": false,
+            "vpn_confidence": "medium",
+            "os_mismatch": false,
+            "suspect_score": 11
+          },
+          "suspect_score_text": 11,
+          "visitor_hash": "9aee787be8106f3c"
+        },
+        "iphey": {
+          "http_status": 200,
+          "error": null,
+          "score": 0,
+          "verdict": "See",
+          "incomplete": true
+        }
+      },
+      "consistency": {
+        "mainWorkerUa": true,
+        "mainFrameUa": true,
+        "mainWorkerPlatform": true,
+        "mainFramePlatform": true,
+        "uaMatchesHttp": true,
+        "mainWorkerUaData": true,
+        "mainFrameUaData": true,
+        "httpUaDataFields": true,
+        "httpFullVersions": true,
+        "mainWorkerLanguage": true
+      },
+      "surface": {
+        "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+        "platform": "MacIntel",
+        "languages": [
+          "en-US",
+          "en"
+        ],
+        "uaFull": [
+          {
+            "brand": "Google Chrome",
+            "version": "155.0.8059.40"
+          },
+          {
+            "brand": "Chromium",
+            "version": "155.0.8059.40"
+          }
+        ],
+        "platformVersion": "26.5.2",
+        "gl": {
+          "webgl": null,
+          "webgl2": null
+        },
+        "fontMetricsHash": "5767b701186cacb5",
+        "screen": {
+          "width": 1366,
+          "height": 768,
+          "availWidth": 1366,
+          "availHeight": 735,
+          "colorDepth": 30
+        },
+        "window": {
+          "innerWidth": 1366,
+          "innerHeight": 647,
+          "outerWidth": 1366,
+          "outerHeight": 735,
+          "devicePixelRatio": 2
+        }
+      }
+    },
+    {
+      "label": "v155",
+      "round": "r2",
+      "case": "macos_20260910_default_headed",
+      "version": "155.0.8059.39",
+      "sites": {
+        "deviceinfo": {
+          "http_status": 200,
+          "error": null,
+          "isBot": false,
+          "positive": []
+        },
+        "fingerprint": {
+          "http_status": 200,
+          "error": null,
+          "signals": {
+            "bot": "not_detected",
+            "tampering": false,
+            "tampering_confidence": "high",
+            "tampering_ml_score": 0.0964,
+            "anomaly_score": 0,
+            "anti_detect_browser": false,
+            "developer_tools": false,
+            "virtual_machine": true,
+            "vpn": false,
+            "vpn_confidence": "medium",
+            "os_mismatch": false,
+            "suspect_score": 11
+          },
+          "suspect_score_text": 11,
+          "visitor_hash": "0e490da246107ae1"
+        }
+      },
+      "consistency": {
+        "mainWorkerUa": true,
+        "mainFrameUa": true,
+        "mainWorkerPlatform": true,
+        "mainFramePlatform": true,
+        "uaMatchesHttp": true,
+        "mainWorkerUaData": true,
+        "mainFrameUaData": true,
+        "httpUaDataFields": true,
+        "httpFullVersions": true,
+        "mainWorkerLanguage": true
+      },
+      "surface": {
+        "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+        "platform": "MacIntel",
+        "languages": [
+          "en-US",
+          "en"
+        ],
+        "uaFull": [
+          {
+            "brand": "Google Chrome",
+            "version": "155.0.8059.40"
+          },
+          {
+            "brand": "Chromium",
+            "version": "155.0.8059.40"
+          }
+        ],
+        "platformVersion": "15.7.9",
+        "gl": {
+          "webgl": null,
+          "webgl2": null
+        },
+        "fontMetricsHash": "5767b701186cacb5",
+        "screen": {
+          "width": 1366,
+          "height": 768,
+          "availWidth": 1366,
+          "availHeight": 738,
+          "colorDepth": 24
+        },
+        "window": {
+          "innerWidth": 1365,
+          "innerHeight": 646,
+          "outerWidth": 1365,
+          "outerHeight": 738,
+          "devicePixelRatio": 1
+        }
+      }
+    },
+    {
+      "label": "v155",
+      "round": "r2",
+      "case": "macos_20260911_default_headed",
+      "version": "155.0.8059.39",
+      "sites": {
+        "deviceinfo": {
+          "http_status": 200,
+          "error": null,
+          "isBot": false,
+          "positive": []
+        },
+        "fingerprint": {
+          "http_status": 200,
+          "error": null,
+          "signals": {
+            "bot": "not_detected",
+            "tampering": false,
+            "tampering_confidence": "high",
+            "tampering_ml_score": 0.1134,
+            "anomaly_score": 0,
+            "anti_detect_browser": false,
+            "developer_tools": false,
+            "virtual_machine": true,
+            "vpn": false,
+            "vpn_confidence": "medium",
+            "os_mismatch": false,
+            "suspect_score": 11
+          },
+          "suspect_score_text": 11,
+          "visitor_hash": "9aee787be8106f3c"
+        }
+      },
+      "consistency": {
+        "mainWorkerUa": true,
+        "mainFrameUa": true,
+        "mainWorkerPlatform": true,
+        "mainFramePlatform": true,
+        "uaMatchesHttp": true,
+        "mainWorkerUaData": true,
+        "mainFrameUaData": true,
+        "httpUaDataFields": true,
+        "httpFullVersions": true,
+        "mainWorkerLanguage": true
+      },
+      "surface": {
+        "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+        "platform": "MacIntel",
+        "languages": [
+          "en-US",
+          "en"
+        ],
+        "uaFull": [
+          {
+            "brand": "Google Chrome",
+            "version": "155.0.8059.40"
+          },
+          {
+            "brand": "Chromium",
+            "version": "155.0.8059.40"
+          }
+        ],
+        "platformVersion": "15.5.0",
+        "gl": {
+          "webgl": null,
+          "webgl2": null
+        },
+        "fontMetricsHash": "5767b701186cacb5",
+        "screen": {
+          "width": 1366,
+          "height": 768,
+          "availWidth": 1366,
+          "availHeight": 729,
+          "colorDepth": 30
+        },
+        "window": {
+          "innerWidth": 1365,
+          "innerHeight": 646,
+          "outerWidth": 1365,
+          "outerHeight": 729,
+          "devicePixelRatio": 1
+        }
+      }
+    },
+    {
+      "label": "v155",
+      "round": "r2",
+      "case": "windows_20260909_default_headed",
+      "version": "155.0.8059.39",
+      "sites": {
+        "sannysoft": {
+          "http_status": 200,
+          "error": null,
+          "failed_rows": [
+            "WebGL Vendor\tCanvas has no webgl context",
+            "WebGL Renderer\tCanvas has no webgl context"
+          ]
+        },
+        "deviceinfo": {
+          "http_status": 200,
+          "error": null,
+          "isBot": false,
+          "positive": []
+        },
+        "fingerprint": {
+          "http_status": 200,
+          "error": null,
+          "signals": {
+            "bot": "not_detected",
+            "tampering": true,
+            "tampering_confidence": "medium",
+            "tampering_ml_score": 0.9997,
+            "anomaly_score": 0.0466,
+            "anti_detect_browser": true,
+            "developer_tools": false,
+            "virtual_machine": true,
+            "vpn": false,
+            "vpn_confidence": "medium",
+            "os_mismatch": false,
+            "suspect_score": 16
+          },
+          "suspect_score_text": 16,
+          "visitor_hash": "35776ff881fd0174"
+        }
+      },
+      "consistency": {
+        "mainWorkerUa": true,
+        "mainFrameUa": true,
+        "mainWorkerPlatform": true,
+        "mainFramePlatform": true,
+        "uaMatchesHttp": true,
+        "mainWorkerUaData": true,
+        "mainFrameUaData": true,
+        "httpUaDataFields": true,
+        "httpFullVersions": true,
+        "mainWorkerLanguage": true
+      },
+      "surface": {
+        "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+        "platform": "Win32",
+        "languages": [
+          "en-US",
+          "en"
+        ],
+        "uaFull": [
+          {
+            "brand": "Google Chrome",
+            "version": "155.0.8059.40"
+          },
+          {
+            "brand": "Chromium",
+            "version": "155.0.8059.40"
+          }
+        ],
+        "platformVersion": "19.0.0",
+        "gl": {
+          "webgl": null,
+          "webgl2": null
+        },
+        "fontMetricsHash": "fd8774cd07254ee0",
+        "screen": {
+          "width": 1366,
+          "height": 768,
+          "availWidth": 1366,
+          "availHeight": 720,
+          "colorDepth": 24
+        },
+        "window": {
+          "innerWidth": 1365,
+          "innerHeight": 646,
+          "outerWidth": 1365,
+          "outerHeight": 720,
+          "devicePixelRatio": 1
+        }
+      }
+    },
+    {
+      "label": "v156",
+      "round": "r1",
+      "case": "linux_20260909_default_headed",
+      "version": "156.0.8078.47",
+      "sites": {
+        "sannysoft": {
+          "http_status": 200,
+          "error": null,
+          "failed_rows": [
+            "WebGL Vendor\tCanvas has no webgl context",
+            "WebGL Renderer\tCanvas has no webgl context"
+          ]
+        },
+        "deviceinfo": {
+          "http_status": 200,
+          "error": null,
+          "isBot": false,
+          "positive": []
+        },
+        "fingerprint": {
+          "http_status": 200,
+          "error": null,
+          "signals": {
+            "bot": "not_detected",
+            "tampering": false,
+            "tampering_confidence": "high",
+            "tampering_ml_score": 0,
+            "anomaly_score": 0,
+            "anti_detect_browser": false,
+            "developer_tools": false,
+            "virtual_machine": false,
+            "vpn": false,
+            "vpn_confidence": "medium",
+            "os_mismatch": false,
+            "suspect_score": 0
+          },
+          "suspect_score_text": 0,
+          "visitor_hash": "00c2f1f8ea596926"
+        }
+      },
+      "consistency": {
+        "mainWorkerUa": true,
+        "mainFrameUa": true,
+        "mainWorkerPlatform": true,
+        "mainFramePlatform": true,
+        "uaMatchesHttp": true,
+        "mainWorkerUaData": true,
+        "mainFrameUaData": true,
+        "httpUaDataFields": true,
+        "httpFullVersions": true,
+        "mainWorkerLanguage": true
+      },
+      "surface": {
+        "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+        "platform": "Linux x86_64",
+        "languages": [
+          "en-US",
+          "en-GB",
+          "en-US",
+          "en"
+        ],
+        "uaFull": [
+          {
+            "brand": "Chromium",
+            "version": "156.0.8078.48"
+          },
+          {
+            "brand": "Google Chrome",
+            "version": "156.0.8078.48"
+          }
+        ],
+        "platformVersion": "6.11.0",
+        "gl": {
+          "webgl": null,
+          "webgl2": null
+        },
+        "fontMetricsHash": "feb968c57a6f2ad6",
+        "screen": {
+          "width": 1366,
+          "height": 768,
+          "availWidth": 1366,
+          "availHeight": 768,
+          "colorDepth": 24
+        },
+        "window": {
+          "innerWidth": 1365,
+          "innerHeight": 680,
+          "outerWidth": 1365,
+          "outerHeight": 767,
+          "devicePixelRatio": 1
+        }
+      }
+    },
+    {
+      "label": "v156",
+      "round": "r1",
+      "case": "macos_20260909_default_headed",
+      "version": "156.0.8078.47",
+      "sites": {
+        "sannysoft": {
+          "http_status": 200,
+          "error": null,
+          "failed_rows": [
+            "WebGL Vendor\tCanvas has no webgl context",
+            "WebGL Renderer\tCanvas has no webgl context"
+          ]
+        },
+        "rebrowser": {
+          "http_status": 200,
+          "error": null,
+          "red": [
+            "mainWorldExecution",
+            "exposeFunctionLeak"
+          ],
+          "n": 20
+        },
+        "creepjs": {
+          "http_status": 200,
+          "error": null,
+          "headless_metrics": [
+            "31% like headless",
+            "0% headless",
+            "0% stealth"
+          ],
+          "font_load": "2/51"
+        },
+        "deviceinfo": {
+          "http_status": 200,
+          "error": null,
+          "isBot": false,
+          "positive": []
+        },
+        "incolumitas": {
+          "http_status": 200,
+          "error": null,
+          "fail_keys": [
+            "WEBDRIVER"
+          ]
+        },
+        "browserscan": {
+          "http_status": 200,
+          "error": null,
+          "result": "Normal"
+        },
+        "fingerprint": {
+          "http_status": 200,
+          "error": null,
+          "signals": {
+            "bot": "not_detected",
+            "tampering": false,
+            "tampering_confidence": "high",
+            "tampering_ml_score": 0.221,
+            "anomaly_score": 0,
+            "anti_detect_browser": false,
+            "developer_tools": false,
+            "virtual_machine": true,
+            "vpn": false,
+            "vpn_confidence": "medium",
+            "os_mismatch": false,
+            "suspect_score": 11
+          },
+          "suspect_score_text": 11,
+          "visitor_hash": "cd9a037cf1af476f"
+        },
+        "iphey": {
+          "http_status": 200,
+          "error": null,
+          "score": 0,
+          "verdict": "See",
+          "incomplete": true
+        },
+        "recaptcha": {
+          "http_status": 200,
+          "error": null,
+          "score": 0.9
+        }
+      },
+      "consistency": {
+        "mainWorkerUa": true,
+        "mainFrameUa": true,
+        "mainWorkerPlatform": true,
+        "mainFramePlatform": true,
+        "uaMatchesHttp": true,
+        "mainWorkerUaData": true,
+        "mainFrameUaData": true,
+        "httpUaDataFields": true,
+        "httpFullVersions": true,
+        "mainWorkerLanguage": true
+      },
+      "surface": {
+        "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+        "platform": "MacIntel",
+        "languages": [
+          "en-US",
+          "en"
+        ],
+        "uaFull": [
+          {
+            "brand": "Chromium",
+            "version": "156.0.8078.48"
+          },
+          {
+            "brand": "Google Chrome",
+            "version": "156.0.8078.48"
+          }
+        ],
+        "platformVersion": "26.5.2",
+        "gl": {
+          "webgl": null,
+          "webgl2": null
+        },
+        "fontMetricsHash": "5767b701186cacb5",
+        "screen": {
+          "width": 1366,
+          "height": 768,
+          "availWidth": 1366,
+          "availHeight": 735,
+          "colorDepth": 30
+        },
+        "window": {
+          "innerWidth": 1365,
+          "innerHeight": 646,
+          "outerWidth": 1365,
+          "outerHeight": 735,
+          "devicePixelRatio": 1
+        }
+      }
+    },
+    {
+      "label": "v156",
+      "round": "r1",
+      "case": "macos_20260909_default_headless",
+      "version": "156.0.8078.47",
+      "sites": {
+        "sannysoft": {
+          "http_status": 200,
+          "error": null,
+          "failed_rows": [
+            "WebGL Vendor\tCanvas has no webgl context",
+            "WebGL Renderer\tCanvas has no webgl context"
+          ]
+        },
+        "rebrowser": {
+          "http_status": 200,
+          "error": null,
+          "red": [
+            "mainWorldExecution",
+            "exposeFunctionLeak"
+          ],
+          "n": 20
+        },
+        "creepjs": {
+          "http_status": 200,
+          "error": null,
+          "headless_metrics": [
+            "31% like headless",
+            "0% headless",
+            "0% stealth"
+          ],
+          "font_load": "2/51"
+        },
+        "deviceinfo": {
+          "http_status": 200,
+          "error": null,
+          "isBot": false,
+          "positive": []
+        },
+        "browserscan": {
+          "http_status": 200,
+          "error": null,
+          "result": "Normal"
+        },
+        "fingerprint": {
+          "http_status": 200,
+          "error": null,
+          "signals": {
+            "bot": "not_detected",
+            "tampering": true,
+            "tampering_confidence": "medium",
+            "tampering_ml_score": 0.806,
+            "anomaly_score": 0,
+            "anti_detect_browser": true,
+            "developer_tools": false,
+            "virtual_machine": true,
+            "vpn": false,
+            "vpn_confidence": "medium",
+            "os_mismatch": false,
+            "suspect_score": 16
+          },
+          "suspect_score_text": 16,
+          "visitor_hash": "cd9a037cf1af476f"
+        },
+        "iphey": {
+          "http_status": 200,
+          "error": null,
+          "score": 0,
+          "verdict": "See",
+          "incomplete": true
+        }
+      },
+      "consistency": {
+        "mainWorkerUa": true,
+        "mainFrameUa": true,
+        "mainWorkerPlatform": true,
+        "mainFramePlatform": true,
+        "uaMatchesHttp": true,
+        "mainWorkerUaData": true,
+        "mainFrameUaData": true,
+        "httpUaDataFields": true,
+        "httpFullVersions": true,
+        "mainWorkerLanguage": true
+      },
+      "surface": {
+        "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+        "platform": "MacIntel",
+        "languages": [
+          "en-US",
+          "en"
+        ],
+        "uaFull": [
+          {
+            "brand": "Chromium",
+            "version": "156.0.8078.48"
+          },
+          {
+            "brand": "Google Chrome",
+            "version": "156.0.8078.48"
+          }
+        ],
+        "platformVersion": "26.5.2",
+        "gl": {
+          "webgl": null,
+          "webgl2": null
+        },
+        "fontMetricsHash": "5767b701186cacb5",
+        "screen": {
+          "width": 1366,
+          "height": 768,
+          "availWidth": 1366,
+          "availHeight": 735,
+          "colorDepth": 30
+        },
+        "window": {
+          "innerWidth": 1366,
+          "innerHeight": 647,
+          "outerWidth": 1366,
+          "outerHeight": 735,
+          "devicePixelRatio": 2
+        }
+      }
+    },
+    {
+      "label": "v156",
+      "round": "r1",
+      "case": "macos_20260910_default_headed",
+      "version": "156.0.8078.47",
+      "sites": {
+        "deviceinfo": {
+          "http_status": 200,
+          "error": null,
+          "isBot": false,
+          "positive": []
+        },
+        "fingerprint": {
+          "http_status": 200,
+          "error": null,
+          "signals": {
+            "bot": "not_detected",
+            "tampering": false,
+            "tampering_confidence": "high",
+            "tampering_ml_score": 0.1782,
+            "anomaly_score": 0,
+            "anti_detect_browser": false,
+            "developer_tools": false,
+            "virtual_machine": true,
+            "vpn": false,
+            "vpn_confidence": "medium",
+            "os_mismatch": false,
+            "suspect_score": 11
+          },
+          "suspect_score_text": 11,
+          "visitor_hash": "3713f23890d91281"
+        }
+      },
+      "consistency": {
+        "mainWorkerUa": true,
+        "mainFrameUa": true,
+        "mainWorkerPlatform": true,
+        "mainFramePlatform": true,
+        "uaMatchesHttp": true,
+        "mainWorkerUaData": true,
+        "mainFrameUaData": true,
+        "httpUaDataFields": true,
+        "httpFullVersions": true,
+        "mainWorkerLanguage": true
+      },
+      "surface": {
+        "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+        "platform": "MacIntel",
+        "languages": [
+          "en-US",
+          "en"
+        ],
+        "uaFull": [
+          {
+            "brand": "Chromium",
+            "version": "156.0.8078.48"
+          },
+          {
+            "brand": "Google Chrome",
+            "version": "156.0.8078.48"
+          }
+        ],
+        "platformVersion": "15.7.9",
+        "gl": {
+          "webgl": null,
+          "webgl2": null
+        },
+        "fontMetricsHash": "5767b701186cacb5",
+        "screen": {
+          "width": 1366,
+          "height": 768,
+          "availWidth": 1366,
+          "availHeight": 738,
+          "colorDepth": 24
+        },
+        "window": {
+          "innerWidth": 1365,
+          "innerHeight": 646,
+          "outerWidth": 1365,
+          "outerHeight": 738,
+          "devicePixelRatio": 1
+        }
+      }
+    },
+    {
+      "label": "v156",
+      "round": "r1",
+      "case": "macos_20260911_default_headed",
+      "version": "156.0.8078.47",
+      "sites": {
+        "deviceinfo": {
+          "http_status": 200,
+          "error": null,
+          "isBot": false,
+          "positive": []
+        },
+        "fingerprint": {
+          "http_status": 200,
+          "error": null,
+          "signals": {
+            "bot": "not_detected",
+            "tampering": false,
+            "tampering_confidence": "high",
+            "tampering_ml_score": 0.2272,
+            "anomaly_score": 0,
+            "anti_detect_browser": false,
+            "developer_tools": false,
+            "virtual_machine": true,
+            "vpn": false,
+            "vpn_confidence": "medium",
+            "os_mismatch": false,
+            "suspect_score": 11
+          },
+          "suspect_score_text": 11,
+          "visitor_hash": "cd9a037cf1af476f"
+        }
+      },
+      "consistency": {
+        "mainWorkerUa": true,
+        "mainFrameUa": true,
+        "mainWorkerPlatform": true,
+        "mainFramePlatform": true,
+        "uaMatchesHttp": true,
+        "mainWorkerUaData": true,
+        "mainFrameUaData": true,
+        "httpUaDataFields": true,
+        "httpFullVersions": true,
+        "mainWorkerLanguage": true
+      },
+      "surface": {
+        "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+        "platform": "MacIntel",
+        "languages": [
+          "en-US",
+          "en"
+        ],
+        "uaFull": [
+          {
+            "brand": "Chromium",
+            "version": "156.0.8078.48"
+          },
+          {
+            "brand": "Google Chrome",
+            "version": "156.0.8078.48"
+          }
+        ],
+        "platformVersion": "15.5.0",
+        "gl": {
+          "webgl": null,
+          "webgl2": null
+        },
+        "fontMetricsHash": "5767b701186cacb5",
+        "screen": {
+          "width": 1366,
+          "height": 768,
+          "availWidth": 1366,
+          "availHeight": 729,
+          "colorDepth": 30
+        },
+        "window": {
+          "innerWidth": 1365,
+          "innerHeight": 646,
+          "outerWidth": 1365,
+          "outerHeight": 729,
+          "devicePixelRatio": 1
+        }
+      }
+    },
+    {
+      "label": "v156",
+      "round": "r1",
+      "case": "windows_20260909_default_headed",
+      "version": "156.0.8078.47",
+      "sites": {
+        "sannysoft": {
+          "http_status": 200,
+          "error": null,
+          "failed_rows": [
+            "WebGL Vendor\tCanvas has no webgl context",
+            "WebGL Renderer\tCanvas has no webgl context"
+          ]
+        },
+        "deviceinfo": {
+          "http_status": 200,
+          "error": null,
+          "isBot": false,
+          "positive": []
+        },
+        "fingerprint": {
+          "http_status": 200,
+          "error": null,
+          "signals": {
+            "bot": "not_detected",
+            "tampering": true,
+            "tampering_confidence": "medium",
+            "tampering_ml_score": 0.9991,
+            "anomaly_score": 0.0466,
+            "anti_detect_browser": true,
+            "developer_tools": false,
+            "virtual_machine": true,
+            "vpn": false,
+            "vpn_confidence": "medium",
+            "os_mismatch": false,
+            "suspect_score": 16
+          },
+          "suspect_score_text": 16,
+          "visitor_hash": "35776ff881fd0174"
+        }
+      },
+      "consistency": {
+        "mainWorkerUa": true,
+        "mainFrameUa": true,
+        "mainWorkerPlatform": true,
+        "mainFramePlatform": true,
+        "uaMatchesHttp": true,
+        "mainWorkerUaData": true,
+        "mainFrameUaData": true,
+        "httpUaDataFields": true,
+        "httpFullVersions": true,
+        "mainWorkerLanguage": true
+      },
+      "surface": {
+        "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+        "platform": "Win32",
+        "languages": [
+          "en-US",
+          "en"
+        ],
+        "uaFull": [
+          {
+            "brand": "Chromium",
+            "version": "156.0.8078.48"
+          },
+          {
+            "brand": "Google Chrome",
+            "version": "156.0.8078.48"
+          }
+        ],
+        "platformVersion": "19.0.0",
+        "gl": {
+          "webgl": null,
+          "webgl2": null
+        },
+        "fontMetricsHash": "fd8774cd07254ee0",
+        "screen": {
+          "width": 1366,
+          "height": 768,
+          "availWidth": 1366,
+          "availHeight": 720,
+          "colorDepth": 24
+        },
+        "window": {
+          "innerWidth": 1365,
+          "innerHeight": 646,
+          "outerWidth": 1365,
+          "outerHeight": 720,
+          "devicePixelRatio": 1
+        }
+      }
+    },
+    {
+      "label": "v156",
+      "round": "r2",
+      "case": "linux_20260909_default_headed",
+      "version": "156.0.8078.47",
+      "sites": {
+        "sannysoft": {
+          "http_status": 200,
+          "error": null,
+          "failed_rows": [
+            "WebGL Vendor\tCanvas has no webgl context",
+            "WebGL Renderer\tCanvas has no webgl context"
+          ]
+        },
+        "deviceinfo": {
+          "http_status": 200,
+          "error": null,
+          "isBot": false,
+          "positive": []
+        },
+        "fingerprint": {
+          "http_status": 200,
+          "error": null,
+          "signals": {
+            "bot": "not_detected",
+            "tampering": false,
+            "tampering_confidence": "high",
+            "tampering_ml_score": 0,
+            "anomaly_score": 0,
+            "anti_detect_browser": false,
+            "developer_tools": false,
+            "virtual_machine": false,
+            "vpn": false,
+            "vpn_confidence": "medium",
+            "os_mismatch": false,
+            "suspect_score": 0
+          },
+          "suspect_score_text": 0,
+          "visitor_hash": "00c2f1f8ea596926"
+        }
+      },
+      "consistency": {
+        "mainWorkerUa": true,
+        "mainFrameUa": true,
+        "mainWorkerPlatform": true,
+        "mainFramePlatform": true,
+        "uaMatchesHttp": true,
+        "mainWorkerUaData": true,
+        "mainFrameUaData": true,
+        "httpUaDataFields": true,
+        "httpFullVersions": true,
+        "mainWorkerLanguage": true
+      },
+      "surface": {
+        "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+        "platform": "Linux x86_64",
+        "languages": [
+          "en-US",
+          "en-GB",
+          "en-US",
+          "en"
+        ],
+        "uaFull": [
+          {
+            "brand": "Chromium",
+            "version": "156.0.8078.48"
+          },
+          {
+            "brand": "Google Chrome",
+            "version": "156.0.8078.48"
+          }
+        ],
+        "platformVersion": "6.11.0",
+        "gl": {
+          "webgl": null,
+          "webgl2": null
+        },
+        "fontMetricsHash": "feb968c57a6f2ad6",
+        "screen": {
+          "width": 1366,
+          "height": 768,
+          "availWidth": 1366,
+          "availHeight": 768,
+          "colorDepth": 24
+        },
+        "window": {
+          "innerWidth": 1365,
+          "innerHeight": 680,
+          "outerWidth": 1365,
+          "outerHeight": 767,
+          "devicePixelRatio": 1
+        }
+      }
+    },
+    {
+      "label": "v156",
+      "round": "r2",
+      "case": "macos_20260909_default_headed",
+      "version": "156.0.8078.47",
+      "sites": {
+        "sannysoft": {
+          "http_status": 200,
+          "error": null,
+          "failed_rows": [
+            "WebGL Vendor\tCanvas has no webgl context",
+            "WebGL Renderer\tCanvas has no webgl context"
+          ]
+        },
+        "rebrowser": {
+          "http_status": 200,
+          "error": null,
+          "red": [
+            "mainWorldExecution",
+            "exposeFunctionLeak"
+          ],
+          "n": 20
+        },
+        "creepjs": {
+          "http_status": 200,
+          "error": null,
+          "headless_metrics": [
+            "31% like headless",
+            "0% headless",
+            "0% stealth"
+          ],
+          "font_load": "2/51"
+        },
+        "deviceinfo": {
+          "http_status": 200,
+          "error": null,
+          "isBot": false,
+          "positive": []
+        },
+        "incolumitas": {
+          "http_status": 200,
+          "error": null,
+          "fail_keys": [
+            "WEBDRIVER"
+          ]
+        },
+        "browserscan": {
+          "http_status": 200,
+          "error": null,
+          "result": "Normal"
+        },
+        "fingerprint": {
+          "http_status": 200,
+          "error": null,
+          "signals": {
+            "bot": "not_detected",
+            "tampering": false,
+            "tampering_confidence": "high",
+            "tampering_ml_score": 0.221,
+            "anomaly_score": 0,
+            "anti_detect_browser": false,
+            "developer_tools": false,
+            "virtual_machine": true,
+            "vpn": false,
+            "vpn_confidence": "medium",
+            "os_mismatch": false,
+            "suspect_score": 11
+          },
+          "suspect_score_text": 11,
+          "visitor_hash": "cd9a037cf1af476f"
+        },
+        "iphey": {
+          "http_status": 200,
+          "error": null,
+          "score": 0,
+          "verdict": "See",
+          "incomplete": true
+        },
+        "recaptcha": {
+          "http_status": 200,
+          "error": null,
+          "score": 0.9
+        }
+      },
+      "consistency": {
+        "mainWorkerUa": true,
+        "mainFrameUa": true,
+        "mainWorkerPlatform": true,
+        "mainFramePlatform": true,
+        "uaMatchesHttp": true,
+        "mainWorkerUaData": true,
+        "mainFrameUaData": true,
+        "httpUaDataFields": true,
+        "httpFullVersions": true,
+        "mainWorkerLanguage": true
+      },
+      "surface": {
+        "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+        "platform": "MacIntel",
+        "languages": [
+          "en-US",
+          "en"
+        ],
+        "uaFull": [
+          {
+            "brand": "Chromium",
+            "version": "156.0.8078.48"
+          },
+          {
+            "brand": "Google Chrome",
+            "version": "156.0.8078.48"
+          }
+        ],
+        "platformVersion": "26.5.2",
+        "gl": {
+          "webgl": null,
+          "webgl2": null
+        },
+        "fontMetricsHash": "5767b701186cacb5",
+        "screen": {
+          "width": 1366,
+          "height": 768,
+          "availWidth": 1366,
+          "availHeight": 735,
+          "colorDepth": 30
+        },
+        "window": {
+          "innerWidth": 1365,
+          "innerHeight": 646,
+          "outerWidth": 1365,
+          "outerHeight": 735,
+          "devicePixelRatio": 1
+        }
+      }
+    },
+    {
+      "label": "v156",
+      "round": "r2",
+      "case": "macos_20260909_default_headless",
+      "version": "156.0.8078.47",
+      "sites": {
+        "sannysoft": {
+          "http_status": 200,
+          "error": null,
+          "failed_rows": [
+            "WebGL Vendor\tCanvas has no webgl context",
+            "WebGL Renderer\tCanvas has no webgl context"
+          ]
+        },
+        "rebrowser": {
+          "http_status": 200,
+          "error": null,
+          "red": [
+            "mainWorldExecution",
+            "exposeFunctionLeak"
+          ],
+          "n": 20
+        },
+        "creepjs": {
+          "http_status": 200,
+          "error": null,
+          "headless_metrics": [
+            "31% like headless",
+            "0% headless",
+            "0% stealth"
+          ],
+          "font_load": "2/51"
+        },
+        "deviceinfo": {
+          "http_status": 200,
+          "error": null,
+          "isBot": false,
+          "positive": []
+        },
+        "browserscan": {
+          "http_status": 200,
+          "error": null,
+          "result": "Normal"
+        },
+        "fingerprint": {
+          "http_status": 200,
+          "error": null,
+          "signals": {
+            "bot": "not_detected",
+            "tampering": true,
+            "tampering_confidence": "medium",
+            "tampering_ml_score": 0.806,
+            "anomaly_score": 0,
+            "anti_detect_browser": true,
+            "developer_tools": false,
+            "virtual_machine": true,
+            "vpn": false,
+            "vpn_confidence": "medium",
+            "os_mismatch": false,
+            "suspect_score": 16
+          },
+          "suspect_score_text": 16,
+          "visitor_hash": "cd9a037cf1af476f"
+        },
+        "iphey": {
+          "http_status": 200,
+          "error": null,
+          "score": 0,
+          "verdict": "See",
+          "incomplete": true
+        }
+      },
+      "consistency": {
+        "mainWorkerUa": true,
+        "mainFrameUa": true,
+        "mainWorkerPlatform": true,
+        "mainFramePlatform": true,
+        "uaMatchesHttp": true,
+        "mainWorkerUaData": true,
+        "mainFrameUaData": true,
+        "httpUaDataFields": true,
+        "httpFullVersions": true,
+        "mainWorkerLanguage": true
+      },
+      "surface": {
+        "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+        "platform": "MacIntel",
+        "languages": [
+          "en-US",
+          "en"
+        ],
+        "uaFull": [
+          {
+            "brand": "Chromium",
+            "version": "156.0.8078.48"
+          },
+          {
+            "brand": "Google Chrome",
+            "version": "156.0.8078.48"
+          }
+        ],
+        "platformVersion": "26.5.2",
+        "gl": {
+          "webgl": null,
+          "webgl2": null
+        },
+        "fontMetricsHash": "5767b701186cacb5",
+        "screen": {
+          "width": 1366,
+          "height": 768,
+          "availWidth": 1366,
+          "availHeight": 735,
+          "colorDepth": 30
+        },
+        "window": {
+          "innerWidth": 1366,
+          "innerHeight": 647,
+          "outerWidth": 1366,
+          "outerHeight": 735,
+          "devicePixelRatio": 2
+        }
+      }
+    },
+    {
+      "label": "v156",
+      "round": "r2",
+      "case": "macos_20260910_default_headed",
+      "version": "156.0.8078.47",
+      "sites": {
+        "deviceinfo": {
+          "http_status": 200,
+          "error": null,
+          "isBot": false,
+          "positive": []
+        },
+        "fingerprint": {
+          "http_status": 200,
+          "error": null,
+          "signals": {
+            "bot": "not_detected",
+            "tampering": false,
+            "tampering_confidence": "high",
+            "tampering_ml_score": 0.1782,
+            "anomaly_score": 0,
+            "anti_detect_browser": false,
+            "developer_tools": false,
+            "virtual_machine": true,
+            "vpn": false,
+            "vpn_confidence": "medium",
+            "os_mismatch": false,
+            "suspect_score": 11
+          },
+          "suspect_score_text": 11,
+          "visitor_hash": "3713f23890d91281"
+        }
+      },
+      "consistency": {
+        "mainWorkerUa": true,
+        "mainFrameUa": true,
+        "mainWorkerPlatform": true,
+        "mainFramePlatform": true,
+        "uaMatchesHttp": true,
+        "mainWorkerUaData": true,
+        "mainFrameUaData": true,
+        "httpUaDataFields": true,
+        "httpFullVersions": true,
+        "mainWorkerLanguage": true
+      },
+      "surface": {
+        "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+        "platform": "MacIntel",
+        "languages": [
+          "en-US",
+          "en"
+        ],
+        "uaFull": [
+          {
+            "brand": "Chromium",
+            "version": "156.0.8078.48"
+          },
+          {
+            "brand": "Google Chrome",
+            "version": "156.0.8078.48"
+          }
+        ],
+        "platformVersion": "15.7.9",
+        "gl": {
+          "webgl": null,
+          "webgl2": null
+        },
+        "fontMetricsHash": "5767b701186cacb5",
+        "screen": {
+          "width": 1366,
+          "height": 768,
+          "availWidth": 1366,
+          "availHeight": 738,
+          "colorDepth": 24
+        },
+        "window": {
+          "innerWidth": 1365,
+          "innerHeight": 646,
+          "outerWidth": 1365,
+          "outerHeight": 738,
+          "devicePixelRatio": 1
+        }
+      }
+    },
+    {
+      "label": "v156",
+      "round": "r2",
+      "case": "macos_20260911_default_headed",
+      "version": "156.0.8078.47",
+      "sites": {
+        "deviceinfo": {
+          "http_status": 200,
+          "error": null,
+          "isBot": false,
+          "positive": []
+        },
+        "fingerprint": {
+          "http_status": 200,
+          "error": null,
+          "signals": {
+            "bot": "not_detected",
+            "tampering": false,
+            "tampering_confidence": "high",
+            "tampering_ml_score": 0.2272,
+            "anomaly_score": 0,
+            "anti_detect_browser": false,
+            "developer_tools": false,
+            "virtual_machine": true,
+            "vpn": false,
+            "vpn_confidence": "medium",
+            "os_mismatch": false,
+            "suspect_score": 11
+          },
+          "suspect_score_text": 11,
+          "visitor_hash": "cd9a037cf1af476f"
+        }
+      },
+      "consistency": {
+        "mainWorkerUa": true,
+        "mainFrameUa": true,
+        "mainWorkerPlatform": true,
+        "mainFramePlatform": true,
+        "uaMatchesHttp": true,
+        "mainWorkerUaData": true,
+        "mainFrameUaData": true,
+        "httpUaDataFields": true,
+        "httpFullVersions": true,
+        "mainWorkerLanguage": true
+      },
+      "surface": {
+        "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+        "platform": "MacIntel",
+        "languages": [
+          "en-US",
+          "en"
+        ],
+        "uaFull": [
+          {
+            "brand": "Chromium",
+            "version": "156.0.8078.48"
+          },
+          {
+            "brand": "Google Chrome",
+            "version": "156.0.8078.48"
+          }
+        ],
+        "platformVersion": "15.5.0",
+        "gl": {
+          "webgl": null,
+          "webgl2": null
+        },
+        "fontMetricsHash": "5767b701186cacb5",
+        "screen": {
+          "width": 1366,
+          "height": 768,
+          "availWidth": 1366,
+          "availHeight": 729,
+          "colorDepth": 30
+        },
+        "window": {
+          "innerWidth": 1365,
+          "innerHeight": 646,
+          "outerWidth": 1365,
+          "outerHeight": 729,
+          "devicePixelRatio": 1
+        }
+      }
+    },
+    {
+      "label": "v156",
+      "round": "r2",
+      "case": "windows_20260909_default_headed",
+      "version": "156.0.8078.47",
+      "sites": {
+        "sannysoft": {
+          "http_status": 200,
+          "error": null,
+          "failed_rows": [
+            "WebGL Vendor\tCanvas has no webgl context",
+            "WebGL Renderer\tCanvas has no webgl context"
+          ]
+        },
+        "deviceinfo": {
+          "http_status": 200,
+          "error": null,
+          "isBot": false,
+          "positive": []
+        },
+        "fingerprint": {
+          "http_status": 200,
+          "error": null,
+          "signals": {
+            "bot": "not_detected",
+            "tampering": true,
+            "tampering_confidence": "medium",
+            "tampering_ml_score": 0.9991,
+            "anomaly_score": 0.0466,
+            "anti_detect_browser": true,
+            "developer_tools": false,
+            "virtual_machine": true,
+            "vpn": false,
+            "vpn_confidence": "medium",
+            "os_mismatch": false,
+            "suspect_score": 16
+          },
+          "suspect_score_text": 16,
+          "visitor_hash": "35776ff881fd0174"
+        }
+      },
+      "consistency": {
+        "mainWorkerUa": true,
+        "mainFrameUa": true,
+        "mainWorkerPlatform": true,
+        "mainFramePlatform": true,
+        "uaMatchesHttp": true,
+        "mainWorkerUaData": true,
+        "mainFrameUaData": true,
+        "httpUaDataFields": true,
+        "httpFullVersions": true,
+        "mainWorkerLanguage": true
+      },
+      "surface": {
+        "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+        "platform": "Win32",
+        "languages": [
+          "en-US",
+          "en"
+        ],
+        "uaFull": [
+          {
+            "brand": "Chromium",
+            "version": "156.0.8078.48"
+          },
+          {
+            "brand": "Google Chrome",
+            "version": "156.0.8078.48"
+          }
+        ],
+        "platformVersion": "19.0.0",
+        "gl": {
+          "webgl": null,
+          "webgl2": null
+        },
+        "fontMetricsHash": "fd8774cd07254ee0",
+        "screen": {
+          "width": 1366,
+          "height": 768,
+          "availWidth": 1366,
+          "availHeight": 720,
+          "colorDepth": 24
+        },
+        "window": {
+          "innerWidth": 1365,
+          "innerHeight": 646,
+          "outerWidth": 1365,
+          "outerHeight": 720,
+          "devicePixelRatio": 1
+        }
+      }
+    }
+  ],
+  "probes": {
+    "v155": {
+      "font": {
+        "r1-macos": [
+          1266,
+          1220,
+          16
+        ],
+        "r1-linux": [
+          262,
+          259,
+          0
+        ],
+        "r2-macos": [
+          1254,
+          1220,
+          16
+        ],
+        "r2-linux": [
+          259,
+          265,
+          0
+        ]
+      },
+      "iphey": {
+        "r1": {
+          "completed": false,
+          "serverErrors": [],
+          "score": null,
+          "verdict": ""
+        },
+        "r2": {
+          "completed": false,
+          "serverErrors": [],
+          "score": null,
+          "verdict": ""
+        }
+      },
+      "canvas": {},
+      "cpu": []
+    },
+    "v156": {
+      "font": {
+        "r1-macos": [
+          1502,
+          1208,
+          16
+        ],
+        "r1-linux": [
+          248,
+          262,
+          0
+        ],
+        "r2-macos": [
+          1308,
+          1217,
+          16
+        ],
+        "r2-linux": [
+          260,
+          264,
+          0
+        ]
+      },
+      "iphey": {
+        "r1": {
+          "completed": false,
+          "serverErrors": [],
+          "score": null,
+          "verdict": ""
+        },
+        "r2": {
+          "completed": false,
+          "serverErrors": [],
+          "score": null,
+          "verdict": ""
+        }
+      },
+      "canvas": {},
+      "cpu": []
+    }
+  }
+}
