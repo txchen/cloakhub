@@ -9,7 +9,7 @@ import {
 import { appendLearning, formatLearnings, listLearnings, readLearnings } from "./learnings.mjs";
 
 const usage = "Usage: node browser.mjs targets | check [--target ALIAS] | run [--target ALIAS] < script.js" +
-  " | learnings [DOMAIN [--append < note.md]]";
+  " | learnings [DOMAIN [--append < note.md]] | session start [--target ALIAS] | session exec|status|end SOCKET";
 // Names available to run scripts, in parameter order.
 const SCRIPT_API = ["browser", "context", "tabs", "tab", "tabId", "observe", "expectChange", "captureResponses", "detectChallenge"];
 
@@ -176,6 +176,7 @@ export async function withBrowser(target, action, connect) {
 
 async function main() {
   const [command, ...args] = process.argv.slice(2);
+  if (command === "session") return (await import("./session.mjs")).sessionCommand(args);
   if (command === "learnings") return learningsCommand(args);
   if (!["targets", "check", "run"].includes(command) ||
       (args.length && (command === "targets" || args.length !== 2 || args[0] !== "--target" || !args[1]))) {

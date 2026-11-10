@@ -1,0 +1,76 @@
+{
+  "profile": "tc_main",
+  "checks": [
+    "same page object across calls",
+    "accumulated rows",
+    "saved async function",
+    "saved imported module",
+    "partial state retained after error",
+    "ReferenceError guidance",
+    "status reports last failed and completed executions",
+    "explicit state deletion"
+  ],
+  "passed": true,
+  "statusAfterError": {
+    "ok": true,
+    "running": false,
+    "completedExecutions": 3,
+    "lastExecution": {
+      "ok": false,
+      "durationMs": 1
+    },
+    "state": [
+      {
+        "name": "page",
+        "type": "object"
+      },
+      {
+        "name": "rows",
+        "type": "object"
+      },
+      {
+        "name": "record",
+        "type": "function"
+      },
+      {
+        "name": "module",
+        "type": "object"
+      }
+    ],
+    "stateCount": 4,
+    "stateTruncated": false,
+    "name": "tc_main",
+    "url": "http://192.168.0.200:7788",
+    "profile": "tc_main",
+    "auth": "none"
+  },
+  "finalStatus": {
+    "ok": true,
+    "running": false,
+    "completedExecutions": 4,
+    "lastExecution": {
+      "ok": true,
+      "durationMs": 40
+    },
+    "state": [
+      {
+        "name": "rows",
+        "type": "object"
+      },
+      {
+        "name": "record",
+        "type": "function"
+      },
+      {
+        "name": "module",
+        "type": "object"
+      }
+    ],
+    "stateCount": 3,
+    "stateTruncated": false,
+    "name": "tc_main",
+    "url": "http://192.168.0.200:7788",
+    "profile": "tc_main",
+    "auth": "none"
+  }
+}

@@ -253,6 +253,19 @@ The [skills CLI](https://github.com/vercel-labs/skills#readme) installs the skil
 `npm ci` installs `playwright-core` without downloading a local browser. After a skill
 update, run `npm ci` in the installed directory again.
 
+### Reuse state across browser rounds
+
+The skill supports task sessions on Linux and macOS. Multi-round tasks can keep the
+same browser connection, page objects, helper functions, and collected data in a
+shared JavaScript `state` object. The agent uses `session start`, `session exec`,
+`session status`, and `session end`; single scripts can continue using `run`.
+See [task sessions](skills/cloakhub-browser/references/sessions.md) for examples.
+
+Sessions end after five minutes without execution, or when a script exceeds two
+minutes. End a session when its task finishes so the browser can sleep. This is a
+client skill update; it requires no server upgrade. Refresh the skill with the
+installation command above and reload it in your agent client.
+
 ## Configure the client
 
 Create the client configuration directory:
@@ -418,7 +431,8 @@ settings, manage its token, or start/stop it. **Close viewer** disconnects the v
 only. The event log shows starts, failures, idle stops, and capacity events.
 
 Browsers wake automatically through their fixed profile connection URL. The skill
-disconnects after each script so idle sleep can work. An open CDP connection prevents
+disconnects after each one-shot script; task sessions disconnect on explicit end or
+expiry so idle sleep can work. An open CDP connection prevents
 automatic sleep; simply watching the viewer does not. Sleep retains cookies and browser storage
 but closes all tabs; the next start opens a new tab. Live JavaScript and unfinished
 operations are lost.

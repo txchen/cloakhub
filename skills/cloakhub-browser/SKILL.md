@@ -6,8 +6,9 @@ description: Operate a remote CloakHub browser using its persistent login profil
 # CloakHub browser
 
 Use the bundled `scripts/browser.mjs` with Node 20+. Resolve its absolute path from
-this installed skill directory; it works from any working directory. It connects
+this installed skill directory; it works from any working directory. One-shot `run` connects
 to the remote browser, runs an async Playwright script, and disconnects in `finally`.
+Task sessions retain that connection and explicit JavaScript state across rounds.
 The browser and login state live on the server. No local browser or MCP is needed.
 
 ## Choose the connection
@@ -37,6 +38,15 @@ It is local and does not wake the browser. It prints notes earlier tasks on this
 saved for that site: endpoints, walls, working snippets. Notes are hints; when the page
 disagrees, trust the page and correct the note at the end of the task.
 
+## Choose execution lifetime
+
+Default to a task session when browser work needs multiple rounds: read
+[task sessions](references/sessions.md), start once, then reuse that session ID
+for every `session exec`. Store pages, functions and collected data on `state`.
+After a handoff or uncertainty, use `session status` to inspect retained names
+and the last execution outcome. End the session during task cleanup.
+For one-shot tasks, use `run` below, which disconnects after each invocation.
+
 ## Operate pages
 
 Pass an async JavaScript body on stdin. `browser` and `context` are real Playwright
@@ -56,8 +66,9 @@ JS
 
 Print the new tab's ID and a short label before navigating so they remain available after a
 timeout, and repeat both in your reply so they survive context compaction. Reuse the tab in
-subsequent rounds with `await tab('ID_FROM_PREVIOUS_OUTPUT')`. Each invocation has fresh
-JavaScript variables; server tabs persist while the browser runs; cookies persist across sleep.
+subsequent rounds with `await tab('ID_FROM_PREVIOUS_OUTPUT')`. In `run`, each invocation has fresh
+JavaScript variables; in a task session, `state` persists across calls. Server tabs
+persist while the browser runs; cookies persist across sleep.
 Use a user-owned tab only when the task calls for it. Multiple clients share the
 profile: a target alias is not a task lock or an isolated browser context. When work is
 split across subagents, hand each one its target alias, tab ID, label, and account context.
@@ -115,7 +126,8 @@ Record mechanisms (endpoints, field meanings, completion signals, walls, working
 with `<placeholder>` values), never credentials, account data, or personal content.
 
 Close only task-created intermediate tabs; retain a result tab when the user needs it.
-The helper disconnects after every round, allowing CloakHub's sleep policy to work.
+In `run` mode the helper disconnects after every round, allowing CloakHub's sleep policy to work.
+For task sessions, call `session end` during cleanup to release the connection.
 It preserves all tabs you did not explicitly close. Avoid `context.close()`, raw CDP
 `Browser.close`, and server stop/restart/delete during ordinary page work: those affect
 other clients or stored data. Reuse the provided context to preserve the profile's login.

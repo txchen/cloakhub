@@ -1,0 +1,49 @@
+{
+  "date": "2026-11-10T17:16:14.482Z",
+  "target": "tc_main",
+  "results": [
+    {
+      "name": "real remote browser fixture and cross-call page/function/data persistence",
+      "passed": true
+    },
+    {
+      "name": "script error preserves session state",
+      "passed": true
+    },
+    {
+      "name": "concurrent command rejected without execution",
+      "passed": true
+    },
+    {
+      "name": "output limit",
+      "passed": true
+    },
+    {
+      "name": "real rendered click and effect verification",
+      "passed": true
+    },
+    {
+      "name": "end releases client and preserves remote tab",
+      "passed": true
+    },
+    {
+      "name": "async deadline terminates session",
+      "passed": true,
+      "ms": 120084
+    },
+    {
+      "name": "watchdog terminates synchronous loop",
+      "passed": true,
+      "ms": 121135
+    },
+    {
+      "name": "five-minute idle expiry despite status polling",
+      "passed": true,
+      "ms": 310623
+    },
+    {
+      "name": "remote profile remains connectable after deadline and idle termination",
+      "passed": true
+    }
+  ]
+}
