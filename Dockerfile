@@ -66,9 +66,30 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     fonts-ipafont-gothic fonts-wqy-zenhei fonts-tlwg-loma-otf fonts-urw-base35 \
     && rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    xvfb libx264-164 libyuv0 libopus0 libpulse0 \
-    && rm -rf /var/lib/apt/lists/*
+# Xvfb's libGL dependency chain ends in Mesa's DRI drivers and LLVM (~160 MB), which
+# nothing here uses: Xvfb runs with GLX disabled and CloakBrowser renders WebGL with
+# its bundled SwiftShader. A local placeholder package satisfies that dependency.
+RUN set -eux; \
+    mkdir -p /tmp/no-mesa-dri/DEBIAN; \
+    printf '%s\n' \
+      'Package: libgl1-mesa-dri' \
+      'Version: 0~cloakhub' \
+      "Architecture: $(dpkg --print-architecture)" \
+      'Multi-Arch: same' \
+      'Maintainer: CloakHub' \
+      'Description: placeholder for Mesa DRI drivers (Xvfb runs without GLX)' \
+      > /tmp/no-mesa-dri/DEBIAN/control; \
+    dpkg-deb --build /tmp/no-mesa-dri /tmp/no-mesa-dri.deb; \
+    dpkg -i /tmp/no-mesa-dri.deb; \
+    apt-mark hold libgl1-mesa-dri; \
+    rm -rf /tmp/no-mesa-dri /tmp/no-mesa-dri.deb; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends \
+      xvfb libx264-164 libyuv0 libopus0 libpulse0; \
+    if dpkg-query -W -f='${Status}' libllvm15 2>/dev/null | grep -q 'ok installed'; then \
+      echo "Mesa/LLVM was installed"; exit 1; \
+    fi; \
+    rm -rf /var/lib/apt/lists/*
 
 COPY --from=voxl /opt/voxl/bin/voxl /usr/local/bin/voxl
 RUN voxl --version

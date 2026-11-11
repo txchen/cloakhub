@@ -58,7 +58,7 @@ describe("VoxlDisplayRuntime", () => {
 
     expect(spawn.commands[0]).toEqual([
       "/usr/bin/Xvfb", ":100", "-screen", "0", "1920x1080x24", "-dpi", "96",
-      "-nolisten", "tcp", "-ac", "-shmem", "-noreset"
+      "-nolisten", "tcp", "-ac", "-shmem", "-noreset", "-extension", "GLX"
     ]);
     expect(spawn.commands[1]).toEqual([
       "/usr/local/bin/voxl",

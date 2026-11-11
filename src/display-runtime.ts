@@ -251,7 +251,10 @@ export function xvfbCommand(
     "-ac",
     // Shared-memory framebuffer: voxl captures it without copying.
     "-shmem",
-    "-noreset"
+    "-noreset",
+    // CloakBrowser renders with its bundled SwiftShader; the image omits Mesa.
+    "-extension",
+    "GLX"
   ];
 }
 

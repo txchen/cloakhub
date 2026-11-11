@@ -54,6 +54,9 @@ describe("Docker-first packaging", () => {
     expect(dockerfile).toContain("cargo install --locked voxl-server");
     expect(dockerfile).toContain("COPY --from=voxl /opt/voxl/bin/voxl /usr/local/bin/voxl");
     expect(dockerfile).toContain("xvfb");
+    // Xvfb runs without GLX, so Mesa's DRI drivers and LLVM stay out of the image.
+    expect(dockerfile).toContain("'Package: libgl1-mesa-dri'");
+    expect(dockerfile).toContain("apt-mark hold libgl1-mesa-dri");
     expect(dockerfile).toContain("xclip");
     expect(dockerfile).toContain('ENTRYPOINT ["/usr/bin/tini", "--"]');
     expect(dockerfile).not.toMatch(/CMD .*ensure_binary|ENTRYPOINT .*ensure_binary/i);

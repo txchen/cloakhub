@@ -22,7 +22,7 @@ docker run --rm --network none --shm-size=1g --tmpfs /data --entrypoint sh \
   grep -F "<html>" /tmp/1.html
   grep -F "<html>" /tmp/2.html
   voxl --version
-  Xvfb :99 -screen 0 640x480x24 -nolisten tcp -shmem & xvfb=$!
+  Xvfb :99 -screen 0 640x480x24 -nolisten tcp -shmem -extension GLX & xvfb=$!
   for i in $(seq 1 50); do [ -S /tmp/.X11-unix/X99 ] && break; sleep 0.1; done
   DISPLAY=:99 voxl --addr=127.0.0.1 --port=5999 --enable-basic-auth=false --audio-enabled=false & streamer=$!
   ok=0
