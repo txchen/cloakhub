@@ -4,18 +4,14 @@
 # from the CloakHub GitHub release for that exact build and verified by SHA-256. At
 # runtime no license key is required and Hub runs with CLOAKHUB_LICENSE_MODE=none, so
 # concurrent Browser Instances are bounded only by CLOAKHUB_MAX_RUNNING_INSTANCES
-# (default 10 here). The live viewer is Xvfb plus voxl (H.264 over WebSocket).
+# (default 10 here). The Hub is one static Go binary; the live viewer is Xvfb plus
+# voxl (H.264 over WebSocket).
 
-FROM oven/bun:1.3.14-debian AS bun
-
-# voxl streams each Browser Instance's Xvfb display to the viewer as H.264 over a
-# WebSocket. Built from the pinned crates.io release; esbuild bundles its web client.
-FROM rust:1.93-bookworm AS voxl
+# esbuild bundles both voxl's web client and CloakHub's operator UI.
+FROM debian:bookworm-slim AS esbuild
 ARG TARGETARCH
-ARG VOXL_VERSION=0.3.4
 ARG ESBUILD_VERSION=0.25.10
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    pkg-config clang libclang-dev libx264-dev libyuv-dev libopus-dev libpulse-dev \
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates wget \
     && rm -rf /var/lib/apt/lists/*
 RUN set -eux; \
     case "$TARGETARCH" in \
@@ -27,7 +23,29 @@ RUN set -eux; \
       "https://registry.npmjs.org/@esbuild/linux-${esbuild_arch}/-/linux-${esbuild_arch}-${ESBUILD_VERSION}.tgz"; \
     tar -C /tmp -xzf /tmp/esbuild.tgz; \
     install -m 755 /tmp/package/bin/esbuild /usr/local/bin/esbuild
+
+# voxl streams each Browser Instance's Xvfb display to the viewer. Built from the
+# pinned crates.io release.
+FROM rust:1.93-bookworm AS voxl
+ARG VOXL_VERSION=0.3.4
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    pkg-config clang libclang-dev libx264-dev libyuv-dev libopus-dev libpulse-dev \
+    && rm -rf /var/lib/apt/lists/*
+COPY --from=esbuild /usr/local/bin/esbuild /usr/local/bin/esbuild
 RUN cargo install --locked voxl-server --version "${VOXL_VERSION}" --root /opt/voxl
+
+# The Hub: a static Go binary with the operator UI embedded.
+FROM golang:1.27-bookworm AS hub
+WORKDIR /src
+COPY go.mod go.sum ./
+RUN go mod download
+COPY --from=esbuild /usr/local/bin/esbuild /usr/local/bin/esbuild
+COPY cmd ./cmd
+COPY internal ./internal
+COPY src/ui ./src/ui
+COPY scripts/build-ui.sh ./scripts/build-ui.sh
+RUN ESBUILD=/usr/local/bin/esbuild ./scripts/build-ui.sh \
+    && CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/cloakhub ./cmd/cloakhub
 
 FROM debian:bookworm-slim
 
@@ -46,8 +64,7 @@ ENV CLOAKHUB_DATA_DIR=/data \
     CLOAKHUB_BROWSER_BIN=/opt/cloakbrowser/chrome \
     CLOAKHUB_MAX_RUNNING_INSTANCES=10 \
     CLOAKHUB_DEFAULT_PLATFORM=macos \
-    CLOAKHUB_MACOS_FONTCONFIG_FILE=/app/macos-fonts.conf \
-    NODE_ENV=production
+    CLOAKHUB_MACOS_FONTCONFIG_FILE=/app/macos-fonts.conf
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
@@ -94,8 +111,6 @@ RUN set -eux; \
 COPY --from=voxl /opt/voxl/bin/voxl /usr/local/bin/voxl
 RUN voxl --version
 
-COPY --from=bun /usr/local/bin/bun /usr/local/bin/bun
-
 # Bake the license-free browser. The release asset is verified by SHA-256 before
 # extraction so a moved or re-uploaded asset cannot silently change the build.
 RUN set -eux; \
@@ -114,18 +129,13 @@ RUN set -eux; \
     HOME=/tmp /opt/cloakbrowser/chrome --version
 
 # Project files follow the browser layer to preserve it across code-only builds.
-COPY package.json bun.lock ./
-# Downloader-only use: exclude optional automation peers resolved by the dev lockfile.
-RUN bun install --frozen-lockfile --production --omit=peer
-
 COPY fonts/macos /opt/cloakhub/fonts/macos
 COPY scripts/macos-fonts.conf /app/macos-fonts.conf
-COPY scripts/check-mac-fonts.ts /app/check-mac-fonts.ts
+COPY scripts/check-mac-fonts.sh /app/check-mac-fonts.sh
 RUN FONTCONFIG_FILE=/app/macos-fonts.conf fc-cache -f \
-    && FONTCONFIG_FILE=/app/macos-fonts.conf bun /app/check-mac-fonts.ts
+    && FONTCONFIG_FILE=/app/macos-fonts.conf /app/check-mac-fonts.sh
 
-COPY src ./src
-COPY tsconfig.json ./
+COPY --from=hub /out/cloakhub /usr/local/bin/cloakhub
 
 RUN mkdir -p /data
 
@@ -133,4 +143,4 @@ EXPOSE 7788
 VOLUME ["/data"]
 
 ENTRYPOINT ["/usr/bin/tini", "--"]
-CMD ["bun", "run", "src/server.ts"]
+CMD ["/usr/local/bin/cloakhub"]

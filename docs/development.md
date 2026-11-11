@@ -2,46 +2,74 @@
 
 Development workflow skills are installed globally rather than vendored in this repository.
 
+The Hub is a Go program (`cmd/cloakhub`, packages under `internal/`). The operator UI is
+TypeScript in `src/ui/`, bundled by esbuild into `internal/web/dist/` and embedded in the
+binary. Bun and Node are only development tools: they run the UI type check, the browser
+skill and its tests, and Playwright.
+
+| Package | Responsibility |
+| --- | --- |
+| `internal/config` | Environment configuration |
+| `internal/profile` | Profile fields, validation, redaction, SQLite repository and service |
+| `internal/events` | Bounded lifecycle event log |
+| `internal/procs` | Owned Processes: pid files, ownership markers, cleanup, resource usage |
+| `internal/browser` | Browser Instance runtime: launch, capacity, idle sleep, crash handling, license seats, proxy relay, Xvfb/voxl display, clipboard |
+| `internal/cdp` | CDP gateway, discovery rewriting, WebSocket relay and last-tab protection |
+| `internal/viewer` | Hub-wide viewer stream settings |
+| `internal/web` | HTTP routes, auth, presentation, server-rendered pages, viewer proxy, embedded UI |
+
 ## Run
+
+Requires Go (see `go.mod`) and Bun for the UI bundle.
 
 ```sh
 bun install
-bun run start
+bun run start        # builds the UI bundle, then go run ./cmd/cloakhub
 ```
 
-For local development, startup requires a discoverable CloakBrowser Binary (see the
+Startup requires a discoverable CloakBrowser Binary (see the
 [pinned deployment build](../README.md#docker)). Set `CLOAKHUB_BROWSER_BIN`, provide
-the packaged Docker path, or install `cloakbrowser` on `PATH`.
+the packaged Docker path, or install `cloakbrowser` on `PATH`. The former runtime
+installer (`CLOAKHUB_BROWSER_INSTALLER`) is not supported.
 Headed Browser Profiles also require `Xvfb` and [voxl](https://github.com/tembo/voxl) (`cargo install voxl-server`; override paths with `CLOAKHUB_XVFB_BIN` / `CLOAKHUB_VOXL_BIN`); if either is missing, startup continues with a warning and headed launch/viewer actions fail until both are installed. The viewer needs a secure page: open `http://localhost:7788` or an HTTPS origin.
+
+During UI work, `CLOAKHUB_UI_DIST=internal/web/dist` serves bundles from disk, so
+`./scripts/build-ui.sh` takes effect without rebuilding the binary.
 
 ## Tests
 
-Normal tests do not launch real CloakBrowser, Xvfb, or voxl:
+Unit tests do not launch real CloakBrowser, Xvfb, or voxl:
 
 ```sh
-bun test
+go test ./...          # Hub (add -race where cgo is available)
+bun test               # browser skill, browser evaluation and packaging checks
+bunx tsc --noEmit      # UI and test type checks
 ```
 
-Real-runtime integration tests are opt-in and require CloakBrowser plus Xvfb and voxl for headed coverage:
+Real-runtime integration tests (`internal/integration`) are opt-in. They run inside a
+CloakHub image, which provides CloakBrowser, Xvfb and voxl:
 
 ```sh
-CLOAKHUB_BROWSER_BIN=/path/to/cloakbrowser bun run integration:real-runtime
+docker build -t cloakhub:local .
+./scripts/real-runtime-tests.sh cloakhub:local
 ```
 
-Those integration tests exercise real headless launch, headed Xvfb/voxl viewer startup, CDP Transparent Recovery, spin-down/recovery persistence, and explicit Stop overriding active clients.
-They also verify that a new default headed profile can render and read pixels through
-both WebGL and WebGL2. They do not depend on public bot-detection websites.
+They exercise real headless and headed launch, WebGL and WebGL2 pixels on the default
+headed profile, regional settings, protected connection metadata and CDP Transparent
+Recovery, the voxl viewer stream through the Hub, spin-down/recovery persistence, and
+explicit Stop overriding active clients. They do not depend on public bot-detection
+websites.
 
-The browser skill has an additional opt-in client test using local Chromium through
-the CDP proxy. It verifies profile-token authentication, tab reuse across script
-rounds, and disconnect without browser shutdown:
+The CDP relay has opt-in tests with real Playwright clients and a local Chromium. They
+run the relay through `internal/cdp/relayfixture`, so Go must be installed:
 
 ```sh
-CLOAKHUB_RUN_CDP_TESTS=true bun test tests/browser-skill.integration.test.js
+CLOAKHUB_RUN_CDP_TESTS=true bun test tests/cdp-browser.integration.test.ts tests/browser-skill.integration.test.js
 ```
 
-It uses Playwright's installed Chromium, or `CLOAKHUB_TEST_BROWSER` when specified;
-it does not require a deployed hub or a CloakBrowser license.
+They verify last-tab protection under concurrent closes, profile-token authentication,
+tab reuse across skill script rounds, and disconnect without browser shutdown. They use
+Playwright's installed Chromium, or `CLOAKHUB_TEST_BROWSER` when specified.
 
 ## Browser version evaluation
 
@@ -63,28 +91,26 @@ matrix or visits public detector sites. Measurement completion is not a stealth 
 
 ## Frontend development and verification
 
-HTTP routing lives in `src/app.ts`, response presentation in `src/profile-presentation.ts`, and
-browser code, templates, and CSS in `src/ui/`. Bun builds the TypeScript browser entries on first
-asset request; no separate frontend server or framework is required. Restart the development
-server after changing bundled frontend files (the watch command does this for imported modules;
-client-only assets may require a manual restart).
+HTTP routing lives in `internal/web/app.go` and `routes.go`, response presentation in
+`internal/web/presentation.go`, the server-rendered shell in `internal/web/pages.go`, and
+browser code and CSS in `src/ui/`. The JSON shapes the UI consumes are typed in
+`src/ui/types.ts`.
 
 ```sh
-bun run typecheck
-bun test
+bunx tsc --noEmit
 bunx playwright install chromium
 bun run test:ui
 ```
 
-The UI suite uses an isolated SQLite data directory and controlled runtime handles. Set
-`CLOAKHUB_TEST_BROWSER=/path/to/chrome` to use an installed browser. It covers create/edit errors,
-proxy preservation and removal, lifecycle confirmations, token-copy fallback, sidebar switching,
-viewer continuity while editing, external profile changes, and narrow screens. Real browser
-persistence and runtime settings remain covered by `bun run integration:real-runtime`.
+The UI suite runs the real HTTP app (`internal/web/uifixture`) over an isolated SQLite
+data directory with controlled runtime handles. Set `CLOAKHUB_TEST_BROWSER=/path/to/chrome`
+to use an installed browser. It covers create/edit errors, proxy preservation and
+removal, lifecycle confirmations, token-copy fallback, sidebar switching, viewer
+continuity while editing, external profile changes, and narrow screens. Real browser
+persistence and runtime settings remain covered by the real-runtime integration tests.
 
 ## Publishing images
 
 To release, update `package.json`, commit and push the changes, and wait for the
-Tests workflow to pass. Push a matching Git tag (for example `v0.7.0`) to build
-the release images. The image workflow checks that the tag matches the package
-version before publishing.
+Tests workflow to pass. Push a matching Git tag (for example `v1.1.0`) to run the
+Release workflow, which builds and smoke-tests both architectures before publishing.
