@@ -5,8 +5,7 @@ through the viewer. For protected CDP access, open the profile's **···** menu
 management page and select **Manage CDP token**, then click **Protect with token**.
 Use **Copy CDP URL** to retrieve the generated token; the UI does not accept a
 custom token. The client needs the reachable hub origin, exact profile ID, and
-that token if protection is enabled. Admin access and the CloakBrowser license
-stay on the server/operator side.
+that token if protection is enabled. Admin access stays on the server/operator side.
 
 ## Install
 

@@ -21,7 +21,7 @@
 
 ## 2. 推荐：固定 Docker 实验环境
 
-Dockerfile 固定基础镜像和 Node digest，包含 KasmVNC、既有 152 binary、系统库及 Mac 字体，使用锁定的 Playwright Core / pngjs。实验镜像不含 key。未来只挂新的候选 binary，先不要连同 OS 镜像、字体、客户端一起升级，否则多出混杂因素。
+Dockerfile 固定基础镜像和 Node digest，包含 KasmVNC、既有 152 binary、系统库及 Mac 字体，使用锁定的 Playwright Core / pngjs。实验镜像刻意固定在 `cloakhub_free:0.8.4`（Bun 与 KasmVNC `Xvnc` 时代）以保持测量可比，与当前 Hub 镜像无关。实验镜像不含 key。未来只挂新的候选 binary，先不要连同 OS 镜像、字体、客户端一起升级，否则多出混杂因素。
 
 ```bash
 bun install --frozen-lockfile
