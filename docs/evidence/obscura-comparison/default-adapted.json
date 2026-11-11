@@ -1,0 +1,537 @@
+{
+  "kind": "default",
+  "startedAt": "2026-11-11T23:06:43.258Z",
+  "version": "obscura 0.2.6",
+  "executableSHA256": "c1400eec0b1572ea9b583b1544feafb0b25cea4e155b353dbba9c144d94ae6e3",
+  "probes": {
+    "suiteSmoke": {
+      "status": "error",
+      "error": "The operation was aborted due to timeout",
+      "wallMs": 50003
+    },
+    "surface": {
+      "status": "complete",
+      "value": {
+        "identity": {
+          "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36",
+          "webdriver": false,
+          "platform": "Win32",
+          "languages": [
+            "en-US",
+            "en"
+          ],
+          "cpu": 8,
+          "memory": 4,
+          "maxTouchPoints": 0,
+          "timezone": "Europe/Berlin",
+          "hints": {
+            "architecture": "x86",
+            "bitness": "64",
+            "brands": [
+              {
+                "brand": "Google Chrome",
+                "version": "143"
+              },
+              {
+                "brand": "Chromium",
+                "version": "143"
+              },
+              {
+                "brand": "Not A(Brand",
+                "version": "24"
+              }
+            ],
+            "fullVersionList": [
+              {
+                "brand": "Google Chrome",
+                "version": "143.0.0.0"
+              },
+              {
+                "brand": "Chromium",
+                "version": "143.0.0.0"
+              },
+              {
+                "brand": "Not A(Brand",
+                "version": "24.0.0.0"
+              }
+            ],
+            "mobile": false,
+            "model": "",
+            "platform": "Windows",
+            "platformVersion": "10.0.0",
+            "uaFullVersion": "143.0.0.0",
+            "wow64": false
+          }
+        },
+        "gl": {
+          "webgl": null,
+          "webgl2": null
+        },
+        "canvas": {
+          "textWidth": 228,
+          "bytes": 76800,
+          "pixelsHash": "a382d99cc5d259fdb97803e294d2c8b08754f1188ae15d631a0c3a7d63799eed",
+          "repeatHash": "a382d99cc5d259fdb97803e294d2c8b08754f1188ae15d631a0c3a7d63799eed",
+          "pngPixelsHash": "a382d99cc5d259fdb97803e294d2c8b08754f1188ae15d631a0c3a7d63799eed",
+          "repeatDiffBytes": 0,
+          "exportDiffBytes": 0
+        },
+        "geometry": {
+          "screenX": 0,
+          "screenY": 0,
+          "outerWidth": 1280,
+          "outerHeight": 680,
+          "innerWidth": 1280,
+          "innerHeight": 720,
+          "dpr": 1,
+          "screenWidth": 1280,
+          "screenHeight": 720,
+          "availLeft": 0,
+          "availTop": 0,
+          "availWidth": 1280,
+          "availHeight": 680,
+          "colorDepth": 24,
+          "pixelDepth": 24
+        }
+      },
+      "wallMs": 901
+    },
+    "identityHeaders": {
+      "status": "complete",
+      "value": {
+        "identity": {
+          "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36",
+          "platform": "Win32",
+          "webdriver": false,
+          "cpu": 8,
+          "hints": {
+            "architecture": "x86",
+            "bitness": "64",
+            "brands": [
+              {
+                "brand": "Google Chrome",
+                "version": "143"
+              },
+              {
+                "brand": "Chromium",
+                "version": "143"
+              },
+              {
+                "brand": "Not A(Brand",
+                "version": "24"
+              }
+            ],
+            "fullVersionList": [
+              {
+                "brand": "Google Chrome",
+                "version": "143.0.0.0"
+              },
+              {
+                "brand": "Chromium",
+                "version": "143.0.0.0"
+              },
+              {
+                "brand": "Not A(Brand",
+                "version": "24.0.0.0"
+              }
+            ],
+            "mobile": false,
+            "model": "",
+            "platform": "Windows",
+            "platformVersion": "10.0.0",
+            "uaFullVersion": "143.0.0.0",
+            "wow64": false
+          }
+        },
+        "headers": {
+          "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"
+        }
+      },
+      "wallMs": 9
+    },
+    "workerIsolation": {
+      "status": "complete",
+      "value": {
+        "document": "object",
+        "window": "object",
+        "importScripts": "undefined",
+        "offscreen": "function"
+      },
+      "wallMs": 8
+    },
+    "worker": {
+      "status": "complete",
+      "value": {
+        "identity": {
+          "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36",
+          "webdriver": false,
+          "platform": "Win32",
+          "languages": [
+            "en-US",
+            "en"
+          ],
+          "cpu": 8,
+          "memory": 4,
+          "maxTouchPoints": 0,
+          "timezone": "Europe/Berlin",
+          "hints": {
+            "architecture": "x86",
+            "bitness": "64",
+            "brands": [
+              {
+                "brand": "Google Chrome",
+                "version": "143"
+              },
+              {
+                "brand": "Chromium",
+                "version": "143"
+              },
+              {
+                "brand": "Not A(Brand",
+                "version": "24"
+              }
+            ],
+            "fullVersionList": [
+              {
+                "brand": "Google Chrome",
+                "version": "143.0.0.0"
+              },
+              {
+                "brand": "Chromium",
+                "version": "143.0.0.0"
+              },
+              {
+                "brand": "Not A(Brand",
+                "version": "24.0.0.0"
+              }
+            ],
+            "mobile": false,
+            "model": "",
+            "platform": "Windows",
+            "platformVersion": "10.0.0",
+            "uaFullVersion": "143.0.0.0",
+            "wow64": false
+          }
+        },
+        "gl": {
+          "webgl": null,
+          "webgl2": null
+        },
+        "canvas": {
+          "textWidth": 228,
+          "bytes": 76800,
+          "pixelsHash": "a382d99cc5d259fdb97803e294d2c8b08754f1188ae15d631a0c3a7d63799eed",
+          "repeatHash": "a382d99cc5d259fdb97803e294d2c8b08754f1188ae15d631a0c3a7d63799eed",
+          "pngPixelsHash": "a382d99cc5d259fdb97803e294d2c8b08754f1188ae15d631a0c3a7d63799eed",
+          "repeatDiffBytes": 0,
+          "exportDiffBytes": 0
+        },
+        "geometry": {
+          "screenX": 0,
+          "screenY": 0,
+          "outerWidth": 1280,
+          "outerHeight": 680,
+          "innerWidth": 1280,
+          "innerHeight": 720,
+          "dpr": 1,
+          "screenWidth": 1280,
+          "screenHeight": 720,
+          "availLeft": 0,
+          "availTop": 0,
+          "availWidth": 1280,
+          "availHeight": 680,
+          "colorDepth": 24,
+          "pixelDepth": 24
+        }
+      },
+      "wallMs": 856
+    },
+    "frame": {
+      "status": "error",
+      "error": "The operation was aborted due to timeout",
+      "wallMs": 30001
+    },
+    "interception": {
+      "status": "complete",
+      "value": {
+        "handled": 8,
+        "good": 8,
+        "requested": 8
+      },
+      "wallMs": 77
+    },
+    "secondConnection": {
+      "status": "complete",
+      "value": {
+        "firstPages": 2,
+        "secondPages": 0,
+        "markerVisible": []
+      },
+      "wallMs": 16
+    },
+    "detectors": {
+      "status": "complete",
+      "value": {
+        "sannysoft": {
+          "status": "complete",
+          "signals": {},
+          "httpStatuses": [],
+          "pageErrors": [
+            "navigator.getUserMedia is not a function"
+          ],
+          "navigationStatus": 200,
+          "complete": true,
+          "waitMs": 1071,
+          "failedOrWarn": [
+            "Canvas has no webgl context",
+            "Canvas has no webgl context",
+            "0x0",
+            "WARN"
+          ]
+        },
+        "browserscan": {
+          "status": "incomplete",
+          "signals": {},
+          "httpStatuses": [],
+          "pageErrors": [],
+          "navigationStatus": 200,
+          "complete": false,
+          "verdict": null,
+          "waitMs": 12387,
+          "reason": "No complete detector result within the bounded observation window"
+        },
+        "fingerprint": {
+          "status": "complete",
+          "signals": {
+            "bot": "not_detected",
+            "tampering": true,
+            "virtual_machine": false,
+            "developer_tools": false,
+            "vpn": true,
+            "proxy": false,
+            "incognito": false,
+            "tampering_ml_score": 0,
+            "suspect_score": 28,
+            "anti_detect_browser": false,
+            "os_mismatch": true
+          },
+          "httpStatuses": [
+            200
+          ],
+          "pageErrors": [],
+          "navigationStatus": 200,
+          "waitMs": 2049,
+          "complete": true
+        },
+        "iphey": {
+          "status": "incomplete",
+          "signals": {},
+          "httpStatuses": [],
+          "pageErrors": [],
+          "navigationStatus": 200,
+          "complete": false,
+          "verdict": null,
+          "score": null,
+          "pendingPlaceholder": true,
+          "waitMs": 30524,
+          "reason": "No complete detector result within the bounded observation window"
+        }
+      },
+      "wallMs": 53719
+    }
+  },
+  "args": [
+    "serve",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "0",
+    "--ready-file",
+    "/tmp/obscura-evaluation-gd7VD7/ready",
+    "--allow-private-network",
+    "--storage-dir",
+    "/tmp/obscura-evaluation-gd7VD7/storage"
+  ],
+  "readyMs": 109,
+  "cdpVersion": "145.0.0.0",
+  "suitePartial": {
+    "main": {
+      "identity": {
+        "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36",
+        "webdriver": false,
+        "platform": "Win32",
+        "languages": [
+          "en-US",
+          "en"
+        ],
+        "cpu": 16,
+        "memory": 1,
+        "maxTouchPoints": 0,
+        "timezone": "Europe/Berlin",
+        "hints": {
+          "architecture": "x86",
+          "bitness": "64",
+          "brands": [
+            {
+              "brand": "Google Chrome",
+              "version": "143"
+            },
+            {
+              "brand": "Chromium",
+              "version": "143"
+            },
+            {
+              "brand": "Not A(Brand",
+              "version": "24"
+            }
+          ],
+          "fullVersionList": [
+            {
+              "brand": "Google Chrome",
+              "version": "143.0.0.0"
+            },
+            {
+              "brand": "Chromium",
+              "version": "143.0.0.0"
+            },
+            {
+              "brand": "Not A(Brand",
+              "version": "24.0.0.0"
+            }
+          ],
+          "mobile": false,
+          "model": "",
+          "platform": "Windows",
+          "platformVersion": "10.0.0",
+          "uaFullVersion": "143.0.0.0",
+          "wow64": false
+        }
+      },
+      "gl": {
+        "webgl": null,
+        "webgl2": null
+      },
+      "canvas": {
+        "textWidth": 228,
+        "bytes": 76800,
+        "pixelsHash": "1f40a0391ccd271cd8a8f1809ced3fc4d46aee301ec4ee338cca790e7257b7b8",
+        "repeatHash": "1f40a0391ccd271cd8a8f1809ced3fc4d46aee301ec4ee338cca790e7257b7b8",
+        "pngPixelsHash": "1f40a0391ccd271cd8a8f1809ced3fc4d46aee301ec4ee338cca790e7257b7b8",
+        "repeatDiffBytes": 0,
+        "exportDiffBytes": 0
+      },
+      "geometry": {
+        "screenX": 0,
+        "screenY": 0,
+        "outerWidth": 1920,
+        "outerHeight": 1040,
+        "innerWidth": 1280,
+        "innerHeight": 720,
+        "dpr": 1,
+        "screenWidth": 1920,
+        "screenHeight": 1080,
+        "availLeft": 0,
+        "availTop": 0,
+        "availWidth": 1920,
+        "availHeight": 1040,
+        "colorDepth": 24,
+        "pixelDepth": 24
+      }
+    },
+    "physicalWindow": {
+      "windowId": 1,
+      "bounds": {
+        "left": 0,
+        "top": 0,
+        "width": 1280,
+        "height": 720,
+        "windowState": "normal"
+      }
+    },
+    "worker": {
+      "identity": {
+        "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36",
+        "webdriver": false,
+        "platform": "Win32",
+        "languages": [
+          "en-US",
+          "en"
+        ],
+        "cpu": 16,
+        "memory": 1,
+        "maxTouchPoints": 0,
+        "timezone": "Europe/Berlin",
+        "hints": {
+          "architecture": "x86",
+          "bitness": "64",
+          "brands": [
+            {
+              "brand": "Google Chrome",
+              "version": "143"
+            },
+            {
+              "brand": "Chromium",
+              "version": "143"
+            },
+            {
+              "brand": "Not A(Brand",
+              "version": "24"
+            }
+          ],
+          "fullVersionList": [
+            {
+              "brand": "Google Chrome",
+              "version": "143.0.0.0"
+            },
+            {
+              "brand": "Chromium",
+              "version": "143.0.0.0"
+            },
+            {
+              "brand": "Not A(Brand",
+              "version": "24.0.0.0"
+            }
+          ],
+          "mobile": false,
+          "model": "",
+          "platform": "Windows",
+          "platformVersion": "10.0.0",
+          "uaFullVersion": "143.0.0.0",
+          "wow64": false
+        }
+      },
+      "gl": {
+        "webgl": null,
+        "webgl2": null
+      },
+      "canvas": {
+        "textWidth": 228,
+        "bytes": 76800,
+        "pixelsHash": "1f40a0391ccd271cd8a8f1809ced3fc4d46aee301ec4ee338cca790e7257b7b8",
+        "repeatHash": "1f40a0391ccd271cd8a8f1809ced3fc4d46aee301ec4ee338cca790e7257b7b8",
+        "pngPixelsHash": "1f40a0391ccd271cd8a8f1809ced3fc4d46aee301ec4ee338cca790e7257b7b8",
+        "repeatDiffBytes": 0,
+        "exportDiffBytes": 0
+      },
+      "geometry": {
+        "screenX": 0,
+        "screenY": 0,
+        "outerWidth": 1920,
+        "outerHeight": 1040,
+        "innerWidth": 1280,
+        "innerHeight": 720,
+        "dpr": 1,
+        "screenWidth": 1920,
+        "screenHeight": 1080,
+        "availLeft": 0,
+        "availTop": 0,
+        "availWidth": 1920,
+        "availHeight": 1040,
+        "colorDepth": 24,
+        "pixelDepth": 24
+      }
+    }
+  },
+  "detectorAdaptation": "Only Page.bringToFront replaced by no-op: headless engine does not implement this CDP method; detector parsing/waits unchanged",
+  "finishedAt": "2026-11-11T23:08:59.265Z"
+}

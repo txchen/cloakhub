@@ -34,7 +34,8 @@ is under [`evidence/`](evidence/).
   [156 configuration isolation](156-configuration-isolation.md),
   [156 Windows persona](156-windows-persona.md), [156 Windows fonts](156-windows-fonts.md),
   [identity diagnosis](identity-diagnosis-20261001.md),
-  [Lightpanda 1.0 vs CloakBrowser](lightpanda-1.0-vs-cloakbrowser.md).
+  [Lightpanda 1.0 vs CloakBrowser](lightpanda-1.0-vs-cloakbrowser.md),
+  [Obscura v0.2.6 vs CloakBrowser 156](obscura-vs-cloakbrowser.md) ([source review](obscura-source-review.md)).
 - Rendering: [GPU-less rendering evaluation](gpu-less-rendering-evaluation.md),
   [WebGL issue draft](cloakbrowser-webgl-issue-draft.md).
 - Agent tooling comparisons: [Browser Use 1.0 analysis](browser-use-1-analysis.md),
