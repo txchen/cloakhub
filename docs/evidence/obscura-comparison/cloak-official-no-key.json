@@ -1,0 +1,23 @@
+{
+  "kind": "cloak",
+  "startedAt": "2026-11-11T23:02:22.900Z",
+  "version": "CloakBrowser 156.0.8078.47.1",
+  "executableSHA256": "37c2b771b87cdbf171c2c8021fc7f7900667e2363ccfc8e5d7904ef7e9dbc74a",
+  "probes": {},
+  "args": [
+    "--headless=new",
+    "--no-sandbox",
+    "--use-gl=angle",
+    "--remote-debugging-address=127.0.0.1",
+    "--remote-debugging-port=0",
+    "--user-data-dir=/tmp/obscura-evaluation-0vl46d/profile",
+    "--no-first-run",
+    "--no-default-browser-check",
+    "--fingerprint=20260909",
+    "--fingerprint-platform=linux",
+    "--window-size=1366,768",
+    "about:blank"
+  ],
+  "error": "Process exited 77",
+  "finishedAt": "2026-11-11T23:02:23.932Z"
+}

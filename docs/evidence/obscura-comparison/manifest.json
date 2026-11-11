@@ -1,0 +1,37 @@
+{
+  "date": "2026-11-11",
+  "obscuraRelease": "v0.2.6",
+  "obscuraReleaseCommit": "8534b401898ed17b62f69bdc3d5eb186bffb0d60",
+  "image": "sha256:a4f6749c8f172ea1c057e024e279e8b63b74dddd0103de64cf4faf2e69611366",
+  "cpuLimit": 4,
+  "memoryLimit": "4g",
+  "shmSize": "2g",
+  "display": "headless, no host GPU",
+  "suiteFiles": {
+    "tests/browser-evaluation/config.mjs": "5657f648abc1d0625ac5f0e5294fd1ef3159381fd8014ea2f4bcafdc1d797efd",
+    "tests/browser-evaluation/detectors.mjs": "3d8762b3acb328a7e290ec02d9e7356ab5fe0a15a41f604be8c73f9cee46394f",
+    "tests/browser-evaluation/engine.mjs": "1045b647994bf95bf0f2d0c43c2cee029fa1b09e3f589f82730fc145f4c93c0c",
+    "tests/browser-evaluation/fixtures.mjs": "1f99f310b460db5a0114e2b70ae2699593cacae1282c059a19a46b2cee8ad586",
+    "tests/browser-evaluation/fonts.mjs": "7f5c8375076b1fab47aa64edc36ebfc45dc64a68b5b0be18cfba3065ddf6ee40",
+    "tests/browser-evaluation/measurements.mjs": "e00c13d0b0336cc6fd6936ac566076bb8962302aa77385385edd5a8a3a575399",
+    "tests/browser-evaluation/report.mjs": "abaf47d4e545e71bff719450e525dc4b03e05a414459db0534938202744cd514",
+    "tests/browser-evaluation/run.mjs": "5b7f230aa2f90f1e268e58fcf4a490f4b1bdbf22b2b35bd561a3814312fdc34a",
+    "tests/browser-evaluation/surface.mjs": "54c23efdfc288ddb822c7c01fd774dc870b97e2cf1b8cb18af8b2c2f201c49a2",
+    "tests/browser-evaluation/util.mjs": "d06f3629414f6a4539148f3cc89f2766cd351592a03123b995b32ae150b8b598"
+  },
+  "repoCommit": "b9d57bf1017fb9e5befe227231af9102997212ec",
+  "playwright": "1.64.1",
+  "archiveSHA256": {
+    "stealth.tar.gz": "ac8057374ec1b5cabb78ea2d08b2ed890d21d156a42b1ac23357fd049edc08c5",
+    "default.tar.gz": "eed986e478c5ec5439f531f2d7fb6b0e36a356f1df7a6c44a8e8fd4f2486bd76"
+  },
+  "notes": [
+    "No production browser profiles used",
+    "Cloak baseline uses existing repository license-free 156 executable plus official sibling resources; not identical to upstream official licensed build",
+    "External detectors share host egress; sequential runs; no proxy; no CAPTCHA solving",
+    "Original probe modules unchanged; adapter isolates startup and optionally ignores unsupported Page.bringToFront",
+    "No CPU/RSS performance claim from this experiment",
+    "Runner evolved during collection: initial stealth lacks Worker-global/second-connection probes and detector no-op; final runner adds them, extends global cleanup deadline, and supports local-only scope. Original suite modules unchanged."
+  ],
+  "finalRunnerSHA256": "2350962a445cf159ccd1a2bc66995727d8926ef6af55866b7ec80254a32aff7c"
+}

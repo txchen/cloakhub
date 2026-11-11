@@ -1,0 +1,1374 @@
+{
+  "kind": "cloak",
+  "startedAt": "2026-11-11T23:03:03.720Z",
+  "version": "CloakBrowser 156.0.8078.47.1",
+  "executableSHA256": "ef78214b823c9a51b0e05d5761025478ad5206c40d0153a8926a2a4a4e0911be",
+  "probes": {
+    "suiteSmoke": {
+      "status": "complete",
+      "value": {
+        "main": {
+          "identity": {
+            "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+            "webdriver": false,
+            "platform": "Linux x86_64",
+            "languages": [
+              "en-US",
+              "en"
+            ],
+            "cpu": 8,
+            "memory": 16,
+            "maxTouchPoints": 0,
+            "timezone": "UTC",
+            "hints": {
+              "architecture": "x86",
+              "bitness": "64",
+              "brands": [
+                {
+                  "brand": "Not:A-Brand",
+                  "version": "8"
+                },
+                {
+                  "brand": "Chromium",
+                  "version": "156"
+                },
+                {
+                  "brand": "Google Chrome",
+                  "version": "156"
+                }
+              ],
+              "fullVersionList": [
+                {
+                  "brand": "Not:A-Brand",
+                  "version": "8.0.0.0"
+                },
+                {
+                  "brand": "Chromium",
+                  "version": "156.0.8078.48"
+                },
+                {
+                  "brand": "Google Chrome",
+                  "version": "156.0.8078.48"
+                }
+              ],
+              "mobile": false,
+              "platform": "Linux",
+              "platformVersion": "6.11.0",
+              "wow64": false
+            }
+          },
+          "gl": {
+            "webgl": null,
+            "webgl2": null
+          },
+          "canvas": {
+            "textWidth": 157.8359375,
+            "bytes": 76800,
+            "pixelsHash": "14fba92458597ab5fd81b79edfd22552250613e1ee027c27b39762b302b34968",
+            "repeatHash": "14fba92458597ab5fd81b79edfd22552250613e1ee027c27b39762b302b34968",
+            "pngPixelsHash": "7a0b33a8dd3ebfa28e3bab7eb6d7deb6cf5aa499dc51917d720c6d2ac849a5b2",
+            "repeatDiffBytes": 0,
+            "exportDiffBytes": 10
+          },
+          "geometry": {
+            "screenX": 237,
+            "screenY": 67,
+            "outerWidth": 1366,
+            "outerHeight": 768,
+            "innerWidth": 1366,
+            "innerHeight": 681,
+            "dpr": 1,
+            "screenWidth": 1920,
+            "screenHeight": 1080,
+            "availLeft": 0,
+            "availTop": 0,
+            "availWidth": 1920,
+            "availHeight": 1080,
+            "colorDepth": 24,
+            "pixelDepth": 24
+          }
+        },
+        "physicalWindow": {
+          "windowId": 1600571683,
+          "bounds": {
+            "left": 10,
+            "top": 10,
+            "width": 1366,
+            "height": 768,
+            "windowState": "normal"
+          }
+        },
+        "worker": {
+          "identity": {
+            "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+            "platform": "Linux x86_64",
+            "languages": [
+              "en-US",
+              "en"
+            ],
+            "cpu": 8,
+            "memory": 16,
+            "timezone": "UTC",
+            "hints": {
+              "architecture": "x86",
+              "bitness": "64",
+              "brands": [
+                {
+                  "brand": "Not:A-Brand",
+                  "version": "8"
+                },
+                {
+                  "brand": "Chromium",
+                  "version": "156"
+                },
+                {
+                  "brand": "Google Chrome",
+                  "version": "156"
+                }
+              ],
+              "fullVersionList": [
+                {
+                  "brand": "Not:A-Brand",
+                  "version": "8.0.0.0"
+                },
+                {
+                  "brand": "Chromium",
+                  "version": "156.0.8078.48"
+                },
+                {
+                  "brand": "Google Chrome",
+                  "version": "156.0.8078.48"
+                }
+              ],
+              "mobile": false,
+              "platform": "Linux",
+              "platformVersion": "6.11.0",
+              "wow64": false
+            }
+          },
+          "gl": {
+            "webgl": null,
+            "webgl2": null
+          },
+          "canvas": {
+            "textWidth": 157.8359375,
+            "bytes": 76800,
+            "pixelsHash": "14fba92458597ab5fd81b79edfd22552250613e1ee027c27b39762b302b34968",
+            "repeatHash": "14fba92458597ab5fd81b79edfd22552250613e1ee027c27b39762b302b34968",
+            "pngPixelsHash": "7a0b33a8dd3ebfa28e3bab7eb6d7deb6cf5aa499dc51917d720c6d2ac849a5b2",
+            "repeatDiffBytes": 0,
+            "exportDiffBytes": 10
+          }
+        },
+        "frame": {
+          "identity": {
+            "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+            "webdriver": false,
+            "platform": "Linux x86_64",
+            "languages": [
+              "en-US",
+              "en"
+            ],
+            "cpu": 8,
+            "memory": 16,
+            "maxTouchPoints": 0,
+            "timezone": "UTC",
+            "hints": {
+              "architecture": "x86",
+              "bitness": "64",
+              "brands": [
+                {
+                  "brand": "Not:A-Brand",
+                  "version": "8"
+                },
+                {
+                  "brand": "Chromium",
+                  "version": "156"
+                },
+                {
+                  "brand": "Google Chrome",
+                  "version": "156"
+                }
+              ],
+              "fullVersionList": [
+                {
+                  "brand": "Not:A-Brand",
+                  "version": "8.0.0.0"
+                },
+                {
+                  "brand": "Chromium",
+                  "version": "156.0.8078.48"
+                },
+                {
+                  "brand": "Google Chrome",
+                  "version": "156.0.8078.48"
+                }
+              ],
+              "mobile": false,
+              "platform": "Linux",
+              "platformVersion": "6.11.0",
+              "wow64": false
+            }
+          },
+          "gl": {
+            "webgl": null,
+            "webgl2": null
+          },
+          "canvas": {
+            "textWidth": 157.8359375,
+            "bytes": 76800,
+            "pixelsHash": "14fba92458597ab5fd81b79edfd22552250613e1ee027c27b39762b302b34968",
+            "repeatHash": "14fba92458597ab5fd81b79edfd22552250613e1ee027c27b39762b302b34968",
+            "pngPixelsHash": "7a0b33a8dd3ebfa28e3bab7eb6d7deb6cf5aa499dc51917d720c6d2ac849a5b2",
+            "repeatDiffBytes": 0,
+            "exportDiffBytes": 10
+          },
+          "geometry": {
+            "screenX": 237,
+            "screenY": 67,
+            "outerWidth": 1366,
+            "outerHeight": 768,
+            "innerWidth": 300,
+            "innerHeight": 150,
+            "dpr": 1,
+            "screenWidth": 1920,
+            "screenHeight": 1080,
+            "availLeft": 0,
+            "availTop": 0,
+            "availWidth": 1920,
+            "availHeight": 1080,
+            "colorDepth": 24,
+            "pixelDepth": 24
+          }
+        },
+        "contextChecks": {
+          "worker": {
+            "sharedIdentityMatches": false,
+            "pixelsMatch": true,
+            "exportMatches": true
+          },
+          "frame": {
+            "sharedIdentityMatches": true,
+            "pixelsMatch": true,
+            "exportMatches": true
+          }
+        },
+        "headers": {
+          "sec-ch-ua-full-version-list": "\"Not:A-Brand\";v=\"8.0.0.0\", \"Chromium\";v=\"156.0.8078.48\", \"Google Chrome\";v=\"156.0.8078.48\"",
+          "sec-ch-ua-platform": "\"Linux\"",
+          "sec-ch-ua": "\"Not:A-Brand\";v=\"8\", \"Chromium\";v=\"156\", \"Google Chrome\";v=\"156\"",
+          "sec-ch-ua-bitness": "\"64\"",
+          "sec-ch-ua-mobile": "?0",
+          "sec-ch-ua-arch": "\"x86\"",
+          "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+          "sec-ch-ua-platform-version": "\"6.11.0\""
+        },
+        "headerChecks": {
+          "uaMatches": true,
+          "platformMatches": true,
+          "archMatches": true
+        },
+        "fontProbe": [
+          {
+            "ms": 97.40000000596046,
+            "checkTrue": 200
+          },
+          {
+            "ms": 88.69999998807907,
+            "checkTrue": 200
+          },
+          {
+            "ms": 63.900000005960464,
+            "checkTrue": 200
+          }
+        ],
+        "renderedFonts": {
+          "text": "Aa09 MWil 0123456789",
+          "rows": [
+            {
+              "requested": "Arial",
+              "fonts": [
+                {
+                  "familyName": "Liberation Sans",
+                  "postScriptName": "LiberationSans",
+                  "isCustomFont": false,
+                  "glyphCount": 20
+                }
+              ]
+            },
+            {
+              "requested": "Arial Black",
+              "fonts": [
+                {
+                  "familyName": "Nimbus Mono PS",
+                  "postScriptName": "NimbusMonoPS-Regular",
+                  "isCustomFont": false,
+                  "glyphCount": 20
+                }
+              ]
+            },
+            {
+              "requested": "Times New Roman",
+              "fonts": [
+                {
+                  "familyName": "Liberation Serif",
+                  "postScriptName": "LiberationSerif",
+                  "isCustomFont": false,
+                  "glyphCount": 20
+                }
+              ]
+            },
+            {
+              "requested": "Courier New",
+              "fonts": [
+                {
+                  "familyName": "Liberation Mono",
+                  "postScriptName": "LiberationMono",
+                  "isCustomFont": false,
+                  "glyphCount": 20
+                }
+              ]
+            },
+            {
+              "requested": "Verdana",
+              "fonts": [
+                {
+                  "familyName": "Nimbus Mono PS",
+                  "postScriptName": "NimbusMonoPS-Regular",
+                  "isCustomFont": false,
+                  "glyphCount": 20
+                }
+              ]
+            },
+            {
+              "requested": "Georgia",
+              "fonts": [
+                {
+                  "familyName": "Nimbus Mono PS",
+                  "postScriptName": "NimbusMonoPS-Regular",
+                  "isCustomFont": false,
+                  "glyphCount": 20
+                }
+              ]
+            },
+            {
+              "requested": "Trebuchet MS",
+              "fonts": [
+                {
+                  "familyName": "Nimbus Mono PS",
+                  "postScriptName": "NimbusMonoPS-Regular",
+                  "isCustomFont": false,
+                  "glyphCount": 20
+                }
+              ]
+            },
+            {
+              "requested": "Comic Sans MS",
+              "fonts": [
+                {
+                  "familyName": "Nimbus Mono PS",
+                  "postScriptName": "NimbusMonoPS-Regular",
+                  "isCustomFont": false,
+                  "glyphCount": 20
+                }
+              ]
+            },
+            {
+              "requested": "Tahoma",
+              "fonts": [
+                {
+                  "familyName": "Nimbus Mono PS",
+                  "postScriptName": "NimbusMonoPS-Regular",
+                  "isCustomFont": false,
+                  "glyphCount": 20
+                }
+              ]
+            },
+            {
+              "requested": "Microsoft Sans Serif",
+              "fonts": [
+                {
+                  "familyName": "Nimbus Mono PS",
+                  "postScriptName": "NimbusMonoPS-Regular",
+                  "isCustomFont": false,
+                  "glyphCount": 20
+                }
+              ]
+            },
+            {
+              "requested": "Segoe UI",
+              "fonts": [
+                {
+                  "familyName": "Nimbus Mono PS",
+                  "postScriptName": "NimbusMonoPS-Regular",
+                  "isCustomFont": false,
+                  "glyphCount": 20
+                }
+              ]
+            },
+            {
+              "requested": "Calibri",
+              "fonts": [
+                {
+                  "familyName": "Nimbus Mono PS",
+                  "postScriptName": "NimbusMonoPS-Regular",
+                  "isCustomFont": false,
+                  "glyphCount": 20
+                }
+              ]
+            },
+            {
+              "requested": "Cambria",
+              "fonts": [
+                {
+                  "familyName": "Nimbus Mono PS",
+                  "postScriptName": "NimbusMonoPS-Regular",
+                  "isCustomFont": false,
+                  "glyphCount": 20
+                }
+              ]
+            },
+            {
+              "requested": "Consolas",
+              "fonts": [
+                {
+                  "familyName": "Nimbus Mono PS",
+                  "postScriptName": "NimbusMonoPS-Regular",
+                  "isCustomFont": false,
+                  "glyphCount": 20
+                }
+              ]
+            },
+            {
+              "requested": "Helvetica Neue",
+              "fonts": [
+                {
+                  "familyName": "Nimbus Mono PS",
+                  "postScriptName": "NimbusMonoPS-Regular",
+                  "isCustomFont": false,
+                  "glyphCount": 20
+                }
+              ]
+            },
+            {
+              "requested": "DejaVu Sans",
+              "fonts": [
+                {
+                  "familyName": "Nimbus Mono PS",
+                  "postScriptName": "NimbusMonoPS-Regular",
+                  "isCustomFont": false,
+                  "glyphCount": 20
+                }
+              ]
+            },
+            {
+              "requested": "Liberation Sans",
+              "fonts": [
+                {
+                  "familyName": "Liberation Sans",
+                  "postScriptName": "LiberationSans",
+                  "isCustomFont": false,
+                  "glyphCount": 20
+                }
+              ]
+            }
+          ],
+          "note": "Actual platform fonts used for this ASCII text, not a complete Unicode coverage or installed-font test. Missing requested families may fall back."
+        },
+        "interception": {
+          "requested": 8,
+          "good": 8,
+          "errors": [],
+          "handled": 8,
+          "routeErrors": [],
+          "wallMs": 50
+        }
+      },
+      "wallMs": 2791
+    },
+    "surface": {
+      "status": "complete",
+      "value": {
+        "identity": {
+          "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+          "webdriver": false,
+          "platform": "Linux x86_64",
+          "languages": [
+            "en-US",
+            "en"
+          ],
+          "cpu": 8,
+          "memory": 16,
+          "maxTouchPoints": 0,
+          "timezone": "UTC",
+          "hints": {
+            "architecture": "x86",
+            "bitness": "64",
+            "brands": [
+              {
+                "brand": "Not:A-Brand",
+                "version": "8"
+              },
+              {
+                "brand": "Chromium",
+                "version": "156"
+              },
+              {
+                "brand": "Google Chrome",
+                "version": "156"
+              }
+            ],
+            "fullVersionList": [
+              {
+                "brand": "Not:A-Brand",
+                "version": "8.0.0.0"
+              },
+              {
+                "brand": "Chromium",
+                "version": "156.0.8078.48"
+              },
+              {
+                "brand": "Google Chrome",
+                "version": "156.0.8078.48"
+              }
+            ],
+            "mobile": false,
+            "platform": "Linux",
+            "platformVersion": "6.11.0",
+            "wow64": false
+          }
+        },
+        "gl": {
+          "webgl": null,
+          "webgl2": null
+        },
+        "canvas": {
+          "textWidth": 157.8359375,
+          "bytes": 76800,
+          "pixelsHash": "14fba92458597ab5fd81b79edfd22552250613e1ee027c27b39762b302b34968",
+          "repeatHash": "14fba92458597ab5fd81b79edfd22552250613e1ee027c27b39762b302b34968",
+          "pngPixelsHash": "7a0b33a8dd3ebfa28e3bab7eb6d7deb6cf5aa499dc51917d720c6d2ac849a5b2",
+          "repeatDiffBytes": 0,
+          "exportDiffBytes": 10
+        },
+        "geometry": {
+          "screenX": 237,
+          "screenY": 67,
+          "outerWidth": 1366,
+          "outerHeight": 768,
+          "innerWidth": 1366,
+          "innerHeight": 681,
+          "dpr": 1,
+          "screenWidth": 1920,
+          "screenHeight": 1080,
+          "availLeft": 0,
+          "availTop": 0,
+          "availWidth": 1920,
+          "availHeight": 1080,
+          "colorDepth": 24,
+          "pixelDepth": 24
+        }
+      },
+      "wallMs": 760
+    },
+    "identityHeaders": {
+      "status": "complete",
+      "value": {
+        "identity": {
+          "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+          "platform": "Linux x86_64",
+          "webdriver": false,
+          "cpu": 8,
+          "hints": {
+            "architecture": "x86",
+            "bitness": "64",
+            "brands": [
+              {
+                "brand": "Not:A-Brand",
+                "version": "8"
+              },
+              {
+                "brand": "Chromium",
+                "version": "156"
+              },
+              {
+                "brand": "Google Chrome",
+                "version": "156"
+              }
+            ],
+            "fullVersionList": [
+              {
+                "brand": "Not:A-Brand",
+                "version": "8.0.0.0"
+              },
+              {
+                "brand": "Chromium",
+                "version": "156.0.8078.48"
+              },
+              {
+                "brand": "Google Chrome",
+                "version": "156.0.8078.48"
+              }
+            ],
+            "mobile": false,
+            "platform": "Linux",
+            "platformVersion": "6.11.0"
+          }
+        },
+        "headers": {
+          "sec-ch-ua-full-version-list": "\"Not:A-Brand\";v=\"8.0.0.0\", \"Chromium\";v=\"156.0.8078.48\", \"Google Chrome\";v=\"156.0.8078.48\"",
+          "sec-ch-ua-platform": "\"Linux\"",
+          "sec-ch-ua": "\"Not:A-Brand\";v=\"8\", \"Chromium\";v=\"156\", \"Google Chrome\";v=\"156\"",
+          "sec-ch-ua-bitness": "\"64\"",
+          "sec-ch-ua-mobile": "?0",
+          "sec-ch-ua-arch": "\"x86\"",
+          "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+          "sec-ch-ua-platform-version": "\"6.11.0\""
+        }
+      },
+      "wallMs": 12
+    },
+    "workerIsolation": {
+      "status": "complete",
+      "value": {
+        "document": "undefined",
+        "window": "undefined",
+        "importScripts": "function",
+        "offscreen": "function"
+      },
+      "wallMs": 10
+    },
+    "worker": {
+      "status": "complete",
+      "value": {
+        "identity": {
+          "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+          "platform": "Linux x86_64",
+          "languages": [
+            "en-US",
+            "en"
+          ],
+          "cpu": 8,
+          "memory": 16,
+          "timezone": "UTC",
+          "hints": {
+            "architecture": "x86",
+            "bitness": "64",
+            "brands": [
+              {
+                "brand": "Not:A-Brand",
+                "version": "8"
+              },
+              {
+                "brand": "Chromium",
+                "version": "156"
+              },
+              {
+                "brand": "Google Chrome",
+                "version": "156"
+              }
+            ],
+            "fullVersionList": [
+              {
+                "brand": "Not:A-Brand",
+                "version": "8.0.0.0"
+              },
+              {
+                "brand": "Chromium",
+                "version": "156.0.8078.48"
+              },
+              {
+                "brand": "Google Chrome",
+                "version": "156.0.8078.48"
+              }
+            ],
+            "mobile": false,
+            "platform": "Linux",
+            "platformVersion": "6.11.0",
+            "wow64": false
+          }
+        },
+        "gl": {
+          "webgl": null,
+          "webgl2": null
+        },
+        "canvas": {
+          "textWidth": 157.8359375,
+          "bytes": 76800,
+          "pixelsHash": "14fba92458597ab5fd81b79edfd22552250613e1ee027c27b39762b302b34968",
+          "repeatHash": "14fba92458597ab5fd81b79edfd22552250613e1ee027c27b39762b302b34968",
+          "pngPixelsHash": "7a0b33a8dd3ebfa28e3bab7eb6d7deb6cf5aa499dc51917d720c6d2ac849a5b2",
+          "repeatDiffBytes": 0,
+          "exportDiffBytes": 10
+        }
+      },
+      "wallMs": 692
+    },
+    "frame": {
+      "status": "complete",
+      "value": {
+        "identity": {
+          "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+          "webdriver": false,
+          "platform": "Linux x86_64",
+          "languages": [
+            "en-US",
+            "en"
+          ],
+          "cpu": 8,
+          "memory": 16,
+          "maxTouchPoints": 0,
+          "timezone": "UTC",
+          "hints": {
+            "architecture": "x86",
+            "bitness": "64",
+            "brands": [
+              {
+                "brand": "Not:A-Brand",
+                "version": "8"
+              },
+              {
+                "brand": "Chromium",
+                "version": "156"
+              },
+              {
+                "brand": "Google Chrome",
+                "version": "156"
+              }
+            ],
+            "fullVersionList": [
+              {
+                "brand": "Not:A-Brand",
+                "version": "8.0.0.0"
+              },
+              {
+                "brand": "Chromium",
+                "version": "156.0.8078.48"
+              },
+              {
+                "brand": "Google Chrome",
+                "version": "156.0.8078.48"
+              }
+            ],
+            "mobile": false,
+            "platform": "Linux",
+            "platformVersion": "6.11.0",
+            "wow64": false
+          }
+        },
+        "gl": {
+          "webgl": null,
+          "webgl2": null
+        },
+        "canvas": {
+          "textWidth": 157.8359375,
+          "bytes": 76800,
+          "pixelsHash": "14fba92458597ab5fd81b79edfd22552250613e1ee027c27b39762b302b34968",
+          "repeatHash": "14fba92458597ab5fd81b79edfd22552250613e1ee027c27b39762b302b34968",
+          "pngPixelsHash": "7a0b33a8dd3ebfa28e3bab7eb6d7deb6cf5aa499dc51917d720c6d2ac849a5b2",
+          "repeatDiffBytes": 0,
+          "exportDiffBytes": 10
+        },
+        "geometry": {
+          "screenX": 237,
+          "screenY": 67,
+          "outerWidth": 1366,
+          "outerHeight": 768,
+          "innerWidth": 300,
+          "innerHeight": 150,
+          "dpr": 1,
+          "screenWidth": 1920,
+          "screenHeight": 1080,
+          "availLeft": 0,
+          "availTop": 0,
+          "availWidth": 1920,
+          "availHeight": 1080,
+          "colorDepth": 24,
+          "pixelDepth": 24
+        }
+      },
+      "wallMs": 2160
+    },
+    "interception": {
+      "status": "complete",
+      "value": {
+        "handled": 8,
+        "good": 8,
+        "requested": 8
+      },
+      "wallMs": 48
+    },
+    "secondConnection": {
+      "status": "complete",
+      "value": {
+        "firstPages": 2,
+        "secondPages": 2,
+        "markerVisible": [
+          "owned-test-page",
+          null
+        ]
+      },
+      "wallMs": 36
+    },
+    "detectors": {
+      "status": "complete",
+      "value": {
+        "sannysoft": {
+          "status": "complete",
+          "signals": {},
+          "httpStatuses": [],
+          "pageErrors": [],
+          "navigationStatus": 200,
+          "complete": true,
+          "waitMs": 1057,
+          "failedOrWarn": [
+            "Canvas has no webgl context",
+            "Canvas has no webgl context"
+          ]
+        },
+        "browserscan": {
+          "status": "complete",
+          "signals": {},
+          "httpStatuses": [],
+          "pageErrors": [],
+          "navigationStatus": 200,
+          "complete": true,
+          "verdict": "Normal",
+          "waitMs": 1054
+        },
+        "fingerprint": {
+          "status": "complete",
+          "signals": {
+            "bot": "not_detected",
+            "tampering": false,
+            "virtual_machine": false,
+            "developer_tools": false,
+            "vpn": true,
+            "proxy": false,
+            "incognito": false,
+            "tampering_ml_score": 0,
+            "suspect_score": 7,
+            "anti_detect_browser": false,
+            "os_mismatch": true
+          },
+          "httpStatuses": [
+            200
+          ],
+          "pageErrors": [],
+          "navigationStatus": 200,
+          "waitMs": 2138,
+          "complete": true
+        },
+        "iphey": {
+          "status": "incomplete",
+          "signals": {},
+          "httpStatuses": [],
+          "pageErrors": [],
+          "navigationStatus": 200,
+          "complete": false,
+          "verdict": null,
+          "score": null,
+          "pendingPlaceholder": true,
+          "waitMs": 30152,
+          "reason": "No complete detector result within the bounded observation window"
+        }
+      },
+      "wallMs": 38206
+    }
+  },
+  "args": [
+    "--headless=new",
+    "--no-sandbox",
+    "--use-gl=angle",
+    "--remote-debugging-address=127.0.0.1",
+    "--remote-debugging-port=0",
+    "--user-data-dir=/tmp/obscura-evaluation-BPI2VA/profile",
+    "--no-first-run",
+    "--no-default-browser-check",
+    "--fingerprint=20260909",
+    "--fingerprint-platform=linux",
+    "--window-size=1366,768",
+    "about:blank"
+  ],
+  "readyMs": 220,
+  "cdpVersion": "156.0.8078.47",
+  "suitePartial": {
+    "main": {
+      "identity": {
+        "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+        "webdriver": false,
+        "platform": "Linux x86_64",
+        "languages": [
+          "en-US",
+          "en"
+        ],
+        "cpu": 8,
+        "memory": 16,
+        "maxTouchPoints": 0,
+        "timezone": "UTC",
+        "hints": {
+          "architecture": "x86",
+          "bitness": "64",
+          "brands": [
+            {
+              "brand": "Not:A-Brand",
+              "version": "8"
+            },
+            {
+              "brand": "Chromium",
+              "version": "156"
+            },
+            {
+              "brand": "Google Chrome",
+              "version": "156"
+            }
+          ],
+          "fullVersionList": [
+            {
+              "brand": "Not:A-Brand",
+              "version": "8.0.0.0"
+            },
+            {
+              "brand": "Chromium",
+              "version": "156.0.8078.48"
+            },
+            {
+              "brand": "Google Chrome",
+              "version": "156.0.8078.48"
+            }
+          ],
+          "mobile": false,
+          "platform": "Linux",
+          "platformVersion": "6.11.0",
+          "wow64": false
+        }
+      },
+      "gl": {
+        "webgl": null,
+        "webgl2": null
+      },
+      "canvas": {
+        "textWidth": 157.8359375,
+        "bytes": 76800,
+        "pixelsHash": "14fba92458597ab5fd81b79edfd22552250613e1ee027c27b39762b302b34968",
+        "repeatHash": "14fba92458597ab5fd81b79edfd22552250613e1ee027c27b39762b302b34968",
+        "pngPixelsHash": "7a0b33a8dd3ebfa28e3bab7eb6d7deb6cf5aa499dc51917d720c6d2ac849a5b2",
+        "repeatDiffBytes": 0,
+        "exportDiffBytes": 10
+      },
+      "geometry": {
+        "screenX": 237,
+        "screenY": 67,
+        "outerWidth": 1366,
+        "outerHeight": 768,
+        "innerWidth": 1366,
+        "innerHeight": 681,
+        "dpr": 1,
+        "screenWidth": 1920,
+        "screenHeight": 1080,
+        "availLeft": 0,
+        "availTop": 0,
+        "availWidth": 1920,
+        "availHeight": 1080,
+        "colorDepth": 24,
+        "pixelDepth": 24
+      }
+    },
+    "physicalWindow": {
+      "windowId": 1600571683,
+      "bounds": {
+        "left": 10,
+        "top": 10,
+        "width": 1366,
+        "height": 768,
+        "windowState": "normal"
+      }
+    },
+    "worker": {
+      "identity": {
+        "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+        "platform": "Linux x86_64",
+        "languages": [
+          "en-US",
+          "en"
+        ],
+        "cpu": 8,
+        "memory": 16,
+        "timezone": "UTC",
+        "hints": {
+          "architecture": "x86",
+          "bitness": "64",
+          "brands": [
+            {
+              "brand": "Not:A-Brand",
+              "version": "8"
+            },
+            {
+              "brand": "Chromium",
+              "version": "156"
+            },
+            {
+              "brand": "Google Chrome",
+              "version": "156"
+            }
+          ],
+          "fullVersionList": [
+            {
+              "brand": "Not:A-Brand",
+              "version": "8.0.0.0"
+            },
+            {
+              "brand": "Chromium",
+              "version": "156.0.8078.48"
+            },
+            {
+              "brand": "Google Chrome",
+              "version": "156.0.8078.48"
+            }
+          ],
+          "mobile": false,
+          "platform": "Linux",
+          "platformVersion": "6.11.0",
+          "wow64": false
+        }
+      },
+      "gl": {
+        "webgl": null,
+        "webgl2": null
+      },
+      "canvas": {
+        "textWidth": 157.8359375,
+        "bytes": 76800,
+        "pixelsHash": "14fba92458597ab5fd81b79edfd22552250613e1ee027c27b39762b302b34968",
+        "repeatHash": "14fba92458597ab5fd81b79edfd22552250613e1ee027c27b39762b302b34968",
+        "pngPixelsHash": "7a0b33a8dd3ebfa28e3bab7eb6d7deb6cf5aa499dc51917d720c6d2ac849a5b2",
+        "repeatDiffBytes": 0,
+        "exportDiffBytes": 10
+      }
+    },
+    "frame": {
+      "identity": {
+        "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+        "webdriver": false,
+        "platform": "Linux x86_64",
+        "languages": [
+          "en-US",
+          "en"
+        ],
+        "cpu": 8,
+        "memory": 16,
+        "maxTouchPoints": 0,
+        "timezone": "UTC",
+        "hints": {
+          "architecture": "x86",
+          "bitness": "64",
+          "brands": [
+            {
+              "brand": "Not:A-Brand",
+              "version": "8"
+            },
+            {
+              "brand": "Chromium",
+              "version": "156"
+            },
+            {
+              "brand": "Google Chrome",
+              "version": "156"
+            }
+          ],
+          "fullVersionList": [
+            {
+              "brand": "Not:A-Brand",
+              "version": "8.0.0.0"
+            },
+            {
+              "brand": "Chromium",
+              "version": "156.0.8078.48"
+            },
+            {
+              "brand": "Google Chrome",
+              "version": "156.0.8078.48"
+            }
+          ],
+          "mobile": false,
+          "platform": "Linux",
+          "platformVersion": "6.11.0",
+          "wow64": false
+        }
+      },
+      "gl": {
+        "webgl": null,
+        "webgl2": null
+      },
+      "canvas": {
+        "textWidth": 157.8359375,
+        "bytes": 76800,
+        "pixelsHash": "14fba92458597ab5fd81b79edfd22552250613e1ee027c27b39762b302b34968",
+        "repeatHash": "14fba92458597ab5fd81b79edfd22552250613e1ee027c27b39762b302b34968",
+        "pngPixelsHash": "7a0b33a8dd3ebfa28e3bab7eb6d7deb6cf5aa499dc51917d720c6d2ac849a5b2",
+        "repeatDiffBytes": 0,
+        "exportDiffBytes": 10
+      },
+      "geometry": {
+        "screenX": 237,
+        "screenY": 67,
+        "outerWidth": 1366,
+        "outerHeight": 768,
+        "innerWidth": 300,
+        "innerHeight": 150,
+        "dpr": 1,
+        "screenWidth": 1920,
+        "screenHeight": 1080,
+        "availLeft": 0,
+        "availTop": 0,
+        "availWidth": 1920,
+        "availHeight": 1080,
+        "colorDepth": 24,
+        "pixelDepth": 24
+      }
+    },
+    "contextChecks": {
+      "worker": {
+        "sharedIdentityMatches": false,
+        "pixelsMatch": true,
+        "exportMatches": true
+      },
+      "frame": {
+        "sharedIdentityMatches": true,
+        "pixelsMatch": true,
+        "exportMatches": true
+      }
+    },
+    "headers": {
+      "sec-ch-ua-full-version-list": "\"Not:A-Brand\";v=\"8.0.0.0\", \"Chromium\";v=\"156.0.8078.48\", \"Google Chrome\";v=\"156.0.8078.48\"",
+      "sec-ch-ua-platform": "\"Linux\"",
+      "sec-ch-ua": "\"Not:A-Brand\";v=\"8\", \"Chromium\";v=\"156\", \"Google Chrome\";v=\"156\"",
+      "sec-ch-ua-bitness": "\"64\"",
+      "sec-ch-ua-mobile": "?0",
+      "sec-ch-ua-arch": "\"x86\"",
+      "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "sec-ch-ua-platform-version": "\"6.11.0\""
+    },
+    "headerChecks": {
+      "uaMatches": true,
+      "platformMatches": true,
+      "archMatches": true
+    },
+    "fontProbe": [
+      {
+        "ms": 97.40000000596046,
+        "checkTrue": 200
+      },
+      {
+        "ms": 88.69999998807907,
+        "checkTrue": 200
+      },
+      {
+        "ms": 63.900000005960464,
+        "checkTrue": 200
+      }
+    ],
+    "renderedFonts": {
+      "text": "Aa09 MWil 0123456789",
+      "rows": [
+        {
+          "requested": "Arial",
+          "fonts": [
+            {
+              "familyName": "Liberation Sans",
+              "postScriptName": "LiberationSans",
+              "isCustomFont": false,
+              "glyphCount": 20
+            }
+          ]
+        },
+        {
+          "requested": "Arial Black",
+          "fonts": [
+            {
+              "familyName": "Nimbus Mono PS",
+              "postScriptName": "NimbusMonoPS-Regular",
+              "isCustomFont": false,
+              "glyphCount": 20
+            }
+          ]
+        },
+        {
+          "requested": "Times New Roman",
+          "fonts": [
+            {
+              "familyName": "Liberation Serif",
+              "postScriptName": "LiberationSerif",
+              "isCustomFont": false,
+              "glyphCount": 20
+            }
+          ]
+        },
+        {
+          "requested": "Courier New",
+          "fonts": [
+            {
+              "familyName": "Liberation Mono",
+              "postScriptName": "LiberationMono",
+              "isCustomFont": false,
+              "glyphCount": 20
+            }
+          ]
+        },
+        {
+          "requested": "Verdana",
+          "fonts": [
+            {
+              "familyName": "Nimbus Mono PS",
+              "postScriptName": "NimbusMonoPS-Regular",
+              "isCustomFont": false,
+              "glyphCount": 20
+            }
+          ]
+        },
+        {
+          "requested": "Georgia",
+          "fonts": [
+            {
+              "familyName": "Nimbus Mono PS",
+              "postScriptName": "NimbusMonoPS-Regular",
+              "isCustomFont": false,
+              "glyphCount": 20
+            }
+          ]
+        },
+        {
+          "requested": "Trebuchet MS",
+          "fonts": [
+            {
+              "familyName": "Nimbus Mono PS",
+              "postScriptName": "NimbusMonoPS-Regular",
+              "isCustomFont": false,
+              "glyphCount": 20
+            }
+          ]
+        },
+        {
+          "requested": "Comic Sans MS",
+          "fonts": [
+            {
+              "familyName": "Nimbus Mono PS",
+              "postScriptName": "NimbusMonoPS-Regular",
+              "isCustomFont": false,
+              "glyphCount": 20
+            }
+          ]
+        },
+        {
+          "requested": "Tahoma",
+          "fonts": [
+            {
+              "familyName": "Nimbus Mono PS",
+              "postScriptName": "NimbusMonoPS-Regular",
+              "isCustomFont": false,
+              "glyphCount": 20
+            }
+          ]
+        },
+        {
+          "requested": "Microsoft Sans Serif",
+          "fonts": [
+            {
+              "familyName": "Nimbus Mono PS",
+              "postScriptName": "NimbusMonoPS-Regular",
+              "isCustomFont": false,
+              "glyphCount": 20
+            }
+          ]
+        },
+        {
+          "requested": "Segoe UI",
+          "fonts": [
+            {
+              "familyName": "Nimbus Mono PS",
+              "postScriptName": "NimbusMonoPS-Regular",
+              "isCustomFont": false,
+              "glyphCount": 20
+            }
+          ]
+        },
+        {
+          "requested": "Calibri",
+          "fonts": [
+            {
+              "familyName": "Nimbus Mono PS",
+              "postScriptName": "NimbusMonoPS-Regular",
+              "isCustomFont": false,
+              "glyphCount": 20
+            }
+          ]
+        },
+        {
+          "requested": "Cambria",
+          "fonts": [
+            {
+              "familyName": "Nimbus Mono PS",
+              "postScriptName": "NimbusMonoPS-Regular",
+              "isCustomFont": false,
+              "glyphCount": 20
+            }
+          ]
+        },
+        {
+          "requested": "Consolas",
+          "fonts": [
+            {
+              "familyName": "Nimbus Mono PS",
+              "postScriptName": "NimbusMonoPS-Regular",
+              "isCustomFont": false,
+              "glyphCount": 20
+            }
+          ]
+        },
+        {
+          "requested": "Helvetica Neue",
+          "fonts": [
+            {
+              "familyName": "Nimbus Mono PS",
+              "postScriptName": "NimbusMonoPS-Regular",
+              "isCustomFont": false,
+              "glyphCount": 20
+            }
+          ]
+        },
+        {
+          "requested": "DejaVu Sans",
+          "fonts": [
+            {
+              "familyName": "Nimbus Mono PS",
+              "postScriptName": "NimbusMonoPS-Regular",
+              "isCustomFont": false,
+              "glyphCount": 20
+            }
+          ]
+        },
+        {
+          "requested": "Liberation Sans",
+          "fonts": [
+            {
+              "familyName": "Liberation Sans",
+              "postScriptName": "LiberationSans",
+              "isCustomFont": false,
+              "glyphCount": 20
+            }
+          ]
+        }
+      ],
+      "note": "Actual platform fonts used for this ASCII text, not a complete Unicode coverage or installed-font test. Missing requested families may fall back."
+    },
+    "interception": {
+      "requested": 8,
+      "good": 8,
+      "errors": [],
+      "handled": 8,
+      "routeErrors": [],
+      "wallMs": 50
+    }
+  },
+  "finishedAt": "2026-11-11T23:03:49.546Z"
+}
