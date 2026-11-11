@@ -50,6 +50,7 @@ describe("VoxlDisplayRuntime", () => {
       spawn: spawn.fn,
       voxlBin: "/usr/local/bin/voxl",
       waitForDisplay: async () => undefined,
+      xRoot: dataRoot,
       xvfbBin: "/usr/bin/Xvfb"
     });
 
@@ -97,6 +98,7 @@ describe("VoxlDisplayRuntime", () => {
       streamSettings: () => settings,
       voxlBin: "/usr/local/bin/voxl",
       waitForDisplay: async () => undefined,
+      xRoot: dataRoot,
       xvfbBin: "/usr/bin/Xvfb"
     });
     await runtime.start(command);

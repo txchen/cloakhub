@@ -40,6 +40,8 @@ export interface VoxlDisplayRuntimeOptions {
   voxlBin?: string;
   /** Waits for Xvfb to accept connections; replaceable in tests. */
   waitForDisplay?: (displayNumber: number, xvfb: DisplaySubprocess) => Promise<void>;
+  /** Where X servers keep `.X<n>-lock` and `.X11-unix/`; `/tmp` except in tests. */
+  xRoot?: string;
   xvfbBin?: string;
 }
 
@@ -62,7 +64,6 @@ interface LiveDisplay {
 
 const DISPLAY_RUNTIME_MISSING_WARNING =
   "Missing Xvfb or voxl display runtime. Headed Browser Instances will fail until both are installed.";
-const X_SOCKET_DIR = "/tmp/.X11-unix";
 const STREAMER_RESPAWN_DELAY_MS = 1000;
 
 export async function resolveDisplayRuntimeBins(
@@ -99,7 +100,9 @@ export function createVoxlDisplayRuntime(
     createOwnedProcessRegistry({ dataRoot: options.dataRoot });
   const spawn = options.spawn ?? Bun.spawn;
   const settings = options.streamSettings ?? (() => DEFAULT_VIEWER_STREAM_SETTINGS);
-  const waitForDisplay = options.waitForDisplay ?? waitForXSocket;
+  const xRoot = options.xRoot ?? "/tmp";
+  const waitForDisplay =
+    options.waitForDisplay ?? ((n: number, xvfb: DisplaySubprocess) => waitForXSocket(xRoot, n, xvfb));
   const live = new Map<string, LiveDisplay>();
   /** Encoders stopped on purpose by restartStreams. */
   const restartRequested = new WeakSet<DisplaySubprocess>();
@@ -155,7 +158,7 @@ export function createVoxlDisplayRuntime(
       await ownedProcesses.cleanupOwnedProcesses([command.profileId], {
         kinds: ["display", "streamer"]
       });
-      await clearStaleDisplay(command.displayNumber);
+      await clearStaleDisplay(xRoot, command.displayNumber);
       const xvfb = spawn(xvfbCommand(options.xvfbBin, command), {
         detached: true,
         env: env(command.profileId),
@@ -274,8 +277,8 @@ export function streamerCommand(
 }
 
 /** Removes a lock and socket left by an X server that no longer runs. */
-async function clearStaleDisplay(displayNumber: number): Promise<void> {
-  const lock = `/tmp/.X${displayNumber}-lock`;
+async function clearStaleDisplay(xRoot: string, displayNumber: number): Promise<void> {
+  const lock = join(xRoot, `.X${displayNumber}-lock`);
   try {
     const pid = Number((await readFile(lock, "utf8")).trim());
     if (Number.isInteger(pid) && pid > 0 && (await isXServer(pid))) {
@@ -285,14 +288,15 @@ async function clearStaleDisplay(displayNumber: number): Promise<void> {
     if (error instanceof Error && error.message.startsWith("Display :")) throw error;
   }
   await rm(lock, { force: true });
-  await rm(join(X_SOCKET_DIR, `X${displayNumber}`), { force: true });
+  await rm(join(xRoot, ".X11-unix", `X${displayNumber}`), { force: true });
 }
 
 async function waitForXSocket(
+  xRoot: string,
   displayNumber: number,
   xvfb: DisplaySubprocess
 ): Promise<void> {
-  const socket = join(X_SOCKET_DIR, `X${displayNumber}`);
+  const socket = join(xRoot, ".X11-unix", `X${displayNumber}`);
   const deadline = Date.now() + 10_000;
   while (Date.now() < deadline) {
     if (xvfb.exitCode !== null) {
