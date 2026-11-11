@@ -1,5 +1,7 @@
 # Mac persona: 152 preview vs 151 stable comparison
 
+> Historical record. CloakHub now ships one image with a baked license-free browser, a Go Hub and a voxl viewer; see the [README](../README.md) and [docs index](README.md).
+
 Test date: 2026-09-11 (America/Los_Angeles; raw logs are UTC 2026-09-12).
 
 The standard build has moved to preview `152.0.7977.82.1`. In this comparison, all three of 152's Fingerprint tampering-model scores were lower than 151, and routine functional tests found no version regression. This is not an estimate of pass rates across all websites; the two builds already had the same boolean verdicts on the major detectors.

@@ -89,6 +89,8 @@ except successful DELETE responses, which have no body. Do not call `.json()` on
 | POST | `/api/profiles/{id}/cdp-token` | 201, existing token or a newly created one |
 | POST | `/api/profiles/{id}/cdp-token/regenerate` | 200, new token; old token no longer authenticates new connections |
 | DELETE | `/api/profiles/{id}/cdp-token` | 204; removes protection from that profile's CDP endpoints |
+| GET | `/api/viewer-settings` | 200, Hub-wide viewer stream settings with the matching preset, presets and limits |
+| PUT | `/api/viewer-settings` | 200, updated settings; send a `preset` (`data-saver`, `balanced`, `high`) or any of `max_kbps`, `framerate`, `crf`; open viewers reconnect |
 
 `GET /api/health` returns `{"ok":true}` without auth. It reports service availability,
 not browser readiness or available capacity. `/api/auth/login` is for UI cookies;

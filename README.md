@@ -128,8 +128,8 @@ the link. Choose **Data saver**, **Balanced** (default), **High quality**, or cu
 limits from the viewer toolbar; the setting applies to every viewer.
 
 Keep `./data` across container replacements: it contains profile metadata, browser
-storage, viewer settings, and secrets. See [browser builds](docs/private-macos.md) and
-the [preview/stable comparison](docs/browser-channel-comparison.md) for details.
+storage, viewer settings, and secrets. See [Mac fonts and image builds](docs/private-macos.md)
+for the bundled fonts and building your own image.
 
 Upgrading from 0.9: the standard and free images are now one image. Remove the
 `secrets/cloakbrowser-keys` mount and `CLOAKHUB_LICENSE_KEYS_FILE` from your Compose
@@ -138,16 +138,16 @@ file, change the image to `ghcr.io/txchen/cloakhub:1.0.0`, and keep `./data`.
 ## Prepare a browser profile
 
 1. Create a profile in the web UI with an exact ID such as `research`.
-2. Open its viewer and sign into any websites the agent should use. Default headed
-   mode supports unattended automation; you do not need to leave the viewer open.
+2. Open its viewer (over [HTTPS or localhost](#open-it-over-https)) and sign into any
+   websites the agent should use. Default headed mode supports unattended automation;
+   you do not need to leave the viewer open.
 3. To protect CDP access, open the profile's **···** menu and select **Manage CDP token**. In the **CDP token** section, click **Protect with token**, then **Copy CDP URL** to retrieve the generated token. It is not an editable field in **Edit settings**; the UI does not accept a custom token.
 4. Give the client the hub origin, profile ID, and CDP token if configured.
 
-There are three separate credentials:
+There are two separate credentials:
 
 | Credential | Where it belongs | Purpose |
 | --- | --- | --- |
-| CloakBrowser key | Server secret file | Download and run the browser |
 | CloakHub admin password | Operator / management API | Manage profiles and the server UI |
 | Profile CDP token | Client config, secret file, or environment | Operate one profile's browser |
 
@@ -408,7 +408,7 @@ referenced by `compose.yml` are picked up from `.env`.
 | `CLOAKHUB_DEFAULT_TIMEZONE` / `CLOAKHUB_DEFAULT_LOCALE` | Compose uses `UTC` / `en-US`; set these to your region |
 | `CLOAKHUB_DISK_CACHE_SIZE_MB` | `256` per profile; HTTP cache budget, not a profile disk quota |
 | `CLOAKHUB_BROWSER_BIN` | Docker defaults to `/opt/cloakbrowser/chrome`; override with a mounted binary if needed |
-| `CLOAKHUB_LICENSE_MODE` | `none` in the image; set `required` with `CLOAKHUB_LICENSE_KEYS_FILE` only for a mounted licensed browser build |
+| `CLOAKHUB_LICENSE_MODE` | `none` in the image; `required` only for a [mounted licensed browser build](docs/licensed-browser.md) |
 | `CLOAKHUB_VOXL_LOG` | `warn`; log level for the viewer stream (`info`, `debug`) |
 
 Pin a full image tag such as `1.0.0` for predictable upgrades. The `1.0` alias follows
@@ -429,8 +429,7 @@ for rollback; do not assume older browsers can read profiles upgraded by newer b
 - [Automation API](docs/api.md) and [management script example](examples/agent-workflow.mjs)
 - [Client setup and troubleshooting](skills/cloakhub-browser/references/setup.md)
 - [Mac fonts and image builds](docs/private-macos.md)
-- [152 preview versus 151 stable](docs/browser-channel-comparison.md)
-- [Browser keys, concurrency, and historical 151 migration](docs/cloakbrowser-151.md)
+- [Running a licensed CloakBrowser build](docs/licensed-browser.md) (optional)
 - [Development and tests](docs/development.md)
 - [Reusable browser version evaluation suite](docs/browser-evaluation.md)
-- [Browser Use design comparison and CLI pilot](docs/browser-use-1-comparison.md)
+- [All documentation](docs/README.md), including architecture decisions and dated research

@@ -1,5 +1,7 @@
 # CloakHub v1 PRD
 
+> Original v1 requirements, kept as written. The runtime has since changed: Xvfb and voxl replace KasmVNC and noVNC ([ADR 0035](adr/0035-xvfb-and-voxl-display-runtime.md)) and the Hub is written in Go rather than Bun ([ADR 0036](adr/0036-go-hub-runtime.md)). Product rules such as idle activity, Transparent Recovery and capacity preemption still apply.
+
 ## Summary
 
 CloakHub is a Linux-focused, Bun-based manager for persistent CloakBrowser profiles and on-demand browser runtimes. It keeps the useful profile-management, VNC viewer, and CDP automation features from CloakBrowser Manager, but improves long-running server efficiency by spinning down browser/display processes when they are not actively used and transparently recovering them when CDP or manual access returns.
