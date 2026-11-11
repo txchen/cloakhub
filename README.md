@@ -51,7 +51,7 @@ image build is required. Create a deployment directory and save this as `compose
 ```yaml
 services:
   cloakhub:
-    image: ghcr.io/txchen/cloakhub:1.0.0
+    image: ghcr.io/txchen/cloakhub:1.1.0
     restart: unless-stopped
     shm_size: 2gb
     environment:
@@ -112,7 +112,7 @@ the browser. Pick one:
 
 ### What the image contains
 
-Version `1.0.0` bakes the license-free CloakBrowser **156.0.8078.47.1** build from the
+Version `1.1.0` bakes the license-free CloakBrowser **156.0.8078.47.1** build from the
 [patched release](https://github.com/txchen/cloakhub/releases/tag/cloakbrowser-156.0.8078.47.1-patched)
 for amd64 and arm64, verified by SHA-256 at build time. CloakHub treats the browser as
 unrestricted: it needs no license key, never contacts a license service, and never
@@ -134,8 +134,11 @@ for the bundled fonts and building your own image.
 Upgrading from 0.9: the standard and free images are now one image. Remove the
 `secrets/cloakbrowser-keys` mount and every `CLOAKHUB_LICENSE_*` setting from your
 Compose file (they are ignored, with a startup warning), change the image to
-`ghcr.io/txchen/cloakhub:1.0.0`, and keep `./data`. A `license-homes` directory left in
+`ghcr.io/txchen/cloakhub:1.1.0`, and keep `./data`. A `license-homes` directory left in
 `./data` by earlier releases is no longer used and can be deleted.
+
+Upgrading from 1.0: change the image tag to `1.1.0`; no other change is needed. The
+Hub is now a Go binary using the same data directory, routes and settings.
 
 ## Prepare a browser profile
 
@@ -412,7 +415,7 @@ referenced by `compose.yml` are picked up from `.env`.
 | `CLOAKHUB_BROWSER_BIN` | Docker defaults to `/opt/cloakbrowser/chrome`; override with a mounted binary if needed |
 | `CLOAKHUB_VOXL_LOG` | `warn`; log level for the viewer stream (`info`, `debug`) |
 
-Pin a full image tag such as `1.0.0` for predictable upgrades. The `1.0` alias follows
+Pin a full image tag such as `1.1.0` for predictable upgrades. The `1.1` alias follows
 patch releases; `latest` follows releases, and `master` / `sha-*` are development tags.
 Browser builds stay pinned until you change the selected build or image.
 
