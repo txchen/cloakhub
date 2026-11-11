@@ -1,8 +1,6 @@
 package browser
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -25,7 +23,6 @@ type ProcessLauncher struct {
 	DataRoot            string
 	DiskCacheSizeMB     int
 	MacOSFontconfigFile string
-	LicensePool         *LicensePool
 	Owned               *procs.Registry
 	Proxies             ProxyRuntime
 	// Command builds the process; tests replace it.
@@ -33,12 +30,11 @@ type ProcessLauncher struct {
 }
 
 // NewProcessLauncher returns a launcher with default helpers.
-func NewProcessLauncher(dataRoot string, diskCacheSizeMB int, macOSFontconfig string, pool *LicensePool) *ProcessLauncher {
+func NewProcessLauncher(dataRoot string, diskCacheSizeMB int, macOSFontconfig string) *ProcessLauncher {
 	return &ProcessLauncher{
 		DataRoot:            dataRoot,
 		DiskCacheSizeMB:     diskCacheSizeMB,
 		MacOSFontconfigFile: macOSFontconfig,
-		LicensePool:         pool,
 		Owned:               procs.NewRegistry(dataRoot),
 		Proxies:             NewProxyRuntime(),
 		Command:             exec.Command,
@@ -58,26 +54,7 @@ func (l *ProcessLauncher) Launch(command LaunchCommand) (ProcessHandle, error) {
 	if err != nil {
 		return nil, err
 	}
-	var lease *LicenseLease
-	if l.LicensePool != nil {
-		if lease, err = l.LicensePool.Acquire(); err != nil {
-			proxy.Close()
-			return nil, err
-		}
-	}
 	env := l.Owned.Env(command.ProfileID, nil)
-	if lease != nil {
-		home, err := prepareLicenseHome(l.DataRoot, lease.Key)
-		if err != nil {
-			lease.Release()
-			proxy.Close()
-			return nil, err
-		}
-		for name, value := range home {
-			env = procs.SetEnv(env, name, value)
-		}
-		env = procs.SetEnv(env, "CLOAKBROWSER_LICENSE_KEY", lease.Key)
-	}
 	if command.Platform == "macos" && l.MacOSFontconfigFile != "" {
 		env = procs.SetEnv(env, "FONTCONFIG_FILE", l.MacOSFontconfigFile)
 	}
@@ -94,18 +71,12 @@ func (l *ProcessLauncher) Launch(command LaunchCommand) (ProcessHandle, error) {
 	cmd.Stderr = os.Stderr
 	process, err := procs.Start(cmd)
 	if err != nil {
-		if lease != nil {
-			lease.Release()
-		}
 		proxy.Close()
 		return nil, err
 	}
-	// Releasing on kill/close would allow another launch before the actual exit.
+	// The proxy relay lives until the browser actually exits.
 	go func() {
 		<-process.Done()
-		if lease != nil {
-			lease.Release()
-		}
 		proxy.Close()
 	}()
 	if err := l.Owned.WritePid(command.ProfileID, procs.Browser, process.Pid()); err == nil {
@@ -183,43 +154,12 @@ func BrowserArgs(command LaunchCommand, proxyURL string, diskCacheSizeMB int) []
 	return append(args, command.CustomLaunchArgs...)
 }
 
-func prepareLicenseHome(dataRoot, key string) (map[string]string, error) {
-	// Stable across profile rotation and Hub restarts; never put the raw key in a path.
-	sum := sha256.Sum256([]byte(key))
-	home, err := filepath.Abs(filepath.Join(dataRoot, "license-homes", hex.EncodeToString(sum[:])))
-	if err != nil {
-		return nil, err
-	}
-	if err := os.MkdirAll(home, 0o700); err != nil {
-		return nil, err
-	}
-	return map[string]string{
-		"HOME":            home,
-		"XDG_CONFIG_HOME": filepath.Join(home, ".config"),
-		"XDG_CACHE_HOME":  filepath.Join(home, ".cache"),
-		"XDG_DATA_HOME":   filepath.Join(home, ".local", "share"),
-		"XDG_STATE_HOME":  filepath.Join(home, ".local", "state"),
-	}, nil
-}
-
 type browserHandle struct {
 	process *procs.Handle
 	cdpPort int
 }
 
 func (h *browserHandle) Done() <-chan struct{} { return h.process.Done() }
-
-func (h *browserHandle) ExitError() error {
-	switch h.process.ExitCode() {
-	case 76:
-		return &CapacityError{Message: "CloakBrowser rejected the session: license concurrency limit reached"}
-	case 77:
-		return errors.New("CloakBrowser rejected the license: missing, invalid, or expired key")
-	case 78:
-		return &CapacityError{Message: "CloakBrowser license validation unavailable; retry later"}
-	}
-	return nil
-}
 
 // Close lets Chromium flush cookies and storage via Browser.close; SIGTERM is the fallback.
 func (h *browserHandle) Close() error {

@@ -35,7 +35,6 @@ func (h *handle) stop()                 { h.once.Do(func() { close(h.done) }) }
 func (h *handle) Close() error          { h.stop(); return nil }
 func (h *handle) Kill() error           { h.stop(); return nil }
 func (h *handle) Done() <-chan struct{} { return h.done }
-func (h *handle) ExitError() error      { return nil }
 
 type launcher struct{}
 
@@ -103,7 +102,7 @@ func newHub(t *testing.T, token string, configure func(*browser.Options)) *hub {
 		configure(&options)
 	}
 	runtime := browser.New(options)
-	cfg := config.Config{AuthToken: token, DataRoot: dataRoot, Host: "127.0.0.1", MaxRunningInstances: 10, LicenseMode: "none"}
+	cfg := config.Config{AuthToken: token, DataRoot: dataRoot, Host: "127.0.0.1", MaxRunningInstances: 10}
 	store := viewer.Open(dataRoot, nil)
 	gateway := &cdp.Gateway{Runtime: runtime, Profiles: service, GetJSON: func(port int, path string) (any, error) {
 		return map[string]any{"webSocketDebuggerUrl": fmt.Sprintf("ws://127.0.0.1:%d/devtools/browser/b", port)}, nil

@@ -27,8 +27,6 @@ type ProcessHandle interface {
 	Kill() error
 	// Done closes once every process has exited.
 	Done() <-chan struct{}
-	// ExitError explains a recognized abnormal exit, or nil.
-	ExitError() error
 }
 
 // LaunchCommand is everything needed to launch CloakBrowser.
@@ -748,9 +746,6 @@ func (r *Runtime) launch(p *profile.Profile) (State, error) {
 			return fail(err)
 		}
 	case <-handle.Done():
-		if exitErr := handle.ExitError(); exitErr != nil {
-			return fail(exitErr)
-		}
 		return fail(errors.New("Browser exited before CDP was ready"))
 	}
 	r.superviseExit(p.ProfileID, handle)
@@ -852,13 +847,8 @@ func (r *Runtime) superviseExit(profileID string, handle ProcessHandle) {
 			if err != nil {
 				return State{}, err
 			}
-			if _, err := r.stopProfile(p, profile.StopCrash, false); err != nil {
-				return State{}, err
-			}
-			if exitErr := handle.ExitError(); exitErr != nil {
-				r.repo.MarkFailed(profileID, exitErr.Error(), r.nowISO())
-			}
-			return State{}, nil
+			_, err = r.stopProfile(p, profile.StopCrash, false)
+			return State{}, err
 		})
 		if err != nil && r.repo.Get(profileID) != nil {
 			r.repo.MarkFailed(profileID, err.Error(), r.nowISO())

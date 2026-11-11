@@ -114,9 +114,9 @@ the browser. Pick one:
 
 Version `1.0.0` bakes the license-free CloakBrowser **156.0.8078.47.1** build from the
 [patched release](https://github.com/txchen/cloakhub/releases/tag/cloakbrowser-156.0.8078.47.1-patched)
-for amd64 and arm64, verified by SHA-256 at build time. It sets
-`CLOAKHUB_LICENSE_MODE=none`: the Hub reads no license key, never queries license
-capacity, and never downloads a browser. Concurrent Browser Instances are capped only by
+for amd64 and arm64, verified by SHA-256 at build time. CloakHub treats the browser as
+unrestricted: it needs no license key, never contacts a license service, and never
+downloads a browser. Concurrent Browser Instances are capped only by
 `CLOAKHUB_MAX_RUNNING_INSTANCES` (default `10`). The image includes Mac fonts and
 defaults new profiles to a macOS identity. The Hub itself is a single static Go binary
 that idles at about 15–20 MB of memory.
@@ -132,8 +132,10 @@ storage, viewer settings, and secrets. See [Mac fonts and image builds](docs/pri
 for the bundled fonts and building your own image.
 
 Upgrading from 0.9: the standard and free images are now one image. Remove the
-`secrets/cloakbrowser-keys` mount and `CLOAKHUB_LICENSE_KEYS_FILE` from your Compose
-file, change the image to `ghcr.io/txchen/cloakhub:1.0.0`, and keep `./data`.
+`secrets/cloakbrowser-keys` mount and every `CLOAKHUB_LICENSE_*` setting from your
+Compose file (they are ignored, with a startup warning), change the image to
+`ghcr.io/txchen/cloakhub:1.0.0`, and keep `./data`. A `license-homes` directory left in
+`./data` by earlier releases is no longer used and can be deleted.
 
 ## Prepare a browser profile
 
@@ -408,7 +410,6 @@ referenced by `compose.yml` are picked up from `.env`.
 | `CLOAKHUB_DEFAULT_TIMEZONE` / `CLOAKHUB_DEFAULT_LOCALE` | Compose uses `UTC` / `en-US`; set these to your region |
 | `CLOAKHUB_DISK_CACHE_SIZE_MB` | `256` per profile; HTTP cache budget, not a profile disk quota |
 | `CLOAKHUB_BROWSER_BIN` | Docker defaults to `/opt/cloakbrowser/chrome`; override with a mounted binary if needed |
-| `CLOAKHUB_LICENSE_MODE` | `none` in the image; `required` only for a [mounted licensed browser build](docs/licensed-browser.md) |
 | `CLOAKHUB_VOXL_LOG` | `warn`; log level for the viewer stream (`info`, `debug`) |
 
 Pin a full image tag such as `1.0.0` for predictable upgrades. The `1.0` alias follows
@@ -429,7 +430,6 @@ for rollback; do not assume older browsers can read profiles upgraded by newer b
 - [Automation API](docs/api.md) and [management script example](examples/agent-workflow.mjs)
 - [Client setup and troubleshooting](skills/cloakhub-browser/references/setup.md)
 - [Mac fonts and image builds](docs/private-macos.md)
-- [Running a licensed CloakBrowser build](docs/licensed-browser.md) (optional)
 - [Development and tests](docs/development.md)
 - [Reusable browser version evaluation suite](docs/browser-evaluation.md)
 - [All documentation](docs/README.md), including architecture decisions and dated research

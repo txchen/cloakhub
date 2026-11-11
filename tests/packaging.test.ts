@@ -30,7 +30,7 @@ describe("Docker-first packaging", () => {
   test("Dockerfile bakes the verified license-free browser for each architecture", async () => {
     const dockerfile = await Bun.file("Dockerfile").text();
 
-    expect(dockerfile).toContain("CLOAKHUB_LICENSE_MODE=none");
+    expect(dockerfile).not.toContain("CLOAKHUB_LICENSE_");
     expect(dockerfile).toContain("CLOAKHUB_BROWSER_BIN=/opt/cloakbrowser/chrome");
     expect(dockerfile).toContain("CLOAKHUB_MAX_RUNNING_INSTANCES=10");
     expect(dockerfile).toContain("CLOAKHUB_DEFAULT_PLATFORM=macos");

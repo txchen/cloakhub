@@ -1,6 +1,6 @@
 # CloakBrowser 151 deployment
 
-> Historical record. CloakHub now ships one image with a baked license-free browser, a Go Hub and a voxl viewer; see the [README](../README.md) and [docs index](README.md). For mounting a licensed build today, see [Running a licensed CloakBrowser build](licensed-browser.md).
+> Historical record. CloakHub now ships one image with a baked license-free browser, a Go Hub and a voxl viewer; see the [README](../README.md) and [docs index](README.md). License-key pooling described below was removed; CloakHub now assumes an unrestricted browser build.
 
 This guide records the 151 deployment and migration introduced before 0.7.0.
 For current deployment defaults, use the [README](../README.md#docker): 0.7.0 images

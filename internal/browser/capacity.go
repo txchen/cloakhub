@@ -9,7 +9,7 @@ import (
 	"github.com/txchen/cloakhub/internal/profile"
 )
 
-// CapacityError means the Running Instance Limit (or license quota) is full.
+// CapacityError means the Running Instance Limit is full.
 type CapacityError struct{ Message string }
 
 func (e *CapacityError) Error() string {

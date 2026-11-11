@@ -16,7 +16,6 @@ import (
 type fakeHandle struct {
 	once     sync.Once
 	done     chan struct{}
-	exitErr  error
 	closes   atomic.Int32
 	kills    atomic.Int32
 	ignoreUp bool // ignore Close (forces the kill path)
@@ -33,7 +32,6 @@ func (h *fakeHandle) Close() error {
 }
 func (h *fakeHandle) Kill() error           { h.kills.Add(1); h.exit(); return nil }
 func (h *fakeHandle) Done() <-chan struct{} { return h.done }
-func (h *fakeHandle) ExitError() error      { return h.exitErr }
 
 type fakeLauncher struct {
 	mu       sync.Mutex
@@ -267,7 +265,7 @@ func TestReadinessFailureStopsProcessesAndRecordsLaunchFailure(t *testing.T) {
 	}
 }
 
-func TestBrowserExitBeforeReadyReportsLicenseErrors(t *testing.T) {
+func TestBrowserExitBeforeReadyIsALaunchFailure(t *testing.T) {
 	f := newFixture(t, func(o *Options) {
 		o.ReadinessProbe = func(State) error { time.Sleep(time.Second); return nil }
 	})
@@ -276,17 +274,13 @@ func TestBrowserExitBeforeReadyReportsLicenseErrors(t *testing.T) {
 		for f.launcher.count() == 0 {
 			time.Sleep(time.Millisecond)
 		}
-		h := f.launcher.handles[0]
-		h.exitErr = &CapacityError{Message: "CloakBrowser rejected the session: license concurrency limit reached"}
-		h.exit()
+		f.launcher.handles[0].exit()
 	}()
-	_, err := f.runtime.Start("work")
-	var capacity *CapacityError
-	if !errors.As(err, &capacity) {
+	if _, err := f.runtime.Start("work"); err == nil || err.Error() != "Browser exited before CDP was ready" {
 		t.Fatalf("got %v", err)
 	}
-	if !strings.Contains(*f.repo.Get("work").LastLaunchError, "license concurrency") {
-		t.Error("license reason lost")
+	if p := f.repo.Get("work"); p.InstanceStatus != "failed" || *p.LastStopReason != "launch failure" {
+		t.Errorf("profile %+v", p)
 	}
 }
 

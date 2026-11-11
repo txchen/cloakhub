@@ -69,19 +69,17 @@ func TestHelperProcess(t *testing.T) {
 	}
 	mode := os.Args[len(os.Args)-1]
 	switch mode {
-	case "license-limit":
-		os.Exit(76)
 	case "sleep":
 		time.Sleep(time.Minute)
 	}
 	os.Exit(0)
 }
 
-func TestLauncherMarksOwnershipAndReportsLicenseExit(t *testing.T) {
+func TestLauncherMarksOwnershipAndClearsStaleLocks(t *testing.T) {
 	dataRoot := t.TempDir()
-	launcher := NewProcessLauncher(dataRoot, 256, "", nil)
+	launcher := NewProcessLauncher(dataRoot, 256, "")
 	launcher.Owned.Wait = func(time.Duration) {}
-	launcher.Command = helperProcess(t, "license-limit")
+	launcher.Command = helperProcess(t, "exit")
 	userData := filepath.Join(dataRoot, "profiles", "work")
 	os.MkdirAll(userData, 0o755)
 	os.WriteFile(filepath.Join(userData, "SingletonLock"), []byte("x"), 0o644)
@@ -90,10 +88,6 @@ func TestLauncherMarksOwnershipAndReportsLicenseExit(t *testing.T) {
 		t.Fatal(err)
 	}
 	<-handle.Done()
-	var capacity *CapacityError
-	if !errors.As(handle.ExitError(), &capacity) {
-		t.Errorf("exit error %v", handle.ExitError())
-	}
 	if _, err := os.Stat(filepath.Join(userData, "SingletonLock")); !os.IsNotExist(err) {
 		t.Error("stale singleton lock kept")
 	}
@@ -105,10 +99,9 @@ func TestLauncherMarksOwnershipAndReportsLicenseExit(t *testing.T) {
 	}
 }
 
-func TestLauncherEnvironmentCarriesMarkersButNoLicenseSecrets(t *testing.T) {
-	t.Setenv("CLOAKHUB_LICENSE_KEYS", "secret")
+func TestLauncherEnvironmentCarriesMarkersDisplayAndFonts(t *testing.T) {
 	dataRoot := t.TempDir()
-	launcher := NewProcessLauncher(dataRoot, 256, "/fonts.conf", nil)
+	launcher := NewProcessLauncher(dataRoot, 256, "/fonts.conf")
 	launcher.Owned.Wait = func(time.Duration) {}
 	var launched *exec.Cmd
 	launcher.Command = func(name string, args ...string) *exec.Cmd {
@@ -121,81 +114,10 @@ func TestLauncherEnvironmentCarriesMarkersButNoLicenseSecrets(t *testing.T) {
 	}
 	<-handle.Done()
 	env := launched.Env
-	if slices.ContainsFunc(env, func(e string) bool { return strings.HasPrefix(e, "CLOAKHUB_LICENSE_") }) {
-		t.Error("license secret leaked into the browser environment")
-	}
 	for _, want := range []string{"CLOAKHUB_PROFILE_ID=work", "CLOAKHUB_DATA_ROOT=" + dataRoot, "DISPLAY=:100", "FONTCONFIG_FILE=/fonts.conf"} {
 		if !slices.Contains(env, want) {
 			t.Errorf("missing %s", want)
 		}
-	}
-}
-
-func TestLicenseKeysAndPool(t *testing.T) {
-	home := t.TempDir()
-	os.MkdirAll(filepath.Join(home, ".cloakbrowser"), 0o755)
-	os.WriteFile(filepath.Join(home, ".cloakbrowser", "license.key"), []byte("legacy-key\n"), 0o600)
-	secret := filepath.Join(home, "keys")
-	os.WriteFile(secret, []byte("key-a\r\nkey-b\n\n key-a \n"), 0o600)
-	env := func(values map[string]string) func(string) string { return func(k string) string { return values[k] } }
-	cases := []struct {
-		values map[string]string
-		want   string
-	}{
-		{map[string]string{}, "legacy-key"},
-		{map[string]string{"CLOAKHUB_LICENSE_KEYS_FILE": secret}, "key-a,key-b"},
-		{map[string]string{"CLOAKHUB_LICENSE_KEYS": `["key-c","key-c"]`, "CLOAKHUB_LICENSE_KEYS_FILE": secret}, "key-c"},
-		{map[string]string{"CLOAKBROWSER_LICENSE_KEY": " env-key "}, "env-key"},
-	}
-	for _, c := range cases {
-		keys, err := LoadLicenseKeys(env(c.values), home)
-		if err != nil || strings.Join(keys, ",") != c.want {
-			t.Errorf("%v: %v %v", c.values, keys, err)
-		}
-	}
-	for _, raw := range []string{`["sensitive-key", null]`, `sensitive-key`, `[]`, `{}`} {
-		_, err := LoadLicenseKeys(env(map[string]string{"CLOAKHUB_LICENSE_KEYS": raw}), home)
-		if err == nil || strings.Contains(err.Error(), "sensitive-key") {
-			t.Errorf("%s: %v", raw, err)
-		}
-	}
-
-	pool, err := NewLicensePool([]string{"a", "b", "c", "a"}, func(string) (Seats, error) { return Seats{Active: 0, Limit: 1}, nil })
-	if err != nil || pool.Capacity != 3 {
-		t.Fatalf("pool %v %v", pool, err)
-	}
-	var leases []*LicenseLease
-	var mu sync.Mutex
-	var wg sync.WaitGroup
-	failures := 0
-	for range 4 {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			lease, err := pool.Acquire()
-			mu.Lock()
-			defer mu.Unlock()
-			if err != nil {
-				failures++
-			} else {
-				leases = append(leases, lease)
-			}
-		}()
-	}
-	wg.Wait()
-	if len(leases) != 3 || failures != 1 {
-		t.Fatalf("leases %d failures %d", len(leases), failures)
-	}
-	leases[0].Release()
-	leases[0].Release()
-	if replacement, err := pool.Acquire(); err != nil || replacement.Key != leases[0].Key {
-		t.Errorf("replacement %v %v", replacement, err)
-	}
-	if _, err := pool.Acquire(); err == nil || !strings.Contains(err.Error(), "capacity is full") {
-		t.Errorf("expected full: %v", err)
-	}
-	if _, err := NewLicensePool([]string{"x"}, func(string) (Seats, error) { return Seats{}, errors.New("down") }); err == nil {
-		t.Error("pool without quota")
 	}
 }
 

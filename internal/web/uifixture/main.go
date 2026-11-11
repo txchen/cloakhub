@@ -28,7 +28,6 @@ func (h *fakeHandle) stop()                 { h.once.Do(func() { close(h.done) }
 func (h *fakeHandle) Close() error          { h.stop(); return nil }
 func (h *fakeHandle) Kill() error           { h.stop(); return nil }
 func (h *fakeHandle) Done() <-chan struct{} { return h.done }
-func (h *fakeHandle) ExitError() error      { return nil }
 
 type fakeLauncher struct{}
 
@@ -73,7 +72,7 @@ func main() {
 		Launcher: fakeLauncher{}, DisplayRuntime: fakeDisplay{},
 		ReadinessProbe: ready, ViewerReadinessProbe: ready, Owned: owned,
 	})
-	cfg := config.Config{DataRoot: dataRoot, Host: "127.0.0.1", Port: 17790, MaxRunningInstances: 10, LicenseMode: "required"}
+	cfg := config.Config{DataRoot: dataRoot, Host: "127.0.0.1", Port: 17790, MaxRunningInstances: 10}
 	app := web.New(cfg, web.Services{Events: eventLog, Runtime: runtime, Profiles: profiles, Owned: owned})
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /__test/cdp/work", func(w http.ResponseWriter, r *http.Request) {

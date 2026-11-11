@@ -64,27 +64,19 @@ func (r *Registry) RuntimePath(profileID string) string {
 	return filepath.Join(r.DataRoot, "runtime", profileID)
 }
 
-// Env returns base minus license secrets, plus ownership markers.
+// Env returns base (os.Environ when nil) with this profile's ownership markers.
 func (r *Registry) Env(profileID string, base []string) []string {
 	if base == nil {
 		base = os.Environ()
 	}
-	env := WithoutLicenseSecrets(base)
-	return append(env, DataRootEnv+"="+r.DataRoot, ProfileIDEnv+"="+profileID)
-}
-
-// WithoutLicenseSecrets drops license keys from an environment.
-func WithoutLicenseSecrets(env []string) []string {
-	result := make([]string, 0, len(env))
-	for _, entry := range env {
+	env := make([]string, 0, len(base)+2)
+	for _, entry := range base {
 		name, _, _ := strings.Cut(entry, "=")
-		if strings.HasPrefix(name, "CLOAKHUB_LICENSE_") || strings.HasPrefix(name, "CLOAKBROWSER_LICENSE_") ||
-			name == DataRootEnv || name == ProfileIDEnv {
-			continue
+		if name != DataRootEnv && name != ProfileIDEnv {
+			env = append(env, entry)
 		}
-		result = append(result, entry)
 	}
-	return result
+	return append(env, DataRootEnv+"="+r.DataRoot, ProfileIDEnv+"="+profileID)
 }
 
 // SetEnv replaces or appends NAME=value.
