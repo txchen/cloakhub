@@ -1,7 +1,7 @@
 name: Merge Image Manifest
 
 # Combine per-arch images into one multi-arch tag, e.g. make
-# cloakhub_free:0.8.2 serve both amd64 and arm64. Sources should be pinned by
+# cloakhub:1.0.0 serve both amd64 and arm64. Sources should be pinned by
 # digest. The current target tag is first copied to `backup_tag` for rollback.
 
 on:
@@ -9,7 +9,7 @@ on:
     inputs:
       image:
         description: Image repository
-        default: ghcr.io/txchen/cloakhub_free
+        default: ghcr.io/txchen/cloakhub
         required: true
       target_tag:
         description: Multi-arch tag to (re)write

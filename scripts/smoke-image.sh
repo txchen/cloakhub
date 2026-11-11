@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
-# Smoke-test a locally loaded free image on its native architecture.
+# Smoke-test a locally loaded image on its native architecture: pinned browser,
+# offline concurrent launches, the viewer runtime, and Hub health.
 set -euo pipefail
 IMAGE="${1:?usage: $0 <image> <expected-chrome-sha256>}"
 EXPECTED="${2:?expected chrome SHA-256 required}"
-NAME="cloakhub-free-smoke-$$"
+NAME="cloakhub-smoke-$$"
 cleanup() { docker rm -fv "$NAME" >/dev/null 2>&1 || true; }
 trap cleanup EXIT
 
@@ -20,6 +21,18 @@ docker run --rm --network none --shm-size=1g --tmpfs /data --entrypoint sh \
   test "$s1" = 0 && test "$s2" = 0
   grep -F "<html>" /tmp/1.html
   grep -F "<html>" /tmp/2.html
+  voxl --version
+  Xvfb :99 -screen 0 640x480x24 -nolisten tcp -shmem & xvfb=$!
+  for i in $(seq 1 50); do [ -S /tmp/.X11-unix/X99 ] && break; sleep 0.1; done
+  DISPLAY=:99 voxl --addr=127.0.0.1 --port=5999 --enable-basic-auth=false --audio-enabled=false & streamer=$!
+  ok=0
+  for i in $(seq 1 50); do
+    if bun -e "const r = await fetch(\"http://127.0.0.1:5999/healthz\"); process.exit(r.ok ? 0 : 1)" 2>/dev/null; then ok=1; break; fi
+    sleep 0.2
+  done
+  kill "$streamer" "$xvfb"
+  test "$ok" = 1
+  echo "viewer runtime ok"
 '
 
 docker run -d --name "$NAME" --network none --tmpfs /data "$IMAGE"
