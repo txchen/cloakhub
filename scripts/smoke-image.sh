@@ -27,7 +27,7 @@ docker run --rm --network none --shm-size=1g --tmpfs /data --entrypoint sh \
   DISPLAY=:99 voxl --addr=127.0.0.1 --port=5999 --enable-basic-auth=false --audio-enabled=false & streamer=$!
   ok=0
   for i in $(seq 1 50); do
-    if bun -e "const r = await fetch(\"http://127.0.0.1:5999/healthz\"); process.exit(r.ok ? 0 : 1)" 2>/dev/null; then ok=1; break; fi
+    if wget -q -O /dev/null http://127.0.0.1:5999/healthz; then ok=1; break; fi
     sleep 0.2
   done
   kill "$streamer" "$xvfb"
@@ -38,7 +38,7 @@ docker run --rm --network none --shm-size=1g --tmpfs /data --entrypoint sh \
 docker run -d --name "$NAME" --network none --tmpfs /data "$IMAGE"
 # Poll inside the network-isolated container; no host ports are exposed.
 for attempt in $(seq 1 30); do
-  if docker exec "$NAME" bun -e 'const r = await fetch("http://127.0.0.1:7788/api/health"); if (!r.ok) process.exit(1); console.log(await r.text());'; then
+  if docker exec "$NAME" wget -q -O - http://127.0.0.1:7788/api/health; then
     docker logs "$NAME"
     exit 0
   fi

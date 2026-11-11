@@ -55,6 +55,8 @@ describe("Docker-first packaging", () => {
     expect(dockerfile).toContain("COPY --from=hub /out/cloakhub /usr/local/bin/cloakhub");
     expect(dockerfile).toContain('CMD ["/usr/local/bin/cloakhub"]');
     expect(dockerfile).toContain("/app/check-mac-fonts.sh");
+    // The runtime image has no Bun, so release smoke checks must not need it.
+    expect(await Bun.file("scripts/smoke-image.sh").text()).not.toMatch(/\bbun\b/);
     expect(dockerfile).not.toContain("kasmvncserver");
     expect(dockerfile).toContain("cargo install --locked voxl-server");
     expect(dockerfile).toContain("COPY --from=voxl /opt/voxl/bin/voxl /usr/local/bin/voxl");
