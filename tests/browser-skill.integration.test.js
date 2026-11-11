@@ -3,7 +3,7 @@ import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { chromium } from "playwright-core";
-import { createCdpWebSocketHandler } from "../src/cdp-websocket-proxy";
+import { startRelay } from "./helpers/relay-fixture.mjs";
 
 const realTest = process.env.CLOAKHUB_RUN_CDP_TESTS === "true" ? test : test.skip;
 
@@ -21,18 +21,8 @@ realTest("skill CLI authenticates through CDP proxy, resumes a tab, and leaves t
     for (let i = 0; i < 100 && !(await Bun.file(activePort).exists()); i++) await Bun.sleep(50);
     const [port, path] = (await readFile(activePort, "utf8")).trim().split("\n");
     const browserUrl = `ws://127.0.0.1:${port}${path}`;
-    let authenticated = 0;
-    server = Bun.serve({
-      hostname: "127.0.0.1", port: 0,
-      fetch(request, server) {
-        if (request.headers.get("authorization") !== "Bearer test-profile-token") return new Response("Unauthorized", { status: 401 });
-        if (new URL(request.url).pathname !== "/api/profiles/research/cdp") return new Response("Not found", { status: 404 });
-        authenticated++;
-        if (server.upgrade(request, { data: { profileId: "research", targetUrl: browserUrl, browserTargetUrl: browserUrl } })) return;
-        return new Response("WebSocket required", { status: 400 });
-      },
-      websocket: createCdpWebSocketHandler()
-    });
+    server = await startRelay({ browser: browserUrl, profile: "research", token: "test-profile-token" });
+    const authenticated = async () => (await server.stats()).authenticated;
     const configPath = join(root, "client.json");
     await writeFile(configPath, JSON.stringify({
       version: 1, defaultTarget: "test",
@@ -52,7 +42,7 @@ realTest("skill CLI authenticates through CDP proxy, resumes a tab, and leaves t
       return JSON.parse(stdout);
     }
     expect(await run("targets")).toHaveLength(1);
-    expect(authenticated).toBe(0);
+    expect(await authenticated()).toBe(0);
     expect((await run("check")).ok).toBe(true);
     const first = await run("run", `
       const page = await context.newPage();
@@ -67,9 +57,9 @@ realTest("skill CLI authenticates through CDP proxy, resumes a tab, and leaves t
     `);
     expect(second).toEqual({ title: "Skill test", count: 2 });
     expect((await run("check")).ok).toBe(true);
-    expect(authenticated).toBe(4);
+    expect(await authenticated()).toBe(4);
   } finally {
-    server?.stop(true);
+    await server?.stop();
     if (processHandle) { processHandle.kill(); await processHandle.exited; }
     await rm(root, { recursive: true, force: true });
   }
@@ -95,6 +85,7 @@ realTest("skill helpers observe, verify effects, capture responses, and detect c
   const root = await mkdtemp(join(tmpdir(), "cloakhub-skill-helpers-"));
   let processHandle;
   let server;
+  let pages;
   try {
     processHandle = Bun.spawn([
       process.env.CLOAKHUB_TEST_BROWSER ?? chromium.executablePath(),
@@ -105,20 +96,18 @@ realTest("skill helpers observe, verify effects, capture responses, and detect c
     for (let i = 0; i < 100 && !(await Bun.file(activePort).exists()); i++) await Bun.sleep(50);
     const [port, path] = (await readFile(activePort, "utf8")).trim().split("\n");
     const browserUrl = `ws://127.0.0.1:${port}${path}`;
-    server = Bun.serve({
+    pages = Bun.serve({
       hostname: "127.0.0.1", port: 0,
-      fetch(request, server) {
+      fetch(request) {
         const { pathname } = new URL(request.url);
         if (pathname === "/playground") return new Response(playground, { headers: { "content-type": "text/html" } });
         if (pathname === "/api/items") return Response.json({ items: ["a", "b"], page: { size: 2, total: 9 } });
         if (pathname === "/challenge") return new Response('<title>Shop</title><iframe src="/captcha/frame"></iframe>', { headers: { "content-type": "text/html" } });
         if (pathname === "/captcha/frame") return new Response("<p>widget</p>", { headers: { "content-type": "text/html" } });
-        if (pathname !== "/api/profiles/research/cdp") return new Response("Not found", { status: 404 });
-        if (server.upgrade(request, { data: { profileId: "research", targetUrl: browserUrl, browserTargetUrl: browserUrl } })) return;
-        return new Response("WebSocket required", { status: 400 });
-      },
-      websocket: createCdpWebSocketHandler()
+        return new Response("Not found", { status: 404 });
+      }
     });
+    server = await startRelay({ browser: browserUrl, profile: "research", pages: `http://127.0.0.1:${pages.port}` });
     const origin = `http://127.0.0.1:${server.port}`;
     const configPath = join(root, "client.json");
     await writeFile(configPath, JSON.stringify({ version: 1, defaultTarget: "test", targets: { test: { url: origin, profile: "research" } } }));
@@ -163,7 +152,8 @@ realTest("skill helpers observe, verify effects, capture responses, and detect c
     expect(result.listed.find((t) => t.url.endsWith("/playground"))).toMatchObject({ title: "Playground" });
     expect(result.challenge).toEqual({ kind: "challenge", evidence: `frame ${origin}/captcha/frame` });
   } finally {
-    server?.stop(true);
+    await server?.stop();
+    pages?.stop(true);
     if (processHandle) { processHandle.kill(); await processHandle.exited; }
     await rm(root, { recursive: true, force: true });
   }

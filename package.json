@@ -4,23 +4,24 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "integration:real-runtime": "CLOAKHUB_RUN_REAL_RUNTIME_TESTS=true bun test tests/real-runtime.integration.test.ts",
-    "start": "bun run src/server.ts",
-    "dev": "bun --watch src/server.ts",
-    "test": "bun test",
-    "typecheck": "tsc --noEmit",
+    "build:ui": "./scripts/build-ui.sh",
+    "build": "./scripts/build-ui.sh && go build -o bin/cloakhub ./cmd/cloakhub",
+    "start": "./scripts/build-ui.sh && go run ./cmd/cloakhub",
+    "test": "go test ./... && bun test",
+    "test:go": "go test ./...",
+    "test:js": "bun test",
+    "typecheck": "tsc --noEmit && go vet ./...",
     "test:ui": "playwright test",
+    "integration:real-runtime": "./scripts/real-runtime-tests.sh",
     "test:browser-evaluation": "node tests/browser-evaluation/run.mjs",
     "test:browser-evaluation:unit": "bun test tests/browser-evaluation.test.js"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",
     "@types/bun": "^1.3.4",
+    "esbuild": "0.25.10",
     "playwright-core": "1.64.1",
     "pngjs": "7.0.0",
     "typescript": "^5.9.2"
-  },
-  "dependencies": {
-    "cloakbrowser": "0.5.10"
   }
 }

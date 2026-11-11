@@ -1,5 +1,5 @@
 import { createEventLogController } from "./event-log-controller";
-import type { PresentedBrowserProfile } from "../profile-presentation";
+import type { PresentedBrowserProfile } from "./types";
 import {
   element,
   escape,

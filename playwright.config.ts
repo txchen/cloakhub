@@ -20,7 +20,7 @@ export default defineConfig({
     screenshot: "only-on-failure"
   },
   webServer: {
-    command: "bun tests/ui/server.ts",
+    command: "./scripts/build-ui.sh && go run ./internal/web/uifixture",
     url: "http://127.0.0.1:17790/api/health",
     reuseExistingServer: false
   },

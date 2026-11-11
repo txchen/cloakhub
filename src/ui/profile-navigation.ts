@@ -1,4 +1,4 @@
-import type { PresentedBrowserProfile } from "../profile-presentation";
+import type { PresentedBrowserProfile } from "./types";
 import { element, escape } from "./dom";
 
 /** Keep profile positions and keyboard focus stable as live observations arrive. */
