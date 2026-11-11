@@ -1,0 +1,140 @@
+[
+  {
+    "arm": "cloakhub",
+    "repeat": 0,
+    "seconds": 41.87,
+    "exit_code": 0,
+    "timed_out": false,
+    "expected": 43,
+    "submissions": [
+      {
+        "reference": "REVIEW-0",
+        "total": 43,
+        "confirmed": true
+      }
+    ],
+    "passed": true,
+    "model_calls": 8,
+    "tool_calls": 7,
+    "usage": {
+      "input": 14077,
+      "output": 855,
+      "cacheRead": 19328,
+      "reasoning": 0,
+      "estimated_cost_usd": 0.00202848
+    },
+    "final": "The qualifying stock total is **43**. The review was saved successfully, and I closed only my task tab."
+  },
+  {
+    "arm": "browser-use",
+    "repeat": 0,
+    "seconds": 56.57,
+    "exit_code": 0,
+    "timed_out": false,
+    "expected": 43,
+    "submissions": [],
+    "passed": false,
+    "model_calls": 12,
+    "tool_calls": 11,
+    "usage": {
+      "input": 14152,
+      "output": 1072,
+      "cacheRead": 42880,
+      "reasoning": 68,
+      "estimated_cost_usd": 0.0023799999999999993
+    },
+    "final": "I couldn\u2019t complete or verify the review. The page remained on page 1, and I was unable to advance through the inventory pages, so I don\u2019t have a reliable total to submit. I also did not save a review."
+  },
+  {
+    "arm": "browser-use",
+    "repeat": 1,
+    "seconds": 72.55,
+    "exit_code": 0,
+    "timed_out": false,
+    "expected": 19,
+    "submissions": [],
+    "passed": false,
+    "model_calls": 14,
+    "tool_calls": 13,
+    "usage": {
+      "input": 27452,
+      "output": 1063,
+      "cacheRead": 50432,
+      "reasoning": 46,
+      "estimated_cost_usd": 0.0037810200000000004
+    },
+    "final": "I couldn\u2019t complete the review: the page stayed on page 1 despite clicking Next, so I couldn\u2019t review all three inventory pages or verify the total. I did not submit a review or close the task tab."
+  },
+  {
+    "arm": "cloakhub",
+    "repeat": 1,
+    "seconds": 42.15,
+    "exit_code": 0,
+    "timed_out": false,
+    "expected": 19,
+    "submissions": [
+      {
+        "reference": "REVIEW-1",
+        "total": 19,
+        "confirmed": true
+      }
+    ],
+    "passed": true,
+    "model_calls": 8,
+    "tool_calls": 8,
+    "usage": {
+      "input": 23379,
+      "output": 844,
+      "cacheRead": 13312,
+      "reasoning": 23,
+      "estimated_cost_usd": 0.00289302
+    },
+    "final": "Total qualifying stock: **19**. The review was saved successfully (\u201cReview saved\u201d), and I closed only my task tab."
+  },
+  {
+    "arm": "cloakhub",
+    "repeat": 2,
+    "seconds": 43.66,
+    "exit_code": 0,
+    "timed_out": false,
+    "expected": 25,
+    "submissions": [
+      {
+        "reference": "REVIEW-2",
+        "total": 25,
+        "confirmed": true
+      }
+    ],
+    "passed": true,
+    "model_calls": 8,
+    "tool_calls": 7,
+    "usage": {
+      "input": 13791,
+      "output": 1130,
+      "cacheRead": 19200,
+      "reasoning": 28,
+      "estimated_cost_usd": 0.0021361
+    },
+    "final": "Review **REVIEW-2** was saved successfully. The qualifying stock total is **25**, and \u201cReview saved\u201d was confirmed. I closed only the task tab."
+  },
+  {
+    "arm": "browser-use",
+    "repeat": 2,
+    "seconds": 78.35,
+    "exit_code": 0,
+    "timed_out": false,
+    "expected": 25,
+    "submissions": [],
+    "passed": false,
+    "model_calls": 17,
+    "tool_calls": 16,
+    "usage": {
+      "input": 35656,
+      "output": 1095,
+      "cacheRead": 88832,
+      "reasoning": 85,
+      "estimated_cost_usd": 0.005001420000000001
+    },
+    "final": "I couldn\u2019t complete the review. I opened the task tab, but did not successfully review all three pages or save a total, so I can\u2019t confirm \u201cReview saved.\u201d I closed the task tab."
+  }
+]

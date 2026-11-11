@@ -1,0 +1,28 @@
+{
+  "pi": "1.5.0",
+  "model": "openai/gpt-6-luna",
+  "thinking": "medium",
+  "browser_use": "1.0.0",
+  "browser_harness": "0.1.13",
+  "task_family": "three-page inventory aggregation and form submission",
+  "paired_seeds": [
+    810,
+    811,
+    812
+  ],
+  "seconds_budget": 180,
+  "cost": "Pi model catalog estimate, not provider invoice",
+  "sha256": {
+    "cloakhub-skill/SKILL.md": "50bb6dfdc1d16968c1c1331f2778227ac4e2916538bb12316e52a08a8f180509",
+    "cloakhub-skill/scripts/browser.mjs": "f7b7d6fa3679f91b1cf2dd9969ecb729e1758b3437063a997745623efabfeacd",
+    "cloakhub-skill/scripts/session.mjs": "fba20a198d8ec0724fdb80b5b62b56cc5aa7c8307f72517351ddc6d5439b4e86",
+    "cloakhub-skill/scripts/helpers.mjs": "304e0e486971b6cf3875382c2f177dc9bc6feb2a4060a8f0710b331dc030c950",
+    "cloakhub-skill/references/sessions.md": "6c17915ca1a4c196965a5e8351ee87350b73da83ab72abad7eb371b16034e208",
+    "browser-use/skill-adapter.md": "7eb3f77638e4af16b13911d0c44a5e0fed12e696cba501e0214f2061106ffa43"
+  },
+  "historical_harness_sha256": {
+    "run.py": "2c770291c78c1a12b979d1c22af17b4ae09c7460349bce073424f07569190092",
+    "bridge.js": "d98ff62b31c7936ca1409d53c1562f343d71c9c9141432ae5db5006dc91f34cc"
+  },
+  "publication_note": "Logical source labels replace private absolute paths. Published harness was parameterized after the experiment and was not rerun against live agents. Raw event logs and upstream skill snapshot are retained privately, not published."
+}

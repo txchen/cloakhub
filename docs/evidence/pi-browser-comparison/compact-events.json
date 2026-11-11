@@ -1,0 +1,2086 @@
+{
+  "schema_version": 1,
+  "note": "Allowlisted counts/usage only. No reasoning content, prompts, tool arguments or outputs. This export cannot independently prove UI behavior or adherence to task constraints. Raw logs are not distributed.",
+  "runs": [
+    {
+      "source": "browser-use-0.jsonl",
+      "raw_sha256": "eeba94eb3d68b28fd62d9c76d29696cc67cbcb44cf88b99ead000618de98146f",
+      "raw_bytes": 440082,
+      "assistant_calls": [
+        {
+          "usage": {
+            "input": 1037,
+            "output": 34,
+            "cacheRead": 0,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.0001207
+          },
+          "tools": [
+            "read"
+          ]
+        },
+        {
+          "usage": {
+            "input": 3589,
+            "output": 68,
+            "cacheRead": 0,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00039290000000000006
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 266,
+            "output": 88,
+            "cacheRead": 3456,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00010516
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 395,
+            "output": 107,
+            "cacheRead": 3584,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00012884000000000002
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 322,
+            "output": 138,
+            "cacheRead": 3840,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00013959999999999998
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 995,
+            "output": 84,
+            "cacheRead": 3968,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00018118
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 467,
+            "output": 92,
+            "cacheRead": 4864,
+            "reasoning": 13,
+            "estimated_cost_usd": 0.00014134
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 5640,
+            "output": 99,
+            "cacheRead": 0,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.0006135
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 634,
+            "output": 122,
+            "cacheRead": 5248,
+            "reasoning": 31,
+            "estimated_cost_usd": 0.00017688000000000003
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 361,
+            "output": 102,
+            "cacheRead": 5760,
+            "reasoning": 11,
+            "estimated_cost_usd": 0.0001447
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 219,
+            "output": 87,
+            "cacheRead": 6016,
+            "reasoning": 13,
+            "estimated_cost_usd": 0.00012556
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 227,
+            "output": 51,
+            "cacheRead": 6144,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00010964000000000001
+          },
+          "tools": []
+        }
+      ],
+      "tool_completions": [
+        {
+          "tool": "read",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": true
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        }
+      ],
+      "non_json_lines": 0,
+      "has_result": true
+    },
+    {
+      "source": "browser-use-1.jsonl",
+      "raw_sha256": "37309f5d0aa42b2a6b24c58bc63615ce3d394d7cb4b2fe376aa8d23558eaf98b",
+      "raw_bytes": 476547,
+      "assistant_calls": [
+        {
+          "usage": {
+            "input": 1039,
+            "output": 34,
+            "cacheRead": 0,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00012090000000000001
+          },
+          "tools": [
+            "read"
+          ]
+        },
+        {
+          "usage": {
+            "input": 3591,
+            "output": 61,
+            "cacheRead": 0,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00038960000000000004
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 3844,
+            "output": 89,
+            "cacheRead": 0,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.0004289
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 4123,
+            "output": 94,
+            "cacheRead": 0,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00045930000000000005
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 1141,
+            "output": 73,
+            "cacheRead": 3456,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00018516
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 738,
+            "output": 57,
+            "cacheRead": 3968,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00014198
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 1515,
+            "output": 177,
+            "cacheRead": 3712,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00027712000000000006
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 908,
+            "output": 77,
+            "cacheRead": 4608,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00017538
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 434,
+            "output": 61,
+            "cacheRead": 5376,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00012766
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 852,
+            "output": 109,
+            "cacheRead": 5120,
+            "reasoning": 46,
+            "estimated_cost_usd": 0.0001909
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 3465,
+            "output": 53,
+            "cacheRead": 4480,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.0004178
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 2506,
+            "output": 61,
+            "cacheRead": 5888,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00033998
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 283,
+            "output": 69,
+            "cacheRead": 8192,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00014472
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 3013,
+            "output": 48,
+            "cacheRead": 5632,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00038162
+          },
+          "tools": []
+        }
+      ],
+      "tool_completions": [
+        {
+          "tool": "read",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": true
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": true
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        }
+      ],
+      "non_json_lines": 0,
+      "has_result": true
+    },
+    {
+      "source": "browser-use-2.jsonl",
+      "raw_sha256": "f8ecbbbab7c6e1b67d4df32c9041f81f8b65f30b63ab8dbb67dc01ec0a8feed1",
+      "raw_bytes": 598532,
+      "assistant_calls": [
+        {
+          "usage": {
+            "input": 1038,
+            "output": 34,
+            "cacheRead": 0,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00012080000000000001
+          },
+          "tools": [
+            "read"
+          ]
+        },
+        {
+          "usage": {
+            "input": 3590,
+            "output": 49,
+            "cacheRead": 0,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00038350000000000005
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 3652,
+            "output": 49,
+            "cacheRead": 0,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00038970000000000004
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 391,
+            "output": 83,
+            "cacheRead": 3456,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00011516
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 659,
+            "output": 80,
+            "cacheRead": 3456,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00014046
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 353,
+            "output": 52,
+            "cacheRead": 3968,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00010098
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 4387,
+            "output": 53,
+            "cacheRead": 0,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00046520000000000003
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 1000,
+            "output": 124,
+            "cacheRead": 4224,
+            "reasoning": 61,
+            "estimated_cost_usd": 0.00020424
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 1225,
+            "output": 76,
+            "cacheRead": 4224,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00020274000000000003
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 494,
+            "output": 61,
+            "cacheRead": 5248,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00013238
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 2192,
+            "output": 86,
+            "cacheRead": 3712,
+            "reasoning": 24,
+            "estimated_cost_usd": 0.00029932000000000005
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 6554,
+            "output": 66,
+            "cacheRead": 5760,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.0007460000000000001
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 240,
+            "output": 61,
+            "cacheRead": 12160,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.0001761
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 274,
+            "output": 60,
+            "cacheRead": 12288,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00018028
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 533,
+            "output": 65,
+            "cacheRead": 12416,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00020996
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 664,
+            "output": 51,
+            "cacheRead": 12800,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00021989999999999998
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 8410,
+            "output": 45,
+            "cacheRead": 5120,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.0009147000000000001
+          },
+          "tools": []
+        }
+      ],
+      "tool_completions": [
+        {
+          "tool": "read",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": true
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        }
+      ],
+      "non_json_lines": 0,
+      "has_result": true
+    },
+    {
+      "source": "cloakhub-0.jsonl",
+      "raw_sha256": "ab27d4441edb79aee7281471fb38ff58a7a93dc5ae3f2d2ea6824f45cb6525e7",
+      "raw_bytes": 383765,
+      "assistant_calls": [
+        {
+          "usage": {
+            "input": 1040,
+            "output": 43,
+            "cacheRead": 0,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00012550000000000001
+          },
+          "tools": [
+            "read"
+          ]
+        },
+        {
+          "usage": {
+            "input": 2906,
+            "output": 44,
+            "cacheRead": 0,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.0003126
+          },
+          "tools": [
+            "read"
+          ]
+        },
+        {
+          "usage": {
+            "input": 797,
+            "output": 76,
+            "cacheRead": 2816,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00014586000000000002
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 340,
+            "output": 127,
+            "cacheRead": 3456,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00013206
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 657,
+            "output": 233,
+            "cacheRead": 3712,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00021932
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 5321,
+            "output": 146,
+            "cacheRead": 0,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.0006051000000000001
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 1658,
+            "output": 159,
+            "cacheRead": 4224,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00028754
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 1358,
+            "output": 27,
+            "cacheRead": 5120,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00020050000000000002
+          },
+          "tools": []
+        }
+      ],
+      "tool_completions": [
+        {
+          "tool": "read",
+          "is_error": false
+        },
+        {
+          "tool": "read",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        }
+      ],
+      "non_json_lines": 0,
+      "has_result": true
+    },
+    {
+      "source": "cloakhub-1.jsonl",
+      "raw_sha256": "4941a1c4b97d2c505bed518555ca39c1aad37e598d49866b78cd742c43647ba0",
+      "raw_bytes": 381877,
+      "assistant_calls": [
+        {
+          "usage": {
+            "input": 1041,
+            "output": 101,
+            "cacheRead": 0,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00015460000000000002
+          },
+          "tools": [
+            "read",
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 3393,
+            "output": 44,
+            "cacheRead": 0,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.0003613
+          },
+          "tools": [
+            "read"
+          ]
+        },
+        {
+          "usage": {
+            "input": 4100,
+            "output": 76,
+            "cacheRead": 0,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00044800000000000005
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 316,
+            "output": 123,
+            "cacheRead": 3968,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00013277999999999999
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 4849,
+            "output": 105,
+            "cacheRead": 0,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.0005374
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 5739,
+            "output": 157,
+            "cacheRead": 0,
+            "reasoning": 23,
+            "estimated_cost_usd": 0.0006524
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 3111,
+            "output": 209,
+            "cacheRead": 3200,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00044760000000000004
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 830,
+            "output": 29,
+            "cacheRead": 6144,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00015894000000000002
+          },
+          "tools": []
+        }
+      ],
+      "tool_completions": [
+        {
+          "tool": "read",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "read",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        }
+      ],
+      "non_json_lines": 0,
+      "has_result": true
+    },
+    {
+      "source": "cloakhub-2.jsonl",
+      "raw_sha256": "8ef8206ddfa53d6b5199fd185e58e2be35a1cd59e659db223bbd4edae8de58d8",
+      "raw_bytes": 465920,
+      "assistant_calls": [
+        {
+          "usage": {
+            "input": 1042,
+            "output": 43,
+            "cacheRead": 0,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00012570000000000002
+          },
+          "tools": [
+            "read"
+          ]
+        },
+        {
+          "usage": {
+            "input": 2908,
+            "output": 44,
+            "cacheRead": 0,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.0003128
+          },
+          "tools": [
+            "read"
+          ]
+        },
+        {
+          "usage": {
+            "input": 799,
+            "output": 77,
+            "cacheRead": 2816,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00014656
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 345,
+            "output": 129,
+            "cacheRead": 3456,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00013356
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 4378,
+            "output": 231,
+            "cacheRead": 0,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.0005533000000000001
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 1459,
+            "output": 252,
+            "cacheRead": 3712,
+            "reasoning": 28,
+            "estimated_cost_usd": 0.0003090200000000001
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 1227,
+            "output": 316,
+            "cacheRead": 4224,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00032293999999999997
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 1633,
+            "output": 38,
+            "cacheRead": 4992,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00023222000000000002
+          },
+          "tools": []
+        }
+      ],
+      "tool_completions": [
+        {
+          "tool": "read",
+          "is_error": false
+        },
+        {
+          "tool": "read",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        }
+      ],
+      "non_json_lines": 0,
+      "has_result": true
+    },
+    {
+      "source": "foreground/browser-use-0.jsonl",
+      "raw_sha256": "5f7c4b1dd9bb2be0261e6bc341eec2b86151e0c700560f9d88f699a92493b077",
+      "raw_bytes": 399413,
+      "assistant_calls": [
+        {
+          "usage": {
+            "input": 1096,
+            "output": 33,
+            "cacheRead": 0,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.0001261
+          },
+          "tools": [
+            "read"
+          ]
+        },
+        {
+          "usage": {
+            "input": 3647,
+            "output": 101,
+            "cacheRead": 0,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.0004152
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 451,
+            "output": 92,
+            "cacheRead": 3456,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00012566
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 4114,
+            "output": 79,
+            "cacheRead": 0,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.0004509
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 508,
+            "output": 62,
+            "cacheRead": 3712,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00011892
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 415,
+            "output": 105,
+            "cacheRead": 3968,
+            "reasoning": 17,
+            "estimated_cost_usd": 0.00013368
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 343,
+            "output": 71,
+            "cacheRead": 4224,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00011203999999999999
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 823,
+            "output": 105,
+            "cacheRead": 4096,
+            "reasoning": 27,
+            "estimated_cost_usd": 0.00017576
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 786,
+            "output": 136,
+            "cacheRead": 4480,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00019140000000000002
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 778,
+            "output": 102,
+            "cacheRead": 4736,
+            "reasoning": 14,
+            "estimated_cost_usd": 0.00017616000000000002
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 806,
+            "output": 56,
+            "cacheRead": 5120,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.0001598
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 682,
+            "output": 26,
+            "cacheRead": 5376,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00013496
+          },
+          "tools": []
+        }
+      ],
+      "tool_completions": [
+        {
+          "tool": "read",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        }
+      ],
+      "non_json_lines": 0,
+      "has_result": true
+    },
+    {
+      "source": "foreground/browser-use-1.jsonl",
+      "raw_sha256": "a4c423301500ed7cc044c845a8cf1e0206a52ccfd397ea574c73f23798a8b1b1",
+      "raw_bytes": 407142,
+      "assistant_calls": [
+        {
+          "usage": {
+            "input": 1096,
+            "output": 33,
+            "cacheRead": 0,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.0001261
+          },
+          "tools": [
+            "read"
+          ]
+        },
+        {
+          "usage": {
+            "input": 3647,
+            "output": 56,
+            "cacheRead": 0,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.0003927
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 3854,
+            "output": 100,
+            "cacheRead": 0,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00043540000000000007
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 435,
+            "output": 132,
+            "cacheRead": 3712,
+            "reasoning": 29,
+            "estimated_cost_usd": 0.00014662
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 955,
+            "output": 62,
+            "cacheRead": 3456,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00016106
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 606,
+            "output": 62,
+            "cacheRead": 3968,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00013128
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 513,
+            "output": 155,
+            "cacheRead": 4224,
+            "reasoning": 49,
+            "estimated_cost_usd": 0.00017104000000000002
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 574,
+            "output": 148,
+            "cacheRead": 4480,
+            "reasoning": 24,
+            "estimated_cost_usd": 0.0001762
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 625,
+            "output": 62,
+            "cacheRead": 4608,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00013958
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 5396,
+            "output": 117,
+            "cacheRead": 0,
+            "reasoning": 11,
+            "estimated_cost_usd": 0.0005981
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 841,
+            "output": 71,
+            "cacheRead": 4864,
+            "reasoning": 13,
+            "estimated_cost_usd": 0.00016824
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 348,
+            "output": 30,
+            "cacheRead": 5504,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00010484
+          },
+          "tools": []
+        }
+      ],
+      "tool_completions": [
+        {
+          "tool": "read",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        }
+      ],
+      "non_json_lines": 0,
+      "has_result": true
+    },
+    {
+      "source": "foreground/browser-use-2.jsonl",
+      "raw_sha256": "85ef59366f5b62304f9e45abf7b107cdfa02a221574c4c6956d8ebe0184e1652",
+      "raw_bytes": 488135,
+      "assistant_calls": [
+        {
+          "usage": {
+            "input": 1096,
+            "output": 51,
+            "cacheRead": 0,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.0001351
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 3666,
+            "output": 128,
+            "cacheRead": 0,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.0004306
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 518,
+            "output": 82,
+            "cacheRead": 3584,
+            "reasoning": 10,
+            "estimated_cost_usd": 0.00012864000000000002
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 4285,
+            "output": 126,
+            "cacheRead": 0,
+            "reasoning": 19,
+            "estimated_cost_usd": 0.0004915000000000001
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 486,
+            "output": 234,
+            "cacheRead": 4096,
+            "reasoning": 19,
+            "estimated_cost_usd": 0.00020656
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 642,
+            "output": 168,
+            "cacheRead": 4480,
+            "reasoning": 57,
+            "estimated_cost_usd": 0.000193
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 1406,
+            "output": 268,
+            "cacheRead": 3968,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00031428
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 520,
+            "output": 114,
+            "cacheRead": 5248,
+            "reasoning": 17,
+            "estimated_cost_usd": 0.00016147999999999998
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 381,
+            "output": 74,
+            "cacheRead": 5632,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00013142
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 295,
+            "output": 34,
+            "cacheRead": 5888,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00010538
+          },
+          "tools": []
+        }
+      ],
+      "tool_completions": [
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        }
+      ],
+      "non_json_lines": 0,
+      "has_result": true
+    },
+    {
+      "source": "infra-failure/browser-use-0.jsonl",
+      "raw_sha256": "2013c26cb2a121804002a4771e1ef67beb959b13783b1360d9b5dfcfdc2933f0",
+      "raw_bytes": 235906,
+      "assistant_calls": [
+        {
+          "usage": {
+            "input": 1037,
+            "output": 33,
+            "cacheRead": 0,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00012020000000000001
+          },
+          "tools": [
+            "read"
+          ]
+        },
+        {
+          "usage": {
+            "input": 3588,
+            "output": 115,
+            "cacheRead": 0,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00041630000000000004
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 4042,
+            "output": 133,
+            "cacheRead": 0,
+            "reasoning": 45,
+            "estimated_cost_usd": 0.0004707
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 1400,
+            "output": 113,
+            "cacheRead": 3456,
+            "reasoning": 15,
+            "estimated_cost_usd": 0.00023106
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 566,
+            "output": 52,
+            "cacheRead": 4736,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00012996
+          },
+          "tools": []
+        }
+      ],
+      "tool_completions": [
+        {
+          "tool": "read",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": true
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        }
+      ],
+      "non_json_lines": 0,
+      "has_result": true
+    },
+    {
+      "source": "infra-failure/browser-use-1.jsonl",
+      "raw_sha256": "a8ae3f99db613a14ae095bb0afc94521dd82a1c45b7b434b6f06000692e00123",
+      "raw_bytes": 214849,
+      "assistant_calls": [
+        {
+          "usage": {
+            "input": 1037,
+            "output": 33,
+            "cacheRead": 0,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00012020000000000001
+          },
+          "tools": [
+            "read"
+          ]
+        },
+        {
+          "usage": {
+            "input": 3588,
+            "output": 105,
+            "cacheRead": 0,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.0004113
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 519,
+            "output": 81,
+            "cacheRead": 3456,
+            "reasoning": 20,
+            "estimated_cost_usd": 0.00012696
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 325,
+            "output": 129,
+            "cacheRead": 3840,
+            "reasoning": 37,
+            "estimated_cost_usd": 0.00013539999999999998
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 505,
+            "output": 86,
+            "cacheRead": 3968,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00013318
+          },
+          "tools": []
+        }
+      ],
+      "tool_completions": [
+        {
+          "tool": "read",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        }
+      ],
+      "non_json_lines": 0,
+      "has_result": true
+    },
+    {
+      "source": "infra-failure/cloakhub-0.jsonl",
+      "raw_sha256": "8417130780e58452483acac8681f1faa466ef24ee48077e8adf3b96d763b1f42",
+      "raw_bytes": 263384,
+      "assistant_calls": [
+        {
+          "usage": {
+            "input": 1042,
+            "output": 91,
+            "cacheRead": 0,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.0001497
+          },
+          "tools": [
+            "read",
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 2983,
+            "output": 44,
+            "cacheRead": 0,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00032030000000000003
+          },
+          "tools": [
+            "read"
+          ]
+        },
+        {
+          "usage": {
+            "input": 874,
+            "output": 76,
+            "cacheRead": 2816,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00015356000000000001
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 290,
+            "output": 123,
+            "cacheRead": 3584,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00012633999999999999
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 4150,
+            "output": 125,
+            "cacheRead": 0,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00047750000000000006
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 4638,
+            "output": 112,
+            "cacheRead": 0,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.0005198000000000001
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 303,
+            "output": 53,
+            "cacheRead": 4480,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.0001016
+          },
+          "tools": []
+        }
+      ],
+      "tool_completions": [
+        {
+          "tool": "read",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "read",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": true
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        }
+      ],
+      "non_json_lines": 0,
+      "has_result": true
+    },
+    {
+      "source": "infra-failure/cloakhub-1.jsonl",
+      "raw_sha256": "5a8a6cfda727bd90dcbddc4ea6cc788712cb64b69545e581e234eeb5b7ead27b",
+      "raw_bytes": 265939,
+      "assistant_calls": [
+        {
+          "usage": {
+            "input": 1042,
+            "output": 87,
+            "cacheRead": 0,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.0001477
+          },
+          "tools": [
+            "bash",
+            "read"
+          ]
+        },
+        {
+          "usage": {
+            "input": 2964,
+            "output": 44,
+            "cacheRead": 0,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00031840000000000004
+          },
+          "tools": [
+            "read"
+          ]
+        },
+        {
+          "usage": {
+            "input": 3671,
+            "output": 76,
+            "cacheRead": 0,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00040510000000000003
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 270,
+            "output": 122,
+            "cacheRead": 3584,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00012384
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 4151,
+            "output": 126,
+            "cacheRead": 0,
+            "reasoning": 36,
+            "estimated_cost_usd": 0.0004781000000000001
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 435,
+            "output": 123,
+            "cacheRead": 3968,
+            "reasoning": 11,
+            "estimated_cost_usd": 0.00014468
+          },
+          "tools": [
+            "bash"
+          ]
+        },
+        {
+          "usage": {
+            "input": 847,
+            "output": 55,
+            "cacheRead": 3712,
+            "reasoning": 0,
+            "estimated_cost_usd": 0.00014932000000000001
+          },
+          "tools": []
+        }
+      ],
+      "tool_completions": [
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "read",
+          "is_error": false
+        },
+        {
+          "tool": "read",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        },
+        {
+          "tool": "bash",
+          "is_error": false
+        }
+      ],
+      "non_json_lines": 0,
+      "has_result": false
+    }
+  ]
+}

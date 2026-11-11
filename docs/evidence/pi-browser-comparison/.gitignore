@@ -1,0 +1,5 @@
+# Private historical transcripts, original local harness, and third-party snapshot.
+*.jsonl
+private-originals/
+browser-use-skill.txt
+__pycache__/

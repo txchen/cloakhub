@@ -1,0 +1,80 @@
+[
+  {
+    "arm": "browser-use",
+    "repeat": 0,
+    "seconds": 52.75,
+    "exit_code": 0,
+    "timed_out": false,
+    "expected": 43,
+    "submissions": [
+      {
+        "reference": "REVIEW-0",
+        "total": 43,
+        "confirmed": true
+      }
+    ],
+    "passed": true,
+    "model_calls": 12,
+    "tool_calls": 11,
+    "usage": {
+      "input": 14449,
+      "output": 968,
+      "cacheRead": 39168,
+      "reasoning": 58,
+      "estimated_cost_usd": 0.0023205799999999996
+    },
+    "final": "Total qualifying stock: **43**. The review was saved successfully, and I closed only the task tab."
+  },
+  {
+    "arm": "browser-use",
+    "repeat": 1,
+    "seconds": 54.3,
+    "exit_code": 0,
+    "timed_out": false,
+    "expected": 19,
+    "submissions": [
+      {
+        "reference": "REVIEW-1",
+        "total": 17,
+        "confirmed": true
+      }
+    ],
+    "passed": false,
+    "model_calls": 12,
+    "tool_calls": 11,
+    "usage": {
+      "input": 18890,
+      "output": 1028,
+      "cacheRead": 34816,
+      "reasoning": 126,
+      "estimated_cost_usd": 0.0027511600000000003
+    },
+    "final": "The qualifying stock total is **17**. The review was saved successfully (\u201cReview saved\u201d), and I closed only the task tab."
+  },
+  {
+    "arm": "browser-use",
+    "repeat": 2,
+    "seconds": 68.74,
+    "exit_code": 0,
+    "timed_out": false,
+    "expected": 25,
+    "submissions": [
+      {
+        "reference": "REVIEW-2",
+        "total": 25,
+        "confirmed": true
+      }
+    ],
+    "passed": true,
+    "model_calls": 10,
+    "tool_calls": 9,
+    "usage": {
+      "input": 13295,
+      "output": 1279,
+      "cacheRead": 32896,
+      "reasoning": 122,
+      "estimated_cost_usd": 0.00229796
+    },
+    "final": "The total qualifying stock is **25**. The review was saved successfully with reference **REVIEW-2**, and I closed only the task tab."
+  }
+]

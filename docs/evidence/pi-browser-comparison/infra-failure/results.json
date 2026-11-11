@@ -1,0 +1,62 @@
+[
+  {
+    "arm": "cloakhub",
+    "repeat": 0,
+    "seconds": 30.47,
+    "exit_code": 0,
+    "timed_out": false,
+    "expected": 43,
+    "submissions": [],
+    "passed": false,
+    "model_calls": 7,
+    "tool_calls": 7,
+    "usage": {
+      "input": 14280,
+      "output": 624,
+      "cacheRead": 10880,
+      "reasoning": 0,
+      "estimated_cost_usd": 0.0018488
+    },
+    "final": "I couldn\u2019t complete the review: the requested page was unreachable (`ERR_ADDRESS_UNREACHABLE`). I closed only my task tab and ended the task session. No review was submitted, so I can\u2019t confirm a total or \u201cReview saved.\u201d"
+  },
+  {
+    "arm": "browser-use",
+    "repeat": 0,
+    "seconds": 22.1,
+    "exit_code": 0,
+    "timed_out": false,
+    "expected": 43,
+    "submissions": [],
+    "passed": false,
+    "model_calls": 5,
+    "tool_calls": 4,
+    "usage": {
+      "input": 10633,
+      "output": 446,
+      "cacheRead": 8192,
+      "reasoning": 60,
+      "estimated_cost_usd": 0.00136822
+    },
+    "final": "The task page is unreachable in the configured browser profile (`ERR_ADDRESS_UNREACHABLE`), including on a retry, so I couldn\u2019t review inventory or save the review. I left the other tabs untouched and did not close any tab."
+  },
+  {
+    "arm": "browser-use",
+    "repeat": 1,
+    "seconds": 24.56,
+    "exit_code": 0,
+    "timed_out": false,
+    "expected": 19,
+    "submissions": [],
+    "passed": false,
+    "model_calls": 5,
+    "tool_calls": 4,
+    "usage": {
+      "input": 5974,
+      "output": 434,
+      "cacheRead": 11264,
+      "reasoning": 57,
+      "estimated_cost_usd": 0.00092704
+    },
+    "final": "I couldn\u2019t reach the task site: Chrome reported `ERR_ADDRESS_UNREACHABLE` for `http://browser-evaluation.test:18765/case/browser-use-1` on both attempts. I did not review or save anything, so I can\u2019t confirm a total. I opened a new task tab and left it open because I couldn\u2019t verify which tab was mine to close safely."
+  }
+]
