@@ -118,7 +118,8 @@ for amd64 and arm64, verified by SHA-256 at build time. It sets
 `CLOAKHUB_LICENSE_MODE=none`: the Hub reads no license key, never queries license
 capacity, and never downloads a browser. Concurrent Browser Instances are capped only by
 `CLOAKHUB_MAX_RUNNING_INSTANCES` (default `10`). The image includes Mac fonts and
-defaults new profiles to a macOS identity.
+defaults new profiles to a macOS identity. The Hub itself is a single static Go binary
+that idles at about 15–20 MB of memory.
 
 Each headed Browser Instance runs on a private Xvfb display streamed by
 [voxl](https://github.com/tembo/voxl) as H.264 over a WebSocket. The stream follows the
@@ -406,7 +407,6 @@ referenced by `compose.yml` are picked up from `.env`.
 | `CLOAKHUB_DEFAULT_PLATFORM` | `macos` in Docker; `linux` in source runs without an override |
 | `CLOAKHUB_DEFAULT_TIMEZONE` / `CLOAKHUB_DEFAULT_LOCALE` | Compose uses `UTC` / `en-US`; set these to your region |
 | `CLOAKHUB_DISK_CACHE_SIZE_MB` | `256` per profile; HTTP cache budget, not a profile disk quota |
-| `CLOAKHUB_BROWSER_VERSION` / `CLOAKHUB_BROWSER_CHANNEL` | Exact build and channel for the optional runtime installer; unused with a bundled binary |
 | `CLOAKHUB_BROWSER_BIN` | Docker defaults to `/opt/cloakbrowser/chrome`; override with a mounted binary if needed |
 | `CLOAKHUB_LICENSE_MODE` | `none` in the image; set `required` with `CLOAKHUB_LICENSE_KEYS_FILE` only for a mounted licensed browser build |
 | `CLOAKHUB_VOXL_LOG` | `warn`; log level for the viewer stream (`info`, `debug`) |

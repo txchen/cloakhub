@@ -13,9 +13,8 @@ trap 'rm -rf -- "$stage"' EXIT
 
 # A small, explicit context keeps credentials, profile data and research files out.
 cp "$repo_root/Dockerfile.mac" "$stage/Dockerfile"
-cp -R "$repo_root/src" "$stage/src"
 cp "$repo_root/scripts/macos-fonts.conf" "$stage/macos-fonts.conf"
-cp "$repo_root/scripts/check-mac-fonts.ts" "$stage/check-mac-fonts.ts"
+cp "$repo_root/scripts/check-mac-fonts.sh" "$stage/check-mac-fonts.sh"
 mkdir "$stage/fonts"
 cp -RL "$font_dir/." "$stage/fonts/"
 docker build --tag "$image_tag" "$stage"

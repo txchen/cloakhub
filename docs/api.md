@@ -53,7 +53,7 @@ to a task before stopping it. Stop preserves browser data; DELETE removes it.
 
 ### Runnable Playwright example
 
-From this repository after `bun install` (Node 20+ or Bun):
+From this repository after `bun install` (Node 20+):
 
 ```sh
 export CLOAKHUB_URL=http://server:7788
