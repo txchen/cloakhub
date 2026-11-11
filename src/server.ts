@@ -14,15 +14,16 @@ import { createXclipClipboardWriter } from "./clipboard-writer";
 import { loadConfigFromEnv } from "./config";
 import { ensureDataRoot } from "./data-root";
 import {
-  createKasmVncDisplayRuntime,
-  resolveKasmVncBin
+  createVoxlDisplayRuntime,
+  resolveDisplayRuntimeBins
 } from "./display-runtime";
 import { openProfileRepository } from "./profile-repository";
+import { openViewerSettingsStore } from "./viewer-settings";
 import { createProfileService } from "./profile-service";
 import {
-  createVncWebSocketHandler,
-  type VncWebSocketData
-} from "./vnc-websocket-proxy";
+  createDisplayWebSocketHandler,
+  type DisplayWebSocketData
+} from "./display-websocket-proxy";
 
 export interface CloakHubServerHandle {
   shutdown(signal?: NodeJS.Signals): Promise<void>;
@@ -56,9 +57,9 @@ export async function startCloakHubServer(): Promise<CloakHubServerHandle> {
   } else if (licensePool) {
     console.log(`CloakBrowser: ${licenseKeys.length} configured key(s), ${licensePool.capacity} licensed slots; Hub limit ${maxRunningInstances}`);
   }
-  const kasmVncBin = await resolveKasmVncBin();
-  if (kasmVncBin.warning) {
-    console.warn(kasmVncBin.warning);
+  const displayBins = await resolveDisplayRuntimeBins();
+  if (displayBins.warning) {
+    console.warn(displayBins.warning);
   }
   const events = openEventLog(config.dataRoot);
   const profileRepository = openProfileRepository(config.dataRoot);
@@ -69,16 +70,23 @@ export async function startCloakHubServer(): Promise<CloakHubServerHandle> {
     dataRoot: config.dataRoot,
     repository: profileRepository
   });
+  const viewerSettings = await openViewerSettingsStore({
+    dataRoot: config.dataRoot,
+    onChange: () => displayRuntime.restartStreams()
+  });
+  const displayRuntime = createVoxlDisplayRuntime({
+    dataRoot: config.dataRoot,
+    streamSettings: () => viewerSettings.get(),
+    voxlBin: displayBins.voxl,
+    xvfbBin: displayBins.xvfb
+  });
   const browserRuntime = createBrowserRuntime({
     browserBin: browserBin.path,
     events,
     clipboardReader: createCdpClipboardReader(),
     clipboardWriter: createXclipClipboardWriter(),
     dataRoot: config.dataRoot,
-    displayRuntime: createKasmVncDisplayRuntime({
-      dataRoot: config.dataRoot,
-      xvncBin: kasmVncBin.path
-    }),
+    displayRuntime,
     launcher: createBunBrowserProcessLauncher({
       dataRoot: config.dataRoot,
       diskCacheSizeMb: config.diskCacheSizeMb,
@@ -108,7 +116,7 @@ export async function startCloakHubServer(): Promise<CloakHubServerHandle> {
 
   const app = createApp(
     { ...config, browserBin: browserBin.path },
-    { browserRuntime, cdpGateway, profileService, events }
+    { browserRuntime, cdpGateway, profileService, events, viewerSettings }
   );
   const cdpWebSocketHandler = createCdpWebSocketHandler({
     cdpSessions: browserRuntime,
@@ -119,7 +127,7 @@ export async function startCloakHubServer(): Promise<CloakHubServerHandle> {
         message: "Created an empty tab before closing the last tab."
       })
   });
-  const vncWebSocketHandler = createVncWebSocketHandler({
+  const displayWebSocketHandler = createDisplayWebSocketHandler({
     manualViewers: browserRuntime,
     clipboardSyncEnabled: (id) =>
       profileService.getProfile(id)?.clipboard_sync ?? false
@@ -131,9 +139,9 @@ export async function startCloakHubServer(): Promise<CloakHubServerHandle> {
     port: config.port,
     websocket: {
       close(ws, code, reason): void {
-        if (isVncWebSocketData(ws.data)) {
-          vncWebSocketHandler.close?.(
-            ws as Bun.ServerWebSocket<VncWebSocketData>,
+        if (isDisplayWebSocketData(ws.data)) {
+          displayWebSocketHandler.close?.(
+            ws as Bun.ServerWebSocket<DisplayWebSocketData>,
             code,
             reason
           );
@@ -147,9 +155,9 @@ export async function startCloakHubServer(): Promise<CloakHubServerHandle> {
         );
       },
       message(ws, message): void {
-        if (isVncWebSocketData(ws.data)) {
-          vncWebSocketHandler.message?.(
-            ws as Bun.ServerWebSocket<VncWebSocketData>,
+        if (isDisplayWebSocketData(ws.data)) {
+          displayWebSocketHandler.message?.(
+            ws as Bun.ServerWebSocket<DisplayWebSocketData>,
             message
           );
           return;
@@ -161,9 +169,9 @@ export async function startCloakHubServer(): Promise<CloakHubServerHandle> {
         );
       },
       open(ws): void {
-        if (isVncWebSocketData(ws.data)) {
-          vncWebSocketHandler.open?.(
-            ws as Bun.ServerWebSocket<VncWebSocketData>
+        if (isDisplayWebSocketData(ws.data)) {
+          displayWebSocketHandler.open?.(
+            ws as Bun.ServerWebSocket<DisplayWebSocketData>
           );
           return;
         }
@@ -267,8 +275,8 @@ if (import.meta.main) {
   await main();
 }
 
-function isVncWebSocketData(
+function isDisplayWebSocketData(
   data: CloakHubWebSocketData
-): data is VncWebSocketData {
-  return "targetPort" in data;
+): data is DisplayWebSocketData {
+  return "kind" in data && data.kind === "display";
 }

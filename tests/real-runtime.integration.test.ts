@@ -27,15 +27,15 @@ import {
   type CdpWebSocketData
 } from "../src/cdp-websocket-proxy";
 import {
-  createKasmVncDisplayRuntime,
-  resolveKasmVncBin
+  createVoxlDisplayRuntime,
+  resolveDisplayRuntimeBins
 } from "../src/display-runtime";
 import { openProfileRepository } from "../src/profile-repository";
 import {
   createProfileService,
   type ProfileService
 } from "../src/profile-service";
-import { createKasmVncWebSocketFactory } from "../src/vnc-websocket-proxy";
+import { createVoxlUpstreamFactory } from "../src/display-websocket-proxy";
 
 setDefaultTimeout(30_000);
 
@@ -176,7 +176,7 @@ describe("real CloakBrowser runtime integration", () => {
   });
 
   realRuntimeTest(
-    "launches a headed Browser Instance with KasmVNC/noVNC path",
+    "launches a headed Browser Instance with the voxl viewer path",
     async () => {
       const fixture = await realRuntimeFixture({ requireDisplay: true });
       await fixture.profileService.createProfile({
@@ -187,17 +187,17 @@ describe("real CloakBrowser runtime integration", () => {
       const viewer = await fixture.runtime.openManualViewer("headed");
 
       expect(viewer.vnc_port).toBeGreaterThan(0);
-      expect(viewer.vnc_ws_path).toBe("/ui/profiles/headed/vnc");
+      expect(viewer.display_path).toBe("/ui/profiles/headed/display/");
       const viewerResponse = await fixture.app.fetch(
         new Request("http://cloakhub.test/ui/profiles/headed/viewer")
       );
       const viewerHtml = await viewerResponse.text();
       const assetResponse = await fixture.app.fetch(
-        new Request("http://cloakhub.test/assets/novnc/core/rfb.js")
+        new Request("http://cloakhub.test/ui/profiles/headed/display/client.js")
       );
       const upgradeServer = fakeUpgradeServer();
       const websocketResponse = await fixture.app.fetch(
-        new Request("http://cloakhub.test/ui/profiles/headed/vnc", {
+        new Request("http://cloakhub.test/ui/profiles/headed/display/ws", {
           headers: { upgrade: "websocket" }
         }),
         upgradeServer
@@ -209,30 +209,32 @@ describe("real CloakBrowser runtime integration", () => {
       expect(websocketResponse).toBeUndefined();
       expect(upgradeServer.upgrades).toEqual([
         {
+          kind: "display",
           profileId: "headed",
           targetHost: "127.0.0.1",
           targetPort: viewer.vnc_port
         }
       ]);
-      const upstream = createKasmVncWebSocketFactory().connect(
+      const upstream = createVoxlUpstreamFactory().connect(
         "127.0.0.1",
         viewer.vnc_port
       );
-      const rfbBanner = await new Promise<string>((resolve, reject) => {
+      const hello = await new Promise<string>((resolve, reject) => {
         const timeout = setTimeout(
-          () => reject(new Error("Timed out waiting for KasmVNC RFB banner")),
+          () => reject(new Error("Timed out waiting for voxl hello")),
           5000
         );
         upstream.onerror = () => {
           clearTimeout(timeout);
-          reject(new Error("KasmVNC upstream websocket failed to open"));
+          reject(new Error("voxl upstream websocket failed to open"));
         };
-        upstream.ondata = (data) => {
+        upstream.onmessage = (data) => {
+          if (typeof data !== "string") return;
           clearTimeout(timeout);
-          resolve(data.toString("ascii"));
+          resolve(data);
         };
       });
-      expect(rfbBanner).toBe("RFB 003.008\n");
+      expect(JSON.parse(hello)).toMatchObject({ t: "hello" });
       upstream.close();
       await fixture.runtime.stop("headed", "manual stop");
     }
@@ -400,10 +402,10 @@ async function realRuntimeFixture(
 ): Promise<RealRuntimeFixture> {
   const dataRoot = await mkdtemp(join(tmpdir(), "cloakhub-real-runtime-"));
   const browserBin = await resolveBrowserBin(process.env.CLOAKHUB_BROWSER_BIN);
-  const kasmVnc = await resolveKasmVncBin();
-  if (options.requireDisplay && !kasmVnc.path) {
+  const displayBins = await resolveDisplayRuntimeBins();
+  if (options.requireDisplay && displayBins.warning) {
     throw new Error(
-      "CLOAKHUB_RUN_REAL_RUNTIME_TESTS requires KasmVNC Xvnc for headed integration tests"
+      "CLOAKHUB_RUN_REAL_RUNTIME_TESTS requires Xvfb and voxl for headed integration tests"
     );
   }
 
@@ -419,9 +421,10 @@ async function realRuntimeFixture(
     events,
     clientConnections: options.clientConnections,
     dataRoot,
-    displayRuntime: createKasmVncDisplayRuntime({
+    displayRuntime: createVoxlDisplayRuntime({
       dataRoot,
-      xvncBin: kasmVnc.path
+      voxlBin: displayBins.voxl,
+      xvfbBin: displayBins.xvfb
     }),
     launcher,
     maxRunningInstances: Math.min(10, licensePool?.capacity ?? Infinity),

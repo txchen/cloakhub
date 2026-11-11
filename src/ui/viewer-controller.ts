@@ -1,6 +1,7 @@
 import type { PresentedBrowserProfile } from "../profile-presentation";
 import { copyText, element, toast } from "./dom";
 import { profilePath } from "./api";
+import { formatStreamStats, setupStreamQuality } from "./stream-quality";
 
 export function createViewerController(
   onConnectionChange: () => void,
@@ -13,6 +14,8 @@ export function createViewerController(
   const paste = element<HTMLButtonElement>("#viewer-paste");
   const copy = element<HTMLButtonElement>("#viewer-copy");
   const state = element("#viewer-state");
+  const stats = element("#viewer-stats");
+  setupStreamQuality();
   let active: PresentedBrowserProfile | undefined;
   let connected = false;
   let clipboard = "";
@@ -36,6 +39,7 @@ export function createViewerController(
     clipboard = "";
     updateClipboard();
     state.textContent = "Connecting…";
+    stats.textContent = "";
     state.className = "badge starting";
     frame.src = `${profilePath(active.profile_id)}/viewer`;
   };
@@ -48,6 +52,7 @@ export function createViewerController(
     connected = false;
     clipboard = "";
     frame.removeAttribute("src");
+    stats.textContent = "";
     nav.hidden = true;
     if (!page.hidden) setPage(false);
     updateClipboard();
@@ -89,7 +94,14 @@ export function createViewerController(
       state.className = "badge running";
       updateClipboard();
       onConnectionChange();
+    } else if (
+      event.data.type === "cloakhub-viewer-stats" &&
+      typeof event.data.fps === "number" &&
+      typeof event.data.kbps === "number"
+    ) {
+      stats.textContent = formatStreamStats(event.data.fps, event.data.kbps);
     } else if (event.data.type === "cloakhub-viewer-disconnected") {
+      stats.textContent = "";
       connected = false;
       clipboard = "";
       state.textContent = "Disconnected";

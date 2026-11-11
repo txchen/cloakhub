@@ -489,26 +489,14 @@ describe("Browser Profile admin API", () => {
     expect(html).not.toMatch(
       /<div id="manual-viewer"[^>]*>\s*<div[^>]*id="clipboard-controls"/
     );
-    expect(html).toContain('data-vnc-websocket-url="/ui/profiles/work/vnc"');
+    expect(html).toContain('data-display-path="/ui/profiles/work/display/"');
+    expect(html).toContain('id="display-frame"');
     expect(html).toContain('src="/assets/viewer.js"');
     const viewerScript = await app.fetch(
       new Request("http://cloakhub.test/assets/viewer.js")
     );
     expect(viewerScript.status).toBe(200);
     expect(viewerScript.headers.get("content-type")).toContain("javascript");
-  });
-
-  test("serves noVNC browser modules for the manual viewer", async () => {
-    const { app } = await tempApp({ authToken: "admin-token" });
-
-    const response = await app.fetch(
-      new Request("http://cloakhub.test/assets/novnc/core/rfb.js")
-    );
-
-    expect(response.status).toBe(200);
-    expect(response.headers.get("content-type")).toContain("text/javascript");
-    expect(response.headers.get("cache-control")).toBe("no-store");
-    expect(await response.text()).toContain("class RFB");
   });
 
   test("manual viewer capacity failures are retryable", async () => {
@@ -545,7 +533,7 @@ describe("Browser Profile admin API", () => {
     );
 
     const response = await app.fetch(
-      new Request("http://cloakhub.test/ui/profiles/work/vnc", {
+      new Request("http://cloakhub.test/ui/profiles/work/display/ws", {
         headers: { cookie, upgrade: "websocket" }
       }),
       server
@@ -554,7 +542,7 @@ describe("Browser Profile admin API", () => {
     expect(response).toBeUndefined();
     expect(browserRuntime.calls).toEqual(["viewer:work"]);
     expect(server.upgrades).toEqual([
-      { profileId: "work", targetHost: "127.0.0.1", targetPort: 5900 }
+      { kind: "display", profileId: "work", targetHost: "127.0.0.1", targetPort: 5900 }
     ]);
   });
 
@@ -567,7 +555,7 @@ describe("Browser Profile admin API", () => {
     const cookie = "cloakhub_auth=admin-token";
 
     const response = await app.fetch(
-      new Request("http://cloakhub.test/ui/profiles/work/vnc", {
+      new Request("http://cloakhub.test/ui/profiles/work/display/ws", {
         headers: { cookie, upgrade: "websocket" }
       }),
       server
@@ -986,7 +974,7 @@ function fakeBrowserRuntime(
         display: ":100",
         profile_id: profileId,
         vnc_port: 5900,
-        vnc_ws_path: `/ui/profiles/${profileId}/vnc`
+        display_path: `/ui/profiles/${profileId}/display/`
       };
     },
     openManualViewerSession: () => ({

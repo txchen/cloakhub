@@ -261,7 +261,7 @@ function fakeRuntime(options: { startError?: Error } = {}): BrowserRuntime & { c
       display: ":100",
       profile_id: profileId,
       vnc_port: 5900,
-      vnc_ws_path: `/ui/profiles/${profileId}/vnc`
+      display_path: `/ui/profiles/${profileId}/display/`
     }),
     openManualViewerSession: () => ({
       close: () => undefined,

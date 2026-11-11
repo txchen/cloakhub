@@ -22,8 +22,7 @@ export async function uiAssetResponse(
       bundle = Bun.build({
         entrypoints: [new URL(entry!, import.meta.url).pathname],
         target: "browser",
-        minify: true,
-        external: ["/assets/novnc/*"]
+        minify: true
       }).then((result) => {
         if (!result.success)
           throw new Error(result.logs.map((log) => log.message).join("\n"));

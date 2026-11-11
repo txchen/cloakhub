@@ -12,23 +12,23 @@ bun run start
 For local development, startup requires a discoverable CloakBrowser Binary (see the
 [pinned deployment build](../README.md#docker)). Set `CLOAKHUB_BROWSER_BIN`, provide
 the packaged Docker path, or install `cloakbrowser` on `PATH`.
-Headed Browser Profiles also require KasmVNC `Xvnc`; if it is missing, startup continues with a warning and headed launch/viewer actions fail until `Xvnc` is installed.
+Headed Browser Profiles also require `Xvfb` and [voxl](https://github.com/tembo/voxl) (`cargo install voxl-server`; override paths with `CLOAKHUB_XVFB_BIN` / `CLOAKHUB_VOXL_BIN`); if either is missing, startup continues with a warning and headed launch/viewer actions fail until both are installed. The viewer needs a secure page: open `http://localhost:7788` or an HTTPS origin.
 
 ## Tests
 
-Normal tests do not launch real CloakBrowser or KasmVNC:
+Normal tests do not launch real CloakBrowser, Xvfb, or voxl:
 
 ```sh
 bun test
 ```
 
-Real-runtime integration tests are opt-in and require CloakBrowser plus KasmVNC for headed coverage:
+Real-runtime integration tests are opt-in and require CloakBrowser plus Xvfb and voxl for headed coverage:
 
 ```sh
 CLOAKHUB_BROWSER_BIN=/path/to/cloakbrowser bun run integration:real-runtime
 ```
 
-Those integration tests exercise real headless launch, headed KasmVNC/noVNC startup, CDP Transparent Recovery, spin-down/recovery persistence, and explicit Stop overriding active clients.
+Those integration tests exercise real headless launch, headed Xvfb/voxl viewer startup, CDP Transparent Recovery, spin-down/recovery persistence, and explicit Stop overriding active clients.
 They also verify that a new default headed profile can render and read pixels through
 both WebGL and WebGL2. They do not depend on public bot-detection websites.
 

@@ -53,8 +53,26 @@ describe("OwnedProcessRegistry", () => {
 
     await expect(registry.cleanupOwnedProcesses()).resolves.toEqual(["headed", "headless"]);
 
-    expect(waits).toEqual([1500, 1500]);
+    // Neither pid is alive with an ownership marker, so nothing is signalled.
+    expect(waits).toEqual([]);
     await expect(readdir(join(dataRoot, "runtime"))).resolves.toEqual([]);
+  });
+
+  test("never signals a reused pid that lacks the ownership marker", async () => {
+    const dataRoot = await tempDataRoot();
+    const registry = createOwnedProcessRegistry({ dataRoot, wait: async () => undefined });
+    const bystander = Bun.spawn(["sleep", "30"], { env: { PATH: process.env.PATH } });
+    try {
+      await registry.writePid("stale", "display", bystander.pid);
+      await registry.writePid("hub", "browser", process.pid);
+
+      await registry.cleanupOwnedProcesses();
+
+      expect(bystander.exitCode).toBeNull();
+      expect(() => process.kill(bystander.pid, 0)).not.toThrow();
+    } finally {
+      bystander.kill();
+    }
   });
 });
 

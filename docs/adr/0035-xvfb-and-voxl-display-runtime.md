@@ -1,0 +1,3 @@
+# Xvfb and voxl display runtime
+
+CloakHub replaces KasmVNC with a private Xvfb display per headed Browser Instance, streamed by a separate voxl process as H.264 over a WebSocket and relayed through CloakHub's viewer proxy. voxl keeps a scrolling browser at 60 fps on a few Mbps, adapts to slow links, costs nothing without a viewer, and syncs the clipboard natively, which removes the RFB compatibility proxy. The trade-off is that browsers only expose WebCodecs on secure pages, so the viewer requires HTTPS or localhost; stream limits are one Hub-wide setting applied by restarting the voxl processes, never the displays.

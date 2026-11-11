@@ -21,7 +21,14 @@ import {
   type CdpGateway
 } from "./cdp-gateway";
 import type { CdpWebSocketData } from "./cdp-websocket-proxy";
-import type { VncWebSocketData } from "./vnc-websocket-proxy";
+import type { DisplayWebSocketData } from "./display-websocket-proxy";
+import {
+  InvalidViewerSettingsError,
+  VIEWER_STREAM_LIMITS,
+  VIEWER_STREAM_PRESETS,
+  viewerPresetFor,
+  type ViewerSettingsStore
+} from "./viewer-settings";
 import {
   BrowserProfileNotFoundError,
   CapacityUnavailableError,
@@ -68,10 +75,11 @@ export interface CloakHubUpgradeServer {
   upgrade(request: Request, options: { data: CloakHubWebSocketData }): boolean;
 }
 
-export type CloakHubWebSocketData = CdpWebSocketData | VncWebSocketData;
+export type CloakHubWebSocketData = CdpWebSocketData | DisplayWebSocketData;
 
 export interface CloakHubServices {
   events?: EventLog;
+  viewerSettings?: ViewerSettingsStore;
   browserRuntime?: BrowserRuntime;
   cdpGateway?: CdpGateway;
   profileService?: ProfileService;
@@ -115,11 +123,6 @@ export function createApp(
     const uiAsset = await uiAssetResponse(request, url);
     if (uiAsset) return uiAsset;
 
-    const noVncAssetResponse = await noVncAssetResponseForRequest(request, url);
-    if (noVncAssetResponse) {
-      return noVncAssetResponse;
-    }
-
     if (
       isAdminApiRoute(url) &&
       !isAdminApiAuthorized(request, config.authToken)
@@ -132,6 +135,13 @@ export function createApp(
       !isUiAuthorized(request, config.authToken)
     ) {
       return unauthorizedResponse();
+    }
+
+    if (url.pathname === "/api/viewer-settings" || url.pathname === "/ui/viewer-settings") {
+      if (url.pathname.startsWith("/ui/") && !isUiAuthorized(request, config.authToken)) {
+        return unauthorizedResponse();
+      }
+      return viewerSettingsResponse(request, services.viewerSettings);
     }
 
     if (url.pathname === "/api/events" || url.pathname === "/ui/events") {
@@ -169,14 +179,14 @@ export function createApp(
       return cdpTokenResponse;
     }
 
-    const vncWebSocketResponse = await vncWebSocketResponseForRequest(
+    const displayResponse = await displayResponseForRequest(
       request,
       url,
       services.browserRuntime,
       server
     );
-    if (vncWebSocketResponse !== undefined || isVncRoute(url)) {
-      return vncWebSocketResponse;
+    if (displayResponse !== undefined || isDisplayWebSocketRoute(url)) {
+      return displayResponse;
     }
 
     const clipboardResponse = await manualClipboardResponse(
@@ -252,64 +262,43 @@ export function createApp(
   };
 }
 
-async function noVncAssetResponseForRequest(
+async function viewerSettingsResponse(
   request: Request,
-  url: URL
-): Promise<Response | undefined> {
-  const prefix = "/assets/novnc/";
-  if (!url.pathname.startsWith(prefix)) {
-    return undefined;
-  }
-
-  if (request.method !== "GET") {
-    return textResponse("Method not allowed", 405, { Allow: "GET" });
-  }
-
-  const assetPath = url.pathname.slice(prefix.length);
-  if (
-    !/^(?:core|vendor)\/[A-Za-z0-9_./-]+\.js$/.test(assetPath) ||
-    assetPath.includes("..")
-  ) {
+  store: ViewerSettingsStore | undefined
+): Promise<Response> {
+  if (!store) {
     return textResponse("Not found", 404);
   }
-
-  const asset = await noVncAsset(assetPath);
-  if (!(await asset.exists())) {
-    return textResponse("Not found", 404);
+  const body = () => {
+    const settings = store.get();
+    return {
+      settings,
+      preset: viewerPresetFor(settings),
+      presets: VIEWER_STREAM_PRESETS,
+      limits: VIEWER_STREAM_LIMITS
+    };
+  };
+  if (request.method === "GET") {
+    return jsonResponse(body(), 200, { "cache-control": "no-store" });
   }
-
-  return new Response(asset, {
-    headers: {
-      "cache-control": "no-store",
-      "content-type": "text/javascript; charset=utf-8"
-    }
-  });
-}
-
-async function noVncAsset(
-  assetPath: string
-): Promise<ReturnType<typeof Bun.file>> {
-  const candidates = [
-    process.env.CLOAKHUB_NOVNC_WEB_ROOT
-      ? Bun.file(
-          `${process.env.CLOAKHUB_NOVNC_WEB_ROOT.replace(/\/$/, "")}/${assetPath}`
-        )
-      : undefined,
-    Bun.file(
-      new URL(`../node_modules/@novnc/novnc/${assetPath}`, import.meta.url)
-    )
-  ].filter(
-    (candidate): candidate is ReturnType<typeof Bun.file> =>
-      candidate !== undefined
-  );
-
-  for (const candidate of candidates) {
-    if (await candidate.exists()) {
-      return candidate;
-    }
+  if (request.method !== "PUT") {
+    return textResponse("Method not allowed", 405, { Allow: "GET, PUT" });
   }
-
-  return candidates[candidates.length - 1]!;
+  let input: unknown;
+  try {
+    input = await request.json();
+  } catch {
+    return errorResponse("Request body must be valid JSON", 400);
+  }
+  try {
+    await store.update(input);
+    return jsonResponse(body());
+  } catch (error) {
+    if (error instanceof InvalidViewerSettingsError) {
+      return errorResponse(error.message, 400);
+    }
+    throw error;
+  }
 }
 
 async function manualClipboardResponse(
@@ -357,13 +346,25 @@ async function manualClipboardResponse(
   }
 }
 
-async function vncWebSocketResponseForRequest(
+/** voxl page assets the viewer iframe loads through CloakHub. */
+const DISPLAY_ASSETS = new Set([
+  "",
+  "index.html",
+  "client.js",
+  "worker.js",
+  "audio.js",
+  "mic.js",
+  "favicon.ico",
+  "inter.woff2"
+]);
+
+async function displayResponseForRequest(
   request: Request,
   url: URL,
   browserRuntime: BrowserRuntime | undefined,
   server: CloakHubUpgradeServer | undefined
 ): Promise<Response | undefined> {
-  const match = /^\/ui\/profiles\/([^/]+)\/vnc$/.exec(url.pathname);
+  const match = /^\/ui\/profiles\/([^/]+)\/display\/([^/]*)$/.exec(url.pathname);
   if (!match) {
     return undefined;
   }
@@ -372,27 +373,57 @@ async function vncWebSocketResponseForRequest(
     return textResponse("Not found", 404);
   }
 
-  if (!isWebSocketUpgrade(request)) {
-    return textResponse("VNC websocket upgrade is required", 426);
+  const profileId = match[1]!;
+  const asset = match[2]!;
+
+  if (asset === "ws") {
+    if (!isWebSocketUpgrade(request)) {
+      return textResponse("Viewer websocket upgrade is required", 426);
+    }
+    if (!server) {
+      return errorResponse("Viewer websocket upgrade is unavailable", 400);
+    }
+    try {
+      const viewer = await browserRuntime.openManualViewer(profileId);
+      const upgraded = server.upgrade(request, {
+        data: {
+          kind: "display",
+          profileId: viewer.profile_id,
+          targetHost: "127.0.0.1",
+          targetPort: viewer.vnc_port
+        }
+      });
+      return upgraded
+        ? undefined
+        : errorResponse("Viewer websocket upgrade failed", 400);
+    } catch (error) {
+      return manualViewerJsonErrorResponse(error);
+    }
   }
 
-  if (!server) {
-    return errorResponse("VNC websocket upgrade is unavailable", 400);
+  if (!DISPLAY_ASSETS.has(asset)) {
+    return textResponse("Not found", 404);
+  }
+  if (request.method !== "GET" && request.method !== "HEAD") {
+    return textResponse("Method not allowed", 405, { Allow: "GET, HEAD" });
   }
 
   try {
-    const viewer = await browserRuntime.openManualViewer(match[1]!);
-    const upgraded = server.upgrade(request, {
-      data: {
-        profileId: viewer.profile_id,
-        targetHost: "127.0.0.1",
-        targetPort: viewer.vnc_port
-      }
+    const viewer = await browserRuntime.openManualViewer(profileId);
+    const upstream = await fetch(
+      `http://127.0.0.1:${viewer.vnc_port}/${asset}`,
+      { method: request.method, signal: AbortSignal.timeout(10_000) }
+    );
+    const headers = new Headers();
+    for (const name of ["content-type", "cache-control", "etag", "last-modified"]) {
+      const value = upstream.headers.get(name);
+      if (value) headers.set(name, value);
+    }
+    headers.set("x-content-type-options", "nosniff");
+    return new Response(request.method === "HEAD" ? null : upstream.body, {
+      headers,
+      status: upstream.status
     });
-
-    return upgraded
-      ? undefined
-      : errorResponse("VNC websocket upgrade failed", 400);
   } catch (error) {
     return manualViewerJsonErrorResponse(error);
   }
@@ -844,12 +875,12 @@ function isCdpRoute(url: URL): boolean {
   return /^\/api\/profiles\/[^/]+\/cdp(?:\/|$)/.test(url.pathname);
 }
 
-function isVncRoute(url: URL): boolean {
-  return /^\/ui\/profiles\/[^/]+\/vnc$/.test(url.pathname);
+function isDisplayWebSocketRoute(url: URL): boolean {
+  return /^\/ui\/profiles\/[^/]+\/display\/ws$/.test(url.pathname);
 }
 
 function isUiProfileActionRoute(url: URL): boolean {
-  return /^\/ui\/profiles(?:\/[^/]+(?:\/(?:start|stop|restart|viewer|vnc|clipboard|cdp-token(?:\/regenerate)?))?)?$/.test(
+  return /^\/ui\/profiles(?:\/[^/]+(?:\/(?:start|stop|restart|viewer|display\/[^/]*|clipboard|cdp-token(?:\/regenerate)?))?)?$/.test(
     url.pathname
   );
 }

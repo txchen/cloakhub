@@ -139,7 +139,7 @@ export interface BrowserRuntimeManualViewerState {
   display: string;
   profile_id: string;
   vnc_port: number;
-  vnc_ws_path: string;
+  display_path: string;
 }
 
 export interface BrowserClipboardWriter {
@@ -235,7 +235,7 @@ const cdpReadinessProbe: BrowserReadinessProbe = {
 const vncReadinessProbe: BrowserManualReadinessProbe = {
   async waitUntilReady(state: BrowserRuntimeState): Promise<void> {
     if (state.vnc_port === undefined) {
-      throw new Error("Browser Instance VNC endpoint was not allocated");
+      throw new Error("Browser Instance viewer endpoint was not allocated");
     }
 
     const deadline = Date.now() + DEFAULT_READY_TIMEOUT_MS;
@@ -253,7 +253,7 @@ const vncReadinessProbe: BrowserManualReadinessProbe = {
     }
 
     throw new Error(
-      `Browser Instance VNC endpoint was not ready: ${lastError}`
+      `Browser Instance viewer endpoint was not ready: ${lastError}`
     );
   }
 };
@@ -395,7 +395,7 @@ export function createBrowserRuntime(
         profile_id: profile.profile_id,
         vnc_port: state.vnc_port,
         clipboard_sync: profile.clipboard_sync,
-        vnc_ws_path: `/ui/profiles/${encodeURIComponent(profile.profile_id)}/vnc`
+        display_path: `/ui/profiles/${encodeURIComponent(profile.profile_id)}/display/`
       };
     },
 
@@ -954,7 +954,7 @@ export class UnsupportedManualViewerProfileError extends Error {
 
 export class MissingDisplayRuntimeError extends Error {
   constructor() {
-    super("Missing KasmVNC Xvnc display runtime");
+    super("Missing Xvfb or voxl display runtime");
     this.name = "MissingDisplayRuntimeError";
   }
 }

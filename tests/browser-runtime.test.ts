@@ -328,7 +328,7 @@ describe("BrowserRuntime", () => {
     });
   });
 
-  test("headed launch fails clearly when KasmVNC display runtime is unavailable", async () => {
+  test("headed launch fails clearly when the display runtime is unavailable", async () => {
     const repository = fakeRepository(
       profile({ headless: false, profile_id: "work" })
     );
@@ -339,7 +339,7 @@ describe("BrowserRuntime", () => {
     );
     expect(repository.get("work")).toMatchObject({
       instance_status: "failed",
-      last_launch_error: "Missing KasmVNC Xvnc display runtime"
+      last_launch_error: "Missing Xvfb or voxl display runtime"
     });
   });
 
@@ -519,7 +519,7 @@ describe("BrowserRuntime", () => {
       profile_id: "work",
       vnc_port: 5900,
       clipboard_sync: true,
-      vnc_ws_path: "/ui/profiles/work/vnc"
+      display_path: "/ui/profiles/work/display/"
     });
     expect(manualReadinessProbe.readyStates).toEqual([
       {

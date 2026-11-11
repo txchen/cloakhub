@@ -10,7 +10,8 @@ export interface OwnedProcessResourceUsage {
   rss_bytes: number | null;
 }
 
-export type OwnedProcessKind = "browser" | "display";
+/** browser: CloakBrowser; display: the Xvfb X server; streamer: voxl on that display. */
+export type OwnedProcessKind = "browser" | "display" | "streamer";
 
 export interface OwnedProcessRegistry {
   cleanupOwnedProcesses(profileIds?: string[], options?: { kinds?: OwnedProcessKind[] }): Promise<string[]>;
@@ -38,7 +39,8 @@ interface OwnedProcessSnapshot {
 
 const OWNED_PROCESS_PID_FILES: Record<OwnedProcessKind, string> = {
   browser: "browser.pid",
-  display: "display.pid"
+  display: "display.pid",
+  streamer: "streamer.pid"
 };
 
 const DEFAULT_STOP_GRACE_MS = 1500;
@@ -265,7 +267,12 @@ async function ownedProcessPids(
 ): Promise<number[]> {
   const pids = new Set<number>();
   for (const pid of await candidatePidFileValues(dataRoot, profileId, kinds)) {
-    pids.add(pid);
+    // A pid file can outlive its PID namespace (container restart); only signal a
+    // process that still carries this profile's ownership marker, never the Hub.
+    const environ = pid === process.pid ? null : await processEnviron(pid);
+    if (environ && hasOwnedProcessEnvMarker(environ, dataRoot, profileId)) {
+      pids.add(pid);
+    }
   }
 
   if (!kinds) {
@@ -355,7 +362,7 @@ async function processSnapshotsForGroups(processGroupIds: Set<number>): Promise<
 async function candidatePidFileValues(
   dataRoot: string,
   profileId: string,
-  kinds: OwnedProcessKind[] = ["browser", "display"]
+  kinds: OwnedProcessKind[] = ["browser", "display", "streamer"]
 ): Promise<number[]> {
   const runtimePath = join(dataRoot, "runtime", profileId);
   const pidFileValues = await Promise.all(

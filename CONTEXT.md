@@ -25,7 +25,7 @@ The Browser Profile setting that controls when its Browser Instance may spin dow
 _Avoid_: Timeout, idle setting
 
 **Browser Instance**:
-The live runtime for a Browser Profile: the running browser process plus supporting display, VNC, and automation endpoints.
+The live runtime for a Browser Profile: the running browser process plus supporting display, viewer stream, and automation endpoints.
 _Avoid_: Profile, session
 
 **Instance Status**:
@@ -42,7 +42,7 @@ _Avoid_: Runtime State, logs
 
 **Owned Process**:
 A child process that CloakHub can identify as belonging to a Browser Instance through its pidfile, profile-specific paths, process group, or launch marker.
-_Avoid_: Chrome process, VNC process
+_Avoid_: Chrome process, VNC process, voxl process
 
 **Resource Usage**:
 Approximate CPU and memory consumption attributed to a Browser Instance through its Owned Processes or process group.
@@ -73,7 +73,7 @@ A human operator connected through the web UI and live browser viewer.
 _Avoid_: User, viewer
 
 **Viewer Presence**:
-The fact that one or more Manual Clients have an open VNC viewer connection to a Browser Instance. Viewer Presence is operator-visible but is not Instance Activity by itself.
+The fact that one or more Manual Clients have an open viewer stream connection to a Browser Instance. Viewer Presence is operator-visible but is not Instance Activity by itself.
 _Avoid_: Active viewer, manual activity
 
 **Manual Input**:
@@ -81,7 +81,7 @@ Keyboard, pointer, wheel, clipboard paste, or similar operator actions sent from
 _Avoid_: Watching, viewing, presence
 
 **Instance Activity**:
-An interaction observed by CloakHub that should keep a Browser Instance alive: active CDP websocket connections, CDP messages through CloakHub, Manual Input through VNC, and explicit lifecycle commands. Passive UI polling, health checks, profile list/status requests, profile edits, and view-only VNC framebuffer updates are not Instance Activity.
+An interaction observed by CloakHub that should keep a Browser Instance alive: active CDP websocket connections, CDP messages through CloakHub, Manual Input through the viewer stream, and explicit lifecycle commands. Passive UI polling, health checks, profile list/status requests, profile edits, and view-only viewer stream frames are not Instance Activity.
 _Avoid_: Traffic, request, usage
 
 **Transparent Recovery**:
@@ -93,7 +93,7 @@ A Browser Instance with no observed Instance Activity for its configured idle wi
 _Avoid_: Inactive tab, sleeping page
 
 **Spin-down**:
-The teardown of an Idle Browser Instance to reclaim server resources, including the browser process and per-instance display, VNC, clipboard, and automation support processes.
+The teardown of an Idle Browser Instance to reclaim server resources, including the browser process and per-instance display, viewer stream, clipboard, and automation support processes.
 _Avoid_: Pause, suspend, hide
 
 **Running Instance Limit**:

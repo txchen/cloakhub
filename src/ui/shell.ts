@@ -56,13 +56,14 @@ export function renderShell(
       <button class="secondary" id="events-more" hidden>Load older events</button>
     </main>
     <section id="viewer-page" class="viewer-page" hidden aria-label="Browser viewer">
-      <div class="viewer-toolbar"><button id="viewer-back" class="secondary">← Profiles</button><div class="viewer-identity"><strong id="viewer-name"></strong><span id="viewer-id" class="mono"></span></div><span id="viewer-state" class="badge">Connecting</span><div class="viewer-actions"><button class="secondary" data-action="edit">Settings</button><button id="viewer-reconnect" class="secondary">Reconnect</button><button id="viewer-paste" class="secondary" disabled>Paste</button><button id="viewer-copy" class="secondary" disabled>Copy out</button><button id="viewer-fullscreen" class="icon-button" title="Full screen" aria-label="Full screen">⛶</button><button id="viewer-close" class="icon-button" title="Close viewer; browser keeps running" aria-label="Close viewer">×</button></div></div>
+      <div class="viewer-toolbar"><button id="viewer-back" class="secondary">← Profiles</button><div class="viewer-identity"><strong id="viewer-name"></strong><span id="viewer-id" class="mono"></span></div><span id="viewer-state" class="badge">Connecting</span><div class="viewer-actions"><span id="viewer-stats" class="viewer-stats" title="Live stream frame rate and bitrate"></span><span class="viewer-quality"><select id="viewer-quality" aria-label="Stream quality for all viewers"><option value="data-saver">Data saver</option><option value="balanced">Balanced</option><option value="high">High quality</option><option value="custom">Custom…</option></select><button id="viewer-quality-edit" class="icon-button" title="Custom stream quality" aria-label="Custom stream quality">⚙</button></span><button class="secondary" data-action="edit">Settings</button><button id="viewer-reconnect" class="secondary">Reconnect</button><button id="viewer-paste" class="secondary" disabled>Paste</button><button id="viewer-copy" class="secondary" disabled>Copy out</button><button id="viewer-fullscreen" class="icon-button" title="Full screen" aria-label="Full screen">⛶</button><button id="viewer-close" class="icon-button" title="Close viewer; browser keeps running" aria-label="Close viewer">×</button></div></div>
       <iframe id="viewer-frame" title="CloakHub browser viewer" allow="clipboard-read; clipboard-write"></iframe>
     </section>
   </div>
 </div>
 <dialog id="profile-editor" aria-labelledby="editor-title"></dialog>
 <dialog id="confirm-dialog" class="confirm-dialog" aria-labelledby="confirm-title"></dialog>
+<dialog id="quality-dialog" class="confirm-dialog quality-dialog" aria-labelledby="quality-title"></dialog>
 <div class="toasts" id="toasts" role="status" aria-live="polite"></div>
 <script id="bootstrap" type="application/json">${data}</script><script type="module" src="/assets/app.js"></script>
 </body></html>`;

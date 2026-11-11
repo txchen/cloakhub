@@ -9,7 +9,7 @@ export function renderLoginShell(): string {
 export function renderManualViewer(
   viewer: BrowserRuntimeManualViewerState
 ): string {
-  return `${head(`CloakHub Viewer - ${viewer.profile_id}`)}<body class="remote-viewer"><main id="manual-viewer" data-profile-id="${escape(viewer.profile_id)}" data-clipboard-sync="${viewer.clipboard_sync !== false}" data-vnc-websocket-url="${escape(viewer.vnc_ws_path)}"></main><span id="remote-status">Connecting…</span><script type="module" src="/assets/viewer.js"></script></body></html>`;
+  return `${head(`CloakHub Viewer - ${viewer.profile_id}`)}<body class="remote-viewer"><main id="manual-viewer" data-profile-id="${escape(viewer.profile_id)}" data-clipboard-sync="${viewer.clipboard_sync !== false}" data-display-path="${escape(viewer.display_path)}"><iframe id="display-frame" title="Browser display" allow="clipboard-read; clipboard-write; fullscreen; keyboard-map"></iframe></main><span id="remote-status">Connecting…</span><script type="module" src="/assets/viewer.js"></script></body></html>`;
 }
 export function renderManualViewerUnavailable(message: string): string {
   return `${head("Viewer unavailable")}<body class="login-page"><main class="login-card"><h1>Viewer unavailable</h1><p>${escape(message)}</p><p>Check the profile’s browser mode and launch status, then try reconnecting.</p><a class="secondary" href="/" target="_top">Back to profiles</a></main></body></html>`;
