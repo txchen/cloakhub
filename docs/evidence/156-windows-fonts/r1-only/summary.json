@@ -1,0 +1,118 @@
+{
+  "schemaVersion": 1,
+  "planned": 2,
+  "recorded": 2,
+  "infrastructureErrors": [],
+  "detectorGaps": [],
+  "groups": [
+    {
+      "label": "detectors / only / windows / headed / configured",
+      "records": 1,
+      "completed": 1,
+      "webgl": {
+        "valid": 1,
+        "available": 1
+      },
+      "webglDraw": {
+        "valid": 2,
+        "successful": 2
+      },
+      "sannysoft": {
+        "valid": 0,
+        "failures": 0
+      },
+      "browserscan": {
+        "valid": 0,
+        "normal": 0
+      },
+      "fingerprint": {
+        "valid": 1,
+        "botNotDetected": 1,
+        "vmPositive": 0,
+        "tamperingPositive": 1,
+        "antiDetectValid": 1,
+        "antiDetectPositive": 1
+      },
+      "iphey": {
+        "observed": 0,
+        "completed": 0,
+        "verdicts": [],
+        "scores": []
+      },
+      "cpu": {
+        "valid": 0,
+        "medianSeconds": null,
+        "frames": []
+      },
+      "interception": {
+        "requested": 0,
+        "successful": 0
+      },
+      "contextMismatches": [
+        "detectors-only-windows-headed-20260909-r1-configured"
+      ],
+      "popupOpened": [],
+      "gpuVendors": [
+        "Google Inc. (Intel)"
+      ],
+      "touchPoints": [
+        0
+      ]
+    },
+    {
+      "label": "detectors / only / windows / headless / configured",
+      "records": 1,
+      "completed": 1,
+      "webgl": {
+        "valid": 1,
+        "available": 1
+      },
+      "webglDraw": {
+        "valid": 2,
+        "successful": 2
+      },
+      "sannysoft": {
+        "valid": 0,
+        "failures": 0
+      },
+      "browserscan": {
+        "valid": 0,
+        "normal": 0
+      },
+      "fingerprint": {
+        "valid": 1,
+        "botNotDetected": 1,
+        "vmPositive": 0,
+        "tamperingPositive": 1,
+        "antiDetectValid": 1,
+        "antiDetectPositive": 1
+      },
+      "iphey": {
+        "observed": 0,
+        "completed": 0,
+        "verdicts": [],
+        "scores": []
+      },
+      "cpu": {
+        "valid": 0,
+        "medianSeconds": null,
+        "frames": []
+      },
+      "interception": {
+        "requested": 0,
+        "successful": 0
+      },
+      "contextMismatches": [
+        "detectors-only-windows-headless-20260909-r1-configured"
+      ],
+      "popupOpened": [],
+      "gpuVendors": [
+        "Google Inc. (Intel)"
+      ],
+      "touchPoints": [
+        0
+      ]
+    }
+  ],
+  "interpretation": "Measurement completion is not an anti-detection pass. Do not aggregate heterogeneous detectors into a pass rate. Missing and rate-limited results are not false or zero. Compare only matched environment, mode, persona, seed and graphics configuration."
+}

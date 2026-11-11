@@ -1,0 +1,156 @@
+{
+  "schemaVersion": 1,
+  "suiteVersion": 1,
+  "suiteSourceSHA256": "21ab154f79859c0da9d5df85976338aba2211e5d4181f0dea5a1954377b529dc",
+  "runId": "2026-11-10T20-56-11-437Z-e9010284",
+  "startedAt": "2026-11-10T20:56:11.440Z",
+  "status": "finished",
+  "plan": "detectors",
+  "external": true,
+  "config": {
+    "binaries": [
+      {
+        "id": "added",
+        "executable": "/binaries/candidate/chrome",
+        "expectedVersion": "156.0.8078.47.1",
+        "kind": "cloakbrowser",
+        "licenseConfigured": true
+      }
+    ],
+    "personas": [
+      "windows"
+    ],
+    "modes": [
+      "headed",
+      "headless"
+    ],
+    "seeds": [
+      20260909
+    ],
+    "rounds": 1,
+    "graphics": {
+      "headed": [],
+      "headless": [
+        "--use-gl=angle"
+      ]
+    },
+    "fontconfigFiles": {
+      "windows": "/opt/evaluation/windows-fonts/configs/windows-added.conf"
+    },
+    "fontNotes": {
+      "windows": "System fonts plus 34 genuine font files: Microsoft corefonts and existing repo Tahoma/MS Sans Serif/Wingdings; missing modern Windows families"
+    },
+    "detectors": [
+      "fingerprint"
+    ],
+    "cooldownMs": 45000,
+    "caseTimeoutMs": 300000,
+    "performanceSampleMs": 5000,
+    "routeRequests": 200,
+    "xvnc": "/usr/bin/Xvnc",
+    "environmentLabel": "Windows font isolation: added; replicate 1; identical evaluation image, 4 CPU/4GiB/2GiB shm, no GPU",
+    "licenseConfigured": true
+  },
+  "plannedCases": [
+    {
+      "id": "detectors-added-windows-headed-20260909-r1-configured",
+      "binaryId": "added",
+      "persona": "windows",
+      "mode": "headed",
+      "seed": 20260909,
+      "round": 1,
+      "plan": "detectors",
+      "variant": "configured",
+      "graphics": [],
+      "extra": []
+    },
+    {
+      "id": "detectors-added-windows-headless-20260909-r1-configured",
+      "binaryId": "added",
+      "persona": "windows",
+      "mode": "headless",
+      "seed": 20260909,
+      "round": 1,
+      "plan": "detectors",
+      "variant": "configured",
+      "graphics": [
+        "--use-gl=angle"
+      ],
+      "extra": []
+    }
+  ],
+  "skipped": [],
+  "environment": {
+    "node": "v24.22.2",
+    "playwright": "1.64.1",
+    "kernel": "7.2.13-200.fc44.x86_64",
+    "arch": "x64",
+    "environmentLabel": "Windows font isolation: added; replicate 1; identical evaluation image, 4 CPU/4GiB/2GiB shm, no GPU",
+    "binaries": [
+      {
+        "id": "added",
+        "kind": "cloakbrowser",
+        "version": "156.0.8078.47.1",
+        "executableSHA256": "37c2b771b87cdbf171c2c8021fc7f7900667e2363ccfc8e5d7904ef7e9dbc74a"
+      }
+    ],
+    "fonts": {
+      "windows": {
+        "file": "/opt/evaluation/windows-fonts/configs/windows-added.conf",
+        "sha256": "4bf2c5add24dcdb98a7ea06c3bca75bcde7e5569f4bf4338e67d46143d06e6b5",
+        "note": "System fonts plus 34 genuine font files: Microsoft corefonts and existing repo Tahoma/MS Sans Serif/Wingdings; missing modern Windows families",
+        "families": [
+          "Andale Mono",
+          "Arial",
+          "Arial Black",
+          "C059",
+          "Comic Sans MS",
+          "Courier New",
+          "D050000L",
+          "FreeMono",
+          "FreeSans",
+          "FreeSerif",
+          "Georgia",
+          "IPAGothic,IPAゴシック",
+          "IPAPGothic,IPA Pゴシック",
+          "Impact",
+          "Liberation Mono",
+          "Liberation Sans",
+          "Liberation Sans Narrow",
+          "Liberation Serif",
+          "Loma",
+          "Microsoft Sans Serif",
+          "Nimbus Mono PS",
+          "Nimbus Roman",
+          "Nimbus Sans",
+          "Nimbus Sans Narrow",
+          "Noto Color Emoji",
+          "P052",
+          "Standard Symbols PS",
+          "Tahoma",
+          "Times New Roman",
+          "Trebuchet MS",
+          "URW Bookman",
+          "URW Gothic",
+          "Unifont",
+          "Unifont CSUR",
+          "Unifont Upper",
+          "Unifont-JP",
+          "Verdana",
+          "Webdings",
+          "WenQuanYi Zen Hei Mono,文泉驛等寬正黑,文泉驿等宽正黑",
+          "WenQuanYi Zen Hei Sharp,文泉驛點陣正黑,文泉驿点阵正黑",
+          "WenQuanYi Zen Hei,文泉驛正黑,文泉驿正黑",
+          "Wingdings",
+          "Z003"
+        ]
+      }
+    },
+    "display": ":90",
+    "externalDisplay": false,
+    "cpuMax": "400000 100000",
+    "memoryMax": "4294967296",
+    "performanceScope": "whole cgroup v2; browser + renderer/GPU + display + runner/fixtures, not browser main process alone"
+  },
+  "finishedAt": "2026-11-10T20:57:12.590Z"
+}

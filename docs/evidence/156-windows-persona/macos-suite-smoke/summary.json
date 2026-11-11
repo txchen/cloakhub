@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "planned": 1,
+  "recorded": 1,
+  "infrastructureErrors": [],
+  "detectorGaps": [],
+  "groups": [
+    {
+      "label": "detectors / candidate / macos / headed / configured",
+      "records": 1,
+      "completed": 1,
+      "webgl": {
+        "valid": 1,
+        "available": 1
+      },
+      "webglDraw": {
+        "valid": 2,
+        "successful": 2
+      },
+      "sannysoft": {
+        "valid": 1,
+        "failures": 0
+      },
+      "browserscan": {
+        "valid": 1,
+        "normal": 1
+      },
+      "fingerprint": {
+        "valid": 1,
+        "botNotDetected": 1,
+        "vmPositive": 0,
+        "tamperingPositive": 0,
+        "antiDetectValid": 1,
+        "antiDetectPositive": 0
+      },
+      "iphey": {
+        "observed": 1,
+        "completed": 1,
+        "verdicts": [
+          "Trustworthy"
+        ],
+        "scores": [
+          100
+        ]
+      },
+      "cpu": {
+        "valid": 0,
+        "medianSeconds": null,
+        "frames": []
+      },
+      "interception": {
+        "requested": 0,
+        "successful": 0
+      },
+      "contextMismatches": [
+        "detectors-candidate-macos-headed-20260909-r1-configured"
+      ],
+      "popupOpened": [],
+      "gpuVendors": [
+        "Google Inc. (Apple)"
+      ],
+      "touchPoints": [
+        0
+      ]
+    }
+  ],
+  "interpretation": "Measurement completion is not an anti-detection pass. Do not aggregate heterogeneous detectors into a pass rate. Missing and rate-limited results are not false or zero. Compare only matched environment, mode, persona, seed and graphics configuration."
+}

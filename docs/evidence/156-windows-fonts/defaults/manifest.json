@@ -1,0 +1,153 @@
+{
+  "schemaVersion": 1,
+  "suiteVersion": 1,
+  "suiteSourceSHA256": "21ab154f79859c0da9d5df85976338aba2211e5d4181f0dea5a1954377b529dc",
+  "runId": "2026-11-10T21-12-34-719Z-53820b5b",
+  "startedAt": "2026-11-10T21:12:34.723Z",
+  "status": "finished",
+  "plan": "detectors",
+  "external": true,
+  "config": {
+    "binaries": [
+      {
+        "id": "defaults",
+        "executable": "/binaries/candidate/chrome",
+        "expectedVersion": "156.0.8078.47.1",
+        "kind": "cloakbrowser",
+        "licenseConfigured": true
+      }
+    ],
+    "personas": [
+      "windows"
+    ],
+    "modes": [
+      "headed",
+      "headless"
+    ],
+    "seeds": [
+      20260909
+    ],
+    "rounds": 2,
+    "graphics": {
+      "headed": [],
+      "headless": [
+        "--use-gl=angle"
+      ]
+    },
+    "fontconfigFiles": {
+      "windows": "/opt/evaluation/windows-fonts/configs/windows-defaults.conf"
+    },
+    "fontNotes": {
+      "windows": "Same 34 font files and system rendering rules; strong generic aliases map sans-serif/serif/monospace to Arial/Times New Roman/Courier New; modern Windows families remain missing"
+    },
+    "detectors": [
+      "fingerprint"
+    ],
+    "cooldownMs": 45000,
+    "caseTimeoutMs": 300000,
+    "performanceSampleMs": 5000,
+    "routeRequests": 200,
+    "xvnc": "/usr/bin/Xvnc",
+    "environmentLabel": "Windows font isolation: strong generic defaults; two rounds; same image and limits as original 12 observations",
+    "licenseConfigured": true
+  },
+  "plannedCases": [
+    {
+      "id": "detectors-defaults-windows-headed-20260909-r1-configured",
+      "binaryId": "defaults",
+      "persona": "windows",
+      "mode": "headed",
+      "seed": 20260909,
+      "round": 1,
+      "plan": "detectors",
+      "variant": "configured",
+      "graphics": [],
+      "extra": []
+    },
+    {
+      "id": "detectors-defaults-windows-headless-20260909-r1-configured",
+      "binaryId": "defaults",
+      "persona": "windows",
+      "mode": "headless",
+      "seed": 20260909,
+      "round": 1,
+      "plan": "detectors",
+      "variant": "configured",
+      "graphics": [
+        "--use-gl=angle"
+      ],
+      "extra": []
+    },
+    {
+      "id": "detectors-defaults-windows-headed-20260909-r2-configured",
+      "binaryId": "defaults",
+      "persona": "windows",
+      "mode": "headed",
+      "seed": 20260909,
+      "round": 2,
+      "plan": "detectors",
+      "variant": "configured",
+      "graphics": [],
+      "extra": []
+    },
+    {
+      "id": "detectors-defaults-windows-headless-20260909-r2-configured",
+      "binaryId": "defaults",
+      "persona": "windows",
+      "mode": "headless",
+      "seed": 20260909,
+      "round": 2,
+      "plan": "detectors",
+      "variant": "configured",
+      "graphics": [
+        "--use-gl=angle"
+      ],
+      "extra": []
+    }
+  ],
+  "skipped": [],
+  "environment": {
+    "node": "v24.22.2",
+    "playwright": "1.64.1",
+    "kernel": "7.2.13-200.fc44.x86_64",
+    "arch": "x64",
+    "environmentLabel": "Windows font isolation: strong generic defaults; two rounds; same image and limits as original 12 observations",
+    "binaries": [
+      {
+        "id": "defaults",
+        "kind": "cloakbrowser",
+        "version": "156.0.8078.47.1",
+        "executableSHA256": "37c2b771b87cdbf171c2c8021fc7f7900667e2363ccfc8e5d7904ef7e9dbc74a"
+      }
+    ],
+    "fonts": {
+      "windows": {
+        "file": "/opt/evaluation/windows-fonts/configs/windows-defaults.conf",
+        "sha256": "f105475077ca1e4804a04345802a3cd7c4ee2ef8eff4bf4fc9b80e825424f2d1",
+        "note": "Same 34 font files and system rendering rules; strong generic aliases map sans-serif/serif/monospace to Arial/Times New Roman/Courier New; modern Windows families remain missing",
+        "families": [
+          "Andale Mono",
+          "Arial",
+          "Arial Black",
+          "Comic Sans MS",
+          "Courier New",
+          "Georgia",
+          "Impact",
+          "Microsoft Sans Serif",
+          "Tahoma",
+          "Times New Roman",
+          "Trebuchet MS",
+          "Verdana",
+          "Webdings",
+          "Wingdings"
+        ]
+      }
+    },
+    "display": ":90",
+    "externalDisplay": false,
+    "cpuMax": "400000 100000",
+    "memoryMax": "4294967296",
+    "performanceScope": "whole cgroup v2; browser + renderer/GPU + display + runner/fixtures, not browser main process alone"
+  },
+  "finishedAt": "2026-11-10T21:15:18.930Z"
+}

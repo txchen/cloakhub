@@ -9,11 +9,15 @@
     "dev": "bun --watch src/server.ts",
     "test": "bun test",
     "typecheck": "tsc --noEmit",
-    "test:ui": "playwright test"
+    "test:ui": "playwright test",
+    "test:browser-evaluation": "node tests/browser-evaluation/run.mjs",
+    "test:browser-evaluation:unit": "bun test tests/browser-evaluation.test.js"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",
     "@types/bun": "^1.3.4",
+    "playwright-core": "1.64.1",
+    "pngjs": "7.0.0",
     "typescript": "^5.9.2"
   },
   "dependencies": {

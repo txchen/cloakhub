@@ -1,0 +1,140 @@
+{
+  "schemaVersion": 1,
+  "suiteVersion": 1,
+  "suiteSourceSHA256": "21ab154f79859c0da9d5df85976338aba2211e5d4181f0dea5a1954377b529dc",
+  "runId": "2026-11-10T21-03-17-639Z-bda0997c",
+  "startedAt": "2026-11-10T21:03:17.643Z",
+  "status": "finished",
+  "plan": "detectors",
+  "external": true,
+  "config": {
+    "binaries": [
+      {
+        "id": "system",
+        "executable": "/binaries/candidate/chrome",
+        "expectedVersion": "156.0.8078.47.1",
+        "kind": "cloakbrowser",
+        "licenseConfigured": true
+      }
+    ],
+    "personas": [
+      "windows"
+    ],
+    "modes": [
+      "headed",
+      "headless"
+    ],
+    "seeds": [
+      20260909
+    ],
+    "rounds": 1,
+    "graphics": {
+      "headed": [],
+      "headless": [
+        "--use-gl=angle"
+      ]
+    },
+    "fontconfigFiles": {},
+    "fontNotes": {
+      "windows": "Unchanged system fontconfig; added files are outside its search path"
+    },
+    "detectors": [
+      "fingerprint"
+    ],
+    "cooldownMs": 45000,
+    "caseTimeoutMs": 300000,
+    "performanceSampleMs": 5000,
+    "routeRequests": 200,
+    "xvnc": "/usr/bin/Xvnc",
+    "environmentLabel": "Windows font isolation: system; replicate 2; identical evaluation image, 4 CPU/4GiB/2GiB shm, no GPU",
+    "licenseConfigured": true
+  },
+  "plannedCases": [
+    {
+      "id": "detectors-system-windows-headed-20260909-r1-configured",
+      "binaryId": "system",
+      "persona": "windows",
+      "mode": "headed",
+      "seed": 20260909,
+      "round": 1,
+      "plan": "detectors",
+      "variant": "configured",
+      "graphics": [],
+      "extra": []
+    },
+    {
+      "id": "detectors-system-windows-headless-20260909-r1-configured",
+      "binaryId": "system",
+      "persona": "windows",
+      "mode": "headless",
+      "seed": 20260909,
+      "round": 1,
+      "plan": "detectors",
+      "variant": "configured",
+      "graphics": [
+        "--use-gl=angle"
+      ],
+      "extra": []
+    }
+  ],
+  "skipped": [],
+  "environment": {
+    "node": "v24.22.2",
+    "playwright": "1.64.1",
+    "kernel": "7.2.13-200.fc44.x86_64",
+    "arch": "x64",
+    "environmentLabel": "Windows font isolation: system; replicate 2; identical evaluation image, 4 CPU/4GiB/2GiB shm, no GPU",
+    "binaries": [
+      {
+        "id": "system",
+        "kind": "cloakbrowser",
+        "version": "156.0.8078.47.1",
+        "executableSHA256": "37c2b771b87cdbf171c2c8021fc7f7900667e2363ccfc8e5d7904ef7e9dbc74a"
+      }
+    ],
+    "fonts": {
+      "windows": {
+        "file": null,
+        "sha256": null,
+        "note": "Unchanged system fontconfig; added files are outside its search path",
+        "families": [
+          "C059",
+          "D050000L",
+          "FreeMono",
+          "FreeSans",
+          "FreeSerif",
+          "IPAGothic,IPAゴシック",
+          "IPAPGothic,IPA Pゴシック",
+          "Liberation Mono",
+          "Liberation Sans",
+          "Liberation Sans Narrow",
+          "Liberation Serif",
+          "Loma",
+          "Nimbus Mono PS",
+          "Nimbus Roman",
+          "Nimbus Sans",
+          "Nimbus Sans Narrow",
+          "Noto Color Emoji",
+          "P052",
+          "Standard Symbols PS",
+          "URW Bookman",
+          "URW Gothic",
+          "Unifont",
+          "Unifont CSUR",
+          "Unifont Upper",
+          "Unifont-JP",
+          "WenQuanYi Zen Hei Mono,文泉驛等寬正黑,文泉驿等宽正黑",
+          "WenQuanYi Zen Hei Sharp,文泉驛點陣正黑,文泉驿点阵正黑",
+          "WenQuanYi Zen Hei,文泉驛正黑,文泉驿正黑",
+          "Z003"
+        ]
+      }
+    },
+    "display": ":90",
+    "externalDisplay": false,
+    "cpuMax": "400000 100000",
+    "memoryMax": "4294967296",
+    "performanceScope": "whole cgroup v2; browser + renderer/GPU + display + runner/fixtures, not browser main process alone"
+  },
+  "finishedAt": "2026-11-10T21:04:17.821Z"
+}

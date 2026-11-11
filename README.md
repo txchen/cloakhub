@@ -478,3 +478,4 @@ for rollback; do not assume older browsers can read profiles upgraded by newer b
 - [152 preview versus 151 stable](docs/browser-channel-comparison.md)
 - [Browser keys, concurrency, and historical 151 migration](docs/cloakbrowser-151.md)
 - [Development and tests](docs/development.md)
+- [Reusable browser version evaluation suite](docs/browser-evaluation.md)

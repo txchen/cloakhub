@@ -1,0 +1,10 @@
+CloakBrowser 152.0.7977.82.1 
+CloakBrowser 156.0.8078.47.1 
+97990530346ff97afa12fb93996659934abb6d6641714384bc126af8721141ca  /opt/cloakbrowser/chrome
+37c2b771b87cdbf171c2c8021fc7f7900667e2363ccfc8e5d7904ef7e9dbc74a  /opt/browser156/chrome
+375a1a3206f772fef17bc300a652de605e9fe0dffb95177bd40f1fbc06acb242  /app/macos-fonts.conf
+v24.22.2
+Linux x86_64
+400000 100000
+Filesystem      Size  Used Avail Use% Mounted on
+shm             2.0G   48M  2.0G   3% /dev/shm

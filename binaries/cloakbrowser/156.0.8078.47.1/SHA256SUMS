@@ -1,0 +1,6 @@
+version=156.0.8078.47.1
+46f8361deb898019ef1a529da22b2c9a8f0e482c7a29600b39d932249c84a4b2  cloakbrowser-linux-x64.tar.gz
+c3f0ff8d2eca247ca28b3bc0a53cc37d69cde3878aeb4197bee61bda97c99559  cloakbrowser-linux-arm64.tar.gz
+74dd15bd8af28704f52e23ad55145c0b8c83ffeab4d9283a1779d89bd8bcc434  cloakbrowser-windows-x64.zip
+c29ba20dfe53b048760ebccb9a816eda08d0424e430208000d01d7bb216197c8  cloakbrowser-darwin-arm64.tar.gz
+1a260c6d31e26695f321a143977b175e7a72295357949da445e7a7a3a384bb5e  cloakbrowser-darwin-x64.tar.gz

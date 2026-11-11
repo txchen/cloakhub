@@ -1,0 +1,54 @@
+{
+  "evaluationImageID": "sha256:01a0a704096815d0af4be33b6781b82c48daec36b7b95dfe97c55ef2db6754b1",
+  "suiteSourceSHA256": "21ab154f79859c0da9d5df85976338aba2211e5d4181f0dea5a1954377b529dc",
+  "runs": [
+    {
+      "arm": "system",
+      "replicate": 1,
+      "runId": "2026-11-10T20-54-21-540Z-39a59243"
+    },
+    {
+      "arm": "added",
+      "replicate": 1,
+      "runId": "2026-11-10T20-56-11-437Z-e9010284"
+    },
+    {
+      "arm": "only",
+      "replicate": 1,
+      "runId": "2026-11-10T20-57-57-743Z-c6c4e156"
+    },
+    {
+      "arm": "only",
+      "replicate": 2,
+      "runId": "2026-11-10T20-59-44-285Z-58b5d0f1"
+    },
+    {
+      "arm": "added",
+      "replicate": 2,
+      "runId": "2026-11-10T21-01-30-647Z-2629297f"
+    },
+    {
+      "arm": "system",
+      "replicate": 2,
+      "runId": "2026-11-10T21-03-17-639Z-bda0997c"
+    },
+    {
+      "arm": "defaults",
+      "replicate": "1+2",
+      "runId": "2026-11-10T21-12-34-719Z-53820b5b",
+      "note": "Subsequent four-profile check of strong generic font bindings; not interleaved with the original three conditions"
+    }
+  ],
+  "sources": {
+    "archiveBase": "https://downloads.sourceforge.net/corefonts/",
+    "checksumSource": "https://deb.debian.org/debian/pool/contrib/m/msttcorefonts/ttf-mscorefonts-installer_3.8.1_all.deb",
+    "checksumPackageSHA256": "8b2d9b10fbddfd3f1083b8a4d7724c766d681ccb8392566c8ffbaf168d3a19f2"
+  },
+  "limitations": [
+    "One seed; original three conditions use two reversed-order replicates and two modes; four supplemental strong-default observations were collected later",
+    "34 font files, not complete Windows 10/11 fonts",
+    "No modern Segoe UI/Calibri/Cambria/Consolas; old Core Fonts versions",
+    "No Windows native reference or font rendering stack",
+    "Font binaries and license keys are not published here"
+  ]
+}

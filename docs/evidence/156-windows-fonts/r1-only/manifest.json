@@ -1,0 +1,127 @@
+{
+  "schemaVersion": 1,
+  "suiteVersion": 1,
+  "suiteSourceSHA256": "21ab154f79859c0da9d5df85976338aba2211e5d4181f0dea5a1954377b529dc",
+  "runId": "2026-11-10T20-57-57-743Z-c6c4e156",
+  "startedAt": "2026-11-10T20:57:57.748Z",
+  "status": "finished",
+  "plan": "detectors",
+  "external": true,
+  "config": {
+    "binaries": [
+      {
+        "id": "only",
+        "executable": "/binaries/candidate/chrome",
+        "expectedVersion": "156.0.8078.47.1",
+        "kind": "cloakbrowser",
+        "licenseConfigured": true
+      }
+    ],
+    "personas": [
+      "windows"
+    ],
+    "modes": [
+      "headed",
+      "headless"
+    ],
+    "seeds": [
+      20260909
+    ],
+    "rounds": 1,
+    "graphics": {
+      "headed": [],
+      "headless": [
+        "--use-gl=angle"
+      ]
+    },
+    "fontconfigFiles": {
+      "windows": "/opt/evaluation/windows-fonts/configs/windows-only.conf"
+    },
+    "fontNotes": {
+      "windows": "Only the same 34 font files, excluding Linux/Mac families; NOT a complete Windows 10/11 inventory"
+    },
+    "detectors": [
+      "fingerprint"
+    ],
+    "cooldownMs": 45000,
+    "caseTimeoutMs": 300000,
+    "performanceSampleMs": 5000,
+    "routeRequests": 200,
+    "xvnc": "/usr/bin/Xvnc",
+    "environmentLabel": "Windows font isolation: only; replicate 1; identical evaluation image, 4 CPU/4GiB/2GiB shm, no GPU",
+    "licenseConfigured": true
+  },
+  "plannedCases": [
+    {
+      "id": "detectors-only-windows-headed-20260909-r1-configured",
+      "binaryId": "only",
+      "persona": "windows",
+      "mode": "headed",
+      "seed": 20260909,
+      "round": 1,
+      "plan": "detectors",
+      "variant": "configured",
+      "graphics": [],
+      "extra": []
+    },
+    {
+      "id": "detectors-only-windows-headless-20260909-r1-configured",
+      "binaryId": "only",
+      "persona": "windows",
+      "mode": "headless",
+      "seed": 20260909,
+      "round": 1,
+      "plan": "detectors",
+      "variant": "configured",
+      "graphics": [
+        "--use-gl=angle"
+      ],
+      "extra": []
+    }
+  ],
+  "skipped": [],
+  "environment": {
+    "node": "v24.22.2",
+    "playwright": "1.64.1",
+    "kernel": "7.2.13-200.fc44.x86_64",
+    "arch": "x64",
+    "environmentLabel": "Windows font isolation: only; replicate 1; identical evaluation image, 4 CPU/4GiB/2GiB shm, no GPU",
+    "binaries": [
+      {
+        "id": "only",
+        "kind": "cloakbrowser",
+        "version": "156.0.8078.47.1",
+        "executableSHA256": "37c2b771b87cdbf171c2c8021fc7f7900667e2363ccfc8e5d7904ef7e9dbc74a"
+      }
+    ],
+    "fonts": {
+      "windows": {
+        "file": "/opt/evaluation/windows-fonts/configs/windows-only.conf",
+        "sha256": "0928fcd16ebc533ddb5ecb3b2780d0380a65e0ca0cf8cc9f51fb1f58120d9ce0",
+        "note": "Only the same 34 font files, excluding Linux/Mac families; NOT a complete Windows 10/11 inventory",
+        "families": [
+          "Andale Mono",
+          "Arial",
+          "Arial Black",
+          "Comic Sans MS",
+          "Courier New",
+          "Georgia",
+          "Impact",
+          "Microsoft Sans Serif",
+          "Tahoma",
+          "Times New Roman",
+          "Trebuchet MS",
+          "Verdana",
+          "Webdings",
+          "Wingdings"
+        ]
+      }
+    },
+    "display": ":90",
+    "externalDisplay": false,
+    "cpuMax": "400000 100000",
+    "memoryMax": "4294967296",
+    "performanceScope": "whole cgroup v2; browser + renderer/GPU + display + runner/fixtures, not browser main process alone"
+  },
+  "finishedAt": "2026-11-10T20:58:59.170Z"
+}

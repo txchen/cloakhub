@@ -1,0 +1,374 @@
+{
+  "system": {
+    "observations": 4,
+    "vmPositive": 0,
+    "tamperingPositive": 4,
+    "antiDetectPositive": 4,
+    "botNotDetected": 4,
+    "mlScores": [
+      0.9995,
+      0.9995,
+      0.9995,
+      0.9995
+    ],
+    "fontFamilies": [
+      "C059",
+      "D050000L",
+      "FreeMono",
+      "FreeSans",
+      "FreeSerif",
+      "IPAGothic,IPA\u30b4\u30b7\u30c3\u30af",
+      "IPAPGothic,IPA P\u30b4\u30b7\u30c3\u30af",
+      "Liberation Mono",
+      "Liberation Sans",
+      "Liberation Sans Narrow",
+      "Liberation Serif",
+      "Loma",
+      "Nimbus Mono PS",
+      "Nimbus Roman",
+      "Nimbus Sans",
+      "Nimbus Sans Narrow",
+      "Noto Color Emoji",
+      "P052",
+      "Standard Symbols PS",
+      "URW Bookman",
+      "URW Gothic",
+      "Unifont",
+      "Unifont CSUR",
+      "Unifont Upper",
+      "Unifont-JP",
+      "WenQuanYi Zen Hei Mono,\u6587\u6cc9\u9a5b\u7b49\u5bec\u6b63\u9ed1,\u6587\u6cc9\u9a7f\u7b49\u5bbd\u6b63\u9ed1",
+      "WenQuanYi Zen Hei Sharp,\u6587\u6cc9\u9a5b\u9ede\u9663\u6b63\u9ed1,\u6587\u6cc9\u9a7f\u70b9\u9635\u6b63\u9ed1",
+      "WenQuanYi Zen Hei,\u6587\u6cc9\u9a5b\u6b63\u9ed1,\u6587\u6cc9\u9a7f\u6b63\u9ed1",
+      "Z003"
+    ],
+    "renderedFonts": {
+      "Arial": [
+        "Liberation Sans"
+      ],
+      "Arial Black": [
+        "Nimbus Mono PS"
+      ],
+      "Times New Roman": [
+        "Liberation Serif"
+      ],
+      "Courier New": [
+        "Liberation Mono"
+      ],
+      "Verdana": [
+        "Nimbus Mono PS"
+      ],
+      "Georgia": [
+        "Nimbus Mono PS"
+      ],
+      "Trebuchet MS": [
+        "Nimbus Mono PS"
+      ],
+      "Comic Sans MS": [
+        "Nimbus Mono PS"
+      ],
+      "Tahoma": [
+        "Nimbus Mono PS"
+      ],
+      "Microsoft Sans Serif": [
+        "Nimbus Mono PS"
+      ],
+      "Segoe UI": [
+        "Nimbus Mono PS"
+      ],
+      "Calibri": [
+        "Nimbus Mono PS"
+      ],
+      "Cambria": [
+        "Nimbus Mono PS"
+      ],
+      "Consolas": [
+        "Nimbus Mono PS"
+      ],
+      "Helvetica Neue": [
+        "Nimbus Mono PS"
+      ],
+      "DejaVu Sans": [
+        "Nimbus Mono PS"
+      ],
+      "Liberation Sans": [
+        "Liberation Sans"
+      ]
+    }
+  },
+  "added": {
+    "observations": 4,
+    "vmPositive": 0,
+    "tamperingPositive": 4,
+    "antiDetectPositive": 4,
+    "botNotDetected": 4,
+    "mlScores": [
+      0.9998,
+      0.9998,
+      0.9998,
+      0.9998
+    ],
+    "fontFamilies": [
+      "Andale Mono",
+      "Arial",
+      "Arial Black",
+      "C059",
+      "Comic Sans MS",
+      "Courier New",
+      "D050000L",
+      "FreeMono",
+      "FreeSans",
+      "FreeSerif",
+      "Georgia",
+      "IPAGothic,IPA\u30b4\u30b7\u30c3\u30af",
+      "IPAPGothic,IPA P\u30b4\u30b7\u30c3\u30af",
+      "Impact",
+      "Liberation Mono",
+      "Liberation Sans",
+      "Liberation Sans Narrow",
+      "Liberation Serif",
+      "Loma",
+      "Microsoft Sans Serif",
+      "Nimbus Mono PS",
+      "Nimbus Roman",
+      "Nimbus Sans",
+      "Nimbus Sans Narrow",
+      "Noto Color Emoji",
+      "P052",
+      "Standard Symbols PS",
+      "Tahoma",
+      "Times New Roman",
+      "Trebuchet MS",
+      "URW Bookman",
+      "URW Gothic",
+      "Unifont",
+      "Unifont CSUR",
+      "Unifont Upper",
+      "Unifont-JP",
+      "Verdana",
+      "Webdings",
+      "WenQuanYi Zen Hei Mono,\u6587\u6cc9\u9a5b\u7b49\u5bec\u6b63\u9ed1,\u6587\u6cc9\u9a7f\u7b49\u5bbd\u6b63\u9ed1",
+      "WenQuanYi Zen Hei Sharp,\u6587\u6cc9\u9a5b\u9ede\u9663\u6b63\u9ed1,\u6587\u6cc9\u9a7f\u70b9\u9635\u6b63\u9ed1",
+      "WenQuanYi Zen Hei,\u6587\u6cc9\u9a5b\u6b63\u9ed1,\u6587\u6cc9\u9a7f\u6b63\u9ed1",
+      "Wingdings",
+      "Z003"
+    ],
+    "renderedFonts": {
+      "Arial": [
+        "Arial"
+      ],
+      "Arial Black": [
+        "Arial Black"
+      ],
+      "Times New Roman": [
+        "Times New Roman"
+      ],
+      "Courier New": [
+        "Courier New"
+      ],
+      "Verdana": [
+        "Verdana"
+      ],
+      "Georgia": [
+        "Georgia"
+      ],
+      "Trebuchet MS": [
+        "Trebuchet MS"
+      ],
+      "Comic Sans MS": [
+        "Comic Sans MS"
+      ],
+      "Tahoma": [
+        "Tahoma"
+      ],
+      "Microsoft Sans Serif": [
+        "Microsoft Sans Serif"
+      ],
+      "Segoe UI": [
+        "Andale Mono"
+      ],
+      "Calibri": [
+        "Andale Mono"
+      ],
+      "Cambria": [
+        "Andale Mono"
+      ],
+      "Consolas": [
+        "Andale Mono"
+      ],
+      "Helvetica Neue": [
+        "Andale Mono"
+      ],
+      "DejaVu Sans": [
+        "Andale Mono"
+      ],
+      "Liberation Sans": [
+        "Liberation Sans"
+      ]
+    }
+  },
+  "only": {
+    "observations": 4,
+    "vmPositive": 0,
+    "tamperingPositive": 4,
+    "antiDetectPositive": 4,
+    "botNotDetected": 4,
+    "mlScores": [
+      0.9996,
+      0.9996,
+      0.9996,
+      0.9996
+    ],
+    "fontFamilies": [
+      "Andale Mono",
+      "Arial",
+      "Arial Black",
+      "Comic Sans MS",
+      "Courier New",
+      "Georgia",
+      "Impact",
+      "Microsoft Sans Serif",
+      "Tahoma",
+      "Times New Roman",
+      "Trebuchet MS",
+      "Verdana",
+      "Webdings",
+      "Wingdings"
+    ],
+    "renderedFonts": {
+      "Arial": [
+        "Arial"
+      ],
+      "Arial Black": [
+        "Arial Black"
+      ],
+      "Times New Roman": [
+        "Times New Roman"
+      ],
+      "Courier New": [
+        "Courier New"
+      ],
+      "Verdana": [
+        "Verdana"
+      ],
+      "Georgia": [
+        "Georgia"
+      ],
+      "Trebuchet MS": [
+        "Trebuchet MS"
+      ],
+      "Comic Sans MS": [
+        "Comic Sans MS"
+      ],
+      "Tahoma": [
+        "Tahoma"
+      ],
+      "Microsoft Sans Serif": [
+        "Microsoft Sans Serif"
+      ],
+      "Segoe UI": [
+        "Andale Mono"
+      ],
+      "Calibri": [
+        "Andale Mono"
+      ],
+      "Cambria": [
+        "Andale Mono"
+      ],
+      "Consolas": [
+        "Andale Mono"
+      ],
+      "Helvetica Neue": [
+        "Andale Mono"
+      ],
+      "DejaVu Sans": [
+        "Andale Mono"
+      ],
+      "Liberation Sans": [
+        "Arial"
+      ]
+    }
+  },
+  "defaults": {
+    "observations": 4,
+    "vmPositive": 0,
+    "tamperingPositive": 4,
+    "antiDetectPositive": 4,
+    "botNotDetected": 4,
+    "mlScores": [
+      0.9962,
+      0.9962,
+      0.9962,
+      0.9962
+    ],
+    "fontFamilies": [
+      "Andale Mono",
+      "Arial",
+      "Arial Black",
+      "Comic Sans MS",
+      "Courier New",
+      "Georgia",
+      "Impact",
+      "Microsoft Sans Serif",
+      "Tahoma",
+      "Times New Roman",
+      "Trebuchet MS",
+      "Verdana",
+      "Webdings",
+      "Wingdings"
+    ],
+    "renderedFonts": {
+      "Arial": [
+        "Arial"
+      ],
+      "Arial Black": [
+        "Arial Black"
+      ],
+      "Times New Roman": [
+        "Times New Roman"
+      ],
+      "Courier New": [
+        "Courier New"
+      ],
+      "Verdana": [
+        "Verdana"
+      ],
+      "Georgia": [
+        "Georgia"
+      ],
+      "Trebuchet MS": [
+        "Trebuchet MS"
+      ],
+      "Comic Sans MS": [
+        "Comic Sans MS"
+      ],
+      "Tahoma": [
+        "Tahoma"
+      ],
+      "Microsoft Sans Serif": [
+        "Microsoft Sans Serif"
+      ],
+      "Segoe UI": [
+        "Courier New"
+      ],
+      "Calibri": [
+        "Courier New"
+      ],
+      "Cambria": [
+        "Courier New"
+      ],
+      "Consolas": [
+        "Courier New"
+      ],
+      "Helvetica Neue": [
+        "Courier New"
+      ],
+      "DejaVu Sans": [
+        "Courier New"
+      ],
+      "Liberation Sans": [
+        "Arial"
+      ]
+    }
+  }
+}

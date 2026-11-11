@@ -1,0 +1,172 @@
+[
+  {
+    "file": "AndaleMo.TTF",
+    "sha256": "48d9bc613917709d3b0e0f4a6d4fe33a5c544c5035dffe9e90bc11e50e822071",
+    "source": "Microsoft corefonts archive; validated against Debian 3.8.1 checksums"
+  },
+  {
+    "file": "AriBlk.TTF",
+    "sha256": "dad7c04acb26e23dfe4780e79375ca193ddaf68409317e81577a30674668830e",
+    "source": "Microsoft corefonts archive; validated against Debian 3.8.1 checksums"
+  },
+  {
+    "file": "Arial.TTF",
+    "sha256": "35c0f3559d8db569e36c31095b8a60d441643d95f59139de40e23fada819b833",
+    "source": "Microsoft corefonts archive; validated against Debian 3.8.1 checksums"
+  },
+  {
+    "file": "Arialbd.TTF",
+    "sha256": "4044aa6b5bebbc36980206b45b0aaaaa5681552a48bcadb41746d5d1d71fd7b4",
+    "source": "Microsoft corefonts archive; validated against Debian 3.8.1 checksums"
+  },
+  {
+    "file": "Arialbi.TTF",
+    "sha256": "2f371cd9d96b3ac544519d85c16dc43ceacdfcea35090ee8ddf3ec5857c50328",
+    "source": "Microsoft corefonts archive; validated against Debian 3.8.1 checksums"
+  },
+  {
+    "file": "Ariali.TTF",
+    "sha256": "70ade233175a6a6675e4501461af9326e6f78b1ffdf787ca0da5ab0fc8c9cfd6",
+    "source": "Microsoft corefonts archive; validated against Debian 3.8.1 checksums"
+  },
+  {
+    "file": "Comic.TTF",
+    "sha256": "b82c53776058f291382ff7e008d4675839d2dc21eb295c66391f6fb0655d8fc0",
+    "source": "Microsoft corefonts archive; validated against Debian 3.8.1 checksums"
+  },
+  {
+    "file": "Comicbd.TTF",
+    "sha256": "873361465d994994762d0b9845c99fc7baa2a600442ea8db713a7dd19f8b0172",
+    "source": "Microsoft corefonts archive; validated against Debian 3.8.1 checksums"
+  },
+  {
+    "file": "Georgia.TTF",
+    "sha256": "7d0bb20c632bb59e81a0885f573bd2173f71f73204de9058feb68ce032227072",
+    "source": "Microsoft corefonts archive; validated against Debian 3.8.1 checksums"
+  },
+  {
+    "file": "Georgiab.TTF",
+    "sha256": "82d2fbadb88a8632d7f2e8ad50420c9fd2e7d3cbc0e90b04890213a711b34b93",
+    "source": "Microsoft corefonts archive; validated against Debian 3.8.1 checksums"
+  },
+  {
+    "file": "Georgiai.TTF",
+    "sha256": "1523f19bda6acca42c47c50da719a12dd34f85cc2606e6a5af15a7728b377b60",
+    "source": "Microsoft corefonts archive; validated against Debian 3.8.1 checksums"
+  },
+  {
+    "file": "Georgiaz.TTF",
+    "sha256": "c983e037d8e4e694dd0fb0ba2e625bca317d67a41da2dc81e46a374e53d0ec8a",
+    "source": "Microsoft corefonts archive; validated against Debian 3.8.1 checksums"
+  },
+  {
+    "file": "Impact.TTF",
+    "sha256": "00f1fc230ac99f9b97ba1a7c214eb5b909a78660cb3826fca7d64c3af5a14848",
+    "source": "Microsoft corefonts archive; validated against Debian 3.8.1 checksums"
+  },
+  {
+    "file": "Tahoma Bold.ttf",
+    "sha256": "fc1863ab504b9c160abaa12b92296363db72f5b759311982510a85fe2aa9ff4f",
+    "source": "existing repository asset"
+  },
+  {
+    "file": "Tahoma.ttf",
+    "sha256": "359413e76969fc8a03e0acf91b355a98bb13c42472614e54bff5c8e4f4817fbb",
+    "source": "existing repository asset"
+  },
+  {
+    "file": "Times.TTF",
+    "sha256": "4e98adeff8ccc8ef4e3ece8d4547e288ff85fdc9c7ca711a4599c234874bbe86",
+    "source": "Microsoft corefonts archive; validated against Debian 3.8.1 checksums"
+  },
+  {
+    "file": "Timesbd.TTF",
+    "sha256": "4357b63cef20c01661a53c5dae70ffd20cb4765503aaed6d38b17a57c5a90bff",
+    "source": "Microsoft corefonts archive; validated against Debian 3.8.1 checksums"
+  },
+  {
+    "file": "Timesbi.TTF",
+    "sha256": "192e1b0d18e90334e999a99f8c32808d6a2e74b3698b8cd90c943c2249a46549",
+    "source": "Microsoft corefonts archive; validated against Debian 3.8.1 checksums"
+  },
+  {
+    "file": "Timesi.TTF",
+    "sha256": "c25ae529b4cecdbca148b6ccb862ee0abad770af8b1fd29c8dba619d1b8da78a",
+    "source": "Microsoft corefonts archive; validated against Debian 3.8.1 checksums"
+  },
+  {
+    "file": "Trebucbd.ttf",
+    "sha256": "f65941f9487c0a0a3b7445996ecbbd24466d7ae76ea2a597ced55f438fa63838",
+    "source": "Microsoft corefonts archive; validated against Debian 3.8.1 checksums"
+  },
+  {
+    "file": "Verdana.TTF",
+    "sha256": "96ed14949ca4b7392cff235b9c41d55c125382abbe0c0d3c2b9dd66897cae0cb",
+    "source": "Microsoft corefonts archive; validated against Debian 3.8.1 checksums"
+  },
+  {
+    "file": "Verdanab.TTF",
+    "sha256": "c8f5065ba91680f596af3b0378e2c3e713b95a523be3d56ae185ca2b8f5f0b23",
+    "source": "Microsoft corefonts archive; validated against Debian 3.8.1 checksums"
+  },
+  {
+    "file": "Verdanai.TTF",
+    "sha256": "91b59186656f52972531a11433c866fd56e62ec4e61e2621a2dba70c8f19a828",
+    "source": "Microsoft corefonts archive; validated against Debian 3.8.1 checksums"
+  },
+  {
+    "file": "Verdanaz.TTF",
+    "sha256": "698e220f48f4a40e77af7eb34958c8fd02f1e18c3ba3f365d93bfa2ed4474c80",
+    "source": "Microsoft corefonts archive; validated against Debian 3.8.1 checksums"
+  },
+  {
+    "file": "Webdings.TTF",
+    "sha256": "10d099c88521b1b9e380b7690cbe47b54bb19396ca515358cfdc15ac249e2f5d",
+    "source": "Microsoft corefonts archive; validated against Debian 3.8.1 checksums"
+  },
+  {
+    "file": "cour.ttf",
+    "sha256": "6715838c52f813f3821549d3f645db9a768bd6f3a43d8f85a89cb6875a546c61",
+    "source": "Microsoft corefonts archive; validated against Debian 3.8.1 checksums"
+  },
+  {
+    "file": "courbd.ttf",
+    "sha256": "edf8a7c5bfcac2e1fe507faab417137cbddc9071637ef4648238d0768c921e02",
+    "source": "Microsoft corefonts archive; validated against Debian 3.8.1 checksums"
+  },
+  {
+    "file": "courbi.ttf",
+    "sha256": "66dbfa20b534fba0e203da140fec7276a45a1069e424b1b9c35547538128bbe8",
+    "source": "Microsoft corefonts archive; validated against Debian 3.8.1 checksums"
+  },
+  {
+    "file": "couri.ttf",
+    "sha256": "f3f6b09855b6700977e214aab5eb9e5be6813976a24f894bd7766e92c732fbe1",
+    "source": "Microsoft corefonts archive; validated against Debian 3.8.1 checksums"
+  },
+  {
+    "file": "micross.ttf",
+    "sha256": "681fd20f201435edc09fac432cd5409722ca8fd10970dc3dc9be1b2de4b0ef43",
+    "source": "existing repository asset"
+  },
+  {
+    "file": "trebuc.ttf",
+    "sha256": "ec3ffb302488251e1b67fb09dd578b364c5339e27c1cfb26eb627666236453d0",
+    "source": "Microsoft corefonts archive; validated against Debian 3.8.1 checksums"
+  },
+  {
+    "file": "trebucbi.ttf",
+    "sha256": "c0a6bdf31f9f2953b2f08a0c1734c892bc825f0fb17c604d420f7acf203a213b",
+    "source": "Microsoft corefonts archive; validated against Debian 3.8.1 checksums"
+  },
+  {
+    "file": "trebucit.ttf",
+    "sha256": "db56fdac7d3ba20b7aededcb6ee86c46687489d17b759e1708ea4e2d21e38410",
+    "source": "Microsoft corefonts archive; validated against Debian 3.8.1 checksums"
+  },
+  {
+    "file": "wingding.ttf",
+    "sha256": "709d5848799239f0c51c0544c471c8d02bcbf9f2bcdc49702ebca1691a4c760e",
+    "source": "existing repository asset"
+  }
+]

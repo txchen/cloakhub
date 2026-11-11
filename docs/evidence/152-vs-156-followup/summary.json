@@ -1,0 +1,71 @@
+{
+  "profiles": 54,
+  "errors": [],
+  "surfaceProfiles": 24,
+  "performance": [
+    {
+      "v": 152,
+      "mode": "headed",
+      "n": 6,
+      "animationCpuSeconds": {
+        "median": 8.14038,
+        "min": 7.824701,
+        "max": 8.287139
+      },
+      "frames": {
+        "min": 300,
+        "max": 301
+      },
+      "medianIdleCpuSeconds": 0.052403,
+      "interceptGood": 1200
+    },
+    {
+      "v": 152,
+      "mode": "headless",
+      "n": 6,
+      "animationCpuSeconds": {
+        "median": 19.9353255,
+        "min": 8.065386,
+        "max": 20.013689
+      },
+      "frames": {
+        "min": 291,
+        "max": 301
+      },
+      "medianIdleCpuSeconds": 0.0831095,
+      "interceptGood": 1200
+    },
+    {
+      "v": 156,
+      "mode": "headed",
+      "n": 6,
+      "animationCpuSeconds": {
+        "median": 1.0993095,
+        "min": 1.024388,
+        "max": 1.219132
+      },
+      "frames": {
+        "min": 300,
+        "max": 301
+      },
+      "medianIdleCpuSeconds": 0.034811999999999996,
+      "interceptGood": 1200
+    },
+    {
+      "v": 156,
+      "mode": "headless",
+      "n": 6,
+      "animationCpuSeconds": {
+        "median": 19.960651,
+        "min": 6.804509,
+        "max": 19.989711
+      },
+      "frames": {
+        "min": 292,
+        "max": 300
+      },
+      "medianIdleCpuSeconds": 0.08147199999999999,
+      "interceptGood": 1200
+    }
+  ]
+}

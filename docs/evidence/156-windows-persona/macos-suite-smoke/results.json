@@ -1,0 +1,460 @@
+[
+  {
+    "schemaVersion": 1,
+    "id": "detectors-candidate-macos-headed-20260909-r1-configured",
+    "binaryId": "candidate",
+    "persona": "macos",
+    "mode": "headed",
+    "seed": 20260909,
+    "round": 1,
+    "plan": "detectors",
+    "variant": "configured",
+    "graphics": [],
+    "extra": [],
+    "startedAt": "2026-11-10T20:16:38.673Z",
+    "status": "complete",
+    "args": [
+      "--no-sandbox",
+      "--no-first-run",
+      "--no-default-browser-check",
+      "--user-data-dir=/results/2026-11-10T20-16-37-714Z-931c2228/.private/detectors-candidate-macos-headed-20260909-r1-configured",
+      "--remote-debugging-address=127.0.0.1",
+      "--remote-debugging-port=0",
+      "--window-size=1366,768",
+      "--window-position=0,0",
+      "--fingerprint=20260909",
+      "--fingerprint-platform=macos",
+      "--fingerprint-hardware-concurrency=4",
+      "--fingerprint-timezone=America/Los_Angeles",
+      "--fingerprint-locale=en-US",
+      "--lang=en-US",
+      "--accept-lang=en-US",
+      "about:blank"
+    ],
+    "actualArgv": [
+      "/binaries/candidate/chrome",
+      "--no-sandbox",
+      "--no-first-run",
+      "--no-default-browser-check",
+      "--user-data-dir=/results/2026-11-10T20-16-37-714Z-931c2228/.private/detectors-candidate-macos-headed-20260909-r1-configured",
+      "--remote-debugging-address=127.0.0.1",
+      "--remote-debugging-port=0",
+      "--window-size=1366,768",
+      "--window-position=0,0",
+      "--fingerprint=20260909",
+      "--fingerprint-platform=macos",
+      "--fingerprint-hardware-concurrency=4",
+      "--fingerprint-timezone=America/Los_Angeles",
+      "--fingerprint-locale=en-US",
+      "--lang=en-US",
+      "--accept-lang=en-US",
+      "about:blank"
+    ],
+    "argvMatches": true,
+    "cdpVersion": "156.0.8078.47",
+    "local": {
+      "main": {
+        "identity": {
+          "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+          "webdriver": false,
+          "platform": "MacIntel",
+          "languages": [
+            "en-US",
+            "en"
+          ],
+          "cpu": 4,
+          "memory": 16,
+          "maxTouchPoints": 0,
+          "timezone": "America/Los_Angeles",
+          "hints": {
+            "architecture": "arm",
+            "bitness": "64",
+            "brands": [
+              {
+                "brand": "Not:A-Brand",
+                "version": "8"
+              },
+              {
+                "brand": "Chromium",
+                "version": "156"
+              },
+              {
+                "brand": "Google Chrome",
+                "version": "156"
+              }
+            ],
+            "fullVersionList": [
+              {
+                "brand": "Not:A-Brand",
+                "version": "8.0.0.0"
+              },
+              {
+                "brand": "Chromium",
+                "version": "156.0.8078.48"
+              },
+              {
+                "brand": "Google Chrome",
+                "version": "156.0.8078.48"
+              }
+            ],
+            "mobile": false,
+            "platform": "macOS",
+            "platformVersion": "26.5.2",
+            "wow64": false
+          }
+        },
+        "gl": {
+          "webgl": {
+            "vendor": "Google Inc. (Apple)",
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Unspecified Version)",
+            "maxTexture": 16384,
+            "pixel": [
+              51,
+              102,
+              153,
+              255
+            ],
+            "error": 0
+          },
+          "webgl2": {
+            "vendor": "Google Inc. (Apple)",
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Unspecified Version)",
+            "maxTexture": 16384,
+            "pixel": [
+              51,
+              102,
+              153,
+              255
+            ],
+            "error": 0
+          }
+        },
+        "canvas": {
+          "textWidth": 157.8359375,
+          "bytes": 76800,
+          "pixelsHash": "83718008204d1c7a359fe1da64b51829adb40941170475b0aa7405d322d92bc1",
+          "repeatHash": "83718008204d1c7a359fe1da64b51829adb40941170475b0aa7405d322d92bc1",
+          "pngPixelsHash": "687e9d3f880784d7bc513bd1da2fbca9d269c67bce2e6086a65e1610388e59f1",
+          "repeatDiffBytes": 0,
+          "exportDiffBytes": 10
+        },
+        "geometry": {
+          "screenX": 0,
+          "screenY": 33,
+          "outerWidth": 1365,
+          "outerHeight": 735,
+          "innerWidth": 1365,
+          "innerHeight": 646,
+          "dpr": 1,
+          "screenWidth": 1366,
+          "screenHeight": 768,
+          "availLeft": 0,
+          "availTop": 33,
+          "availWidth": 1366,
+          "availHeight": 735,
+          "colorDepth": 30,
+          "pixelDepth": 30
+        }
+      },
+      "physicalWindow": {
+        "windowId": 285918263,
+        "bounds": {
+          "left": 0,
+          "top": 0,
+          "width": 1365,
+          "height": 767,
+          "windowState": "normal"
+        }
+      },
+      "worker": {
+        "identity": {
+          "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+          "platform": "MacIntel",
+          "languages": [
+            "en-US",
+            "en"
+          ],
+          "cpu": 4,
+          "memory": 16,
+          "timezone": "America/Los_Angeles",
+          "hints": {
+            "architecture": "arm",
+            "bitness": "64",
+            "brands": [
+              {
+                "brand": "Not:A-Brand",
+                "version": "8"
+              },
+              {
+                "brand": "Chromium",
+                "version": "156"
+              },
+              {
+                "brand": "Google Chrome",
+                "version": "156"
+              }
+            ],
+            "fullVersionList": [
+              {
+                "brand": "Not:A-Brand",
+                "version": "8.0.0.0"
+              },
+              {
+                "brand": "Chromium",
+                "version": "156.0.8078.48"
+              },
+              {
+                "brand": "Google Chrome",
+                "version": "156.0.8078.48"
+              }
+            ],
+            "mobile": false,
+            "platform": "macOS",
+            "platformVersion": "26.5.2",
+            "wow64": false
+          }
+        },
+        "gl": {
+          "webgl": {
+            "vendor": "Google Inc. (Apple)",
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Unspecified Version)",
+            "maxTexture": 16384,
+            "pixel": [
+              51,
+              102,
+              153,
+              255
+            ],
+            "error": 0
+          },
+          "webgl2": {
+            "vendor": "Google Inc. (Apple)",
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Unspecified Version)",
+            "maxTexture": 16384,
+            "pixel": [
+              51,
+              102,
+              153,
+              255
+            ],
+            "error": 0
+          }
+        },
+        "canvas": {
+          "textWidth": 157.8359375,
+          "bytes": 76800,
+          "pixelsHash": "83718008204d1c7a359fe1da64b51829adb40941170475b0aa7405d322d92bc1",
+          "repeatHash": "83718008204d1c7a359fe1da64b51829adb40941170475b0aa7405d322d92bc1",
+          "pngPixelsHash": "687e9d3f880784d7bc513bd1da2fbca9d269c67bce2e6086a65e1610388e59f1",
+          "repeatDiffBytes": 0,
+          "exportDiffBytes": 10
+        }
+      },
+      "frame": {
+        "identity": {
+          "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+          "webdriver": false,
+          "platform": "MacIntel",
+          "languages": [
+            "en-US",
+            "en"
+          ],
+          "cpu": 4,
+          "memory": 16,
+          "maxTouchPoints": 0,
+          "timezone": "America/Los_Angeles",
+          "hints": {
+            "architecture": "arm",
+            "bitness": "64",
+            "brands": [
+              {
+                "brand": "Not:A-Brand",
+                "version": "8"
+              },
+              {
+                "brand": "Chromium",
+                "version": "156"
+              },
+              {
+                "brand": "Google Chrome",
+                "version": "156"
+              }
+            ],
+            "fullVersionList": [
+              {
+                "brand": "Not:A-Brand",
+                "version": "8.0.0.0"
+              },
+              {
+                "brand": "Chromium",
+                "version": "156.0.8078.48"
+              },
+              {
+                "brand": "Google Chrome",
+                "version": "156.0.8078.48"
+              }
+            ],
+            "mobile": false,
+            "platform": "macOS",
+            "platformVersion": "26.5.2",
+            "wow64": false
+          }
+        },
+        "gl": {
+          "webgl": {
+            "vendor": "Google Inc. (Apple)",
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Unspecified Version)",
+            "maxTexture": 16384,
+            "pixel": [
+              51,
+              102,
+              153,
+              255
+            ],
+            "error": 0
+          },
+          "webgl2": {
+            "vendor": "Google Inc. (Apple)",
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Unspecified Version)",
+            "maxTexture": 16384,
+            "pixel": [
+              51,
+              102,
+              153,
+              255
+            ],
+            "error": 0
+          }
+        },
+        "canvas": {
+          "textWidth": 157.8359375,
+          "bytes": 76800,
+          "pixelsHash": "83718008204d1c7a359fe1da64b51829adb40941170475b0aa7405d322d92bc1",
+          "repeatHash": "83718008204d1c7a359fe1da64b51829adb40941170475b0aa7405d322d92bc1",
+          "pngPixelsHash": "687e9d3f880784d7bc513bd1da2fbca9d269c67bce2e6086a65e1610388e59f1",
+          "repeatDiffBytes": 0,
+          "exportDiffBytes": 10
+        },
+        "geometry": {
+          "screenX": 0,
+          "screenY": 33,
+          "outerWidth": 1365,
+          "outerHeight": 735,
+          "innerWidth": 300,
+          "innerHeight": 150,
+          "dpr": 1,
+          "screenWidth": 1366,
+          "screenHeight": 768,
+          "availLeft": 0,
+          "availTop": 33,
+          "availWidth": 1366,
+          "availHeight": 735,
+          "colorDepth": 30,
+          "pixelDepth": 30
+        }
+      },
+      "contextChecks": {
+        "worker": {
+          "sharedIdentityMatches": false,
+          "pixelsMatch": true,
+          "exportMatches": true
+        },
+        "frame": {
+          "sharedIdentityMatches": true,
+          "pixelsMatch": true,
+          "exportMatches": true
+        }
+      },
+      "headers": {
+        "sec-ch-ua-full-version-list": "\"Not:A-Brand\";v=\"8.0.0.0\", \"Chromium\";v=\"156.0.8078.48\", \"Google Chrome\";v=\"156.0.8078.48\"",
+        "sec-ch-ua-platform": "\"macOS\"",
+        "sec-ch-ua": "\"Not:A-Brand\";v=\"8\", \"Chromium\";v=\"156\", \"Google Chrome\";v=\"156\"",
+        "sec-ch-ua-bitness": "\"64\"",
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-arch": "\"arm\"",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+        "sec-ch-ua-platform-version": "\"26.5.2\""
+      },
+      "headerChecks": {
+        "uaMatches": true,
+        "platformMatches": true,
+        "archMatches": true
+      },
+      "fontProbe": [
+        {
+          "ms": 11.899999998509884,
+          "checkTrue": 200
+        },
+        {
+          "ms": 0.7000000029802322,
+          "checkTrue": 200
+        },
+        {
+          "ms": 0.6999999955296516,
+          "checkTrue": 200
+        }
+      ]
+    },
+    "detectors": {
+      "fingerprint": {
+        "status": "complete",
+        "signals": {
+          "bot": "not_detected",
+          "tampering": false,
+          "virtual_machine": false,
+          "developer_tools": false,
+          "vpn": true,
+          "proxy": false,
+          "incognito": false,
+          "tampering_ml_score": 0.2606,
+          "suspect_score": 7,
+          "anti_detect_browser": false,
+          "os_mismatch": true
+        },
+        "httpStatuses": [
+          200
+        ],
+        "pageErrors": [],
+        "navigationStatus": 200,
+        "waitMs": 3094,
+        "complete": true
+      },
+      "sannysoft": {
+        "status": "complete",
+        "signals": {},
+        "httpStatuses": [],
+        "pageErrors": [],
+        "navigationStatus": 200,
+        "complete": true,
+        "waitMs": 1054,
+        "failedOrWarn": []
+      },
+      "browserscan": {
+        "status": "complete",
+        "signals": {},
+        "httpStatuses": [],
+        "pageErrors": [],
+        "navigationStatus": 200,
+        "complete": true,
+        "verdict": "Normal",
+        "waitMs": 1055
+      },
+      "iphey": {
+        "status": "complete",
+        "signals": {},
+        "httpStatuses": [],
+        "pageErrors": [],
+        "navigationStatus": 200,
+        "complete": true,
+        "verdict": "Trustworthy",
+        "score": 100,
+        "pendingPlaceholder": false,
+        "waitMs": 3210
+      }
+    },
+    "forcedStop": false,
+    "exitCode": 0,
+    "gpuErrors": [],
+    "finishedAt": "2026-11-10T20:16:55.132Z"
+  }
+]

@@ -1,0 +1,178 @@
+{
+  "schemaVersion": 1,
+  "suiteVersion": 1,
+  "runId": "2026-11-10T20-04-08-903Z-fc0486b7",
+  "startedAt": "2026-11-10T20:04:08.904Z",
+  "status": "finished",
+  "plan": "detectors",
+  "external": true,
+  "config": {
+    "binaries": [
+      {
+        "id": "candidate",
+        "executable": "/binaries/candidate/chrome",
+        "expectedVersion": "156.0.8078.47.1",
+        "kind": "cloakbrowser",
+        "licenseConfigured": true
+      }
+    ],
+    "personas": [
+      "windows"
+    ],
+    "modes": [
+      "headed",
+      "headless"
+    ],
+    "seeds": [
+      20260909
+    ],
+    "rounds": 1,
+    "graphics": {
+      "headed": [],
+      "headless": [
+        "--use-gl=angle"
+      ]
+    },
+    "fontconfigFiles": {
+      "macos": "/app/macos-fonts.conf",
+      "windows": "/app/macos-fonts.conf"
+    },
+    "fontNotes": {
+      "macos": "Image bundles Mac fonts; explicit Mac fontconfig enabled",
+      "windows": "Sensitivity control only: Windows persona with Mac fontconfig; NOT a real Windows font installation",
+      "linux": "System fontconfig; not a native desktop or real-user baseline"
+    },
+    "detectors": [
+      "fingerprint"
+    ],
+    "cooldownMs": 45000,
+    "caseTimeoutMs": 300000,
+    "performanceSampleMs": 5000,
+    "routeRequests": 200,
+    "xvnc": "/usr/bin/Xvnc",
+    "environmentLabel": "cloakhub_free:0.8.4 pinned Linux x64 lab; 4 CPU, 4 GiB RAM, 2 GiB shm; no host GPU",
+    "licenseConfigured": true
+  },
+  "plannedCases": [
+    {
+      "id": "detectors-candidate-windows-headed-20260909-r1-configured",
+      "binaryId": "candidate",
+      "persona": "windows",
+      "mode": "headed",
+      "seed": 20260909,
+      "round": 1,
+      "plan": "detectors",
+      "variant": "configured",
+      "graphics": [],
+      "extra": []
+    },
+    {
+      "id": "detectors-candidate-windows-headless-20260909-r1-configured",
+      "binaryId": "candidate",
+      "persona": "windows",
+      "mode": "headless",
+      "seed": 20260909,
+      "round": 1,
+      "plan": "detectors",
+      "variant": "configured",
+      "graphics": [
+        "--use-gl=angle"
+      ],
+      "extra": []
+    }
+  ],
+  "skipped": [],
+  "environment": {
+    "node": "v24.22.2",
+    "playwright": "1.64.1",
+    "kernel": "7.2.13-200.fc44.x86_64",
+    "arch": "x64",
+    "environmentLabel": "cloakhub_free:0.8.4 pinned Linux x64 lab; 4 CPU, 4 GiB RAM, 2 GiB shm; no host GPU",
+    "binaries": [
+      {
+        "id": "candidate",
+        "kind": "cloakbrowser",
+        "version": "156.0.8078.47.1",
+        "executableSHA256": "37c2b771b87cdbf171c2c8021fc7f7900667e2363ccfc8e5d7904ef7e9dbc74a"
+      }
+    ],
+    "fonts": {
+      "windows": {
+        "file": "/app/macos-fonts.conf",
+        "sha256": "375a1a3206f772fef17bc300a652de605e9fe0dffb95177bd40f1fbc06acb242",
+        "note": "Sensitivity control only: Windows persona with Mac fontconfig; NOT a real Windows font installation",
+        "families": [
+          ".Arial Hebrew Desk Interface",
+          ".Lucida Grande UI",
+          ".SF Compact",
+          ".SF NS Mono",
+          ".SF NS Rounded",
+          "Apple Color Emoji",
+          "Arial",
+          "Arial Hebrew",
+          "Arial Narrow",
+          "Arial Unicode MS",
+          "C059",
+          "Comic Sans MS",
+          "Courier",
+          "Courier New",
+          "D050000L",
+          "FreeMono",
+          "FreeSans",
+          "FreeSerif",
+          "Georgia",
+          "Gill Sans",
+          "Helvetica",
+          "Helvetica Neue",
+          "IPAGothic,IPAゴシック",
+          "IPAPGothic,IPA Pゴシック",
+          "Impact",
+          "Liberation Mono",
+          "Liberation Sans",
+          "Liberation Sans Narrow",
+          "Liberation Serif",
+          "Loma",
+          "Lucida Grande",
+          "Menlo",
+          "Microsoft Sans Serif",
+          "Monaco",
+          "Nimbus Mono PS",
+          "Nimbus Roman",
+          "Nimbus Sans",
+          "Nimbus Sans Narrow",
+          "Noto Color Emoji",
+          "P052",
+          "Standard Symbols PS",
+          "System Font,Tipus de lletra del sistema,系統字體,Systémové písmo,Systemskrift,Systemschrift,Γραμματοσειρά συστήματος,Järjestelmäfontti,Police système,גופן מערכת,Rendszerbetűtípus,Font di sistema,システムフォント,시스템 서체,Systeemlettertype,Czcionka systemowa,Fonte do Sistema,Font de sistem,Системный шрифт,Font sustava,Systemtypsnitt,แบบอักษรระบบ,Sistem Fontu,Font Sistem,Системний шрифт,Phông chữ Hệ thống,系统字体,Tipo de letra do sistema,خط النظام,Tipo de letra del sistema,.SF NS",
+          "Systemskrift,Systemschrift,Γραμματοσειρά συστήματος,Järjestelmäfontti,Police système,גופן מערכת,Rendszerbetűtípus,Font di sistema,システムフォント,시스템 서체,Systeemlettertype,Systemfont,Czcionka systemowa,Fonte do Sistema,Font de sistem,Системный шрифт,Font sustava,Systémové písmo,Systemtypsnitt,แบบอักษรระบบ,Sistem Fontu,Font Sistem,Системний шрифт,Phông chữ Hệ thống,系统字体,Tipo de letra do sistema,خط النظام,Tipo de letra del sistema,.SF NS",
+          "Systémové písmo,Systemskrift,Systemschrift,Γραμματοσειρά συστήματος,Järjestelmäfontti,Police système,גופן מערכת,Rendszerbetűtípus,Font di sistema,システムフォント,시스템 서체,Systeemlettertype,Systemfont,Czcionka systemowa,Fonte do Sistema,Font de sistem,Системный шрифт,Font sustava,Systemtypsnitt,แบบอักษรระบบ,Sistem Fontu,Font Sistem,Системний шрифт,Phông chữ Hệ thống,系统字体,Tipo de letra do sistema,خط النظام,Tipo de letra del sistema,.SF NS",
+          "Tahoma",
+          "Times",
+          "Times New Roman",
+          "Tipus de lletra del sistema,系統字體,Systémové písmo,Systemskrift,Systemschrift,Γραμματοσειρά συστήματος,Järjestelmäfontti,Police système,גופן מערכת,Rendszerbetűtípus,Font di sistema,システムフォント,시스템 서체,Systeemlettertype,Systemfont,Czcionka systemowa,Fonte do Sistema,Font de sistem,Системный шрифт,Font sustava,Systemtypsnitt,แบบอักษรระบบ,Sistem Fontu,Font Sistem,Системний шрифт,Phông chữ Hệ thống,系统字体,Tipo de letra do sistema,خط النظام,Tipo de letra del sistema,.SF NS",
+          "Trebuchet MS",
+          "URW Bookman",
+          "URW Gothic",
+          "Unifont",
+          "Unifont CSUR",
+          "Unifont Upper",
+          "Unifont-JP",
+          "Verdana",
+          "Webdings",
+          "WenQuanYi Zen Hei Mono,文泉驛等寬正黑,文泉驿等宽正黑",
+          "WenQuanYi Zen Hei Sharp,文泉驛點陣正黑,文泉驿点阵正黑",
+          "WenQuanYi Zen Hei,文泉驛正黑,文泉驿正黑",
+          "Wingdings",
+          "Z003",
+          "系統字體,Systémové písmo,Systemskrift,Systemschrift,Γραμματοσειρά συστήματος,Järjestelmäfontti,Police système,גופן מערכת,Rendszerbetűtípus,Font di sistema,システムフォント,시스템 서체,Systeemlettertype,Systemfont,Czcionka systemowa,Fonte do Sistema,Font de sistem,Системный шрифт,Font sustava,Systemtypsnitt,แบบอักษรระบบ,Sistem Fontu,Font Sistem,Системний шрифт,Phông chữ Hệ thống,系统字体,Tipo de letra do sistema,خط النظام,Tipo de letra del sistema,.SF NS"
+        ]
+      }
+    },
+    "display": ":90",
+    "externalDisplay": false,
+    "cpuMax": "400000 100000",
+    "memoryMax": "4294967296",
+    "performanceScope": "whole cgroup v2; browser + renderer/GPU + display + runner/fixtures, not browser main process alone"
+  },
+  "finishedAt": "2026-11-10T20:05:14.600Z"
+}

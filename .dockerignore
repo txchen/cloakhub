@@ -9,6 +9,9 @@ coverage
 test-results
 playwright-report
 
+# Local downloaded browser bundles; opt in explicitly for pinned-binary builds.
+binaries/cloakbrowser/
+
 secrets/
 
 .env

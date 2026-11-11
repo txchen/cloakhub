@@ -1,0 +1,15 @@
+{
+  "baseImage": "ghcr.io/txchen/cloakhub_free:0.8.4",
+  "baseImageIndexDigest": "sha256:961f1ac4b12c2c15569e7765bc09cbb0ebdad77892f52496b025c67b121bec33",
+  "referenceVersion": "Chrome for Testing 156.0.8078.4",
+  "referencePlaywrightRevision": 1248,
+  "referenceDownloadURL": "https://cdn.playwright.dev/builds/cft/156.0.8078.4/linux64/chrome-linux64.zip",
+  "referenceExecutableSHA256": "377a9fc07b495c3b8d0ab8ec1fdfd153641759f9756fea34d8dfce4de82f5025",
+  "node": "24.22.2",
+  "playwrightCore": "1.64.1",
+  "pngjs": "7.0.0",
+  "cpuQuota": 4,
+  "memoryGiB": 4,
+  "shmGiB": 2,
+  "physicalGPU": false
+}

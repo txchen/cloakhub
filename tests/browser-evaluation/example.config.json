@@ -1,0 +1,24 @@
+{
+  "environmentLabel": "cloakhub_free:0.8.4 pinned Linux x64 lab; 4 CPU, 4 GiB RAM, 2 GiB shm; no host GPU",
+  "binaries": [
+    { "id": "baseline", "executable": "/opt/cloakbrowser/chrome", "expectedVersion": "152.0.7977.82.1" },
+    { "id": "candidate", "executable": "/binaries/candidate/chrome", "expectedVersion": "156.0.8078.47.1" }
+  ],
+  "licenseKeyFile": "/run/browser-license.key",
+  "personas": ["macos", "windows", "linux"],
+  "modes": ["headed", "headless"],
+  "seeds": [20260909, 20260910, 20260911],
+  "rounds": 2,
+  "graphics": { "headed": [], "headless": ["--use-gl=angle"] },
+  "fontconfigFiles": { "macos": "/app/macos-fonts.conf" },
+  "fontNotes": {
+    "macos": "Image bundles Mac fonts; explicit Mac fontconfig enabled",
+    "windows": "System fontconfig in a Linux/Mac-font image, NOT a complete real Windows font installation",
+    "linux": "System fontconfig; not a native desktop or real-user baseline"
+  },
+  "detectors": ["fingerprint", "sannysoft", "browserscan", "iphey"],
+  "cooldownMs": 45000,
+  "caseTimeoutMs": 300000,
+  "performanceSampleMs": 5000,
+  "routeRequests": 200
+}

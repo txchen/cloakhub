@@ -1,0 +1,41 @@
+{
+  "environmentLabel": "Windows font isolation: strong generic defaults; two rounds; same image and limits as original 12 observations",
+  "binaries": [
+    {
+      "id": "defaults",
+      "executable": "/binaries/candidate/chrome",
+      "expectedVersion": "156.0.8078.47.1"
+    }
+  ],
+  "licenseKeyFile": "/run/browser-license.key",
+  "personas": [
+    "windows"
+  ],
+  "modes": [
+    "headed",
+    "headless"
+  ],
+  "seeds": [
+    20260909
+  ],
+  "rounds": 2,
+  "graphics": {
+    "headed": [],
+    "headless": [
+      "--use-gl=angle"
+    ]
+  },
+  "fontconfigFiles": {
+    "windows": "/opt/evaluation/windows-fonts/configs/windows-defaults.conf"
+  },
+  "fontNotes": {
+    "windows": "Same 34 font files and system rendering rules; strong generic aliases map sans-serif/serif/monospace to Arial/Times New Roman/Courier New; modern Windows families remain missing"
+  },
+  "detectors": [
+    "fingerprint"
+  ],
+  "cooldownMs": 45000,
+  "caseTimeoutMs": 300000,
+  "performanceSampleMs": 5000,
+  "routeRequests": 200
+}

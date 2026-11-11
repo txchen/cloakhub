@@ -1,0 +1,39 @@
+{
+  "environmentLabel": "Windows font isolation: system; replicate 2; identical evaluation image, 4 CPU/4GiB/2GiB shm, no GPU",
+  "binaries": [
+    {
+      "id": "system",
+      "executable": "/binaries/candidate/chrome",
+      "expectedVersion": "156.0.8078.47.1"
+    }
+  ],
+  "licenseKeyFile": "/run/browser-license.key",
+  "personas": [
+    "windows"
+  ],
+  "modes": [
+    "headed",
+    "headless"
+  ],
+  "seeds": [
+    20260909
+  ],
+  "rounds": 1,
+  "graphics": {
+    "headed": [],
+    "headless": [
+      "--use-gl=angle"
+    ]
+  },
+  "fontconfigFiles": {},
+  "fontNotes": {
+    "windows": "Unchanged system fontconfig; added files are outside its search path"
+  },
+  "detectors": [
+    "fingerprint"
+  ],
+  "cooldownMs": 45000,
+  "caseTimeoutMs": 300000,
+  "performanceSampleMs": 5000,
+  "routeRequests": 200
+}

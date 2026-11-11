@@ -43,6 +43,24 @@ CLOAKHUB_RUN_CDP_TESTS=true bun test tests/browser-skill.integration.test.js
 It uses Playwright's installed Chromium, or `CLOAKHUB_TEST_BROWSER` when specified;
 it does not require a deployed hub or a CloakBrowser license.
 
+## Browser version evaluation
+
+Use the [reusable browser evaluation suite](browser-evaluation.md) when comparing a
+new CloakBrowser binary with the deployed baseline. It has config-driven paired
+persona/seed/mode matrices, local Canvas/Worker/iframe/WebGL and request-interception
+probes, CPU measurements, graphics-flag isolation, and opt-in public detector adapters.
+Exact binary versions, hashes, argv and per-persona font provenance are recorded.
+
+```sh
+npm run test:browser-evaluation:unit
+npm run test:browser-evaluation -- --config tests/browser-evaluation/example.config.json --plan all --dry-run
+```
+
+The example uses container paths; follow the guide for the pinned Docker lab.
+Real execution needs explicit binaries and (where required) a license file.
+`--plan detectors` requires `--external`; ordinary `bun test` never launches this
+matrix or visits public detector sites. Measurement completion is not a stealth pass.
+
 ## Frontend development and verification
 
 HTTP routing lives in `src/app.ts`, response presentation in `src/profile-presentation.ts`, and

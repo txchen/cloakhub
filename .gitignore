@@ -11,3 +11,10 @@ secrets/
 .env
 .env.*
 !.env.example
+
+# Local browser downloads: retain metadata and verification tools, not payloads.
+/binaries/cloakbrowser/*/linux-x64/
+/binaries/cloakbrowser/*/linux-arm64/
+/binaries/cloakbrowser/*/*.tar.gz
+/binaries/cloakbrowser/*/*.partial
+/binaries/cloakbrowser/*/*.extracting/
