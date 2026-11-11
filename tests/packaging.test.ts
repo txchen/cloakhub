@@ -70,7 +70,7 @@ describe("Docker-first packaging", () => {
     const readme = await Bun.file("README.md").text();
 
     expect(readme).toContain("### Run the free image");
-    expect(readme).toContain("image: ghcr.io/txchen/cloakhub_free:0.9.1");
+    expect(readme).toContain("image: ghcr.io/txchen/cloakhub_free:0.9.2");
     expect(readme).toContain("CLOAKHUB_LICENSE_MODE=none");
     expect(readme).toContain("docker compose logs -f cloakhub-free");
   });
@@ -131,8 +131,8 @@ describe("Docker-first packaging", () => {
     expect(dockerfile).toContain("CLOAKHUB_BROWSER_BIN=/opt/cloakbrowser/chrome");
     expect(dockerfile).toContain("CLOAKHUB_MAX_RUNNING_INSTANCES=10");
     expect(dockerfile).toContain("CLOAKHUB_DEFAULT_PLATFORM=macos");
-    expect(dockerfile).toContain("cloakbrowser-154.0.8037.57.1-linux-x64-nolicense-patched.tar.zst");
-    expect(dockerfile).toContain("143476343497fe04e343fc0ace793c71e1fcfeb6328ad8530cb6c75665faf8ae");
+    expect(dockerfile).toContain("cloakbrowser-156.0.8078.47.1-linux-x64-nolicense-patched.tar.zst");
+    expect(dockerfile).toContain("6642660ea04842dc073662f99114d9217f1ef61640cca0f6425fc424c4929737");
     expect(dockerfile).toContain("sha256sum -c -");
     expect(dockerfile).not.toContain("CLOAKHUB_BROWSER_INSTALLER");
     expect(dockerfile).not.toMatch(/^(ARG|ENV) .*LICENSE_KEY/m);
@@ -147,10 +147,26 @@ describe("Docker-first packaging", () => {
     expect(workflow.split("push: ${{ github.event_name != 'pull_request' }}").length - 1).toBe(2);
   });
 
+  test("156 free release builds and tests both native architectures before merging", async () => {
+    const workflow = await Bun.file(".github/workflows/free-release.yml").text();
+    expect(workflow).toContain("runner: ubuntu-24.04-arm");
+    expect(workflow).toContain("runner: ubuntu-24.04");
+    expect(workflow).toContain("dockerfile: Dockerfile.free.arm64");
+    expect(workflow).toContain("needs: test");
+    expect(workflow).toContain("needs: build");
+    expect(workflow).toContain('bash scripts/smoke-free-image.sh "$IMAGE" "$EXPECTED"');
+    expect(workflow).toContain('docker buildx imagetools create -t "$IMAGE:$VERSION" "$AMD64" "$ARM64"');
+    expect(workflow).not.toContain('-t "$IMAGE:latest"');
+    const arm = await Bun.file("Dockerfile.free.arm64").text();
+    expect(arm).toContain("cloakbrowser-156.0.8078.47.1-linux-arm64-nolicense-patched.tar.zst");
+    expect(arm).toContain("c8028ff40ef2b3b1db1023cbbc914de393187cd7aef9c235390da9265488912c");
+    expect(arm).toContain("sha256sum -c -");
+  });
+
   test("free compose example needs no license secret", async () => {
     const compose = await Bun.file("compose.free.yml").text();
 
-    expect(compose).toContain("image: ghcr.io/txchen/cloakhub_free:0.9.1");
+    expect(compose).toContain("image: ghcr.io/txchen/cloakhub_free:0.9.2");
     expect(compose).not.toMatch(/^\s*CLOAKHUB_LICENSE_MODE:/m);
     expect(compose).not.toContain("CLOAKHUB_LICENSE_KEYS_FILE");
     expect(compose).not.toContain("cloakbrowser-keys");

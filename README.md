@@ -112,12 +112,13 @@ and the [preview/stable comparison](docs/browser-channel-comparison.md) for deta
 
 ### The two published images
 
-The same release publishes two images:
+Two image variants are available. The 0.9.2 free-image release upgrades only
+`cloakhub_free`; the standard image remains at 0.9.1.
 
 | Image | License key | Browser | Notes |
 | --- | --- | --- | --- |
 | `ghcr.io/txchen/cloakhub` | Required | Public 146 build, baked in and SHA-256 verified | amd64 and arm64 |
-| `ghcr.io/txchen/cloakhub_free` | None | Patched 154 build, baked in and SHA-256 verified | amd64 and arm64 |
+| `ghcr.io/txchen/cloakhub_free` | None | Patched 156 build, baked in and SHA-256 verified | amd64 and arm64 |
 
 Both default to a macOS persona, bundle Mac fonts, and otherwise share the same Hub
 features and settings.
@@ -126,14 +127,16 @@ features and settings.
 
 Use the free image when you cannot or do not want to supply a CloakBrowser key. It
 requires no secret file, does not contact the license service, and does not download a
-browser at runtime. Both amd64 and arm64 bake a license-free 154.0.8037.57.1.
+browser at runtime. Version 0.9.2 bundles license-free 156.0.8078.47.1 on both
+amd64 and arm64 under one multi-architecture tag. This release does not move
+`latest` or the `0.9` alias; use the explicit `0.9.2` tag.
 
 The free image sets `CLOAKHUB_LICENSE_MODE=none` and already defaults
 `CLOAKHUB_DATA_DIR`, `CLOAKHUB_HOST`, `CLOAKHUB_PORT`, and
 `CLOAKHUB_MAX_RUNNING_INSTANCES=10`, so the Compose file only needs the settings an
 operator typically customizes. The Hub reads no license key, never queries license
 capacity, and never downloads a browser. It uses the license-free CloakBrowser build
-from the [154.0.8037.57.1 patched release](https://github.com/txchen/cloakhub/releases/tag/cloakbrowser-154.0.8037.57.1-patched),
+from the [156.0.8078.47.1 patched release](https://github.com/txchen/cloakhub/releases/tag/cloakbrowser-156.0.8078.47.1-patched),
 verified by SHA-256 at image-build time. Concurrent Browser Instances are capped only
 by `CLOAKHUB_MAX_RUNNING_INSTANCES` (default `10`; add it to the Compose `environment`
 to raise it).
@@ -144,7 +147,7 @@ directory:
 ```yaml
 services:
   cloakhub-free:
-    image: ghcr.io/txchen/cloakhub_free:0.9.1
+    image: ghcr.io/txchen/cloakhub_free:0.9.2
     restart: unless-stopped
     shm_size: 2gb
     environment:
