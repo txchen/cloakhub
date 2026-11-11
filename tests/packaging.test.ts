@@ -11,7 +11,7 @@ describe("Docker-first packaging", () => {
     expect(dockerfile).toContain("FROM debian:bookworm-slim");
     expect(dockerfile).not.toContain("oven/bun");
     const pkg = await Bun.file("package.json").json();
-    expect(pkg.version).toBe("1.0.0");
+    expect(pkg.version).toBe("1.1.0");
     expect(pkg.dependencies?.cloakbrowser).toBeUndefined();
     expect(dockerfile).not.toContain("FROM python:");
     expect(dockerfile).not.toContain("pip install");
@@ -82,7 +82,7 @@ describe("Docker-first packaging", () => {
   test("README documents deployment from the published image", async () => {
     const readme = await Bun.file("README.md").text();
 
-    expect(readme).toContain("image: ghcr.io/txchen/cloakhub:1.0.0");
+    expect(readme).toContain("image: ghcr.io/txchen/cloakhub:1.1.0");
     expect(readme).not.toContain("cloakhub_free");
     expect(readme).toContain("docker compose pull");
     expect(readme).toContain("restart: unless-stopped");
@@ -96,7 +96,7 @@ describe("Docker-first packaging", () => {
     for (const file of ["compose.yml", "compose.arm64.yml"]) {
       const compose = await Bun.file(file).text();
       expect(compose).not.toContain("build:");
-      expect(compose).toContain("image: ghcr.io/txchen/cloakhub:1.0.0");
+      expect(compose).toContain("image: ghcr.io/txchen/cloakhub:1.1.0");
       expect(compose).not.toContain("CLOAKHUB_LICENSE_KEYS_FILE");
       expect(compose).not.toContain("cloakbrowser-keys");
       expect(compose).toContain("restart: unless-stopped");
