@@ -1,4 +1,4 @@
-import type { PresentedBrowserProfile } from "../profile-presentation";
+import type { PresentedBrowserProfile } from "./types";
 import { copyText, element, toast } from "./dom";
 import { profilePath } from "./api";
 import { formatStreamStats, setupStreamQuality } from "./stream-quality";

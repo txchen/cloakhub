@@ -1,9 +1,6 @@
 import { expect, test } from "bun:test";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
-import {
-  createCdpWebSocketHandler,
-  type CdpWebSocketData
-} from "../src/cdp-websocket-proxy";
+import { startRelay } from "./helpers/relay-fixture.mjs";
 
 const realTest =
   process.env.CLOAKHUB_RUN_CDP_TESTS === "true" ? test : test.skip;
@@ -32,27 +29,9 @@ realTest(
       .trim()
       .split("\n");
     const browserUrl = `ws://127.0.0.1:${port}${path}`;
-    let protections = 0;
-    const server = Bun.serve<CdpWebSocketData>({
-      hostname: "127.0.0.1",
-      port: 0,
-      fetch(request, server) {
-        const path = new URL(request.url).pathname;
-        const targetUrl = path.startsWith("/devtools/page/")
-          ? `ws://127.0.0.1:${port}${path}`
-          : browserUrl;
-        if (
-          server.upgrade(request, {
-            data: { profileId: "work", targetUrl, browserTargetUrl: browserUrl }
-          })
-        )
-          return;
-        return new Response("Websocket required", { status: 400 });
-      },
-      websocket: createCdpWebSocketHandler({ onBlankTab: () => protections++ })
-    });
+    const server = await startRelay({ browser: browserUrl, profile: "work" });
     try {
-      // Playwright runs under Node; Bun owns the real proxy websocket server.
+      // Playwright runs under Node; the Go relay fixture owns the proxy websocket server.
       const client = Bun.spawn(
         [
           "node",
@@ -63,9 +42,9 @@ realTest(
       );
       const output = await new Response(client.stderr).text();
       expect(await client.exited, output).toBe(0);
-      expect(protections).toBe(4);
+      expect((await server.stats()).protections).toBe(4);
     } finally {
-      server.stop(true);
+      await server.stop();
       process.kill();
       await process.exited;
       await rm(root, { recursive: true, force: true });

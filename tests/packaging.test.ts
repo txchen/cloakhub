@@ -7,14 +7,17 @@ describe("Docker-first packaging", () => {
   test("one Dockerfile serves amd64 and arm64 with pinned dependencies", async () => {
     const dockerfile = await Bun.file("Dockerfile").text();
 
-    expect(dockerfile).toContain("FROM oven/bun:1.3.14-debian AS bun");
+    expect(dockerfile).toContain("FROM golang:1.27-bookworm AS hub");
     expect(dockerfile).toContain("FROM debian:bookworm-slim");
+    expect(dockerfile).not.toContain("oven/bun");
     const pkg = await Bun.file("package.json").json();
     expect(pkg.version).toBe("1.0.0");
-    expect(pkg.dependencies.cloakbrowser).toBe("0.5.10");
+    expect(pkg.dependencies?.cloakbrowser).toBeUndefined();
     expect(dockerfile).not.toContain("FROM python:");
     expect(dockerfile).not.toContain("pip install");
-    expect(dockerfile).toContain("bun install --frozen-lockfile --production --omit=peer");
+    expect(dockerfile).not.toContain("bun install");
+    expect(dockerfile).toContain("CGO_ENABLED=0 go build -trimpath");
+    expect(dockerfile).toContain("ESBUILD=/usr/local/bin/esbuild ./scripts/build-ui.sh");
     expect(dockerfile).not.toContain("FROM cloakhq/cloakbrowser");
     expect(dockerfile).not.toMatch(/^(ARG|ENV) .*LICENSE_KEY/m);
     expect(dockerfile).toMatch(/^ARG TARGETARCH$/m);
@@ -49,7 +52,9 @@ describe("Docker-first packaging", () => {
     expect(dockerfile).toContain("CLOAKHUB_PORT=7788");
     expect(dockerfile).toContain("EXPOSE 7788");
     expect(dockerfile).toContain('VOLUME ["/data"]');
-    expect(dockerfile).toContain("COPY --from=bun /usr/local/bin/bun /usr/local/bin/bun");
+    expect(dockerfile).toContain("COPY --from=hub /out/cloakhub /usr/local/bin/cloakhub");
+    expect(dockerfile).toContain('CMD ["/usr/local/bin/cloakhub"]');
+    expect(dockerfile).toContain("/app/check-mac-fonts.sh");
     expect(dockerfile).not.toContain("kasmvncserver");
     expect(dockerfile).toContain("cargo install --locked voxl-server");
     expect(dockerfile).toContain("COPY --from=voxl /opt/voxl/bin/voxl /usr/local/bin/voxl");
@@ -63,7 +68,9 @@ describe("Docker-first packaging", () => {
   });
 
   test("the image installs binaries before any project files", async () => {
-    const dockerfile = await Bun.file("Dockerfile").text();
+    const full = await Bun.file("Dockerfile").text();
+    // Build stages copy sources freely; the runtime stage must keep binaries first.
+    const dockerfile = full.slice(full.lastIndexOf("\nFROM "));
     const binaryEnd = dockerfile.indexOf("HOME=/tmp /opt/cloakbrowser/chrome --version");
     expect(binaryEnd).toBeGreaterThan(0);
     for (const copy of dockerfile.matchAll(/^COPY (.*)$/gm)) {
@@ -103,11 +110,13 @@ describe("Docker-first packaging", () => {
 
   test("real runtime integration tests are opt-in for normal CI", async () => {
     const packageJson = await Bun.file("package.json").json();
-    const integrationTest = await Bun.file("tests/real-runtime.integration.test.ts").text();
+    const integrationTest = await Bun.file("internal/integration/realruntime_test.go").text();
+    const runner = await Bun.file("scripts/real-runtime-tests.sh").text();
 
-    expect(packageJson.scripts["integration:real-runtime"]).toContain("CLOAKHUB_RUN_REAL_RUNTIME_TESTS=true");
-    expect(integrationTest).toContain('process.env.CLOAKHUB_RUN_REAL_RUNTIME_TESTS === "true"');
-    expect(integrationTest).toContain("test.skip");
+    expect(packageJson.scripts["integration:real-runtime"]).toBe("./scripts/real-runtime-tests.sh");
+    expect(runner).toContain("CLOAKHUB_RUN_REAL_RUNTIME_TESTS=true");
+    expect(integrationTest).toContain('os.Getenv("CLOAKHUB_RUN_REAL_RUNTIME_TESTS") != "true"');
+    expect(integrationTest).toContain("t.Skip(");
   });
 
   test("continuous builds never push on pull requests", async () => {

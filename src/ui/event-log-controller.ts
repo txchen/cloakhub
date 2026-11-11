@@ -1,5 +1,5 @@
-import type { EventEntry, EventPage } from "../event-log";
-import type { PresentedBrowserProfile } from "../profile-presentation";
+import type { EventEntry, EventPage } from "./types";
+import type { PresentedBrowserProfile } from "./types";
 import { element, escape } from "./dom";
 import { request } from "./api";
 

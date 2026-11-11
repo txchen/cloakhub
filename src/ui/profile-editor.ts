@@ -1,5 +1,5 @@
-import type { PresentedBrowserProfile } from "../profile-presentation";
-import type { LaunchProfileFields } from "../profile";
+import type { PresentedBrowserProfile } from "./types";
+import type { LaunchProfileFields } from "./types";
 import { element, escape, toast } from "./dom";
 import { profilePath, request } from "./api";
 
