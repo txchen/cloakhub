@@ -1,11 +1,10 @@
 # CloakHub image (linux/amd64 and linux/arm64).
 #
 # Bakes the license-free CloakBrowser build for the target architecture, downloaded
-# from the CloakHub GitHub release for that exact build and verified by SHA-256. At
-# runtime no license key is required and Hub runs with CLOAKHUB_LICENSE_MODE=none, so
-# concurrent Browser Instances are bounded only by CLOAKHUB_MAX_RUNNING_INSTANCES
-# (default 10 here). The Hub is one static Go binary; the live viewer is Xvfb plus
-# voxl (H.264 over WebSocket).
+# from the CloakHub GitHub release for that exact build and verified by SHA-256. No
+# license key is involved; concurrent Browser Instances are bounded only by
+# CLOAKHUB_MAX_RUNNING_INSTANCES (default 10 here). The Hub is one static Go binary;
+# the live viewer is Xvfb plus voxl (H.264 over WebSocket).
 
 # esbuild bundles both voxl's web client and CloakHub's operator UI.
 FROM debian:bookworm-slim AS esbuild
@@ -60,7 +59,6 @@ WORKDIR /app
 ENV CLOAKHUB_DATA_DIR=/data \
     CLOAKHUB_HOST=0.0.0.0 \
     CLOAKHUB_PORT=7788 \
-    CLOAKHUB_LICENSE_MODE=none \
     CLOAKHUB_BROWSER_BIN=/opt/cloakbrowser/chrome \
     CLOAKHUB_MAX_RUNNING_INSTANCES=10 \
     CLOAKHUB_DEFAULT_PLATFORM=macos \

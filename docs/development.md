@@ -13,7 +13,7 @@ skill and its tests, and Playwright.
 | `internal/profile` | Profile fields, validation, redaction, SQLite repository and service |
 | `internal/events` | Bounded lifecycle event log |
 | `internal/procs` | Owned Processes: pid files, ownership markers, cleanup, resource usage |
-| `internal/browser` | Browser Instance runtime: launch, capacity, idle sleep, crash handling, license seats, proxy relay, Xvfb/voxl display, clipboard |
+| `internal/browser` | Browser Instance runtime: launch, capacity, idle sleep, crash handling, proxy relay, Xvfb/voxl display, clipboard |
 | `internal/cdp` | CDP gateway, discovery rewriting, WebSocket relay and last-tab protection |
 | `internal/viewer` | Hub-wide viewer stream settings |
 | `internal/web` | HTTP routes, auth, presentation, server-rendered pages, viewer proxy, embedded UI |
@@ -29,8 +29,8 @@ bun run start        # builds the UI bundle, then go run ./cmd/cloakhub
 
 Startup requires a discoverable CloakBrowser Binary (see the
 [pinned deployment build](../README.md#docker)). Set `CLOAKHUB_BROWSER_BIN`, provide
-the packaged Docker path, or install `cloakbrowser` on `PATH`. The former runtime
-installer (`CLOAKHUB_BROWSER_INSTALLER`) is not supported.
+the packaged Docker path, or install `cloakbrowser` on `PATH`. CloakHub assumes the
+binary is unrestricted: it neither downloads browsers nor manages license keys.
 Headed Browser Profiles also require `Xvfb` and [voxl](https://github.com/tembo/voxl) (`cargo install voxl-server`; override paths with `CLOAKHUB_XVFB_BIN` / `CLOAKHUB_VOXL_BIN`); if either is missing, startup continues with a warning and headed launch/viewer actions fail until both are installed. The viewer needs a secure page: open `http://localhost:7788` or an HTTPS origin.
 
 During UI work, `CLOAKHUB_UI_DIST=internal/web/dist` serves bundles from disk, so

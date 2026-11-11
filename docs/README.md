@@ -5,7 +5,6 @@
 - [Automation API](api.md): profiles, lifecycle, CDP tokens, events and viewer settings.
 - [Development and tests](development.md): Go layout, running from source, test suites, releases.
 - [Mac fonts and image builds](private-macos.md): bundled fonts, building the image, private font images.
-- [Running a licensed CloakBrowser build](licensed-browser.md): only for mounting an official licensed binary.
 - [Reusable browser version evaluation suite](browser-evaluation.md): comparing CloakBrowser builds in a pinned lab.
 - [CloakBrowser feedback tracking](cloakbrowser-feedback-tracking.md): upstream issues CloakHub works around.
 - Client setup lives with the browser skill: [setup and troubleshooting](../skills/cloakhub-browser/references/setup.md).
@@ -25,7 +24,8 @@ license-keyed images, or the Bun runtime) and are kept unchanged as evidence; ra
 is under [`evidence/`](evidence/).
 
 - [CloakHub v1 PRD](cloakhub-v1-prd.md): the original product requirements.
-- [CloakBrowser 151 deployment](cloakbrowser-151.md) and [152 preview vs 151 stable](browser-channel-comparison.md).
+- [CloakBrowser 151 deployment](cloakbrowser-151.md), including the license-key pooling of earlier
+  releases, and [152 preview vs 151 stable](browser-channel-comparison.md).
 - [CloakBrowser 156 patch validation](cloakbrowser-156-patch-validation.md): the license-free 156 build the image bakes.
 - Anti-detection comparisons: [preview 154 57.1 vs 57.2](preview-154-57.1-vs-57.2-antidetection.md),
   [preview 155](preview-155-antidetection.md), [preview 156](preview-156-antidetection.md),

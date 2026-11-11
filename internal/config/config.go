@@ -46,7 +46,6 @@ type Config struct {
 	DiskCacheSizeMB     int
 	DataRoot            string
 	Host                string
-	LicenseMode         string
 	MaxRunningInstances int
 	MacOSFontconfigFile string
 	Port                int
@@ -90,14 +89,6 @@ func Load(env func(string) string, home string) (Config, error) {
 	}
 	if cfg.MaxRunningInstances, err = positiveInteger(env("CLOAKHUB_MAX_RUNNING_INSTANCES"), "CLOAKHUB_MAX_RUNNING_INSTANCES", DefaultMaxRunningInstances, MaxInternalRunningInstances()); err != nil {
 		return Config{}, err
-	}
-	switch mode := get("CLOAKHUB_LICENSE_MODE"); mode {
-	case "":
-		cfg.LicenseMode = "required"
-	case "required", "none":
-		cfg.LicenseMode = mode
-	default:
-		return Config{}, &Error{Message: "CLOAKHUB_LICENSE_MODE must be required or none"}
 	}
 	port, err := parseInteger(env("CLOAKHUB_PORT"), DefaultPort)
 	if err != nil || port < 1 || port > 65535 {

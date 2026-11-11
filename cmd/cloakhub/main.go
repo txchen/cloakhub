@@ -11,7 +11,9 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"sort"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
@@ -55,24 +57,8 @@ func run() error {
 		return err
 	}
 
-	var licensePool *browser.LicensePool
-	maxRunning := cfg.MaxRunningInstances
-	if cfg.LicenseMode == "none" {
-		// In free mode never read license configuration or reserve licensed slots.
-		log.Printf("CLOAKHUB_LICENSE_MODE=none: CloakBrowser license checks disabled; Hub limit %d", maxRunning)
-	} else {
-		keys, err := browser.LoadLicenseKeys(nil, home)
-		if err != nil {
-			return err
-		}
-		if len(keys) > 0 {
-			if licensePool, err = browser.NewLicensePool(keys, nil); err != nil {
-				return err
-			}
-			maxRunning = min(maxRunning, licensePool.Capacity)
-			log.Printf("CloakBrowser: %d configured key(s), %d licensed slots; Hub limit %d", len(keys), licensePool.Capacity, maxRunning)
-		}
-	}
+	warnIgnoredLicenseSettings()
+	log.Printf("CloakBrowser %s; Hub limit %d", browserBin, cfg.MaxRunningInstances)
 
 	displayBins := browser.ResolveDisplayBins(os.Getenv("CLOAKHUB_XVFB_BIN"), os.Getenv("CLOAKHUB_VOXL_BIN"), "")
 	if displayBins.Warning != "" {
@@ -103,7 +89,7 @@ func run() error {
 	viewerSettings := viewer.Open(cfg.DataRoot, func(viewer.Settings) { display.RestartStreams() })
 	display.Settings = viewerSettings.Get
 
-	launcher := browser.NewProcessLauncher(cfg.DataRoot, cfg.DiskCacheSizeMB, cfg.MacOSFontconfigFile, licensePool)
+	launcher := browser.NewProcessLauncher(cfg.DataRoot, cfg.DiskCacheSizeMB, cfg.MacOSFontconfigFile)
 	launcher.Owned = owned
 	runtime := browser.New(browser.Options{
 		BrowserBin:          browserBin,
@@ -113,7 +99,7 @@ func run() error {
 		DataRoot:            cfg.DataRoot,
 		DisplayRuntime:      display,
 		Launcher:            launcher,
-		MaxRunningInstances: maxRunning,
+		MaxRunningInstances: cfg.MaxRunningInstances,
 		Owned:               owned,
 		Repository:          repository,
 	})
@@ -165,6 +151,22 @@ func run() error {
 	repository.Close()
 	eventLog.Close()
 	return shutdownErr
+}
+
+// warnIgnoredLicenseSettings flags settings from releases that metered licensed
+// browser builds. CloakHub assumes an unrestricted browser and ignores them.
+func warnIgnoredLicenseSettings() {
+	var ignored []string
+	for _, entry := range os.Environ() {
+		name, _, _ := strings.Cut(entry, "=")
+		if strings.HasPrefix(name, "CLOAKHUB_LICENSE_") {
+			ignored = append(ignored, name)
+		}
+	}
+	if len(ignored) > 0 {
+		sort.Strings(ignored)
+		log.Printf("Ignoring %s: CloakHub assumes an unrestricted browser build and no longer manages license keys", strings.Join(ignored, ", "))
+	}
 }
 
 func signalName(sig os.Signal) string {

@@ -10,8 +10,8 @@ import (
 	"time"
 )
 
-func TestEnvMarksOwnershipAndDropsLicenseSecrets(t *testing.T) {
-	env := (&Registry{DataRoot: "/data"}).Env("work", []string{"PATH=/bin", "CLOAKBROWSER_LICENSE_KEY=s", "CLOAKHUB_LICENSE_KEYS=k", "CLOAKHUB_PROFILE_ID=stale"})
+func TestEnvMarksOwnership(t *testing.T) {
+	env := (&Registry{DataRoot: "/data"}).Env("work", []string{"PATH=/bin", "CLOAKHUB_PROFILE_ID=stale"})
 	if !slices.Equal(env, []string{"PATH=/bin", "CLOAKHUB_DATA_ROOT=/data", "CLOAKHUB_PROFILE_ID=work"}) {
 		t.Errorf("env %v", env)
 	}

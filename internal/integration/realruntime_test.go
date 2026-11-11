@@ -77,7 +77,7 @@ func newFixture(t *testing.T, requireDisplay bool) *fixture {
 	eventLog, _ := events.Open(dataRoot)
 	profiles, _ := profile.NewService(profile.ServiceOptions{DataRoot: dataRoot, Repository: repo})
 	owned := procs.NewRegistry(dataRoot)
-	launcher := browser.NewProcessLauncher(dataRoot, 64, "", nil)
+	launcher := browser.NewProcessLauncher(dataRoot, 64, "")
 	launcher.Owned = owned
 	display := &browser.VoxlDisplayRuntime{XvfbBin: bins.Xvfb, VoxlBin: bins.Voxl, Owned: owned}
 	settings := viewer.Open(dataRoot, nil)
@@ -90,7 +90,7 @@ func newFixture(t *testing.T, requireDisplay bool) *fixture {
 	})
 	gateway := &cdp.Gateway{Runtime: runtime, Profiles: profiles}
 	relay := &cdp.Relay{Sessions: tracker{runtime}, Guard: &cdp.TabGuard{}}
-	cfg := config.Config{DataRoot: dataRoot, Host: "127.0.0.1", MaxRunningInstances: 10, LicenseMode: "none"}
+	cfg := config.Config{DataRoot: dataRoot, Host: "127.0.0.1", MaxRunningInstances: 10}
 	server := httptest.NewServer(web.New(cfg, web.Services{Events: eventLog, Viewer: settings, Runtime: runtime,
 		Gateway: gateway, Relay: relay, Profiles: profiles, Owned: owned}))
 	f := &fixture{t: t, runtime: runtime, profiles: profiles, repo: repo, events: eventLog, server: server, clock: c}

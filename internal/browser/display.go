@@ -288,8 +288,6 @@ func (h *displayHandle) Done() <-chan struct{} {
 	return h.done
 }
 
-func (h *displayHandle) ExitError() error { return nil }
-
 // XvfbArgs is the Xvfb command line for a display.
 func XvfbArgs(command DisplayCommand) []string {
 	return []string{
