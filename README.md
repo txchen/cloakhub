@@ -10,6 +10,8 @@ resources and wake when you connect again; their profile data stays on disk.
 - **Human and agent access:** use the web viewer for login or manual work and the companion skill for automation.
 - **Simple deployment:** Docker Compose on Linux, with amd64 and arm64 images.
 
+![A CloakHub profile open in the live viewer: the remote browser shows a Wikipedia page, with stream rate and quality controls in the toolbar](docs/images/viewer.png)
+
 ## How it works
 
 ```mermaid
@@ -396,6 +398,8 @@ support; CloakHub does not implement Playwright's separate browser-server protoc
 See the [API guide](docs/api.md#cdp-endpoints) for discovery and authentication details.
 
 ## Everyday use
+
+![The profile list: running and stopped profiles with their status, connections, memory, and last activity](docs/images/dashboard.png)
 
 Select a profile in the sidebar to open its viewer or controls. Use its menu to edit
 settings, manage its token, or start/stop it. **Close viewer** disconnects the viewer
