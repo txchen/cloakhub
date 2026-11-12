@@ -161,7 +161,7 @@ func (s *Server) viewerPage(r *http.Request, path string) *response {
 	if err != nil {
 		return viewerHTMLError(err)
 	}
-	return htmlResponse(renderViewer(state.ProfileID, state.DisplayPath, state.ClipboardSync), 200, nil)
+	return htmlResponse(renderViewer(state.ProfileID, state.DisplayPath, state.ClipboardSync, s.config.TLSPort), 200, nil)
 }
 
 var lifecyclePath = regexp.MustCompile(`^/(?:api|ui)/profiles/([^/]+)/(start|stop|restart)$`)

@@ -1,6 +1,6 @@
 services:
   cloakhub:
-    image: ghcr.io/txchen/cloakhub:1.1.0
+    image: ghcr.io/txchen/cloakhub:1.2.0
     restart: unless-stopped
     shm_size: 2gb
     environment:
@@ -15,5 +15,7 @@ services:
       # CLOAKHUB_MAX_RUNNING_INSTANCES: "20"
     ports:
       - "${CLOAKHUB_BIND_ADDRESS:-127.0.0.1}:7788:7788"
+      # Built-in HTTPS (self-signed certificate) for the live viewer:
+      - "${CLOAKHUB_BIND_ADDRESS:-127.0.0.1}:7789:7789"
     volumes:
       - ./data:/data

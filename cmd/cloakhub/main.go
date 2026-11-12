@@ -23,6 +23,7 @@ import (
 	"github.com/txchen/cloakhub/internal/events"
 	"github.com/txchen/cloakhub/internal/procs"
 	"github.com/txchen/cloakhub/internal/profile"
+	"github.com/txchen/cloakhub/internal/tlscert"
 	"github.com/txchen/cloakhub/internal/viewer"
 	"github.com/txchen/cloakhub/internal/web"
 )
@@ -128,6 +129,12 @@ func run() error {
 			log.Fatal(err)
 		}
 	}()
+	var httpsServer *http.Server
+	if cfg.TLSPort > 0 {
+		if httpsServer, err = startHTTPS(cfg, server); err != nil {
+			return err
+		}
+	}
 
 	idle := time.NewTicker(5 * time.Second)
 	go func() {
@@ -147,6 +154,9 @@ func run() error {
 	defer cancel()
 	// Hijacked WebSockets are not tracked by Shutdown; runtime shutdown closes them.
 	_ = httpServer.Shutdown(ctx)
+	if httpsServer != nil {
+		_ = httpsServer.Shutdown(ctx)
+	}
 	shutdownErr := runtime.Shutdown()
 	repository.Close()
 	eventLog.Close()
@@ -167,6 +177,35 @@ func warnIgnoredLicenseSettings() {
 		sort.Strings(ignored)
 		log.Printf("Ignoring %s: CloakHub assumes an unrestricted browser build and no longer manages license keys", strings.Join(ignored, ", "))
 	}
+}
+
+// startHTTPS serves the same handler over TLS. Browsers only decode the live viewer
+// on secure pages, so this lets the viewer work without a reverse proxy; without an
+// operator certificate it uses a self-signed one kept in the Data Root.
+func startHTTPS(cfg config.Config, handler http.Handler) (*http.Server, error) {
+	files, err := tlscert.Ensure(cfg.TLSCert, cfg.TLSKey, filepath.Join(cfg.DataRoot, "tls"), cfg.TLSHosts)
+	if err != nil {
+		return nil, err
+	}
+	listener, err := net.Listen("tcp", net.JoinHostPort(cfg.Host, strconv.Itoa(cfg.TLSPort)))
+	if err != nil {
+		return nil, err
+	}
+	server := &http.Server{Handler: handler, ReadHeaderTimeout: 30 * time.Second}
+	go func() {
+		if err := server.ServeTLS(listener, files.Cert, files.Key); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Fatal(err)
+		}
+	}()
+	switch {
+	case cfg.TLSCert != "":
+		log.Printf("CloakHub HTTPS on https://%s:%d", cfg.Host, cfg.TLSPort)
+	case files.Generated:
+		log.Printf("CloakHub HTTPS on https://%s:%d with a new self-signed certificate (%s); browsers ask to trust it once", cfg.Host, cfg.TLSPort, files.Cert)
+	default:
+		log.Printf("CloakHub HTTPS on https://%s:%d with the self-signed certificate %s", cfg.Host, cfg.TLSPort, files.Cert)
+	}
+	return server, nil
 }
 
 func signalName(sig os.Signal) string {
