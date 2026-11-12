@@ -2,6 +2,7 @@ package web
 
 import (
 	"encoding/json"
+	"strconv"
 	"strings"
 )
 
@@ -70,7 +71,7 @@ const shellTemplate = `<!doctype html><html lang="en"><head><meta charset="utf-8
 
 const loginBody = `<body class="login-page"><main class="login-card"><a class="brand" href="/"><span class="brand-mark">c<span>h</span></span>CloakHub</a><h1>Welcome back</h1><p>Enter your admin token to open your browser workspace.</p><form id="login-form"><label class="field"><span>Admin token</span><input name="token" type="password" autocomplete="current-password" required autofocus></label><div id="login-error" class="form-error" role="alert" hidden></div><button class="primary" type="submit">Open workspace →</button></form></main><script type="module" src="/assets/login.js"></script></body></html>`
 
-const viewerBody = `<body class="remote-viewer"><main id="manual-viewer" data-profile-id="{{PROFILE_ID}}" data-clipboard-sync="{{CLIPBOARD}}" data-display-path="{{DISPLAY_PATH}}"><iframe id="display-frame" title="Browser display" allow="clipboard-read; clipboard-write; fullscreen; keyboard-map"></iframe></main><span id="remote-status">Connecting…</span><script type="module" src="/assets/viewer.js"></script></body></html>`
+const viewerBody = `<body class="remote-viewer"><main id="manual-viewer" data-profile-id="{{PROFILE_ID}}" data-clipboard-sync="{{CLIPBOARD}}" data-display-path="{{DISPLAY_PATH}}" data-https-port="{{HTTPS_PORT}}"><iframe id="display-frame" title="Browser display" allow="clipboard-read; clipboard-write; fullscreen; keyboard-map"></iframe></main><span id="remote-status">Connecting…</span><script type="module" src="/assets/viewer.js"></script></body></html>`
 
 const unavailableBody = `<body class="login-page"><main class="login-card"><h1>Viewer unavailable</h1><p>{{MESSAGE}}</p><p>Check the profile’s browser mode and launch status, then try reconnecting.</p><a class="secondary" href="/" target="_top">Back to profiles</a></main></body></html>`
 
@@ -90,7 +91,7 @@ func renderShell(profiles any, limit int) string {
 
 func renderLogin() string { return head("CloakHub Login") + loginBody }
 
-func renderViewer(profileID, displayPath string, clipboardSync bool) string {
+func renderViewer(profileID, displayPath string, clipboardSync bool, httpsPort int) string {
 	clipboard := "false"
 	if clipboardSync {
 		clipboard = "true"
@@ -99,7 +100,15 @@ func renderViewer(profileID, displayPath string, clipboardSync bool) string {
 		"{{PROFILE_ID}}", escapeHTML(profileID),
 		"{{CLIPBOARD}}", clipboard,
 		"{{DISPLAY_PATH}}", escapeHTML(displayPath),
+		"{{HTTPS_PORT}}", httpsPortAttribute(httpsPort),
 	).Replace(viewerBody)
+}
+
+func httpsPortAttribute(port int) string {
+	if port <= 0 {
+		return ""
+	}
+	return strconv.Itoa(port)
 }
 
 func renderViewerUnavailable(message string) string {

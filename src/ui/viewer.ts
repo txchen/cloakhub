@@ -162,9 +162,28 @@ setInterval(() => {
 }, 1000);
 
 if (!window.isSecureContext) {
-  showStatus(
-    "The live viewer needs HTTPS or localhost: browsers only decode video on secure pages."
-  );
+  // Browsers only decode video on secure pages. Point at the built-in HTTPS
+  // listener when the Hub runs one.
+  const port = viewer.dataset.httpsPort;
+  const notice = document.createElement("div");
+  notice.className = "viewer-notice";
+  const text = document.createElement("p");
+  text.textContent =
+    "The live viewer needs HTTPS or localhost: browsers only decode video on secure pages.";
+  notice.append(text);
+  if (port) {
+    const link = document.createElement("a");
+    link.href = `https://${location.hostname}:${port}/`;
+    link.target = "_top";
+    link.className = "primary";
+    link.textContent = "Open CloakHub over HTTPS";
+    const hint = document.createElement("small");
+    hint.textContent =
+      "The certificate is self-signed: accept the browser warning once, then sign in.";
+    notice.append(link, hint);
+  }
+  viewer.replaceChildren(notice);
+  status.hidden = true;
 } else {
   frame.addEventListener("load", watchDisplayPage);
   frame.src = viewer.dataset.displayPath!;

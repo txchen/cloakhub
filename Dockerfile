@@ -59,6 +59,7 @@ WORKDIR /app
 ENV CLOAKHUB_DATA_DIR=/data \
     CLOAKHUB_HOST=0.0.0.0 \
     CLOAKHUB_PORT=7788 \
+    CLOAKHUB_TLS_PORT=7789 \
     CLOAKHUB_BROWSER_BIN=/opt/cloakbrowser/chrome \
     CLOAKHUB_MAX_RUNNING_INSTANCES=10 \
     CLOAKHUB_DEFAULT_PLATFORM=macos \
@@ -137,7 +138,7 @@ COPY --from=hub /out/cloakhub /usr/local/bin/cloakhub
 
 RUN mkdir -p /data
 
-EXPOSE 7788
+EXPOSE 7788 7789
 VOLUME ["/data"]
 
 ENTRYPOINT ["/usr/bin/tini", "--"]

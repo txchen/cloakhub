@@ -51,7 +51,7 @@ image build is required. Create a deployment directory and save this as `compose
 ```yaml
 services:
   cloakhub:
-    image: ghcr.io/txchen/cloakhub:1.1.0
+    image: ghcr.io/txchen/cloakhub:1.2.0
     restart: unless-stopped
     shm_size: 2gb
     environment:
@@ -66,6 +66,8 @@ services:
       # CLOAKHUB_MAX_RUNNING_INSTANCES: "20"
     ports:
       - "${CLOAKHUB_BIND_ADDRESS:-127.0.0.1}:7788:7788"
+      # Built-in HTTPS (self-signed certificate) for the live viewer:
+      - "${CLOAKHUB_BIND_ADDRESS:-127.0.0.1}:7789:7789"
     volumes:
       - ./data:/data
 ```
@@ -98,8 +100,19 @@ Sign in with the admin password. The image automatically selects amd64 or arm64.
 
 The live viewer decodes video with the browser's WebCodecs API, which browsers only
 offer on secure pages: an `https://` origin, or `http://localhost`. Over plain HTTP from
-another machine, the dashboard and CDP work but the viewer shows a notice instead of
-the browser. Pick one:
+another machine, the dashboard and CDP work but the viewer shows a notice with a link to
+the HTTPS address instead of the browser.
+
+The image serves the same UI over HTTPS on port **7789**, so the simplest option is to
+open `https://<server>:7789`. The first start generates a self-signed certificate in
+`data/tls/` (kept across upgrades); your browser warns about it once per device, and
+after you accept the warning the viewer works. Agents can keep using the plain
+`http://<server>:7788` CDP URLs. To use your own certificate instead, mount it and set
+`CLOAKHUB_TLS_CERT` and `CLOAKHUB_TLS_KEY`; `CLOAKHUB_TLS_HOSTS` adds names or addresses
+to a generated certificate (regenerate it by deleting `data/tls/`), and
+`CLOAKHUB_TLS_PORT=0` turns the listener off.
+
+Alternatives with a certificate browsers trust without a warning:
 
 - **Tailscale Serve** (simplest on a tailnet): `tailscale serve --bg 7788`, then open
   `https://<machine>.<tailnet>.ts.net`. Serve must be enabled once for the tailnet.
@@ -112,7 +125,7 @@ the browser. Pick one:
 
 ### What the image contains
 
-Version `1.1.0` bakes the license-free CloakBrowser **156.0.8078.47.1** build from the
+Version `1.2.0` bakes the license-free CloakBrowser **156.0.8078.47.1** build from the
 [patched release](https://github.com/txchen/cloakhub/releases/tag/cloakbrowser-156.0.8078.47.1-patched)
 for amd64 and arm64, verified by SHA-256 at build time. CloakHub treats the browser as
 unrestricted: it needs no license key, never contacts a license service, and never
@@ -134,11 +147,12 @@ for the bundled fonts and building your own image.
 Upgrading from 0.9: the standard and free images are now one image. Remove the
 `secrets/cloakbrowser-keys` mount and every `CLOAKHUB_LICENSE_*` setting from your
 Compose file (they are ignored, with a startup warning), change the image to
-`ghcr.io/txchen/cloakhub:1.1.0`, and keep `./data`. A `license-homes` directory left in
+`ghcr.io/txchen/cloakhub:1.2.0`, and keep `./data`. A `license-homes` directory left in
 `./data` by earlier releases is no longer used and can be deleted.
 
-Upgrading from 1.0: change the image tag to `1.1.0`; no other change is needed. The
-Hub is now a Go binary using the same data directory, routes and settings.
+Upgrading from 1.0 or 1.1: change the image tag to `1.2.0` and publish port 7789 to
+use the built-in HTTPS; nothing else changes. Since 1.1 the Hub is a Go binary using the
+same data directory, routes and settings.
 
 ## Prepare a browser profile
 
@@ -413,9 +427,12 @@ referenced by `compose.yml` are picked up from `.env`.
 | `CLOAKHUB_DEFAULT_TIMEZONE` / `CLOAKHUB_DEFAULT_LOCALE` | Compose uses `UTC` / `en-US`; set these to your region |
 | `CLOAKHUB_DISK_CACHE_SIZE_MB` | `256` per profile; HTTP cache budget, not a profile disk quota |
 | `CLOAKHUB_BROWSER_BIN` | Docker defaults to `/opt/cloakbrowser/chrome`; override with a mounted binary if needed |
+| `CLOAKHUB_TLS_PORT` | `7789` in the image (`0` off; unset in source runs); built-in HTTPS listener |
+| `CLOAKHUB_TLS_CERT` / `CLOAKHUB_TLS_KEY` | Optional PEM certificate chain and key for that listener; otherwise self-signed in `data/tls/` |
+| `CLOAKHUB_TLS_HOSTS` | Extra comma-separated names or addresses for a generated certificate |
 | `CLOAKHUB_VOXL_LOG` | `warn`; log level for the viewer stream (`info`, `debug`) |
 
-Pin a full image tag such as `1.1.0` for predictable upgrades. The `1.1` alias follows
+Pin a full image tag such as `1.2.0` for predictable upgrades. The `1.2` alias follows
 patch releases; `latest` follows releases, and `master` / `sha-*` are development tags.
 Browser builds stay pinned until you change the selected build or image.
 

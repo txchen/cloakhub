@@ -49,6 +49,12 @@ type Config struct {
 	MaxRunningInstances int
 	MacOSFontconfigFile string
 	Port                int
+	// TLSPort is the built-in HTTPS listener (0 disables it). TLSCert and TLSKey
+	// name an operator certificate; otherwise a self-signed one is generated.
+	TLSPort  int
+	TLSCert  string
+	TLSKey   string
+	TLSHosts []string
 }
 
 // Error is a configuration problem reported at startup.
@@ -95,6 +101,18 @@ func Load(env func(string) string, home string) (Config, error) {
 		return Config{}, &Error{Message: "CLOAKHUB_PORT must be an integer between 1 and 65535"}
 	}
 	cfg.Port = port
+	tlsPort, err := parseInteger(env("CLOAKHUB_TLS_PORT"), 0)
+	if err != nil || tlsPort < 0 || tlsPort > 65535 || (tlsPort != 0 && tlsPort == port) {
+		return Config{}, &Error{Message: "CLOAKHUB_TLS_PORT must be 0 (off) or a port between 1 and 65535 other than CLOAKHUB_PORT"}
+	}
+	cfg.TLSPort = tlsPort
+	cfg.TLSCert = get("CLOAKHUB_TLS_CERT")
+	cfg.TLSKey = get("CLOAKHUB_TLS_KEY")
+	for _, host := range strings.Split(get("CLOAKHUB_TLS_HOSTS"), ",") {
+		if host = strings.TrimSpace(host); host != "" {
+			cfg.TLSHosts = append(cfg.TLSHosts, host)
+		}
+	}
 	return cfg, nil
 }
 

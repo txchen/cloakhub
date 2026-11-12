@@ -1,5 +1,5 @@
 # Local, personal image. Build with scripts/build-mac-image.sh.
-ARG BASE_IMAGE=ghcr.io/txchen/cloakhub:1.1.0
+ARG BASE_IMAGE=ghcr.io/txchen/cloakhub:1.2.0
 FROM ${BASE_IMAGE}
 
 ENV CLOAKHUB_DEFAULT_PLATFORM=macos \

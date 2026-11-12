@@ -355,6 +355,9 @@ func TestViewerPagesAndClipboard(t *testing.T) {
 	if page.status != 200 || !strings.Contains(page.body, `data-display-path="/ui/profiles/work/display/"`) || !strings.Contains(page.body, `id="display-frame"`) || !strings.Contains(page.body, `data-clipboard-sync="true"`) {
 		t.Errorf("viewer page %d %s", page.status, page.body)
 	}
+	if !strings.Contains(page.body, `data-https-port=""`) || !strings.Contains(renderViewer("work", "/d/", true, 7789), `data-https-port="7789"`) {
+		t.Error("viewer page must advertise the HTTPS port only when it is enabled")
+	}
 	if r := h.do("GET", "/ui/profiles/bg/viewer", ""); r.status != 400 || !strings.Contains(r.body, "headless") {
 		t.Errorf("headless viewer %d", r.status)
 	}

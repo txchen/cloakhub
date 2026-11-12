@@ -16,6 +16,7 @@ skill and its tests, and Playwright.
 | `internal/browser` | Browser Instance runtime: launch, capacity, idle sleep, crash handling, proxy relay, Xvfb/voxl display, clipboard |
 | `internal/cdp` | CDP gateway, discovery rewriting, WebSocket relay and last-tab protection |
 | `internal/viewer` | Hub-wide viewer stream settings |
+| `internal/tlscert` | Certificate for the built-in HTTPS listener (operator-supplied or self-signed) |
 | `internal/web` | HTTP routes, auth, presentation, server-rendered pages, viewer proxy, embedded UI |
 
 ## Run
