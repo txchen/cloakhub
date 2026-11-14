@@ -1,0 +1,285 @@
+import { installCheckpointGate, checkpointGateCommand } from './checkpoint-gate.mjs';
+import { createHash, randomUUID } from 'node:crypto';
+import { hostname } from 'node:os';
+import { basename, dirname, isAbsolute, join } from 'node:path';
+import { lstat, mkdir, open, readFile, realpath, rename, rmdir, unlink } from 'node:fs/promises';
+
+const object = value => value !== null && typeof value === 'object' && !Array.isArray(value);
+const text = value => typeof value === 'string' && value.trim().length > 0;
+function fail(code, message) { const error = new Error(`Checkpoint ${code}: ${message}`); error.code = code; throw error; }
+function canonical(value) {
+  if (value === null || typeof value === 'boolean' || typeof value === 'string') return JSON.stringify(value);
+  if (typeof value === 'number' && Number.isFinite(value)) return JSON.stringify(value);
+  if (Array.isArray(value)) return '[' + value.map(canonical).join(',') + ']';
+  if (object(value) && Object.getPrototypeOf(value) === Object.prototype) {
+    return '{' + Object.keys(value).sort().map(key => JSON.stringify(key) + ':' + canonical(value[key])).join(',') + '}';
+  }
+  fail('INVALID', 'Use finite JSON data only');
+}
+const equal = (a, b) => canonical(a) === canonical(b);
+const copy = value => JSON.parse(canonical(value));
+function origin(value, label) {
+  let url; try { url = new URL(value); } catch { fail('INVALID', `${label} must be an exact HTTP(S) origin; correct the adapter field before retrying`); }
+  if (!['http:', 'https:'].includes(url.protocol) || url.origin !== value || url.username || url.password) fail('INVALID', `${label} must be an exact origin without paths or credentials`);
+  return value;
+}
+function destination(value, label = 'destination') {
+  if (!object(value) || !text(value.accountKey)) fail('INVALID', `${label} must contain siteOrigin and a freshly observed accountKey`);
+  if (Object.keys(value).some(key => !['siteOrigin', 'accountKey', 'scope'].includes(key)) || !object(value.scope) || !Object.keys(value.scope).length || Object.values(value.scope).some(v => !text(v))) fail('INVALID', `${label} requires explicit nonempty scope identifiers, with no unknown top-level fields`);
+  return copy({ siteOrigin: origin(value.siteOrigin, `${label}.siteOrigin`), accountKey: value.accountKey, scope: value.scope });
+}
+async function regular(path) {
+  const stat = await lstat(path);
+  if (!stat.isFile() || stat.nlink !== 1) fail('STORAGE', 'Checkpoint must be a regular, unlinked file');
+  return stat;
+}
+async function atomicWrite(path, value) {
+  const temp = `${path}.${randomUUID()}.tmp`;
+  let file;
+  try {
+    file = await open(temp, 'wx', 0o600);
+    await file.writeFile(JSON.stringify(value) + '\n');
+    await file.sync(); await file.close(); file = null;
+    await rename(temp, path);
+    // Make the rename durable, not just the contents of the temporary file.
+    const dir = await open(dirname(path), 'r');
+    try { await dir.sync(); } finally { await dir.close(); }
+  } finally {
+    if (file) await file.close();
+    await unlink(temp).catch(error => { if (error.code !== 'ENOENT') throw error; });
+  }
+}
+function alive(pid) {
+  try { process.kill(pid, 0); return true; }
+  catch (error) { if (error.code === 'ESRCH') return false; return true; }
+}
+async function lock(path) {
+  const dir = path + '.lock';
+  const owner = { pid: process.pid, host: hostname(), nonce: randomUUID() };
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      await mkdir(dir, { mode: 0o700 });
+      const f = await open(join(dir, 'owner.json'), 'wx', 0o600);
+      try { await f.writeFile(JSON.stringify(owner)); await f.sync(); } finally { await f.close(); }
+      return async () => {
+        const actual = JSON.parse(await readFile(join(dir, 'owner.json'), 'utf8'));
+        if (!equal(actual, owner)) fail('LOCKED', 'Lock ownership changed');
+        await unlink(join(dir, 'owner.json')); await rmdir(dir);
+      };
+    } catch (error) { if (error.code !== 'EEXIST') throw error; }
+    let old;
+    try {
+      if (!(await lstat(dir)).isDirectory() || (await lstat(dir)).isSymbolicLink()) throw Error();
+      old = JSON.parse(await readFile(join(dir, 'owner.json'), 'utf8'));
+    } catch { fail('LOCKED', 'Incomplete lock; inspect the owning process before manual recovery'); }
+    if (old.host !== hostname() || !Number.isSafeInteger(old.pid) || old.pid <= 0 || !text(old.nonce) || alive(old.pid)) {
+      fail('LOCKED', 'Another writer may still own this checkpoint');
+    }
+    // Only one reaper may remove this dead owner's directory. Missing/partial locks fail closed.
+    const reap = join(dir, 'reaping');
+    try { await mkdir(reap); } catch { fail('LOCKED', 'Checkpoint lock recovery is already in progress'); }
+    try {
+      const actual = JSON.parse(await readFile(join(dir, 'owner.json'), 'utf8'));
+      if (!equal(actual, old) || alive(old.pid)) fail('LOCKED', 'Lock ownership changed during recovery');
+      await unlink(join(dir, 'owner.json'));
+    } finally { await rmdir(reap); }
+    await rmdir(dir);
+  }
+  fail('LOCKED', 'Could not acquire checkpoint');
+}
+
+const ownedPages = new WeakMap();
+/** Create before navigation so cached application fetch references cannot bypass the gate. */
+export async function checkpointPage(context, url) {
+  if (context.serviceWorkers().length) fail('UNSUPPORTED', 'Service-worker contexts unsupported');
+  const page = await context.newPage(), key = '__cloakhub_' + randomUUID().replaceAll('-', '');
+  try {
+    await page.addInitScript(installCheckpointGate, { key });
+    await page.goto(url);
+    ownedPages.set(page, key);
+    return page;
+  } catch (error) { await page.close(); throw error; }
+}
+
+const evidence = new WeakMap();
+/** Capture only a request initiated AFTER the listener was installed. No DOM-ready booleans. */
+export async function checkpointRead(page, request, { trigger, match, timeoutMs = 15000 }) {
+  if (typeof trigger !== 'function' || typeof match !== 'function' || !Number.isSafeInteger(timeoutMs) || timeoutMs < 1) fail('INVALID', 'Need trigger, synchronous match and positive timeoutMs');
+  const seen = new WeakSet();
+  const listener = req => seen.add(req);
+  page.on('request', listener);
+  let timer;
+  try {
+    const responsePromise = page.waitForResponse(res => {
+      if (!seen.has(res.request())) return false;
+      const matched = match(res);
+      if (typeof matched !== 'boolean') fail('INVALID', 'Read match must return a synchronous boolean');
+      return matched;
+    }, { timeout: timeoutMs });
+    const capture = async () => {
+      const [response] = await Promise.all([responsePromise, Promise.resolve().then(trigger)]);
+      if (!response.ok()) fail('EVIDENCE', `Read response HTTP ${response.status()}`);
+      const json = await response.json();
+      const token = {};
+      evidence.set(token, { request, page, origin: new URL(response.url()).origin });
+      return { json, evidence: token };
+    };
+    return await Promise.race([capture(), new Promise((_, reject) => {
+      timer = setTimeout(() => reject(Object.assign(Error('Checkpoint EVIDENCE: read timed out'), { code: 'EVIDENCE' })), timeoutMs);
+    })]);
+  } finally { clearTimeout(timer); page.off('request', listener); }
+}
+
+/** v2: explicit scope, fresh paged reads, terminal records and an outbound write gate.
+ * page is a dedicated, disposable task tab; always closed on return/failure.
+ */
+export async function checkpointBatch(options) {
+  try { return await executeBatch(options); }
+  finally {
+    // Ownership includes validation and lock failures, before the inner guard exists.
+    const page = options?.page;
+    if (typeof page?.isClosed === 'function' && !page.isClosed()) await page.close();
+  }
+}
+
+async function executeBatch(options) {
+  const { path: requestedPath, operation, adapterVersion, target, page, read, prepare, submit, write,
+    onProgress, maxItems = 10, budgetMs = 120000 } = options;
+  if (!isAbsolute(requestedPath || '') || !text(operation) || !text(adapterVersion) || options.intent !== 'ensure_exists' ||
+      !ownedPages.has(page) || [read, prepare, submit].some(fn => typeof fn !== 'function')) fail('INVALID', 'v2 requires path, operation, adapterVersion, intent: ensure_exists, checkpointPage-created page, read, prepare, submit, declarative write mapping');
+  if (!Number.isSafeInteger(maxItems) || maxItems < 1 || maxItems > 100 || !Number.isSafeInteger(budgetMs) || budgetMs < 1) fail('INVALID', 'Invalid batch bounds');
+  const expected = destination(options.destination);
+  if (!object(target) || !text(target.profile)) fail('INVALID', 'Exact connected target required');
+  const rows = copy(options.rows);
+  if (!Array.isArray(rows) || rows.some(row => !object(row) || !text(row.key))) fail('INVALID', 'Rows need nonempty string keys');
+  if (new Set(rows.map(row => row.key)).size !== rows.length) fail('INVALID', 'Duplicate input business keys');
+  const mapping = value => object(value) && Object.keys(value).length && Object.values(value).every(path => Array.isArray(path) && path.length && path.every(text));
+  let writeURL; try { writeURL = new URL(write?.url); } catch { fail('INVALID', 'write.url required'); }
+  if (writeURL.origin !== expected.siteOrigin || writeURL.username || writeURL.password || writeURL.hash || writeURL.search || !['POST','PUT','PATCH','DELETE'].includes(write?.method) ||
+      !mapping(write.fields) || !mapping(write.scope) || !equal(Object.keys(write.scope).sort(), Object.keys(expected.scope).sort()) ||
+      !Array.isArray(write.accountKey) || !write.accountKey.length || !write.accountKey.every(text) || rows.some(row => !equal(Object.keys(row).sort(), Object.keys(write.fields).sort()))) fail('INVALID', 'write requires exact same-origin URL without query/credentials, method and JSON paths for accountKey, all scope identifiers and all input fields');
+  const writeContract = copy(write); writeContract.url = writeURL.href;
+  const identity = { operation, adapterVersion, intent: 'ensure_exists', hubOrigin: origin(target.url, 'connected hub origin'), profileId: target.profile,
+    ...expected, writeDigest: createHash('sha256').update(canonical(writeContract)).digest('hex'), inputDigest: createHash('sha256').update(canonical(rows)).digest('hex') };
+  const path = join(await realpath(dirname(requestedPath)), basename(requestedPath));
+  const release = await lock(path);
+  const started = Date.now(), context = page.context();
+  let saved;
+  const persist = async () => { saved.revision++; await atomicWrite(path, saved); };
+  const checkScope = value => { if (!equal(destination(value, 'read/request.destination'), expected)) fail('IDENTITY', 'Account, origin or scope differs'); };
+  const gate = message => page.evaluate(checkpointGateCommand, { key: ownedPages.get(page), ...message });
+  const checkGate = async () => {
+    const state = await gate({ command: 'snapshot' });
+    if (state.blocked.length) fail('WRITE_GATE', state.blocked[0]);
+    return state;
+  };
+  try {
+    if (context.serviceWorkers().length || await page.evaluate(() => !!navigator.serviceWorker?.controller)) fail('UNSUPPORTED', 'Service workers unsupported');
+    await checkGate();
+    try {
+      await regular(path); saved = JSON.parse(await readFile(path, 'utf8'));
+      if (saved.version !== 2 || !equal(saved.identity, identity)) fail('IDENTITY', 'v2 checkpoint/input/adapter/scope differs; do not replace the file');
+      if (!Number.isSafeInteger(saved.revision) || saved.revision < 1 || !Array.isArray(saved.completed) || !Array.isArray(saved.notSent) || !['active', 'complete'].includes(saved.status)) fail('CORRUPT', 'Invalid checkpoint');
+      const keys = new Set(), ids = new Set();
+      for (const item of saved.completed) {
+        if (!rows.some(r => r.key === item.key) || !text(item.recordId) || keys.has(item.key) || ids.has(item.recordId)) fail('CORRUPT', 'Invalid completed records');
+        keys.add(item.key); ids.add(item.recordId);
+      }
+      if (saved.pending && (!rows.some(r => r.key === saved.pending.key) || keys.has(saved.pending.key) || !text(saved.pending.attemptId) || !['prepared', 'sent'].includes(saved.pending.stage))) fail('CORRUPT', 'Invalid pending');
+      if (saved.pending === undefined || (saved.status === 'complete' && (saved.pending || keys.size !== rows.length))) fail('CORRUPT', 'Invalid completion');
+    } catch (error) {
+      if (error.code !== 'ENOENT') throw error;
+      saved = { version: 2, identity, revision: 0, status: 'active', completed: [], pending: null, notSent: [] };
+      await persist();
+    }
+    const scan = async (key = null) => {
+      const records = [], cursors = new Set();
+      let cursor = null, revision, total;
+      do {
+        if (Date.now() - started >= budgetMs) fail('BUDGET', 'Read budget expired; no further writes');
+        const request = Object.freeze({ key, cursor, nonce: randomUUID() });
+        const result = await read(request);
+        const proof = evidence.get(result?.evidence);
+        if (!proof || proof.request !== request || proof.page !== page || proof.origin !== expected.siteOrigin) fail('EVIDENCE', 'Use checkpointRead for a fresh response from this read request and site');
+        evidence.delete(result.evidence);
+        checkScope(result.destination);
+        await checkGate();
+        if (!Array.isArray(result.records) || !equal(result.cursor, cursor) || !Number.isSafeInteger(result.total) || result.total < 0 || !text(result.revision) || !(result.nextCursor === null || text(result.nextCursor))) fail('INCOMPLETE', 'Need cursor, nextCursor, total, revision and records from the authoritative response');
+        if (revision !== undefined && (revision !== result.revision || total !== result.total)) fail('INCOMPLETE', 'Dataset changed across pages; retry a fresh read');
+        revision = result.revision; total = result.total;
+        records.push(...result.records);
+        cursor = result.nextCursor;
+        if (cursor !== null && (cursors.has(cursor) || !result.records.length || cursors.size >= 1000)) fail('INCOMPLETE', 'Invalid pagination chain');
+        cursors.add(cursor);
+      } while (cursor !== null);
+      if (records.length !== total) fail('INCOMPLETE', 'Pagination count differs from server total');
+      const found = new Map(), ids = new Set();
+      for (const record of records) {
+        if (!object(record) || !object(record.fields) || !text(record.fields.key) || !text(record.recordId) || !['confirmed', 'processing', 'rejected'].includes(record.status)) fail('EVIDENCE', 'Records require fields, recordId and explicit business status');
+        if (found.has(record.fields.key) || ids.has(record.recordId)) fail('DUPLICATE', 'Duplicate business key or record ID');
+        if (key !== null && record.fields.key !== key) fail('EVIDENCE', 'Exact-key lookup returned another key');
+        const intended = rows.find(r => r.key === record.fields.key);
+        if (intended && !equal(intended, record.fields)) fail('MISMATCH', 'Saved fields differ');
+        found.set(record.fields.key, record); ids.add(record.recordId);
+      }
+      return found;
+    };
+    const reconcile = async (found, full) => {
+      for (const [key, record] of found) if (saved.completed.some(old => old.key !== key && old.recordId === record.recordId)) fail('DUPLICATE', 'Durable ID reused across business keys');
+      for (const old of saved.completed) if ((full || found.has(old.key)) && (found.get(old.key)?.recordId !== old.recordId || found.get(old.key)?.status !== 'confirmed')) fail('MISSING_CONFIRMED', 'Confirmed record changed or disappeared');
+      for (const row of rows) {
+        const record = found.get(row.key);
+        if (record?.status === 'rejected') fail('REJECTED', 'Business operation rejected; preserve checkpoint for review');
+        if (record?.status === 'processing') fail('PROCESSING', 'Business operation still processing; retry read-only reconciliation later');
+      }
+      if (saved.pending && found.get(saved.pending.key)?.status !== 'confirmed') fail('PENDING', 'Outcome unknown; no automatic replay');
+      for (const row of rows) if (found.get(row.key)?.status === 'confirmed' && !saved.completed.some(r => r.key === row.key)) saved.completed.push({ key: row.key, recordId: found.get(row.key).recordId });
+      saved.pending = null;
+      saved.status = full && saved.completed.length === rows.length ? 'complete' : 'active';
+      await persist();
+    };
+    // A prepared pending surviving a process crash is still uncertain: never infer no send from absence.
+    await reconcile(await scan(), true);
+    let processed = 0;
+    for (const row of rows) {
+      if (saved.completed.some(r => r.key === row.key)) continue;
+      if (processed >= maxItems || Date.now() - started >= budgetMs) break;
+      await prepare(copy(row));
+      await checkGate();
+      const before = await scan(row.key);
+      await reconcile(before, false);
+      if (saved.completed.some(r => r.key === row.key)) continue;
+      if (Date.now() - started >= budgetMs) break;
+      saved.pending = { key: row.key, attemptId: randomUUID(), startedAt: new Date().toISOString(), stage: 'prepared' };
+      await persist();
+      const beforeGate = await checkGate();
+      // Mark possibly sent before arming the document: a crash cannot authorize an uncheckpointed write.
+      saved.pending.stage = 'sent'; await persist();
+      await gate({ command: 'arm', generation: beforeGate.generation, approval: { write: writeContract, destination: expected, fields: row } });
+      let error, threw = false;
+      try { await submit(copy(row)); } catch (caught) { error = caught; threw = true; }
+      // A changed/closed document cannot prove no-send; preserve pending in that case.
+      const afterGate = await gate({ command: 'disarm' });
+      if (afterGate.generation !== beforeGate.generation) fail('PENDING', 'Document changed during commit; outcome unknown');
+      if (afterGate.admitted === beforeGate.admitted) {
+        await page.close();
+        saved.notSent.push({ ...saved.pending, endedAt: new Date().toISOString(), reason: afterGate.blocked[0] || 'No request admitted by document gate' });
+        saved.pending = null; await persist();
+        if (afterGate.blocked.length) fail('WRITE_GATE', afterGate.blocked[0]);
+        if (threw) throw error;
+        fail('NOT_SENT', 'No request sent; correct adapter and reuse checkpoint');
+      }
+      if (afterGate.admitted !== beforeGate.admitted + 1) fail('WRITE_GATE', 'Invalid admission count');
+      await checkGate();
+      if (threw) throw error;
+      await reconcile(await scan(row.key), false);
+      processed++;
+      if (onProgress) await onProgress({ completed: saved.completed.length, total: rows.length, processed });
+    }
+    await reconcile(await scan(), true);
+    return { path, status: saved.status, completed: saved.completed.length, total: rows.length, processed, pending: saved.pending?.key ?? null, revision: saved.revision };
+  } finally {
+    try { if (!page.isClosed()) await page.close(); }
+    finally { await release(); }
+  }
+}

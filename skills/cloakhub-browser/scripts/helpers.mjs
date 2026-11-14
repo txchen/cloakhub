@@ -238,27 +238,55 @@ export function compareProbes(before, after, limit = 20) {
  * `until` (async () => boolean) adds an explicit expected-state check.
  */
 export async function expectChange(page, target, action, { scope, timeout = 3000, until } = {}) {
+  if (!Number.isSafeInteger(timeout) || timeout < 0 || timeout > 2_147_483_647) throw new Error("timeout must be a nonnegative timer interval");
+  if (typeof action !== "function" || (until !== undefined && typeof until !== "function")) throw new Error("action and until must be functions");
+  const expired = new Error("Observation deadline exceeded");
+  const observeWithin = async (operation, deadline) => {
+    let timer;
+    try {
+      return await Promise.race([
+        Promise.resolve().then(operation),
+        new Promise((_, reject) => { timer = setTimeout(() => reject(expired), Math.max(0, deadline - Date.now())); })
+      ]);
+    } finally { clearTimeout(timer); }
+  };
   const targetLocator = asLocator(page, target);
   const scopeLocator = scope ? asLocator(page, scope) : null;
-  const before = await probe(page, targetLocator, scopeLocator);
-  await action();
+  // A failed baseline is a pre-action failure: callers can distinguish it from an uncertain write.
+  let before;
+  try { before = await observeWithin(() => probe(page, targetLocator, scopeLocator), Date.now() + timeout); }
+  catch { throw new Error("Could not observe the baseline; action was not started."); }
+  await action(); // Its own Playwright timeout applies; never replay it inside this helper.
   const deadline = Date.now() + timeout;
-  let result;
-  let met;
+  let result = { changes: [], notices: [] };
+  let met = until ? false : undefined;
+  let verificationError;
+  let completedChecks = 0;
   for (;;) {
-    const after = await probe(page, targetLocator, scopeLocator);
-    result = compareProbes(before, after);
-    met = until ? Boolean(await until().catch(() => false)) : undefined;
+    if (completedChecks && Date.now() >= deadline) break;
+    try {
+      const after = await observeWithin(() => probe(page, targetLocator, scopeLocator), deadline);
+      result = compareProbes(before, after);
+      if (until) met = Boolean(await observeWithin(until, deadline));
+      completedChecks++;
+    } catch (error) {
+      if (error === expired && completedChecks) break; // Normal polling expiry; retain the last complete check.
+      verificationError = error === expired ? "observation-timeout" : "postcondition-error";
+      break;
+    }
     const done = until ? met : result.changes.length || result.notices.length;
     if (done || Date.now() >= deadline) break;
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await new Promise(resolve => setTimeout(resolve, Math.min(100, Math.max(0, deadline - Date.now()))));
   }
   const changed = result.changes.length > 0 || result.notices.length > 0;
   const url = page.url();
   const report = { changed, url: url.length > 160 ? `${url.slice(0, 160)}...` : url, changes: result.changes.map(redactCreds), notices: result.notices };
   if (until) report.met = met;
-  if (!changed) {
-    report.hint = "No attributable change at the target, scope, URL, or notices. The element may be a container, the effect may be asynchronous elsewhere, or the site ignored the input. Change target or approach instead of repeating the same action.";
+  if (verificationError) {
+    report.verificationError = verificationError;
+    report.hint = "The action ran, but verification could not finish. Inspect the postcondition and business result before another attempt.";
+  } else if (met !== true && !changed) {
+    report.hint = "No attributable change at the target, scope, URL, or notices. The element may be a container, the effect may be asynchronous elsewhere, or the site ignored the input. Inspect the business result before deciding how to continue; do not replay an uncertain write.";
   } else if (until && !met) {
     report.hint = "The page changed, but the expected state was not reached within the timeout.";
   }
@@ -270,7 +298,10 @@ export async function expectChange(page, target, action, { scope, timeout = 3000
 function matcher(filter) {
   if (filter == null) return () => true;
   if (typeof filter === "string") return (response) => response.url().includes(filter);
-  if (filter instanceof RegExp) return (response) => filter.test(response.url());
+  if (filter instanceof RegExp) {
+    const pattern = new RegExp(filter.source, filter.flags.replace(/[gy]/g, ""));
+    return (response) => pattern.test(response.url());
+  }
   if (typeof filter === "function") return filter;
   throw new Error("captureResponses filter must be a string, RegExp, function, or null.");
 }
@@ -280,66 +311,162 @@ function matcher(filter) {
  * traffic is quiet, and return compact summaries. `save` writes full bodies as JSONL.
  */
 export async function captureResponses(page, filter, trigger, {
-  types = ["xhr", "fetch"], quiet = 1000, timeout = 15_000, min = 1, preview = 1500, save
+  types = ["xhr", "fetch"], quiet = 1000, timeout = 15_000, min = 1, preview = 1500, save,
+  project, report = false, maxResponses = 100, maxBodyBytes = 2_000_000,
+  maxTotalBytes = 10_000_000
 } = {}) {
+  for (const [name, value] of Object.entries({ timeout, maxResponses, maxBodyBytes, maxTotalBytes })) {
+    if (!Number.isSafeInteger(value) || value <= 0) throw new Error(`${name} must be a positive integer`);
+  }
+  for (const [name, value] of Object.entries({ quiet, min, preview })) {
+    if (!Number.isSafeInteger(value) || value < 0) throw new Error(`${name} must be a nonnegative integer`);
+  }
+  if (min > maxResponses) throw new Error("min must not exceed maxResponses");
+  if (project !== undefined && typeof project !== "function") throw new Error("project must be a function");
+  if (typeof trigger !== "function") throw new Error("trigger must be a function");
+  if (types !== "all" && (!Array.isArray(types) || types.some(type => typeof type !== "string"))) throw new Error('types must be "all" or an array of resource types');
+  if (save !== undefined && typeof save !== "string") throw new Error("save must be a client file path");
   const matches = matcher(filter);
+  const entries = [];
   const pending = [];
+  const reasons = new Set();
+  let active = true;
+  let bytes = 0;
   let last = Date.now();
+  const deadline = last + timeout;
+  const cancelWaits = new Set();
+  const deadlineError = new Error("Capture deadline exceeded");
+  const endedError = new Error("Capture ended");
+  const withinDeadline = async (operation) => {
+    const remaining = deadline - Date.now();
+    if (remaining <= 0) throw deadlineError;
+    let timer;
+    let onStop;
+    try {
+      return await Promise.race([
+        Promise.resolve().then(operation),
+        new Promise((_, reject) => {
+          timer = setTimeout(() => reject(deadlineError), remaining);
+          onStop = () => reject(endedError);
+          cancelWaits.add(onStop);
+        })
+      ]);
+    } finally { clearTimeout(timer); cancelWaits.delete(onStop); }
+  };
   const onResponse = (response) => {
+    if (!active) return;
     const type = response.request().resourceType();
     if (types !== "all" && !types.includes(type)) return;
-    let ok = false;
-    try { ok = Boolean(matches(response)); } catch { ok = false; }
-    if (!ok) return;
+    let matched;
+    try {
+      matched = matches(response);
+      if (matched && typeof matched.then === "function") {
+        // Predicates are synchronous: a Promise is not a truthy match. Consume rejection.
+        Promise.resolve(matched).catch(() => {});
+        reasons.add("filter-error"); return;
+      }
+    } catch { reasons.add("filter-error"); return; }
+    if (!matched) return;
     last = Date.now();
+    if (entries.length >= maxResponses) { reasons.add("response-limit"); return; }
+    const request = response.request();
+    const entry = {
+      url: response.url(), method: request.method(), status: response.status(), type,
+      contentType: response.headers()["content-type"] ?? ""
+    };
+    entries.push(entry);
     pending.push((async () => {
-      const request = response.request();
-      const entry = {
-        url: response.url(), method: request.method(), status: response.status(), type,
-        contentType: response.headers()["content-type"] ?? ""
-      };
-      let body;
-      try { body = await response.body(); } catch { entry.bodyError = "body unavailable (redirect, aborted, or evicted)"; }
-      if (body) {
+      try {
+        const declared = Number(response.headers()["content-length"]);
+        if (declared > maxBodyBytes) { entry.bodyError = "body-limit"; reasons.add("body-limit"); return; }
+        if (bytes >= maxTotalBytes) { entry.bodyError = "total-byte-limit"; reasons.add("total-byte-limit"); return; }
+        const body = await withinDeadline(() => response.body());
+        if (!active) return;
         entry.bytes = body.length;
-        const text = /json|text|javascript|xml|html/i.test(entry.contentType) ? body.toString("utf8") : null;
-        if (text != null) {
+        bytes += body.length;
+        if (body.length > maxBodyBytes || bytes > maxTotalBytes) {
+          entry.bodyError = body.length > maxBodyBytes ? "body-limit" : "total-byte-limit";
+          reasons.add(entry.bodyError); return;
+        }
+        if (/json|text|javascript|xml|html/i.test(entry.contentType)) {
+          const text = body.toString("utf8");
           try {
-            const json = JSON.parse(text);
-            entry.json = json;
-            if (json && typeof json === "object" && !Array.isArray(json)) entry.keys = Object.keys(json).slice(0, 30);
+            entry.json = JSON.parse(text);
+            if (entry.json && typeof entry.json === "object" && !Array.isArray(entry.json)) entry.keys = Object.keys(entry.json).slice(0, 30);
           } catch { entry.text = text; }
         }
+        entry.requestBody = request.postData() ?? undefined;
+        if (project) {
+          try {
+            const projected = await withinDeadline(() => project({ ...entry }));
+            // Require serializable, bounded output; preserve full data only inside this client.
+            const encoded = JSON.stringify(projected);
+            if (encoded === undefined) throw new Error("project must return JSON data");
+            if (Buffer.byteLength(encoded) > maxBodyBytes) throw new Error("projection exceeds maxBodyBytes");
+            if (active) entry.data = JSON.parse(encoded);
+          } catch (error) {
+            entry.projectError = error === deadlineError ? "deadline" : "projection failed; check project and data schema";
+            reasons.add(error === deadlineError ? "deadline" : "projection-error");
+          }
+        }
+      } catch (error) {
+        entry.bodyError = error === deadlineError ? "deadline" : "body-unavailable";
+        reasons.add(entry.bodyError);
       }
-      entry.requestBody = request.postData() ?? undefined;
-      return entry;
     })());
   };
   page.on("response", onResponse);
+  let triggerError;
+  let triggerFailed = false;
   try {
-    const started = Date.now();
-    await trigger();
-    for (;;) {
-      const now = Date.now();
-      if (now - started >= timeout) break;
-      if (pending.length >= min && now - last >= quiet) break;
-      await new Promise((resolve) => setTimeout(resolve, 100));
+    try { await withinDeadline(trigger); }
+    catch (error) {
+      if (error === deadlineError) reasons.add("trigger-deadline");
+      else { triggerFailed = true; triggerError = error; }
+    }
+    if (!triggerFailed && !reasons.has("trigger-deadline")) {
+      for (;;) {
+        if (reasons.has("filter-error")) break;
+        if (Date.now() >= deadline) { reasons.add("deadline"); break; }
+        if (entries.length >= min && Date.now() - last >= quiet) break;
+        await new Promise(resolve => setTimeout(resolve, Math.min(50, Math.max(1, deadline - Date.now()))));
+      }
+      // Freeze the observation window before Promise.all snapshots its inputs.
+      // Bodies may finish later, but no new response can appear half-read in the report.
+      page.off("response", onResponse);
+      try { await withinDeadline(() => Promise.all(pending)); }
+      catch { reasons.add("deadline"); }
     }
   } finally {
+    active = false;
+    for (const cancel of cancelWaits) cancel();
     page.off("response", onResponse);
   }
-  const entries = await Promise.all(pending);
-  if (save) {
-    await writeFile(save, entries.map((e) => JSON.stringify({
-      url: e.url, method: e.method, status: e.status, contentType: e.contentType,
-      requestBody: e.requestBody, body: e.json ?? e.text ?? null
-    })).join("\n") + (entries.length ? "\n" : ""));
-  }
-  return entries.map(({ json, text, requestBody, ...summary }) => {
-    const content = json !== undefined ? JSON.stringify(json) : text;
-    if (content != null) summary.preview = truncate(content, preview);
-    return summary;
+  // A failed trigger is never converted into a successful observation.
+  if (triggerFailed) throw triggerError;
+  const responses = entries.map(({ json, text, requestBody, ...summary }) => {
+    if (!project) {
+      const content = json !== undefined ? JSON.stringify(json) : text;
+      if (content != null) summary.preview = truncate(content, preview);
+    }
+    return { ...summary };
   });
+  const result = { complete: reasons.size === 0, reasons: [...reasons], responses };
+  if (save) {
+    // Saving is bounded by the collected data limits, but local disk I/O is outside the network deadline.
+    await writeFile(save, entries.map(e => JSON.stringify({
+      url: e.url, method: e.method, status: e.status, contentType: e.contentType,
+      requestBody: e.requestBody, body: e.json ?? e.text ?? null,
+      bodyError: e.bodyError, projectError: e.projectError
+    })).join("\n") + (entries.length ? "\n" : ""), { mode: 0o600 });
+  }
+  if (report) return result;
+  if (!result.complete) {
+    const error = new Error(`Incomplete response capture (${result.reasons.join(", ")}); inspect before retrying the trigger. Use report: true for partial results.`);
+    error.result = result;
+    throw error;
+  }
+  return responses;
 }
 
 // ---------------------------------------------------------------- tabs

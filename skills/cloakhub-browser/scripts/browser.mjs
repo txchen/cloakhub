@@ -6,12 +6,13 @@ import { pathToFileURL } from "node:url";
 import {
   captureResponses, detectChallenge, errorHint, expectChange, installOutputFilter, observe, tabInfo
 } from "./helpers.mjs";
-import { appendLearning, formatLearnings, listLearnings, readLearnings } from "./learnings.mjs";
+import { checkpointBatch as executeCheckpointBatch, checkpointRead, checkpointPage } from "./checkpoint.mjs";
+import { appendLearning, formatLearnings, listLearnings, readLearnings, upsertLearning } from "./learnings.mjs";
 
 const usage = "Usage: node browser.mjs targets | check [--target ALIAS] | run [--target ALIAS] < script.js" +
-  " | learnings [DOMAIN [--append < note.md]] | session start [--target ALIAS] | session exec|status|end SOCKET";
+  " | learnings [DOMAIN [--query TEXT] [--max-chars N] [--all] | --append | --upsert ID < note.md] | session start [--target ALIAS] [--timeout-ms N] | session exec|status|end SOCKET";
 // Names available to run scripts, in parameter order.
-const SCRIPT_API = ["browser", "context", "tabs", "tab", "tabId", "observe", "expectChange", "captureResponses", "detectChallenge"];
+const SCRIPT_API = ["browser", "context", "tabs", "tab", "tabId", "observe", "expectChange", "captureResponses", "detectChallenge", "checkpointBatch", "checkpointRead", "checkpointPage"];
 
 function record(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value);
@@ -167,7 +168,8 @@ export async function withBrowser(target, action, connect) {
       for (const page of context.pages()) if (await tabId(page) === id) return page;
       throw new Error("Tab no longer exists. List tabs again; browser restart changes tab IDs.");
     };
-    return await action({ browser, context, tabs, tab, tabId, observe, expectChange, captureResponses, detectChallenge });
+    const checkpointBatch = options => executeCheckpointBatch({ ...options, target: { url: target.metadata.url, profile: target.metadata.profile } });
+    return await action({ browser, context, tabs, tab, tabId, observe, expectChange, captureResponses, detectChallenge, checkpointBatch, checkpointRead, checkpointPage });
   } finally {
     // Playwright's attached-browser close disconnects, not CDP Browser.close.
     if (browser) await browser.close();
@@ -222,16 +224,36 @@ async function learningsCommand(args) {
     console.log(JSON.stringify(await listLearnings(), null, 2));
     return;
   }
-  if (args.length > 2 || (args.length === 2 && args[1] !== "--append")) throw new Error(usage);
-  if (args[1] === "--append") {
+  const [domain, ...flags] = args;
+  const options = {};
+  let operation;
+  let recipe;
+  const seen = new Set();
+  for (let i = 0; i < flags.length; i++) {
+    const flag = flags[i];
+    if (seen.has(flag)) throw new Error(usage);
+    seen.add(flag);
+    if (flag === '--append' || flag === '--upsert') {
+      if (operation) throw new Error(usage);
+      operation = flag;
+      if (flag === '--upsert') recipe = flags[++i];
+    } else if (flag === '--all') options.all = true;
+    else if (flag === '--query') options.query = flags[++i];
+    else if (flag === '--max-chars') options.maxChars = Number(flags[++i]);
+    else throw new Error(usage);
+    if ((flag === '--query' && options.query === undefined) || (flag === '--upsert' && !recipe)) throw new Error(usage);
+  }
+  if (operation) {
+    if (Object.keys(options).length) throw new Error('Read filters cannot be combined with note writes');
     if (process.stdin.isTTY) throw new Error("Pass the note on stdin.");
     const chunks = [];
     for await (const chunk of process.stdin) chunks.push(chunk);
-    const saved = await appendLearning(args[0], Buffer.concat(chunks).toString("utf8"));
+    const text = Buffer.concat(chunks).toString("utf8");
+    const saved = operation === '--append' ? await appendLearning(domain, text) : await upsertLearning(domain, recipe, text);
     console.log(JSON.stringify({ ok: true, ...saved }));
     return;
   }
-  console.log(formatLearnings(await readLearnings(args[0])));
+  console.log(formatLearnings(await readLearnings(domain), options));
 }
 
 // Skill installs are often symlinked; compare real paths so a symlinked invocation still runs main().

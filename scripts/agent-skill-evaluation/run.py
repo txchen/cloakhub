@@ -1,0 +1,303 @@
+"""Real Pi agents, paired old/new CloakHub skills, isolated synthetic browser tasks.
+Default is a plan; --execute spends model quota and creates/deletes disposable profiles.
+Raw transcripts stay in a private ignored output directory. No production profile is used.
+"""
+import argparse
+import hashlib
+import json
+import os
+from pathlib import Path
+import random
+import shutil
+import signal
+import socket
+import subprocess
+import threading
+import tempfile
+import time
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from urllib.request import Request, urlopen
+from urllib.error import HTTPError
+from urllib.parse import urlsplit
+from uuid import uuid4
+
+ROOT = Path(__file__).resolve().parents[2]
+HERE = Path(__file__).resolve().parent
+TASKS = ['extract', 'batch', 'recovery']
+
+
+def dataset(task, seed):
+    rng = random.Random(seed)
+    if task == 'extract':
+        return [dict(id=i+1, name=f'商品-{i+1:04}', priceCents=rng.randint(500, 9000), stock=rng.randint(0, 20),
+                     description='Synthetic inventory metadata. ' * 4) for i in range(1000)]
+    return [dict(key=f'ITEM-{i+1:03}', name=f'商品 {seed}-{i+1}', quantity=rng.randint(1, 20), priceCents=rng.randint(100, 10000)) for i in range(20)]
+
+
+def expected_summary(rows):
+    eligible = [row for row in rows if row['stock'] > 0 and row['priceCents'] <= 5000]
+    return dict(eligibleRows=len(eligible), totalStock=sum(row['stock'] for row in eligible),
+                valueCents=sum(row['stock'] * row['priceCents'] for row in eligible))
+
+
+def score(case):
+    if case['task'] == 'extract':
+        expected = expected_summary(case['input'])
+        submissions = case['summaries']
+        correct = len(submissions) == 1 and submissions[0] == expected
+        return dict(business_correct=correct, accepted_writes=len(submissions), expected_writes=1,
+                    duplicate_writes=max(0, len(submissions)-1), missing_records=int(not submissions), expected=expected)
+    expected = {row['key']: row for row in case['input']}
+    records = case['records']
+    counts = {}
+    for row in records:
+        counts[row['key']] = counts.get(row['key'], 0) + 1
+    mismatches = sum({k:v for k,v in row.items() if k != 'recordId'} != expected.get(row['key']) for row in records)
+    missing = len(set(expected) - set(counts))
+    duplicates = sum(max(0, count-1) for count in counts.values())
+    correct = len(records) == len(expected) and not (mismatches or missing or duplicates)
+    return dict(business_correct=correct, accepted_writes=len(records), expected_writes=len(expected),
+                duplicate_writes=duplicates, missing_records=missing, mismatched_records=mismatches,
+                interruption_injected=case['interrupted'], interruption_completed=case['fault_done'].is_set())
+
+
+def hub_call(origin, path, method='GET', body=None):
+    payload = None if body is None else json.dumps(body).encode()
+    request = Request(origin + path, data=payload, method=method, headers={'Content-Type':'application/json'})
+    with urlopen(request, timeout=45) as response:
+        data = response.read()
+        return json.loads(data) if data else None
+
+
+def handler_for(cases, hub):
+    template = (HERE / 'fixture.html').read_text()
+    class Handler(BaseHTTPRequestHandler):
+        def log_message(self, *_): pass
+        def setup(self):
+            super().setup()
+            self.connection.settimeout(10)
+        def case_route(self):
+            parts = urlsplit(self.path).path.strip('/').split('/')
+            if len(parts) < 2 or parts[0] != 'case': return None, ''
+            return cases.get(parts[1]), parts[2] if len(parts) > 2 else ''
+        def send_data(self, value, status=200, html=False):
+            data = value.encode() if html else json.dumps(value, ensure_ascii=False).encode()
+            self.send_response(status)
+            self.send_header('Content-Type','text/html; charset=utf-8' if html else 'application/json; charset=utf-8')
+            self.send_header('Cache-Control','no-store')
+            self.send_header('Content-Length',str(len(data)))
+            self.end_headers()
+            try: self.wfile.write(data)
+            except (BrokenPipeError, ConnectionResetError): pass
+        def do_GET(self):
+            case, route = self.case_route()
+            if not case: self.send_error(404); return
+            with case['lock']:
+                case['reads'][route or 'page'] = case['reads'].get(route or 'page',0)+1
+                if not route: return self.send_data(template.replace('TASK_JSON',json.dumps(case['task'])),html=True)
+                if route == 'inventory' and case['task'] == 'extract': return self.send_data(dict(items=case['input'],total=1000))
+                if route == 'records': return self.send_data(dict(records=case['records']))
+            self.send_error(404)
+        def do_POST(self):
+            case, route = self.case_route()
+            if not case: self.send_error(404); return
+            try:
+                size=int(self.headers.get('Content-Length','0'))
+                if not 0 < size < 65536: raise ValueError()
+                body=json.loads(self.rfile.read(size))
+                if not isinstance(body,dict): raise ValueError()
+            except (ValueError, TimeoutError): self.send_error(400); return
+            inject=False
+            with case['lock']:
+                case['attempts'] += 1
+                if route == 'summary' and case['task']=='extract':
+                    if set(body) != {'eligibleRows','totalStock','valueCents'} or any(type(v) is not int for v in body.values()):
+                        return self.send_data({'error':'invalid summary'},400)
+                    case['summaries'].append(body)
+                    return self.send_data({'ok':True})
+                if route != 'records' or case['task']=='extract': self.send_error(404); return
+                if (set(body) != {'key','name','quantity','priceCents'} or not all(isinstance(body[k],str) for k in ['key','name'])
+                        or not all(type(body[k]) is int for k in ['quantity','priceCents'])):
+                    return self.send_data({'error':'invalid record'},400)
+                record={**body,'recordId':f"record-{len(case['records'])+1}"}
+                case['records'].append(record)
+                if case['task']=='recovery' and len(case['records'])==7 and not case['interrupted']:
+                    case['interrupted']=True; inject=True
+            if inject:
+                # Commit was accepted, then lose the response and stop only this generated test profile.
+                try: self.connection.shutdown(socket.SHUT_RDWR)
+                except OSError: pass
+                self.close_connection=True
+                try: hub_call(hub, f"/api/profiles/{case['profile']}/stop", 'POST')
+                except Exception as error: case['fault_error']=type(error).__name__
+                finally: case['fault_done'].set()
+                return
+            self.send_data({'recordId':record['recordId']})
+    return Handler
+
+
+def snapshots(output, baseline_ref):
+    paths={}
+    baseline=output/'baseline-skill'; current=output/'current-skill'
+    files=subprocess.check_output(['git','ls-tree','-r','--name-only',baseline_ref,'--','skills/cloakhub-browser'],cwd=ROOT,text=True).splitlines()
+    for name in files:
+        relative=Path(name).relative_to('skills/cloakhub-browser')
+        path=baseline/relative; path.parent.mkdir(parents=True,exist_ok=True)
+        path.write_bytes(subprocess.check_output(['git','show',f'{baseline_ref}:{name}'],cwd=ROOT))
+    shutil.copytree(ROOT/'skills/cloakhub-browser',current,ignore=shutil.ignore_patterns('node_modules'))
+    dependency=ROOT/'skills/cloakhub-browser/node_modules'
+    if not (dependency/'playwright-core/package.json').is_file(): raise ValueError('Install skill dependency first')
+    for arm,path in [('baseline',baseline),('current',current)]:
+        (path/'node_modules').symlink_to(dependency,target_is_directory=True)
+        paths[arm]=path
+    return paths
+
+
+def hashes(path):
+    return {str(file.relative_to(path)):hashlib.sha256(file.read_bytes()).hexdigest()
+            for file in sorted(path.rglob('*')) if file.is_file() and 'node_modules' not in file.parts}
+
+
+def usage_from(log):
+    usage=dict(input=0,output=0,cacheRead=0,cacheWrite=0,reasoning=0,estimated_cost_usd=0)
+    events=[]
+    for line in log.read_text(errors='replace').splitlines():
+        try: event=json.loads(line)
+        except ValueError: continue
+        message=event.get('message',{})
+        if event.get('type')!='message_end' or message.get('role')!='assistant': continue
+        values=message.get('usage',{})
+        for key in ['input','output','cacheRead','cacheWrite','reasoning']: usage[key]+=values.get(key,0)
+        usage['estimated_cost_usd']+=values.get('cost',{}).get('total',0)
+        tools=[part.get('name') for part in message.get('content',[]) if part.get('type')=='toolCall']
+        events.append(dict(usage=values,tools=tools,stopReason=message.get('stopReason')))
+    return dict(model_calls=len(events),tool_calls=sum(len(event['tools']) for event in events),usage=usage,events=events)
+
+
+def stop_owned(proc):
+    try: os.killpg(proc.pid,signal.SIGTERM)
+    except ProcessLookupError: pass
+    try: proc.wait(timeout=3)
+    except subprocess.TimeoutExpired: pass
+    try: os.killpg(proc.pid,signal.SIGKILL)
+    except ProcessLookupError: pass
+    proc.wait(timeout=3)
+
+
+def prompt_for(task,url,skill,workspace):
+    common=(f'Read {skill}/SKILL.md and follow the relevant references. Use the assigned CloakHub target evaluation '
+            f'via node {skill}/scripts/browser.mjs. Work only in this task workspace and assigned browser profile. '
+            f'Open a new tab at {url}. The site account is evaluation-tenant. ')
+    if task=='extract':
+        task_text=('Load and review the full inventory dataset. For records with stock > 0 and priceCents <= 5000, '
+                   'calculate the number of eligible rows, total stock, and inventory value in cents (sum of priceCents * stock). '
+                   'Enter all three results into the summary form and save it once. Verify the saved result. ')
+    else:
+        task_text=(f'Enter all 20 records from {workspace}/input.json through the record form, preserving all fields exactly. '
+                   'Each business key must appear exactly once with the intended values. Verify the final saved record set. '
+                   'If a save result is unclear or the browser disconnects, reconcile saved records before retrying. ')
+    return common+task_text+('You may read DOM or network responses and run code through the skill. Writes must use the site forms; '
+            'do not submit writes through HTTP/API, mutate the app/DOM to fake completion, or inspect fixture/server files. '
+            'Do not use a local browser, other profiles, direct client HTTP to the site, or modify the skill. '
+            'Task files/checkpoints and local site learnings are allowed within this workspace. '
+            'No external research. Act autonomously, close only your task tabs, and end task sessions when finished. '
+            'Report completion truthfully. The task budget is 300 seconds.')
+
+
+def execute(args):
+    output=Path(args.output).resolve()
+    if output.exists(): raise ValueError('Output must be a fresh private directory')
+    output.mkdir(parents=True,mode=0o700); (output/'.gitignore').write_text('*\n')
+    skills=snapshots(output,args.baseline)
+    metadata=dict(baseline_commit=subprocess.check_output(['git','rev-parse',args.baseline],cwd=ROOT,text=True).strip(),
+                  provider=args.provider,model=args.model,thinking='medium',repeats=args.repeats,tasks=args.tasks,arms=args.arms,seed_start=args.seed_start,
+                  pi_version=subprocess.check_output([args.pi,'--version'],text=True).strip(),
+                  playwright=json.loads((ROOT/'skills/cloakhub-browser/node_modules/playwright-core/package.json').read_text())['version'],
+                  skill_hashes={arm:hashes(path) for arm,path in skills.items()}, fixture_hash=hashlib.sha256((HERE/'fixture.html').read_bytes()).hexdigest(),
+                  runner_hash=hashlib.sha256(Path(__file__).read_bytes()).hexdigest())
+    (output/'metadata.json').write_text(json.dumps(metadata,indent=2)+'\n')
+    cases={};results=[]
+    server=ThreadingHTTPServer((args.fixture_host,0),handler_for(cases,args.hub))
+    threading.Thread(target=server.serve_forever,daemon=True).start()
+    origin=f'http://{args.fixture_host}:{server.server_port}'
+    run_id=uuid4().hex[:8]; active=None; profile=None; trial_tmp=None
+    def interrupt(*_): raise KeyboardInterrupt()
+    previous=signal.signal(signal.SIGTERM,interrupt)
+    try:
+        for repeat in range(args.repeats):
+            for offset in range(len(args.tasks)):
+                task=args.tasks[(offset+repeat)%len(args.tasks)]
+                arms=['baseline','current'] if (repeat+offset)%2==0 else ['current','baseline']
+                for arm in [arm for arm in arms if arm in args.arms]:
+                    key=f'{task}-{repeat}-{arm}'; profile=f'eval_{run_id}_{len(results)}'
+                    workspace=output/key; workspace.mkdir(mode=0o700)
+                    case=dict(task=task,input=dataset(task,args.seed_start+repeat),profile=profile,records=[],summaries=[],attempts=0,reads={},
+                              lock=threading.Lock(),interrupted=False,fault_done=threading.Event())
+                    cases[key]=case
+                    (workspace/'input.json').write_text(json.dumps(case['input'] if task!='extract' else {},ensure_ascii=False))
+                    trial_tmp=tempfile.mkdtemp(prefix='ch-eval-')
+                    config=dict(version=1,defaultTarget='evaluation',targets=dict(evaluation=dict(url=args.hub,profile=profile)))
+                    (workspace/'client.json').write_text(json.dumps(config))
+                    hub_call(args.hub,'/api/profiles','POST',dict(profile_id=profile,headless=False,fingerprint_seed='41027'))
+                    hub_call(args.hub,f'/api/profiles/{profile}/start','POST')
+                    prompt=prompt_for(task,f'{origin}/case/{key}',skills[arm],workspace)
+                    (workspace/'prompt.txt').write_text(prompt)
+                    env=os.environ.copy();env.update(CLOAKHUB_CLIENT_CONFIG=str(workspace/'client.json'),CLOAKHUB_TARGET='evaluation',
+                        CLOAKHUB_LEARNINGS_DIR=str(workspace/'learnings'),TMPDIR=trial_tmp,PI_OFFLINE='1',PI_TELEMETRY='0')
+                    command=[args.pi,'--provider',args.provider,'--model',args.model,'--thinking','medium','--no-extensions','--no-mcp',
+                             '--no-skills','--no-context-files','--no-prompt-templates','--no-session','--tools','read,bash','--mode','json','-p',prompt]
+                    started=time.monotonic();timed_out=False
+                    log=workspace/'agent.jsonl'
+                    with log.open('w') as stream:
+                        active=subprocess.Popen(command,cwd=workspace,env=env,stdout=stream,stderr=subprocess.STDOUT,start_new_session=True)
+                        try: code=active.wait(timeout=300)
+                        except subprocess.TimeoutExpired: timed_out=True;stop_owned(active);code=active.returncode
+                        finally: elapsed=time.monotonic()-started;stop_owned(active);active=None
+                    if case['interrupted']: case['fault_done'].wait(50)
+                    metric=usage_from(log); events=metric.pop('events')
+                    cleanup=hub_call(args.hub,f'/api/profiles/{profile}?view=summary')
+                    result=dict(arm=arm,task=task,repeat=repeat,seconds=round(elapsed,3),exit_code=code,timed_out=timed_out,
+                                **score(case),**metric,request_attempts=case['attempts'],reads=case['reads'],
+                                fault_error=case.get('fault_error'),cdp_sessions_after_agent=cleanup.get('cdp_session_count'),
+                                raw_sha256=hashlib.sha256(log.read_bytes()).hexdigest(),raw_bytes=log.stat().st_size)
+                    result['passed']=result['business_correct'] and not timed_out and code==0 and not result['fault_error']
+                    if task=='recovery': result['passed'] = result['passed'] and result['interruption_injected'] and result['interruption_completed']
+                    results.append(result)
+                    (workspace/'events.json').write_text(json.dumps(events,indent=2)+'\n')
+                    (output/'results.json').write_text(json.dumps(results,indent=2)+'\n')
+                    print(json.dumps(result),flush=True)
+                    hub_call(args.hub,f'/api/profiles/{profile}','DELETE');profile=None
+                    shutil.rmtree(trial_tmp,ignore_errors=True);trial_tmp=None
+                    # Profile deletion disconnects any forgotten task workers; never reuse a timed-out task.
+    finally:
+        if active: stop_owned(active)
+        if profile:
+            try: hub_call(args.hub,f'/api/profiles/{profile}','DELETE')
+            except Exception: pass
+        if trial_tmp: shutil.rmtree(trial_tmp,ignore_errors=True)
+        server.shutdown();server.server_close();signal.signal(signal.SIGTERM,previous)
+
+
+def main():
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--execute',action='store_true')
+    parser.add_argument('--hub',required=True)
+    parser.add_argument('--fixture-host',required=True,help='Private Docker bridge gateway reachable by both browser and this host')
+    parser.add_argument('--output',required=True)
+    parser.add_argument('--baseline',default='HEAD')
+    parser.add_argument('--repeats',type=int,default=3)
+    parser.add_argument('--tasks',nargs='+',choices=TASKS,default=TASKS)
+    parser.add_argument('--arms',nargs='+',choices=['baseline','current'],default=['baseline','current'])
+    parser.add_argument('--seed-start',type=int,default=810)
+    parser.add_argument('--provider',default='openai');parser.add_argument('--model',default='gpt-6-luna')
+    parser.add_argument('--pi',default=shutil.which('pi'))
+    args=parser.parse_args()
+    hub=urlsplit(args.hub)
+    if hub.scheme!='http' or hub.hostname not in ['127.0.0.1','localhost'] or hub.path not in ['', '/'] or hub.query or hub.username:
+        parser.error('Use a dedicated, loopback-only, unauthenticated evaluation Hub')
+    if not 1<=args.repeats<=5 or not args.pi: parser.error('Need Pi and 1..5 repeats')
+    if not args.execute:
+        print(json.dumps(dict(plan=True,trials=args.repeats*len(args.tasks)*len(args.arms),tasks=args.tasks,arms=args.arms,model=args.model,baseline=args.baseline)));return
+    execute(args)
+
+if __name__=='__main__': main()

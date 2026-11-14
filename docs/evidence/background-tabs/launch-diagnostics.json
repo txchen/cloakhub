@@ -1,0 +1,75 @@
+{
+  "createdAt": "2026-11-13T22:32:02.422Z",
+  "platform": "linux",
+  "architecture": "x64",
+  "playwright": "1.64.1",
+  "repetitions": 2,
+  "flagSets": {
+    "current": [
+      "--disable-gpu",
+      "--disable-dev-shm-usage",
+      "--use-gl=angle",
+      "--use-angle=swiftshader"
+    ],
+    "unthrottled": [
+      "--disable-gpu",
+      "--disable-dev-shm-usage",
+      "--use-gl=angle",
+      "--use-angle=swiftshader",
+      "--disable-background-timer-throttling",
+      "--disable-backgrounding-occluded-windows",
+      "--disable-renderer-backgrounding"
+    ]
+  },
+  "scope": "Excluded startup diagnostics in older evaluation image; not background-interaction scores.",
+  "results": [
+    {
+      "browser": "cloak",
+      "flags": "current",
+      "mode": "noDefaults",
+      "trials": [],
+      "error": "Browser exited SIGTRAP",
+      "stderr": ""
+    },
+    {
+      "browser": "cloak",
+      "flags": "current",
+      "mode": "playwrightDefaults",
+      "trials": [],
+      "error": "Browser exited SIGTRAP",
+      "stderr": ""
+    },
+    {
+      "browser": "cloak",
+      "flags": "current",
+      "mode": "noDefaults+focus",
+      "trials": [],
+      "error": "Browser exited SIGTRAP",
+      "stderr": ""
+    },
+    {
+      "browser": "cloak",
+      "flags": "unthrottled",
+      "mode": "noDefaults",
+      "trials": [],
+      "error": "Browser exited SIGTRAP",
+      "stderr": ""
+    },
+    {
+      "browser": "cloak",
+      "flags": "unthrottled",
+      "mode": "playwrightDefaults",
+      "trials": [],
+      "error": "Browser exited SIGTRAP",
+      "stderr": ""
+    },
+    {
+      "browser": "cloak",
+      "flags": "unthrottled",
+      "mode": "noDefaults+focus",
+      "trials": [],
+      "error": "Browser exited SIGTRAP",
+      "stderr": ""
+    }
+  ]
+}

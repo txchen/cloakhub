@@ -1,0 +1,51 @@
+[
+  {
+    "scenario": "pagination",
+    "raw_passed": false,
+    "boundary_exercised": false,
+    "accepted": false,
+    "note": ""
+  },
+  {
+    "scenario": "scope-flip",
+    "raw_passed": true,
+    "boundary_exercised": false,
+    "accepted": false,
+    "note": "Raw score retained; zero writes alone do not prove a gate attempt."
+  },
+  {
+    "scenario": "async-reject",
+    "raw_passed": false,
+    "boundary_exercised": false,
+    "accepted": false,
+    "note": ""
+  },
+  {
+    "scenario": "unknown",
+    "raw_passed": false,
+    "boundary_exercised": false,
+    "accepted": false,
+    "note": ""
+  },
+  {
+    "scenario": "preflight",
+    "raw_passed": false,
+    "boundary_exercised": false,
+    "accepted": false,
+    "note": ""
+  },
+  {
+    "scenario": "restart",
+    "raw_passed": false,
+    "boundary_exercised": false,
+    "accepted": false,
+    "note": ""
+  },
+  {
+    "scenario": "disconnect",
+    "raw_passed": false,
+    "boundary_exercised": false,
+    "accepted": false,
+    "note": ""
+  }
+]

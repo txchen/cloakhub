@@ -1,0 +1,164 @@
+{
+  "total_runs": 18,
+  "tasks": {
+    "batch": {
+      "arms": {
+        "baseline": {
+          "runs": 3,
+          "passed": 3,
+          "median_seconds": 64.374,
+          "mean_model_calls": 11.33,
+          "mean_tool_calls": 11.67,
+          "mean_input_tokens": 15033.33,
+          "mean_cache_read_tokens": 73856,
+          "mean_output_tokens": 1876,
+          "mean_estimated_cost_usd": 0.00318,
+          "duplicate_writes": 0,
+          "missing_records": 0
+        },
+        "current": {
+          "runs": 3,
+          "passed": 3,
+          "median_seconds": 59.686,
+          "mean_model_calls": 8.67,
+          "mean_tool_calls": 9.67,
+          "mean_input_tokens": 12684,
+          "mean_cache_read_tokens": 36224,
+          "mean_output_tokens": 1477.33,
+          "mean_estimated_cost_usd": 0.002369,
+          "duplicate_writes": 0,
+          "missing_records": 0
+        }
+      },
+      "pairs": [
+        {
+          "repeat": 0,
+          "both_passed": true,
+          "seconds_delta": 6.658,
+          "model_calls_delta": 0,
+          "estimated_cost_delta": 0.000306
+        },
+        {
+          "repeat": 1,
+          "both_passed": true,
+          "seconds_delta": -2.514,
+          "model_calls_delta": -1,
+          "estimated_cost_delta": -0.000447
+        },
+        {
+          "repeat": 2,
+          "both_passed": true,
+          "seconds_delta": -51.233,
+          "model_calls_delta": -7,
+          "estimated_cost_delta": -0.002292
+        }
+      ]
+    },
+    "extract": {
+      "arms": {
+        "baseline": {
+          "runs": 3,
+          "passed": 3,
+          "median_seconds": 61.618,
+          "mean_model_calls": 12.67,
+          "mean_tool_calls": 12.67,
+          "mean_input_tokens": 14245.67,
+          "mean_cache_read_tokens": 80341.33,
+          "mean_output_tokens": 1737.33,
+          "mean_estimated_cost_usd": 0.003097,
+          "duplicate_writes": 0,
+          "missing_records": 0
+        },
+        "current": {
+          "runs": 3,
+          "passed": 3,
+          "median_seconds": 51.217,
+          "mean_model_calls": 8.67,
+          "mean_tool_calls": 8,
+          "mean_input_tokens": 9648.33,
+          "mean_cache_read_tokens": 34517.33,
+          "mean_output_tokens": 1328,
+          "mean_estimated_cost_usd": 0.001974,
+          "duplicate_writes": 0,
+          "missing_records": 0
+        }
+      },
+      "pairs": [
+        {
+          "repeat": 0,
+          "both_passed": true,
+          "seconds_delta": -23.251,
+          "model_calls_delta": -5,
+          "estimated_cost_delta": -0.001667
+        },
+        {
+          "repeat": 1,
+          "both_passed": true,
+          "seconds_delta": -8.021,
+          "model_calls_delta": -1,
+          "estimated_cost_delta": -0.000756
+        },
+        {
+          "repeat": 2,
+          "both_passed": true,
+          "seconds_delta": -10.401,
+          "model_calls_delta": -6,
+          "estimated_cost_delta": -0.000946
+        }
+      ]
+    },
+    "recovery": {
+      "arms": {
+        "baseline": {
+          "runs": 3,
+          "passed": 3,
+          "median_seconds": 99.671,
+          "mean_model_calls": 12.33,
+          "mean_tool_calls": 13.33,
+          "mean_input_tokens": 19813,
+          "mean_cache_read_tokens": 83242.67,
+          "mean_output_tokens": 2051,
+          "mean_estimated_cost_usd": 0.003839,
+          "duplicate_writes": 0,
+          "missing_records": 0
+        },
+        "current": {
+          "runs": 3,
+          "passed": 2,
+          "median_seconds": 85.154,
+          "mean_model_calls": 13.67,
+          "mean_tool_calls": 14,
+          "mean_input_tokens": 14520.67,
+          "mean_cache_read_tokens": 91221.33,
+          "mean_output_tokens": 2302.67,
+          "mean_estimated_cost_usd": 0.003516,
+          "duplicate_writes": 1,
+          "missing_records": 0
+        }
+      },
+      "pairs": [
+        {
+          "repeat": 0,
+          "both_passed": false,
+          "seconds_delta": 5.925,
+          "model_calls_delta": 7,
+          "estimated_cost_delta": 0.000906
+        },
+        {
+          "repeat": 1,
+          "both_passed": true,
+          "seconds_delta": -23.793,
+          "model_calls_delta": 2,
+          "estimated_cost_delta": 0.000862
+        },
+        {
+          "repeat": 2,
+          "both_passed": true,
+          "seconds_delta": -20.413,
+          "model_calls_delta": -5,
+          "estimated_cost_delta": -0.002738
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "cases": 6,
+  "passed": 3,
+  "writes": 6,
+  "audited_writes": 6,
+  "wrong_scope_cases": 0,
+  "phases": 9,
+  "estimated_cost_usd": 0.03226238,
+  "median_case_seconds": 127.6925
+}

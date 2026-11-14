@@ -1,0 +1,72 @@
+{
+  "createdAt": "2026-11-13T23:15:50.320Z",
+  "platform": "linux",
+  "architecture": "x64",
+  "playwright": "1.63.0",
+  "dependencySource": "skill",
+  "repetitions": 2,
+  "flagSets": {
+    "current": [
+      "--disable-gpu",
+      "--disable-dev-shm-usage",
+      "--use-gl=angle",
+      "--use-angle=swiftshader"
+    ],
+    "unthrottled": [
+      "--disable-gpu",
+      "--disable-dev-shm-usage",
+      "--use-gl=angle",
+      "--use-angle=swiftshader",
+      "--disable-background-timer-throttling",
+      "--disable-backgrounding-occluded-windows",
+      "--disable-renderer-backgrounding"
+    ]
+  },
+  "incomplete": false,
+  "results": [
+    {
+      "browser": "cloak156",
+      "flags": "current",
+      "mode": "noDefaults",
+      "trials": [],
+      "version": "156.0.8078.47",
+      "focusLifecycle": {
+        "baseline": {
+          "visible": "hidden",
+          "focused": false
+        },
+        "enabled": {
+          "visible": "visible",
+          "focused": true
+        },
+        "otherPage": {
+          "visible": "visible",
+          "focused": true
+        },
+        "nativeInputValue": "viewer-input",
+        "agentClicks": "1",
+        "nativeInputAfterAgentClick": "viewer-input",
+        "nativeInputAfterSecondTyping": "viewer-input-after-agent",
+        "afterDetach": {
+          "visible": "hidden",
+          "focused": true
+        },
+        "afterExplicitDisable": {
+          "visible": "hidden",
+          "focused": true
+        },
+        "beforeClientDisconnect": {
+          "visible": "visible",
+          "focused": true
+        },
+        "afterClientDisconnect": {
+          "visible": "hidden",
+          "focused": true
+        },
+        "confirmed": true
+      }
+    }
+  ],
+  "scope": "two-client focus lifecycle and native X input",
+  "validationPassed": true
+}

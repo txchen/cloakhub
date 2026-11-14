@@ -1,0 +1,512 @@
+{
+  "createdAt": "2026-11-13T22:37:20.394Z",
+  "platform": "linux",
+  "architecture": "x64",
+  "playwright": "1.63.0",
+  "dependencySource": "skill",
+  "repetitions": 2,
+  "flagSets": {
+    "current": [
+      "--disable-gpu",
+      "--disable-dev-shm-usage",
+      "--use-gl=angle",
+      "--use-angle=swiftshader"
+    ],
+    "unthrottled": [
+      "--disable-gpu",
+      "--disable-dev-shm-usage",
+      "--use-gl=angle",
+      "--use-angle=swiftshader",
+      "--disable-background-timer-throttling",
+      "--disable-backgrounding-occluded-windows",
+      "--disable-renderer-backgrounding"
+    ]
+  },
+  "incomplete": false,
+  "results": [
+    {
+      "browser": "stock",
+      "flags": "current",
+      "mode": "noDefaults",
+      "trials": [
+        {
+          "iteration": 0,
+          "foreground": false,
+          "visibility": "hidden",
+          "focused": false,
+          "rafDelta": 0,
+          "fill": "ok",
+          "click": "TimeoutError",
+          "clickError": "locator.click: Timeout 1500ms exceeded.\nCall log:\n  - waiting for getByRole('button', { name: 'Save' })\n    - locator resolved to <button onclick=\"document.querySelector('output').textContent=String(++window.clicks)\">Save</button>\n  - attempting click action\n    - waiting for element to be visible, enabled and stable\n",
+          "durationMs": 1571,
+          "effect": {
+            "visible": "hidden",
+            "focused": true,
+            "frames": 1,
+            "clicks": 0,
+            "value": "verified"
+          },
+          "confirmed": false
+        },
+        {
+          "iteration": 0,
+          "foreground": true,
+          "visibility": "visible",
+          "focused": true,
+          "rafDelta": 25,
+          "fill": "ok",
+          "click": "ok",
+          "durationMs": 114,
+          "effect": {
+            "visible": "visible",
+            "focused": true,
+            "frames": 47,
+            "clicks": 1,
+            "value": "verified"
+          },
+          "confirmed": true
+        },
+        {
+          "iteration": 1,
+          "foreground": false,
+          "visibility": "hidden",
+          "focused": false,
+          "rafDelta": 0,
+          "fill": "ok",
+          "click": "TimeoutError",
+          "clickError": "locator.click: Timeout 1500ms exceeded.\nCall log:\n  - waiting for getByRole('button', { name: 'Save' })\n    - locator resolved to <button onclick=\"document.querySelector('output').textContent=String(++window.clicks)\">Save</button>\n  - attempting click action\n    - waiting for element to be visible, enabled and stable\n",
+          "durationMs": 1561,
+          "effect": {
+            "visible": "hidden",
+            "focused": true,
+            "frames": 2,
+            "clicks": 0,
+            "value": "verified"
+          },
+          "confirmed": false
+        },
+        {
+          "iteration": 1,
+          "foreground": true,
+          "visibility": "visible",
+          "focused": true,
+          "rafDelta": 25,
+          "fill": "ok",
+          "click": "ok",
+          "durationMs": 72,
+          "effect": {
+            "visible": "visible",
+            "focused": true,
+            "frames": 43,
+            "clicks": 1,
+            "value": "verified"
+          },
+          "confirmed": true
+        }
+      ],
+      "version": "158.0.8127.18"
+    },
+    {
+      "browser": "stock",
+      "flags": "current",
+      "mode": "playwrightDefaults",
+      "trials": [
+        {
+          "iteration": 0,
+          "foreground": false,
+          "visibility": "visible",
+          "focused": true,
+          "rafDelta": 24,
+          "fill": "ok",
+          "click": "ok",
+          "durationMs": 104,
+          "effect": {
+            "visible": "visible",
+            "focused": true,
+            "frames": 45,
+            "clicks": 1,
+            "value": "verified"
+          },
+          "confirmed": true
+        },
+        {
+          "iteration": 0,
+          "foreground": true,
+          "visibility": "visible",
+          "focused": true,
+          "rafDelta": 25,
+          "fill": "ok",
+          "click": "ok",
+          "durationMs": 107,
+          "effect": {
+            "visible": "visible",
+            "focused": true,
+            "frames": 44,
+            "clicks": 1,
+            "value": "verified"
+          },
+          "confirmed": true
+        },
+        {
+          "iteration": 1,
+          "foreground": false,
+          "visibility": "visible",
+          "focused": true,
+          "rafDelta": 24,
+          "fill": "ok",
+          "click": "ok",
+          "durationMs": 94,
+          "effect": {
+            "visible": "visible",
+            "focused": true,
+            "frames": 44,
+            "clicks": 1,
+            "value": "verified"
+          },
+          "confirmed": true
+        },
+        {
+          "iteration": 1,
+          "foreground": true,
+          "visibility": "visible",
+          "focused": true,
+          "rafDelta": 24,
+          "fill": "ok",
+          "click": "ok",
+          "durationMs": 111,
+          "effect": {
+            "visible": "visible",
+            "focused": true,
+            "frames": 45,
+            "clicks": 1,
+            "value": "verified"
+          },
+          "confirmed": true
+        }
+      ],
+      "version": "158.0.8127.18"
+    },
+    {
+      "browser": "stock",
+      "flags": "current",
+      "mode": "noDefaults+focus",
+      "trials": [
+        {
+          "iteration": 0,
+          "foreground": false,
+          "visibility": "visible",
+          "focused": true,
+          "rafDelta": 24,
+          "fill": "ok",
+          "click": "ok",
+          "durationMs": 97,
+          "effect": {
+            "visible": "visible",
+            "focused": true,
+            "frames": 44,
+            "clicks": 1,
+            "value": "verified"
+          },
+          "confirmed": true
+        },
+        {
+          "iteration": 0,
+          "foreground": true,
+          "visibility": "visible",
+          "focused": true,
+          "rafDelta": 25,
+          "fill": "ok",
+          "click": "ok",
+          "durationMs": 92,
+          "effect": {
+            "visible": "visible",
+            "focused": true,
+            "frames": 44,
+            "clicks": 1,
+            "value": "verified"
+          },
+          "confirmed": true
+        },
+        {
+          "iteration": 1,
+          "foreground": false,
+          "visibility": "visible",
+          "focused": true,
+          "rafDelta": 24,
+          "fill": "ok",
+          "click": "ok",
+          "durationMs": 101,
+          "effect": {
+            "visible": "visible",
+            "focused": true,
+            "frames": 45,
+            "clicks": 1,
+            "value": "verified"
+          },
+          "confirmed": true
+        },
+        {
+          "iteration": 1,
+          "foreground": true,
+          "visibility": "visible",
+          "focused": true,
+          "rafDelta": 25,
+          "fill": "ok",
+          "click": "ok",
+          "durationMs": 108,
+          "effect": {
+            "visible": "visible",
+            "focused": true,
+            "frames": 45,
+            "clicks": 1,
+            "value": "verified"
+          },
+          "confirmed": true
+        }
+      ],
+      "version": "158.0.8127.18"
+    },
+    {
+      "browser": "stock",
+      "flags": "unthrottled",
+      "mode": "noDefaults",
+      "trials": [
+        {
+          "iteration": 0,
+          "foreground": false,
+          "visibility": "hidden",
+          "focused": false,
+          "rafDelta": 0,
+          "fill": "ok",
+          "click": "TimeoutError",
+          "clickError": "locator.click: Timeout 1500ms exceeded.\nCall log:\n  - waiting for getByRole('button', { name: 'Save' })\n    - locator resolved to <button onclick=\"document.querySelector('output').textContent=String(++window.clicks)\">Save</button>\n  - attempting click action\n    - waiting for element to be visible, enabled and stable\n",
+          "durationMs": 1555,
+          "effect": {
+            "visible": "hidden",
+            "focused": true,
+            "frames": 2,
+            "clicks": 0,
+            "value": "verified"
+          },
+          "confirmed": false
+        },
+        {
+          "iteration": 0,
+          "foreground": true,
+          "visibility": "visible",
+          "focused": true,
+          "rafDelta": 24,
+          "fill": "ok",
+          "click": "ok",
+          "durationMs": 112,
+          "effect": {
+            "visible": "visible",
+            "focused": true,
+            "frames": 45,
+            "clicks": 1,
+            "value": "verified"
+          },
+          "confirmed": true
+        },
+        {
+          "iteration": 1,
+          "foreground": false,
+          "visibility": "hidden",
+          "focused": false,
+          "rafDelta": 0,
+          "fill": "ok",
+          "click": "TimeoutError",
+          "clickError": "locator.click: Timeout 1500ms exceeded.\nCall log:\n  - waiting for getByRole('button', { name: 'Save' })\n    - locator resolved to <button onclick=\"document.querySelector('output').textContent=String(++window.clicks)\">Save</button>\n  - attempting click action\n    - waiting for element to be visible, enabled and stable\n",
+          "durationMs": 1560,
+          "effect": {
+            "visible": "hidden",
+            "focused": true,
+            "frames": 1,
+            "clicks": 0,
+            "value": "verified"
+          },
+          "confirmed": false
+        },
+        {
+          "iteration": 1,
+          "foreground": true,
+          "visibility": "visible",
+          "focused": true,
+          "rafDelta": 24,
+          "fill": "ok",
+          "click": "ok",
+          "durationMs": 111,
+          "effect": {
+            "visible": "visible",
+            "focused": true,
+            "frames": 45,
+            "clicks": 1,
+            "value": "verified"
+          },
+          "confirmed": true
+        }
+      ],
+      "version": "158.0.8127.18"
+    },
+    {
+      "browser": "stock",
+      "flags": "unthrottled",
+      "mode": "playwrightDefaults",
+      "trials": [
+        {
+          "iteration": 0,
+          "foreground": false,
+          "visibility": "visible",
+          "focused": true,
+          "rafDelta": 24,
+          "fill": "ok",
+          "click": "ok",
+          "durationMs": 94,
+          "effect": {
+            "visible": "visible",
+            "focused": true,
+            "frames": 44,
+            "clicks": 1,
+            "value": "verified"
+          },
+          "confirmed": true
+        },
+        {
+          "iteration": 0,
+          "foreground": true,
+          "visibility": "visible",
+          "focused": true,
+          "rafDelta": 25,
+          "fill": "ok",
+          "click": "ok",
+          "durationMs": 107,
+          "effect": {
+            "visible": "visible",
+            "focused": true,
+            "frames": 45,
+            "clicks": 1,
+            "value": "verified"
+          },
+          "confirmed": true
+        },
+        {
+          "iteration": 1,
+          "foreground": false,
+          "visibility": "visible",
+          "focused": true,
+          "rafDelta": 24,
+          "fill": "ok",
+          "click": "ok",
+          "durationMs": 94,
+          "effect": {
+            "visible": "visible",
+            "focused": true,
+            "frames": 44,
+            "clicks": 1,
+            "value": "verified"
+          },
+          "confirmed": true
+        },
+        {
+          "iteration": 1,
+          "foreground": true,
+          "visibility": "visible",
+          "focused": true,
+          "rafDelta": 25,
+          "fill": "ok",
+          "click": "ok",
+          "durationMs": 105,
+          "effect": {
+            "visible": "visible",
+            "focused": true,
+            "frames": 44,
+            "clicks": 1,
+            "value": "verified"
+          },
+          "confirmed": true
+        }
+      ],
+      "version": "158.0.8127.18"
+    },
+    {
+      "browser": "stock",
+      "flags": "unthrottled",
+      "mode": "noDefaults+focus",
+      "trials": [
+        {
+          "iteration": 0,
+          "foreground": false,
+          "visibility": "visible",
+          "focused": true,
+          "rafDelta": 25,
+          "fill": "ok",
+          "click": "ok",
+          "durationMs": 88,
+          "effect": {
+            "visible": "visible",
+            "focused": true,
+            "frames": 42,
+            "clicks": 1,
+            "value": "verified"
+          },
+          "confirmed": true
+        },
+        {
+          "iteration": 0,
+          "foreground": true,
+          "visibility": "visible",
+          "focused": true,
+          "rafDelta": 24,
+          "fill": "ok",
+          "click": "ok",
+          "durationMs": 96,
+          "effect": {
+            "visible": "visible",
+            "focused": true,
+            "frames": 44,
+            "clicks": 1,
+            "value": "verified"
+          },
+          "confirmed": true
+        },
+        {
+          "iteration": 1,
+          "foreground": false,
+          "visibility": "visible",
+          "focused": true,
+          "rafDelta": 24,
+          "fill": "ok",
+          "click": "ok",
+          "durationMs": 100,
+          "effect": {
+            "visible": "visible",
+            "focused": true,
+            "frames": 44,
+            "clicks": 1,
+            "value": "verified"
+          },
+          "confirmed": true
+        },
+        {
+          "iteration": 1,
+          "foreground": true,
+          "visibility": "visible",
+          "focused": true,
+          "rafDelta": 25,
+          "fill": "ok",
+          "click": "ok",
+          "durationMs": 105,
+          "effect": {
+            "visible": "visible",
+            "focused": true,
+            "frames": 45,
+            "clicks": 1,
+            "value": "verified"
+          },
+          "confirmed": true
+        }
+      ],
+      "version": "158.0.8127.18"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+<!doctype html><meta charset="utf-8"><title>Scoped record entry</title>
+<h1>Record entry</h1><p id="identity"></p>
+<p>Records API: GET ./records?key=exact-key&amp;cursor=cursor. Responses include destination, revision, total, cursor, nextCursor, records. Record statuses: confirmed is committed; processing is not terminal; rejected is failed.</p>
+<p>POST body is {destination, fields: {key, name}}. Scope shown below. Save is the only write operation.</p>
+<label>Key <input id="key"></label><label>Name <input id="name"></label>
+<button id="save">Save</button><button id="refresh">Refresh records</button><button id="next">Next page</button>
+<p id="ready">Records complete: 0</p><pre id="records"></pre><p id="message"></p>
+<script>
+let destination, nextCursor=null;
+const base=location.pathname.replace(/\/$/,'');
+async function refresh(cursor=null) {
+ const r=await fetch(base+'/records'+(cursor?'?cursor='+encodeURIComponent(cursor):'')); const data=await r.json();
+ destination=data.destination; document.querySelector('#identity').textContent=JSON.stringify(destination);
+ // Intentionally old visible ready marker while this response loads.
+ await new Promise(r=>setTimeout(r,700));
+ document.querySelector('#records').textContent=JSON.stringify(data,null,2);nextCursor=data.nextCursor;
+ document.querySelector('#ready').textContent='Records complete: '+data.total;
+}
+document.querySelector('#refresh').onclick=()=>refresh();
+document.querySelector('#next').onclick=()=>refresh(nextCursor);
+document.querySelector('#save').onclick=async()=>{
+ const fields={key:document.querySelector('#key').value,name:document.querySelector('#name').value};
+ const dest=structuredClone(destination);
+ if(SCENARIO==='scope-flip') dest.scope.collectionId='other';
+ const r=await fetch(base+'/records',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({destination:dest,fields})});
+ document.querySelector('#message').textContent=await r.text();
+};
+refresh();
+</script>

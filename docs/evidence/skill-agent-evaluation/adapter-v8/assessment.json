@@ -1,0 +1,16 @@
+[
+  {
+    "scenario": "scope-flip",
+    "raw_passed": true,
+    "boundary_exercised": true,
+    "accepted": true,
+    "note": ""
+  },
+  {
+    "scenario": "submit-retry",
+    "raw_passed": true,
+    "boundary_exercised": true,
+    "accepted": true,
+    "note": ""
+  }
+]

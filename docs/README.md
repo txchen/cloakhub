@@ -37,7 +37,11 @@ is under [`evidence/`](evidence/).
   [Lightpanda 1.0 vs CloakBrowser](lightpanda-1.0-vs-cloakbrowser.md),
   [Obscura v0.2.6 vs CloakBrowser 156](obscura-vs-cloakbrowser.md) ([source review](obscura-source-review.md)).
 - Rendering: [GPU-less rendering evaluation](gpu-less-rendering-evaluation.md),
-  [WebGL issue draft](cloakbrowser-webgl-issue-draft.md).
+  [WebGL issue draft](cloakbrowser-webgl-issue-draft.md),
+  [background tabs and focus emulation](background-tabs-evaluation.md).
+- [Scoped adapters and disconnect recovery](adapter-recovery-evaluation.md): v2 evidence contract, document write gate and real-agent boundary trials.
+- [Durable checkpoints and cold-agent recovery](checkpoint-recovery-evaluation.md): executable checkpoint state machine and fresh-agent fault tests.
+- [Paired skill evaluation with real agents](skill-agent-evaluation.md): frozen old/new skill snapshots, independent business scoring and fault recovery.
 - Agent tooling comparisons: [Browser Use 1.0 analysis](browser-use-1-analysis.md),
   [Browser Use 1.0 comparison](browser-use-1-comparison.md),
   [Pi browser comparison](pi-browser-comparison.md), [OpenCode Browse](opencode-browse-analysis.md).

@@ -31,12 +31,12 @@ The helper loads the credential itself; do not print the config, token files, or
 `check --target ALIAS` verifies a real CDP connection and disconnects. It can wake a
 stopped browser. For an actual task, go directly to `run` rather than checking first.
 
-## Start with site learnings
+## Site experience
 
-Before working on a site, run `node /absolute/skill/scripts/browser.mjs learnings DOMAIN`.
-It is local and does not wake the browser. It prints notes earlier tasks on this machine
-saved for that site: endpoints, walls, working snippets. Notes are hints; when the page
-disagrees, trust the page and correct the note at the end of the task.
+For a repeated or unfamiliar site, read local hints with
+`node /absolute/skill/scripts/browser.mjs learnings DOMAIN --query "URL-path task"`.
+Use `--all` to inspect all notes. Check their URL and preconditions against the page.
+To correct or save a reusable recipe, read [site learnings](references/learnings.md).
 
 ## Choose execution lifetime
 
@@ -73,7 +73,7 @@ Use a user-owned tab only when the task calls for it. Multiple clients share the
 profile: a target alias is not a task lock or an isolated browser context. When work is
 split across subagents, hand each one its target alias, tab ID, label, and account context.
 
-**Only one tab renders: the foreground tab.** `tabs()` reports it as `visible`. Many steps
+**With the current headed, `noDefaults: true` connection, use the foreground tab for rendering-dependent work.** `tabs()` reports it as `visible`. Many steps
 work in a background tab: navigation, `observe`, `captureResponses`, `fill`, typing,
 `selectOption`, and screenshots. Bring the tab to the front only when a step needs rendering:
 
@@ -83,24 +83,29 @@ work in a background tab: navigation, `observe`, `captureResponses`, `fill`, typ
 - input on sites that watch for automation, since typing into a hidden page is a signal.
 
 Call `await page.bringToFront()` right before such a step. It moves the viewer and every other
-client on the profile to this tab, and their tabs stop rendering, so keep foreground work
+client on the profile to this tab, and may pause rendering in their tabs, so keep foreground work
 short. Details: Background tabs in [references/operations.md](references/operations.md).
 
-Work in three layers, in this order:
+Choose observations for the question:
 
-1. **Data from the network.** For lists, tables, and numbers, use `captureResponses` around
-   the navigation or click that loads them. API field names are authoritative; numbers read
-   off the screen get mislabelled.
-2. **Actions through the DOM.** `observe(page, { scope })` returns a compact aria snapshot plus
-   page notices (alerts, toasts, invalid fields). Choose role/label locators from it.
-3. **Pixels last.** Save a screenshot and inspect it when layout itself is the question or
-   the page is a canvas.
+- Known control: use its locator directly; a new snapshot is optional.
+- Unknown structure: `observe(page, { scope })` gives scoped aria and page notices.
+- Lists, tables or calculations: extract structured DOM fields or captured network data;
+  verify units, pagination and field meanings. Read [data extraction](references/data-extraction.md)
+  for response projection and incomplete captures.
+- Layout, canvas or ambiguous visual state: inspect a screenshot.
+- Missing high-level capability: use real Playwright APIs or read [CDP access](references/cdp.md).
 
-Every write needs effect evidence. Wrap it in `expectChange(page, target, action, { until })`,
-or wait on the expected state, and read the result: `changed: false` means change target or
-approach rather than repeating the call. A returned click is not proof that a form was submitted.
-Batch steps whose outcome you can predict; observe again when a result changes the next decision.
-Submissions, payments, deletions, posts, and messages run as their own verified step, and run once.
+Keep datasets and reusable functions in `state`; print counts, selected fields and small samples.
+Observe again when new information can change the next decision.
+
+Verify writes against a record-specific business postcondition. `expectChange(..., { until })`
+reports it as `met`; `changed` alone is diagnostic, including failure notices. A returned click
+is not proof of submission. On unknown results, inspect the site before another attempt.
+Before the first write in authorized repeated work, read [batch work](references/batch-work.md)
+and use the built-in v2 `checkpointBatch` with a dedicated disposable tab, explicit destination scope and fresh `checkpointRead` evidence. Save its site adapter and input in the task directory;
+it persists pending before submission and reconciles exact records on resume.
+Task scope and per-record judgment still apply; batching does not authorize additional actions.
 
 When `observe` or `detectChallenge` reports a challenge or block (CAPTCHA, "verify you are
 human", MFA, QR login), hand that step to the user in the CloakHub viewer as described in
@@ -113,17 +118,8 @@ use them only when the task needs page-world state.
 
 ## Finish and recover
 
-Before finishing, save non-obvious, reusable findings for each site you worked on:
-
-```sh
-node /absolute/skill/scripts/browser.mjs learnings DOMAIN --append <<'MD'
-- Orders API: GET /api/orders?page=N; the server caps page size at 20 whatever `size` says.
-- The export button opens a native save dialog: ask the user.
-MD
-```
-
-Record mechanisms (endpoints, field meanings, completion signals, walls, working snippets
-with `<placeholder>` values), never credentials, account data, or personal content.
+Save reusable mechanisms in site learnings; keep account data and task checkpoints separate.
+Update an existing named recipe when it becomes stale rather than appending contradictory notes.
 
 Close only task-created intermediate tabs; retain a result tab when the user needs it.
 In `run` mode the helper disconnects after every round, allowing CloakHub's sleep policy to work.
@@ -135,6 +131,8 @@ other clients or stored data. Reuse the provided context to preserve the profile
 After a disconnect or timeout, reconnect to the same alias and inspect `tabs()` and
 the application state before continuing. Sleep and restarts close all tabs;
 reopen what you need and identify the intended page from fresh observations instead of silently using the first.
+Before any further write after a lost reply, partial batch or session expiry, read
+[recovery](references/recovery.md) and complete its structured reconciliation gate.
 Do not replay purchases, messages, or submissions just because their reply was lost.
 For authentication or startup errors, use the troubleshooting section in setup.md.
 

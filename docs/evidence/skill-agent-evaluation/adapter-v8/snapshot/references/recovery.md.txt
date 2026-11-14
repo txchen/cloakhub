@@ -1,0 +1,59 @@
+# Recover from an uncertain execution
+
+Use after lost replies, partial batches, session expiry or browser disconnects.
+
+1. Query `session status SOCKET` if the session still exists. `currentExecution` reports
+   an active execution ID and explicit progress. Do not submit another operation while it
+   is running. `recentExecutions` retains ten outcome summaries, without script/output data.
+   A completed `ok: true` means the script returned; its business checks define success.
+2. If the session is gone, reconnect to the same target and discover tabs again. Browser
+   restarts/sleep invalidate old tab IDs and page objects. Cookies survive; forms and live
+   state do not. A retained page object can also refer to a closed tab.
+3. Locate the task's saved adapter, input and checkpoint. Verify the exact target and
+   site account and all workspace/collection scope identifiers. For `checkpointBatch` tasks, rerun that adapter with the same path;
+   the helper enforces the structured gate below before further writes. It rejects
+   changed identity, missing pending records and changed prior confirmations.
+4. Resume only confirmed remaining work. Preserve a blocked checkpoint and report its
+   path/reason when an outcome is unknown. Do not create a replacement checkpoint,
+   delete pending, skip by ordinal index or replay submissions to force completion.
+
+A new agent or process should read these task artifacts even when it has no prior
+transcript. In-memory execution history is diagnostic; it cannot replace the durable
+checkpoint. See [batch work](batch-work.md) for the adapter contract and lock recovery.
+
+## Structured reconciliation gate
+
+Complete this read-only step before resuming writes. First confirm the exact target and
+account, wait for the application's refresh/loading completion, and cover all relevant
+pages or search results. An empty or partial table during loading does not prove absence.
+
+Extract one object per saved record with its durable ID, exact business key and intended
+fields. For a DOM table, read separate cells using the observed headers (for example,
+`await row.locator('td').allTextContents()`); for network data, use named JSON fields.
+Whole-row text concatenates adjacent cells and loses field boundaries. Preserve string
+keys, whitespace in names, and explicit numeric units rather than inferring them from
+substrings. Validate the extractor against a known saved row before using it to skip or retry.
+
+Compare the complete structured result with the intended input:
+
+- One exact key match with all intended fields equal AND authoritative terminal business status `confirmed`: retain its durable ID. `processing` and `rejected` are never success.
+- Multiple matches, malformed fields, a field mismatch, or incomplete loading: stop writes
+  and report the discrepancy. Do not continue filling other missing rows around it.
+- No match: pending/unknown until the original request's final outcome and absence are
+  established, or a verified application idempotency mechanism makes retry safe.
+
+For v2 batching, use fresh response evidence and the pagination contract in [batch work](batch-work.md); a visible completion marker or DOM-only scan is insufficient. Let the helper update checkpoints, never edit them manually.
+
+Print a compact reconciliation result (confirmed, missing, duplicates, mismatches,
+coverage complete) and save the confirmed IDs/pending key in the private checkpoint.
+Resume only after that gate passes. At the end, repeat the exact set-and-field comparison;
+a count alone or finding every expected key does not exclude duplicates.
+
+Progress is explicitly supplied by the script, not a scanner of `state`. Report counts
+and non-sensitive phase names; keep customer records and secrets out of progress/errors.
+Recent outcomes disappear when the session exits, so retain durable evidence in task files.
+
+For a user handoff, leave the required tab visible and describe the action in the viewer.
+Ending the session releases CDP and permits idle sleep, which can close that tab and its
+unfinished form. Tell the user if a fresh navigation may be needed when resuming; login
+cookies remain. Do not hold sessions open indefinitely just to avoid rediscovery.

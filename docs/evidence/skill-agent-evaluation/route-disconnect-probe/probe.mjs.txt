@@ -1,0 +1,19 @@
+import {chromium} from '../skills/cloakhub-browser/node_modules/playwright-core/index.mjs';
+import {createServer} from 'node:http';
+import {spawn} from 'node:child_process';
+const server=createServer((req,res)=>{if(req.method==='POST')writes++;res.end('{}')});let writes=0;
+await new Promise(r=>server.listen(0,'127.0.0.1',r));const url=`http://127.0.0.1:${server.address().port}`;
+const ports=createServer();await new Promise(r=>ports.listen(0,'127.0.0.1',r));const port=ports.address().port;await new Promise(r=>ports.close(r));
+const browser=await chromium.launch({executablePath:'/home/txchen/.cache/ms-playwright/chromium-1254/chrome-linux64/chrome',headless:true,args:['--no-sandbox',`--remote-debugging-port=${port}`]});
+try {
+for(const mode of ['before-validation','after-fetch']) {
+ writes=0;
+ const code=`import {chromium} from ${JSON.stringify(new URL('../skills/cloakhub-browser/node_modules/playwright-core/index.mjs',import.meta.url).href)};
+ const b=await chromium.connectOverCDP('http://127.0.0.1:${port}');const p=await b.contexts()[0].newPage();await p.goto('${url}');
+ await p.route('**/*',async r=>{if(r.request().method()!=='POST')return r.continue();if('${mode}'==='after-fetch')await r.fetch({maxRedirects:0});console.log('PAUSED');await new Promise(()=>{});});
+ await p.evaluate(()=>fetch(location.href,{method:'POST',body:'{}'})).catch(()=>{});`;
+ const child=spawn('node',['--input-type=module','-e',code],{stdio:['ignore','pipe','pipe']});
+ await new Promise((resolve,reject)=>{child.stdout.on('data',d=>{if(String(d).includes('PAUSED'))resolve()});child.stderr.on('data',d=>process.stderr.write(d));child.on('exit',()=>reject(Error('early exit')))});
+ const before=writes; child.kill('SIGKILL');await new Promise(r=>child.on('exit',r));await new Promise(r=>setTimeout(r,1000));console.log(JSON.stringify({mode,before,afterDisconnect:writes}));
+}
+} finally {await browser.close();await new Promise(r=>server.close(r));}

@@ -1,0 +1,933 @@
+[
+  {
+    "arm": "current",
+    "task": "recovery",
+    "repeat": 0,
+    "raw_sha256": "5585373be7a2063dd5ece34545fdc8d963066b83ef5fbef07732e4eecab7581a",
+    "events": [
+      {
+        "usage": {
+          "input": 1146,
+          "output": 58,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "reasoning": 0,
+          "totalTokens": 1204,
+          "cost": {
+            "input": 0.00011460000000000001,
+            "output": 2.9e-05,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0.00014360000000000002,
+            "totalFromProvider": false
+          }
+        },
+        "tools": [
+          "read"
+        ],
+        "stopReason": "toolUse"
+      },
+      {
+        "usage": {
+          "input": 3068,
+          "output": 294,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "reasoning": 0,
+          "totalTokens": 3362,
+          "cost": {
+            "input": 0.00030680000000000003,
+            "output": 0.000147,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0.0004538,
+            "totalFromProvider": false
+          }
+        },
+        "tools": [
+          "read",
+          "read",
+          "read",
+          "bash",
+          "read"
+        ],
+        "stopReason": "toolUse"
+      },
+      {
+        "usage": {
+          "input": 4478,
+          "output": 220,
+          "cacheRead": 2944,
+          "cacheWrite": 0,
+          "reasoning": 13,
+          "totalTokens": 7642,
+          "cost": {
+            "input": 0.00044780000000000004,
+            "output": 0.00010999999999999999,
+            "cacheRead": 2.944e-05,
+            "cacheWrite": 0,
+            "total": 0.00058724,
+            "totalFromProvider": false
+          }
+        },
+        "tools": [
+          "read",
+          "bash",
+          "read"
+        ],
+        "stopReason": "toolUse"
+      },
+      {
+        "usage": {
+          "input": 3284,
+          "output": 68,
+          "cacheRead": 7296,
+          "cacheWrite": 0,
+          "reasoning": 0,
+          "totalTokens": 10648,
+          "cost": {
+            "input": 0.0003284,
+            "output": 3.4e-05,
+            "cacheRead": 7.296e-05,
+            "cacheWrite": 0,
+            "total": 0.00043536000000000003,
+            "totalFromProvider": false
+          }
+        },
+        "tools": [
+          "bash"
+        ],
+        "stopReason": "toolUse"
+      },
+      {
+        "usage": {
+          "input": 236,
+          "output": 156,
+          "cacheRead": 10496,
+          "cacheWrite": 0,
+          "reasoning": 0,
+          "totalTokens": 10888,
+          "cost": {
+            "input": 2.36e-05,
+            "output": 7.8e-05,
+            "cacheRead": 0.00010496,
+            "cacheWrite": 0,
+            "total": 0.00020656,
+            "totalFromProvider": false
+          }
+        },
+        "tools": [
+          "bash"
+        ],
+        "stopReason": "toolUse"
+      },
+      {
+        "usage": {
+          "input": 572,
+          "output": 298,
+          "cacheRead": 10624,
+          "cacheWrite": 0,
+          "reasoning": 30,
+          "totalTokens": 11494,
+          "cost": {
+            "input": 5.720000000000001e-05,
+            "output": 0.000149,
+            "cacheRead": 0.00010624,
+            "cacheWrite": 0,
+            "total": 0.00031244,
+            "totalFromProvider": false
+          }
+        },
+        "tools": [
+          "bash"
+        ],
+        "stopReason": "toolUse"
+      },
+      {
+        "usage": {
+          "input": 844,
+          "output": 496,
+          "cacheRead": 11008,
+          "cacheWrite": 0,
+          "reasoning": 43,
+          "totalTokens": 12348,
+          "cost": {
+            "input": 8.44e-05,
+            "output": 0.000248,
+            "cacheRead": 0.00011008,
+            "cacheWrite": 0,
+            "total": 0.00044248,
+            "totalFromProvider": false
+          }
+        },
+        "tools": [
+          "bash"
+        ],
+        "stopReason": "toolUse"
+      },
+      {
+        "usage": {
+          "input": 813,
+          "output": 105,
+          "cacheRead": 11648,
+          "cacheWrite": 0,
+          "reasoning": 22,
+          "totalTokens": 12566,
+          "cost": {
+            "input": 8.130000000000001e-05,
+            "output": 5.2499999999999995e-05,
+            "cacheRead": 0.00011648,
+            "cacheWrite": 0,
+            "total": 0.00025027999999999997,
+            "totalFromProvider": false
+          }
+        },
+        "tools": [
+          "bash"
+        ],
+        "stopReason": "toolUse"
+      },
+      {
+        "usage": {
+          "input": 322,
+          "output": 83,
+          "cacheRead": 12288,
+          "cacheWrite": 0,
+          "reasoning": 13,
+          "totalTokens": 12693,
+          "cost": {
+            "input": 3.2200000000000003e-05,
+            "output": 4.15e-05,
+            "cacheRead": 0.00012288000000000002,
+            "cacheWrite": 0,
+            "total": 0.00019658000000000002,
+            "totalFromProvider": false
+          }
+        },
+        "tools": [
+          "bash"
+        ],
+        "stopReason": "toolUse"
+      },
+      {
+        "usage": {
+          "input": 362,
+          "output": 154,
+          "cacheRead": 12416,
+          "cacheWrite": 0,
+          "reasoning": 0,
+          "totalTokens": 12932,
+          "cost": {
+            "input": 3.6200000000000006e-05,
+            "output": 7.7e-05,
+            "cacheRead": 0.00012416,
+            "cacheWrite": 0,
+            "total": 0.00023736000000000002,
+            "totalFromProvider": false
+          }
+        },
+        "tools": [
+          "bash"
+        ],
+        "stopReason": "toolUse"
+      },
+      {
+        "usage": {
+          "input": 1099,
+          "output": 423,
+          "cacheRead": 12672,
+          "cacheWrite": 0,
+          "reasoning": 18,
+          "totalTokens": 14194,
+          "cost": {
+            "input": 0.00010990000000000002,
+            "output": 0.0002115,
+            "cacheRead": 0.00012672,
+            "cacheWrite": 0,
+            "total": 0.00044812,
+            "totalFromProvider": false
+          }
+        },
+        "tools": [
+          "bash"
+        ],
+        "stopReason": "toolUse"
+      },
+      {
+        "usage": {
+          "input": 769,
+          "output": 258,
+          "cacheRead": 13568,
+          "cacheWrite": 0,
+          "reasoning": 32,
+          "totalTokens": 14595,
+          "cost": {
+            "input": 7.690000000000001e-05,
+            "output": 0.000129,
+            "cacheRead": 0.00013568,
+            "cacheWrite": 0,
+            "total": 0.00034158,
+            "totalFromProvider": false
+          }
+        },
+        "tools": [
+          "bash"
+        ],
+        "stopReason": "toolUse"
+      },
+      {
+        "usage": {
+          "input": 436,
+          "output": 224,
+          "cacheRead": 14208,
+          "cacheWrite": 0,
+          "reasoning": 0,
+          "totalTokens": 14868,
+          "cost": {
+            "input": 4.36e-05,
+            "output": 0.000112,
+            "cacheRead": 0.00014208,
+            "cacheWrite": 0,
+            "total": 0.00029768,
+            "totalFromProvider": false
+          }
+        },
+        "tools": [
+          "bash"
+        ],
+        "stopReason": "toolUse"
+      },
+      {
+        "usage": {
+          "input": 453,
+          "output": 224,
+          "cacheRead": 14464,
+          "cacheWrite": 0,
+          "reasoning": 0,
+          "totalTokens": 15141,
+          "cost": {
+            "input": 4.53e-05,
+            "output": 0.000112,
+            "cacheRead": 0.00014464,
+            "cacheWrite": 0,
+            "total": 0.00030194,
+            "totalFromProvider": false
+          }
+        },
+        "tools": [
+          "bash"
+        ],
+        "stopReason": "toolUse"
+      },
+      {
+        "usage": {
+          "input": 475,
+          "output": 390,
+          "cacheRead": 14720,
+          "cacheWrite": 0,
+          "reasoning": 15,
+          "totalTokens": 15585,
+          "cost": {
+            "input": 4.75e-05,
+            "output": 0.000195,
+            "cacheRead": 0.0001472,
+            "cacheWrite": 0,
+            "total": 0.0003897,
+            "totalFromProvider": false
+          }
+        },
+        "tools": [
+          "bash"
+        ],
+        "stopReason": "toolUse"
+      },
+      {
+        "usage": {
+          "input": 554,
+          "output": 56,
+          "cacheRead": 15104,
+          "cacheWrite": 0,
+          "reasoning": 0,
+          "totalTokens": 15714,
+          "cost": {
+            "input": 5.5400000000000005e-05,
+            "output": 2.8e-05,
+            "cacheRead": 0.00015104,
+            "cacheWrite": 0,
+            "total": 0.00023443999999999998,
+            "totalFromProvider": false
+          }
+        },
+        "tools": [],
+        "stopReason": "stop"
+      }
+    ]
+  },
+  {
+    "arm": "current",
+    "task": "recovery",
+    "repeat": 1,
+    "raw_sha256": "83da52b4164c552f232976895d381602133b951995286b19eeeab1ee9afac9dc",
+    "events": [
+      {
+        "usage": {
+          "input": 1146,
+          "output": 58,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "reasoning": 0,
+          "totalTokens": 1204,
+          "cost": {
+            "input": 0.00011460000000000001,
+            "output": 2.9e-05,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0.00014360000000000002,
+            "totalFromProvider": false
+          }
+        },
+        "tools": [
+          "read"
+        ],
+        "stopReason": "toolUse"
+      },
+      {
+        "usage": {
+          "input": 2044,
+          "output": 186,
+          "cacheRead": 1024,
+          "cacheWrite": 0,
+          "reasoning": 0,
+          "totalTokens": 3254,
+          "cost": {
+            "input": 0.0002044,
+            "output": 9.3e-05,
+            "cacheRead": 1.024e-05,
+            "cacheWrite": 0,
+            "total": 0.00030764000000000003,
+            "totalFromProvider": false
+          }
+        },
+        "tools": [
+          "read",
+          "read",
+          "read"
+        ],
+        "stopReason": "toolUse"
+      },
+      {
+        "usage": {
+          "input": 3634,
+          "output": 140,
+          "cacheRead": 2944,
+          "cacheWrite": 0,
+          "reasoning": 0,
+          "totalTokens": 6718,
+          "cost": {
+            "input": 0.00036340000000000005,
+            "output": 7e-05,
+            "cacheRead": 2.944e-05,
+            "cacheWrite": 0,
+            "total": 0.00046284,
+            "totalFromProvider": false
+          }
+        },
+        "tools": [
+          "bash"
+        ],
+        "stopReason": "toolUse"
+      },
+      {
+        "usage": {
+          "input": 958,
+          "output": 58,
+          "cacheRead": 6400,
+          "cacheWrite": 0,
+          "reasoning": 0,
+          "totalTokens": 7416,
+          "cost": {
+            "input": 9.580000000000001e-05,
+            "output": 2.9e-05,
+            "cacheRead": 6.4e-05,
+            "cacheWrite": 0,
+            "total": 0.00018879999999999998,
+            "totalFromProvider": false
+          }
+        },
+        "tools": [
+          "read"
+        ],
+        "stopReason": "toolUse"
+      },
+      {
+        "usage": {
+          "input": 919,
+          "output": 67,
+          "cacheRead": 7168,
+          "cacheWrite": 0,
+          "reasoning": 0,
+          "totalTokens": 8154,
+          "cost": {
+            "input": 9.190000000000001e-05,
+            "output": 3.35e-05,
+            "cacheRead": 7.168e-05,
+            "cacheWrite": 0,
+            "total": 0.00019708000000000003,
+            "totalFromProvider": false
+          }
+        },
+        "tools": [
+          "bash"
+        ],
+        "stopReason": "toolUse"
+      },
+      {
+        "usage": {
+          "input": 300,
+          "output": 146,
+          "cacheRead": 7936,
+          "cacheWrite": 0,
+          "reasoning": 0,
+          "totalTokens": 8382,
+          "cost": {
+            "input": 3.0000000000000004e-05,
+            "output": 7.3e-05,
+            "cacheRead": 7.936e-05,
+            "cacheWrite": 0,
+            "total": 0.00018236,
+            "totalFromProvider": false
+          }
+        },
+        "tools": [
+          "bash"
+        ],
+        "stopReason": "toolUse"
+      },
+      {
+        "usage": {
+          "input": 628,
+          "output": 640,
+          "cacheRead": 8064,
+          "cacheWrite": 0,
+          "reasoning": 80,
+          "totalTokens": 9332,
+          "cost": {
+            "input": 6.280000000000001e-05,
+            "output": 0.00031999999999999997,
+            "cacheRead": 8.064e-05,
+            "cacheWrite": 0,
+            "total": 0.00046343999999999997,
+            "totalFromProvider": false
+          }
+        },
+        "tools": [
+          "bash"
+        ],
+        "stopReason": "toolUse"
+      },
+      {
+        "usage": {
+          "input": 862,
+          "output": 94,
+          "cacheRead": 8576,
+          "cacheWrite": 0,
+          "reasoning": 14,
+          "totalTokens": 9532,
+          "cost": {
+            "input": 8.620000000000001e-05,
+            "output": 4.7e-05,
+            "cacheRead": 8.576e-05,
+            "cacheWrite": 0,
+            "total": 0.00021896000000000003,
+            "totalFromProvider": false
+          }
+        },
+        "tools": [
+          "bash"
+        ],
+        "stopReason": "toolUse"
+      },
+      {
+        "usage": {
+          "input": 230,
+          "output": 89,
+          "cacheRead": 9344,
+          "cacheWrite": 0,
+          "reasoning": 20,
+          "totalTokens": 9663,
+          "cost": {
+            "input": 2.3000000000000003e-05,
+            "output": 4.45e-05,
+            "cacheRead": 9.344e-05,
+            "cacheWrite": 0,
+            "total": 0.00016094,
+            "totalFromProvider": false
+          }
+        },
+        "tools": [
+          "bash"
+        ],
+        "stopReason": "toolUse"
+      },
+      {
+        "usage": {
+          "input": 273,
+          "output": 121,
+          "cacheRead": 9472,
+          "cacheWrite": 0,
+          "reasoning": 0,
+          "totalTokens": 9866,
+          "cost": {
+            "input": 2.7300000000000003e-05,
+            "output": 6.05e-05,
+            "cacheRead": 9.472e-05,
+            "cacheWrite": 0,
+            "total": 0.00018252,
+            "totalFromProvider": false
+          }
+        },
+        "tools": [
+          "bash"
+        ],
+        "stopReason": "toolUse"
+      },
+      {
+        "usage": {
+          "input": 382,
+          "output": 157,
+          "cacheRead": 9600,
+          "cacheWrite": 0,
+          "reasoning": 9,
+          "totalTokens": 10139,
+          "cost": {
+            "input": 3.82e-05,
+            "output": 7.85e-05,
+            "cacheRead": 9.6e-05,
+            "cacheWrite": 0,
+            "total": 0.0002127,
+            "totalFromProvider": false
+          }
+        },
+        "tools": [
+          "bash"
+        ],
+        "stopReason": "toolUse"
+      },
+      {
+        "usage": {
+          "input": 1068,
+          "output": 810,
+          "cacheRead": 9856,
+          "cacheWrite": 0,
+          "reasoning": 60,
+          "totalTokens": 11734,
+          "cost": {
+            "input": 0.00010680000000000001,
+            "output": 0.000405,
+            "cacheRead": 9.856e-05,
+            "cacheWrite": 0,
+            "total": 0.00061036,
+            "totalFromProvider": false
+          }
+        },
+        "tools": [
+          "bash"
+        ],
+        "stopReason": "toolUse"
+      },
+      {
+        "usage": {
+          "input": 1108,
+          "output": 78,
+          "cacheRead": 10752,
+          "cacheWrite": 0,
+          "reasoning": 0,
+          "totalTokens": 11938,
+          "cost": {
+            "input": 0.00011080000000000001,
+            "output": 3.9e-05,
+            "cacheRead": 0.00010752,
+            "cacheWrite": 0,
+            "total": 0.00025732,
+            "totalFromProvider": false
+          }
+        },
+        "tools": [
+          "bash"
+        ],
+        "stopReason": "toolUse"
+      },
+      {
+        "usage": {
+          "input": 178,
+          "output": 53,
+          "cacheRead": 11776,
+          "cacheWrite": 0,
+          "reasoning": 0,
+          "totalTokens": 12007,
+          "cost": {
+            "input": 1.7800000000000002e-05,
+            "output": 2.65e-05,
+            "cacheRead": 0.00011776,
+            "cacheWrite": 0,
+            "total": 0.00016206,
+            "totalFromProvider": false
+          }
+        },
+        "tools": [],
+        "stopReason": "stop"
+      }
+    ]
+  },
+  {
+    "arm": "current",
+    "task": "recovery",
+    "repeat": 2,
+    "raw_sha256": "1034224cbe3f04a99b50d7c4956a94482c2a6665a74219450b8206eb7d84d298",
+    "events": [
+      {
+        "usage": {
+          "input": 1146,
+          "output": 58,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "reasoning": 0,
+          "totalTokens": 1204,
+          "cost": {
+            "input": 0.00011460000000000001,
+            "output": 2.9e-05,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0.00014360000000000002,
+            "totalFromProvider": false
+          }
+        },
+        "tools": [
+          "read"
+        ],
+        "stopReason": "toolUse"
+      },
+      {
+        "usage": {
+          "input": 2044,
+          "output": 154,
+          "cacheRead": 1024,
+          "cacheWrite": 0,
+          "reasoning": 0,
+          "totalTokens": 3222,
+          "cost": {
+            "input": 0.0002044,
+            "output": 7.7e-05,
+            "cacheRead": 1.024e-05,
+            "cacheWrite": 0,
+            "total": 0.00029164,
+            "totalFromProvider": false
+          }
+        },
+        "tools": [
+          "bash"
+        ],
+        "stopReason": "toolUse"
+      },
+      {
+        "usage": {
+          "input": 422,
+          "output": 240,
+          "cacheRead": 2944,
+          "cacheWrite": 0,
+          "reasoning": 0,
+          "totalTokens": 3606,
+          "cost": {
+            "input": 4.22e-05,
+            "output": 0.00011999999999999999,
+            "cacheRead": 2.944e-05,
+            "cacheWrite": 0,
+            "total": 0.00019163999999999997,
+            "totalFromProvider": false
+          }
+        },
+        "tools": [
+          "read",
+          "read",
+          "read",
+          "read"
+        ],
+        "stopReason": "toolUse"
+      },
+      {
+        "usage": {
+          "input": 4396,
+          "output": 68,
+          "cacheRead": 3200,
+          "cacheWrite": 0,
+          "reasoning": 0,
+          "totalTokens": 7664,
+          "cost": {
+            "input": 0.00043960000000000006,
+            "output": 3.4e-05,
+            "cacheRead": 3.2e-05,
+            "cacheWrite": 0,
+            "total": 0.0005056,
+            "totalFromProvider": false
+          }
+        },
+        "tools": [
+          "bash"
+        ],
+        "stopReason": "toolUse"
+      },
+      {
+        "usage": {
+          "input": 328,
+          "output": 153,
+          "cacheRead": 7424,
+          "cacheWrite": 0,
+          "reasoning": 0,
+          "totalTokens": 7905,
+          "cost": {
+            "input": 3.2800000000000004e-05,
+            "output": 7.65e-05,
+            "cacheRead": 7.424000000000001e-05,
+            "cacheWrite": 0,
+            "total": 0.00018354,
+            "totalFromProvider": false
+          }
+        },
+        "tools": [
+          "bash"
+        ],
+        "stopReason": "toolUse"
+      },
+      {
+        "usage": {
+          "input": 667,
+          "output": 116,
+          "cacheRead": 7552,
+          "cacheWrite": 0,
+          "reasoning": 0,
+          "totalTokens": 8335,
+          "cost": {
+            "input": 6.670000000000001e-05,
+            "output": 5.8e-05,
+            "cacheRead": 7.552e-05,
+            "cacheWrite": 0,
+            "total": 0.00020021999999999998,
+            "totalFromProvider": false
+          }
+        },
+        "tools": [
+          "bash"
+        ],
+        "stopReason": "toolUse"
+      },
+      {
+        "usage": {
+          "input": 353,
+          "output": 454,
+          "cacheRead": 8064,
+          "cacheWrite": 0,
+          "reasoning": 0,
+          "totalTokens": 8871,
+          "cost": {
+            "input": 3.5300000000000004e-05,
+            "output": 0.000227,
+            "cacheRead": 8.064e-05,
+            "cacheWrite": 0,
+            "total": 0.00034293999999999997,
+            "totalFromProvider": false
+          }
+        },
+        "tools": [
+          "bash"
+        ],
+        "stopReason": "toolUse"
+      },
+      {
+        "usage": {
+          "input": 652,
+          "output": 138,
+          "cacheRead": 8320,
+          "cacheWrite": 0,
+          "reasoning": 0,
+          "totalTokens": 9110,
+          "cost": {
+            "input": 6.52e-05,
+            "output": 6.9e-05,
+            "cacheRead": 8.32e-05,
+            "cacheWrite": 0,
+            "total": 0.00021740000000000003,
+            "totalFromProvider": false
+          }
+        },
+        "tools": [
+          "bash"
+        ],
+        "stopReason": "toolUse"
+      },
+      {
+        "usage": {
+          "input": 370,
+          "output": 107,
+          "cacheRead": 8832,
+          "cacheWrite": 0,
+          "reasoning": 0,
+          "totalTokens": 9309,
+          "cost": {
+            "input": 3.7000000000000005e-05,
+            "output": 5.35e-05,
+            "cacheRead": 8.832000000000001e-05,
+            "cacheWrite": 0,
+            "total": 0.00017882,
+            "totalFromProvider": false
+          }
+        },
+        "tools": [
+          "bash"
+        ],
+        "stopReason": "toolUse"
+      },
+      {
+        "usage": {
+          "input": 870,
+          "output": 481,
+          "cacheRead": 9088,
+          "cacheWrite": 0,
+          "reasoning": 23,
+          "totalTokens": 10439,
+          "cost": {
+            "input": 8.700000000000001e-05,
+            "output": 0.0002405,
+            "cacheRead": 9.088e-05,
+            "cacheWrite": 0,
+            "total": 0.00041838,
+            "totalFromProvider": false
+          }
+        },
+        "tools": [
+          "bash"
+        ],
+        "stopReason": "toolUse"
+      },
+      {
+        "usage": {
+          "input": 1090,
+          "output": 48,
+          "cacheRead": 9856,
+          "cacheWrite": 0,
+          "reasoning": 0,
+          "totalTokens": 10994,
+          "cost": {
+            "input": 0.000109,
+            "output": 2.4e-05,
+            "cacheRead": 9.856e-05,
+            "cacheWrite": 0,
+            "total": 0.00023156,
+            "totalFromProvider": false
+          }
+        },
+        "tools": [],
+        "stopReason": "stop"
+      }
+    ]
+  }
+]

@@ -1,0 +1,350 @@
+[
+  {
+    "scenario": "pagination",
+    "passed": false,
+    "exact_records": false,
+    "checkpoint_complete": false,
+    "blocked_reported": true,
+    "writes": 0,
+    "wrong_scope_writes": false,
+    "checkpoint_before_every_write": true,
+    "pending": null,
+    "pending_preserved": false,
+    "final_records": [
+      {
+        "fields": {
+          "key": "unrelated",
+          "name": "Other"
+        },
+        "recordId": "unrelated",
+        "status": "confirmed"
+      },
+      {
+        "fields": {
+          "key": "beta",
+          "name": "Beta"
+        },
+        "recordId": "existing-beta",
+        "status": "confirmed"
+      }
+    ],
+    "checkpoint_completed": [],
+    "not_sent": 0,
+    "reads": 8,
+    "audit": [],
+    "phases": [
+      {
+        "phase": 1,
+        "seconds": 72.249,
+        "interrupted": false,
+        "timed_out": false,
+        "exit_code": 0,
+        "raw_sha256": "97580c92a2c986cef53a1d1fbff6ec4bf557ccc8f4c3de511dbfa1f426ff9218",
+        "model_calls": 10,
+        "tool_calls": 12,
+        "usage": {
+          "input": 17587,
+          "output": 2144,
+          "cacheRead": 43520,
+          "cacheWrite": 0,
+          "reasoning": 387,
+          "estimated_cost_usd": 0.0032659
+        }
+      }
+    ]
+  },
+  {
+    "scenario": "scope-flip",
+    "passed": true,
+    "exact_records": false,
+    "checkpoint_complete": false,
+    "blocked_reported": true,
+    "writes": 0,
+    "wrong_scope_writes": false,
+    "checkpoint_before_every_write": true,
+    "pending": null,
+    "pending_preserved": false,
+    "final_records": [],
+    "checkpoint_completed": [],
+    "not_sent": 0,
+    "reads": 9,
+    "audit": [],
+    "phases": [
+      {
+        "phase": 1,
+        "seconds": 72.832,
+        "interrupted": false,
+        "timed_out": false,
+        "exit_code": 0,
+        "raw_sha256": "eda277d194b4ec05b78644934ad8e7f303e0f070582c689ebdd7bab88bd03026",
+        "model_calls": 13,
+        "tool_calls": 12,
+        "usage": {
+          "input": 16280,
+          "output": 2050,
+          "cacheRead": 60800,
+          "cacheWrite": 0,
+          "reasoning": 274,
+          "estimated_cost_usd": 0.003261
+        }
+      }
+    ]
+  },
+  {
+    "scenario": "async-reject",
+    "passed": false,
+    "exact_records": false,
+    "checkpoint_complete": false,
+    "blocked_reported": true,
+    "writes": 0,
+    "wrong_scope_writes": false,
+    "checkpoint_before_every_write": true,
+    "pending": null,
+    "pending_preserved": false,
+    "final_records": [],
+    "checkpoint_completed": [],
+    "not_sent": 0,
+    "reads": 9,
+    "audit": [],
+    "phases": [
+      {
+        "phase": 1,
+        "seconds": 57.097,
+        "interrupted": false,
+        "timed_out": false,
+        "exit_code": 0,
+        "raw_sha256": "d3bff6f024a60230ff31705dbaba519fdf95ac02ef64159ea2304f3dbb4dab78",
+        "model_calls": 8,
+        "tool_calls": 10,
+        "usage": {
+          "input": 9585,
+          "output": 1835,
+          "cacheRead": 35968,
+          "cacheWrite": 0,
+          "reasoning": 306,
+          "estimated_cost_usd": 0.00223568
+        }
+      },
+      {
+        "phase": 2,
+        "seconds": 47.068,
+        "interrupted": false,
+        "timed_out": false,
+        "exit_code": 0,
+        "raw_sha256": "67ac349d4adbe10b91c9ef6f20e6715b10a20848191e3bb3acddbfc0c48372c6",
+        "model_calls": 6,
+        "tool_calls": 10,
+        "usage": {
+          "input": 9343,
+          "output": 1091,
+          "cacheRead": 21888,
+          "cacheWrite": 0,
+          "reasoning": 353,
+          "estimated_cost_usd": 0.0016986800000000002
+        }
+      }
+    ]
+  },
+  {
+    "scenario": "unknown",
+    "passed": false,
+    "exact_records": false,
+    "checkpoint_complete": false,
+    "blocked_reported": true,
+    "writes": 0,
+    "wrong_scope_writes": false,
+    "checkpoint_before_every_write": true,
+    "pending": null,
+    "pending_preserved": false,
+    "final_records": [],
+    "checkpoint_completed": [],
+    "not_sent": 0,
+    "reads": 9,
+    "audit": [],
+    "phases": [
+      {
+        "phase": 1,
+        "seconds": 69.926,
+        "interrupted": false,
+        "timed_out": false,
+        "exit_code": 0,
+        "raw_sha256": "79a2829b9979c9f3ab44684b26263f14249a7550977fcfc0db10fb5b08bd3ecb",
+        "model_calls": 11,
+        "tool_calls": 11,
+        "usage": {
+          "input": 13643,
+          "output": 2081,
+          "cacheRead": 68736,
+          "cacheWrite": 0,
+          "reasoning": 395,
+          "estimated_cost_usd": 0.00309216
+        }
+      },
+      {
+        "phase": 2,
+        "seconds": 87.422,
+        "interrupted": false,
+        "timed_out": false,
+        "exit_code": 0,
+        "raw_sha256": "679039aaf12845d2830ff3d59931b042b792cd200ecf4a79185f3c853342fca6",
+        "model_calls": 12,
+        "tool_calls": 14,
+        "usage": {
+          "input": 15533,
+          "output": 1547,
+          "cacheRead": 97152,
+          "cacheWrite": 0,
+          "reasoning": 451,
+          "estimated_cost_usd": 0.003298320000000001
+        }
+      }
+    ]
+  },
+  {
+    "scenario": "preflight",
+    "passed": false,
+    "exact_records": false,
+    "checkpoint_complete": false,
+    "blocked_reported": true,
+    "writes": 0,
+    "wrong_scope_writes": false,
+    "checkpoint_before_every_write": true,
+    "pending": null,
+    "pending_preserved": false,
+    "final_records": [],
+    "checkpoint_completed": [],
+    "not_sent": 0,
+    "reads": 7,
+    "audit": [],
+    "phases": [
+      {
+        "phase": 1,
+        "seconds": 72.03,
+        "interrupted": false,
+        "timed_out": false,
+        "exit_code": 0,
+        "raw_sha256": "b9cf0c8c1a69ac4c6a6ccb0bed7629140375f3da05cab7cd96bb58367a7606bf",
+        "model_calls": 11,
+        "tool_calls": 10,
+        "usage": {
+          "input": 11288,
+          "output": 2280,
+          "cacheRead": 54272,
+          "cacheWrite": 0,
+          "reasoning": 372,
+          "estimated_cost_usd": 0.00281152
+        }
+      }
+    ]
+  },
+  {
+    "scenario": "restart",
+    "passed": false,
+    "exact_records": false,
+    "checkpoint_complete": false,
+    "blocked_reported": true,
+    "writes": 0,
+    "wrong_scope_writes": false,
+    "checkpoint_before_every_write": true,
+    "pending": null,
+    "pending_preserved": false,
+    "final_records": [],
+    "checkpoint_completed": [],
+    "not_sent": 0,
+    "reads": 14,
+    "audit": [],
+    "phases": [
+      {
+        "phase": 1,
+        "seconds": 72.232,
+        "interrupted": false,
+        "timed_out": false,
+        "exit_code": 0,
+        "raw_sha256": "ce96fe37f5f774b68b842bc2cb5a5027b2a9dd606e0b33d68e723eb8dd0bcb1e",
+        "model_calls": 11,
+        "tool_calls": 10,
+        "usage": {
+          "input": 18126,
+          "output": 1831,
+          "cacheRead": 43904,
+          "cacheWrite": 0,
+          "reasoning": 285,
+          "estimated_cost_usd": 0.0031671400000000006
+        }
+      },
+      {
+        "phase": 2,
+        "seconds": 49.715,
+        "interrupted": false,
+        "timed_out": false,
+        "exit_code": 0,
+        "raw_sha256": "e6794518bf04d742e2a0c194b0d6fe64186d779dd997e2bdd5f0e77e02c9838e",
+        "model_calls": 9,
+        "tool_calls": 9,
+        "usage": {
+          "input": 17457,
+          "output": 1049,
+          "cacheRead": 34304,
+          "cacheWrite": 0,
+          "reasoning": 286,
+          "estimated_cost_usd": 0.00261324
+        }
+      }
+    ]
+  },
+  {
+    "scenario": "disconnect",
+    "passed": false,
+    "exact_records": false,
+    "checkpoint_complete": false,
+    "blocked_reported": true,
+    "writes": 0,
+    "wrong_scope_writes": false,
+    "checkpoint_before_every_write": true,
+    "pending": null,
+    "pending_preserved": false,
+    "final_records": [],
+    "checkpoint_completed": [],
+    "not_sent": 0,
+    "reads": 11,
+    "audit": [],
+    "phases": [
+      {
+        "phase": 1,
+        "seconds": 55.18,
+        "interrupted": false,
+        "timed_out": false,
+        "exit_code": 0,
+        "raw_sha256": "821b1a8b6ce3ac7c13b36d95a3efcbe491e2b421ac8d5835352394f99cff0bbe",
+        "model_calls": 10,
+        "tool_calls": 9,
+        "usage": {
+          "input": 9924,
+          "output": 1661,
+          "cacheRead": 40704,
+          "cacheWrite": 0,
+          "reasoning": 250,
+          "estimated_cost_usd": 0.0022299399999999997
+        }
+      },
+      {
+        "phase": 2,
+        "seconds": 53.932,
+        "interrupted": false,
+        "timed_out": false,
+        "exit_code": 0,
+        "raw_sha256": "6627b3564ca3d6990e673ca452708021130f9f9c11086982fd266a736495f451",
+        "model_calls": 8,
+        "tool_calls": 12,
+        "usage": {
+          "input": 11341,
+          "output": 1401,
+          "cacheRead": 45440,
+          "cacheWrite": 0,
+          "reasoning": 379,
+          "estimated_cost_usd": 0.002289
+        }
+      }
+    ]
+  }
+]

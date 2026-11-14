@@ -16,15 +16,22 @@ worlds, never through the page's own JavaScript world.
   `<page-content untrusted>`, credential-looking line groups are redacted, and long
   output is truncated with a hint. Warnings for challenges and credential pages come first.
 - `expectChange(page, target, action, { scope, timeout = 3000, until })` →
-  `{ changed, changes, notices, url, met?, hint? }`. Compares the target's aria
+  `{ changed, changes, notices, url, met?, verificationError?, hint? }`. Compares the target's aria
   snapshot (value, checked, expanded, disabled, text), the optional `scope`, the URL,
   and new notices before and after `action`. `until` is an async predicate for the
-  expected state; `met` reports it. Target removal is a change.
-- `captureResponses(page, filter, trigger, { types, quiet = 1000, timeout = 15000, min = 1, preview = 1500, save })`
+  expected state; `met` reports it. Sync predicates also work. Target removal is a change.
+  `timeout` bounds baseline observation and, separately, post-action verification; the action
+  uses its own Playwright timeout. A baseline failure throws before calling the action.
+  A stalled/throwing postcondition returns `verificationError` and an unknown outcome:
+  inspect before retrying. Predicates must be read-only; timeout stops waiting, not their
+  underlying work. Synchronous blocking code still requires the session watchdog.
+- `captureResponses(page, filter, trigger, options)`
   → `[{ url, method, status, type, contentType, bytes, keys?, preview }]`. `filter` is a
   URL substring, RegExp, function, or `null`. `types` defaults to `['xhr', 'fetch']`;
   pass `'all'` for documents and scripts. `save` writes full request and response bodies
-  as JSONL on the client.
+  as JSONL on the client. `project` returns chosen JSON fields as `data`; `report: true`
+  returns `{ complete, reasons, responses }`. Incomplete captures otherwise throw. See
+  [data extraction](data-extraction.md) for deadlines and bounds.
 - `detectChallenge(page)` → `null` or `{ kind: 'challenge' | 'blocked', evidence }`, from
   challenge iframes (Cloudflare, hCaptcha, reCAPTCHA, GeeTest, DataDome, ...) and page text.
 
@@ -39,34 +46,15 @@ console.log(await expectChange(page, page.getByLabel('Email'), () => save.click(
 }));
 ```
 
-Read `notices` first: a validation error often appears far from the button. On
-`changed: false`, the element may be a wrapper (try its inner control), the effect may
-be asynchronous elsewhere (widen `scope`), or the site ignored the input.
+Read `met` for the explicit postcondition and `notices` for diagnostics. A validation error
+can produce `changed: true`; successful network evidence can produce `met: true` with
+`changed: false`. Use a condition tied to this record/attempt, not a stale generic toast.
+If the condition is not met, inspect business state before deciding whether to retry.
 
 ## Data from the network
 
-```js
-const page = await tab('ID_FROM_PREVIOUS_OUTPUT');
-const responses = await captureResponses(page, null, () => page.reload());
-console.log(responses.map(({ url, status, bytes, keys }) => ({ url, status, bytes, keys }))
-  .sort((a, b) => (b.bytes ?? 0) - (a.bytes ?? 0)).slice(0, 15));
-```
-
-- First list everything without a filter and sort by size. Endpoint names from
-  memory are often wrong; the large JSON response is usually the data.
-- Each `run` is a new connection: listeners never carry over, so capture inside the
-  same script as the navigation, click, or scroll that triggers the requests.
-- To page through results, prefer replaying the endpoint in the page context so cookies
-  apply: `page.evaluate(u => fetch(u).then(r => r.json()), url)` (page-visible, see below).
-  Check the pagination fields in the response: servers silently cap page sizes.
-- Signed or tokenised APIs (403/406 on replay): drive the UI instead (click next page,
-  scroll) inside `captureResponses` and read what the page itself requested.
-- The same data often has another entry point on the site with a cleaner API; look
-  before fighting one page.
-- Use `save` for large or multi-page text/JSON bodies, then process the file locally.
-- `page.request` and `context.request` send from the client machine, not from the
-  server browser: a different IP, TLS fingerprint, and proxy than the profile. Keep
-  site traffic inside the browser.
+Read [data extraction](data-extraction.md) for discovery, structured projection, pagination,
+capture limits, and the client/server network boundary.
 
 ## Page-visible operations
 
@@ -84,7 +72,7 @@ an app's JS object). None of this makes a profile anonymous or untrackable.
 
 ## Background tabs
 
-Observed on CloakHub's headed browser on 2026-10-01: only the frontmost tab of the
+Observed on CloakHub's headed browser with the skill's `noDefaults: true` connection: only the frontmost tab of the
 frontmost window renders. Every other tab, including tabs in other windows, reports
 `document.visibilityState: hidden`; `requestAnimationFrame` and `IntersectionObserver`
 callbacks never run, and timers are throttled (a 50 ms interval ran twice per second).
@@ -98,10 +86,10 @@ callbacks never run, and timers are throttled (a 50 ms interval ran twice per se
 | Waiting for network responses | Pages that pause or skip rendering while hidden |
 
 Observed: `click`, `hover`, and `scrollIntoViewIfNeeded` timed out; the left column
-worked. The other pointer actions follow from Playwright's actionability rules, and the
-rendering rows from Chrome's background-tab behaviour.
+worked. The other pointer actions follow from Playwright's actionability rules. These are
+configuration-specific observations, not a guarantee about every Chromium or Playwright mode.
 
-Pointer actions wait for two animation frames to check that the element is stable, so
+Playwright stable-element checks wait for two animation frames to check that the element is stable, so
 in a background tab they time out at "waiting for element to be stable". The `run`
 error then carries a hint.
 

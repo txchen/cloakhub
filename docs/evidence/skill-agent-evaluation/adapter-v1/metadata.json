@@ -1,0 +1,31 @@
+{
+  "model": "openai/gpt-6-luna",
+  "thinking": "medium",
+  "scenarios": [
+    "pagination",
+    "scope-flip",
+    "async-reject",
+    "unknown",
+    "preflight"
+  ],
+  "skill_hashes": {
+    "SKILL.md": "de9e8d835863354ec12a657c220c3868360a141d44bbb43d0e441fd75ffe0753",
+    "package-lock.json": "cc278dc10625c79c45458f44b0bc1c713b76bb5b086ea961fdec880a5d73bfad",
+    "package.json": "0aa9912397a92f9ef70f7b693fa89fada321238cee37fe8e970f89a8bf5c5bea",
+    "references/batch-work.md": "5465bad1765c81da43ced7fb339cf97b7a98ed165764db1309b993a785725345",
+    "references/cdp.md": "cddf3289e4ba8fb4370db676fc953f46962df4213d572c645f93706de5b463d4",
+    "references/data-extraction.md": "dcaabe2db2248f3cf94300f2b3b630bc9cf7edd73700f1fc41074f91e7472f57",
+    "references/learnings.md": "5ba6490178c90e8f6479e2f2f9c5d9f9ce5989bcc11b2b565cd9a3b8973d33a7",
+    "references/operations.md": "9992f46a175a850dc57d8ece004df036638ccd560db40dd18f3eae44abfaf0b6",
+    "references/recovery.md": "c088e422bb2b6095a6d39eec1dd676ba445c4a00dc9681d91fddfb6fdd1d585e",
+    "references/sessions.md": "3b270dfe406fa7af3359d94d90feebe0b645d6c4006eca945aaf56329a198fe8",
+    "references/setup.md": "977bc252bb7530c511e975ec3103a4e27ddc8adf4293f3c3ca4e0a3995ffc6ee",
+    "scripts/browser.mjs": "fb73e290ac1636578e8edbca1460d62a2738a8e6fcc13b5efbc5f5a1a876adca",
+    "scripts/checkpoint.mjs": "bf355df30e2dc5430bf681b1da426078a293a98bea5bab6b783ae5c3e6ac07eb",
+    "scripts/helpers.mjs": "e3634b66729452843a88bbb36857fba8c5383fd613cbde9a2769151cf4121e46",
+    "scripts/learnings.mjs": "e943d30702cd5af8f55b1b19fc4fd12bf061571c7597627865e4eca9e20cca83",
+    "scripts/session.mjs": "bcdd102a358ec0a99a92a909fd11348b542003b56eb1e770632283b6317dd940"
+  },
+  "runner_sha256": "8d32970ddb81b71a1d8732146fb028bf18a3ae594d400cb76988850bb7ef8c93",
+  "fixture_sha256": "7be04cca0ad873dacfc312f11662737fdf7e310a6138eb6ce64af957bcdc55a7"
+}

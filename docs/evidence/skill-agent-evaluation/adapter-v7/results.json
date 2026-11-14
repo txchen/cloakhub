@@ -1,0 +1,674 @@
+[
+  {
+    "scenario": "pagination",
+    "passed": true,
+    "exact_records": true,
+    "checkpoint_complete": true,
+    "blocked_reported": false,
+    "writes": 2,
+    "wrong_scope_writes": false,
+    "checkpoint_before_every_write": true,
+    "pending": null,
+    "pending_preserved": false,
+    "final_records": [
+      {
+        "fields": {
+          "key": "unrelated",
+          "name": "Other"
+        },
+        "recordId": "unrelated",
+        "status": "confirmed"
+      },
+      {
+        "fields": {
+          "key": "beta",
+          "name": "Beta"
+        },
+        "recordId": "existing-beta",
+        "status": "confirmed"
+      },
+      {
+        "fields": {
+          "key": "alpha",
+          "name": "Alpha"
+        },
+        "recordId": "id-2",
+        "status": "confirmed"
+      },
+      {
+        "fields": {
+          "key": "gamma",
+          "name": "Gamma"
+        },
+        "recordId": "id-3",
+        "status": "confirmed"
+      }
+    ],
+    "checkpoint_completed": [
+      {
+        "key": "beta",
+        "recordId": "existing-beta"
+      },
+      {
+        "key": "alpha",
+        "recordId": "id-2"
+      },
+      {
+        "key": "gamma",
+        "recordId": "id-3"
+      }
+    ],
+    "not_sent": 0,
+    "reads": 23,
+    "audit": [
+      {
+        "valid": true,
+        "key": "alpha",
+        "phase": 1,
+        "revision": 5,
+        "scope": {
+          "workspaceId": "workspace-1",
+          "collectionId": "collection-1"
+        },
+        "path": "checkpoint.json",
+        "checkpoint_sha256": "0f370e013c7e17c8162a31c885d795d4423097ba7c0ebdc447ddc4ee92a5d27b"
+      },
+      {
+        "valid": true,
+        "key": "gamma",
+        "phase": 1,
+        "revision": 11,
+        "scope": {
+          "workspaceId": "workspace-1",
+          "collectionId": "collection-1"
+        },
+        "path": "checkpoint.json",
+        "checkpoint_sha256": "e067251fd0737ae3252a4f5140e531a2208465c3fb98890e2c55e2127b63bd0c"
+      }
+    ],
+    "phases": [
+      {
+        "phase": 1,
+        "seconds": 80.09,
+        "interrupted": false,
+        "timed_out": false,
+        "exit_code": 0,
+        "raw_sha256": "644c90e7ba4419abd6fa78516281bb27734c9fa40dc056472eed6c109a281774",
+        "model_calls": 11,
+        "tool_calls": 14,
+        "usage": {
+          "input": 13430,
+          "output": 2528,
+          "cacheRead": 72320,
+          "cacheWrite": 0,
+          "reasoning": 209,
+          "estimated_cost_usd": 0.0033302
+        }
+      }
+    ]
+  },
+  {
+    "scenario": "scope-flip",
+    "passed": true,
+    "exact_records": false,
+    "checkpoint_complete": false,
+    "blocked_reported": true,
+    "writes": 0,
+    "wrong_scope_writes": false,
+    "checkpoint_before_every_write": true,
+    "pending": null,
+    "pending_preserved": false,
+    "final_records": [],
+    "checkpoint_completed": [],
+    "not_sent": 1,
+    "reads": 7,
+    "audit": [],
+    "phases": [
+      {
+        "phase": 1,
+        "seconds": 77.095,
+        "interrupted": false,
+        "timed_out": false,
+        "exit_code": 0,
+        "raw_sha256": "8c362b8c0c916175976491f207054c1a64b3d24dbd8dacfba0dc162df9a5f566",
+        "model_calls": 9,
+        "tool_calls": 8,
+        "usage": {
+          "input": 12733,
+          "output": 1707,
+          "cacheRead": 36480,
+          "cacheWrite": 0,
+          "reasoning": 284,
+          "estimated_cost_usd": 0.0024916
+        }
+      }
+    ]
+  },
+  {
+    "scenario": "async-reject",
+    "passed": true,
+    "exact_records": false,
+    "checkpoint_complete": false,
+    "blocked_reported": true,
+    "writes": 1,
+    "wrong_scope_writes": false,
+    "checkpoint_before_every_write": true,
+    "pending": {
+      "key": "alpha",
+      "attemptId": "7e3238ef-f05f-49ed-9ce3-c9365d5974e9",
+      "startedAt": "2026-11-14T01:50:13.818Z",
+      "stage": "sent"
+    },
+    "pending_preserved": true,
+    "final_records": [
+      {
+        "fields": {
+          "key": "alpha",
+          "name": "Alpha"
+        },
+        "recordId": "id-0",
+        "status": "rejected"
+      }
+    ],
+    "checkpoint_completed": [],
+    "not_sent": 0,
+    "reads": 10,
+    "audit": [
+      {
+        "valid": true,
+        "key": "alpha",
+        "phase": 1,
+        "revision": 5,
+        "scope": {
+          "workspaceId": "workspace-1",
+          "collectionId": "collection-1"
+        },
+        "path": "checkpoint.json",
+        "checkpoint_sha256": "6bd009002ef63153234123053525ef779ce012d4cd38a7ff97de2f49b0ef2baa"
+      }
+    ],
+    "phases": [
+      {
+        "phase": 1,
+        "seconds": 56.593,
+        "interrupted": false,
+        "timed_out": false,
+        "exit_code": 0,
+        "raw_sha256": "bbfc386a9755de94b10ffd4b85b16dfa139b5bba08d1b78961ceb12775a589bc",
+        "model_calls": 10,
+        "tool_calls": 9,
+        "usage": {
+          "input": 12896,
+          "output": 1793,
+          "cacheRead": 40704,
+          "cacheWrite": 0,
+          "reasoning": 211,
+          "estimated_cost_usd": 0.00259314
+        }
+      },
+      {
+        "phase": 2,
+        "seconds": 36.05,
+        "interrupted": false,
+        "timed_out": false,
+        "exit_code": 0,
+        "raw_sha256": "e18dcb66a057a76ea0255dd3a37b594b42901d109ec0aa40e0c52c541cc2611c",
+        "model_calls": 8,
+        "tool_calls": 13,
+        "usage": {
+          "input": 15234,
+          "output": 972,
+          "cacheRead": 28928,
+          "cacheWrite": 0,
+          "reasoning": 144,
+          "estimated_cost_usd": 0.00229868
+        }
+      }
+    ]
+  },
+  {
+    "scenario": "unknown",
+    "passed": true,
+    "exact_records": false,
+    "checkpoint_complete": false,
+    "blocked_reported": true,
+    "writes": 1,
+    "wrong_scope_writes": false,
+    "checkpoint_before_every_write": true,
+    "pending": {
+      "key": "alpha",
+      "attemptId": "f27a5f9d-b007-45dd-88b4-10ed3062d25e",
+      "startedAt": "2026-11-14T01:51:54.367Z",
+      "stage": "sent"
+    },
+    "pending_preserved": true,
+    "final_records": [],
+    "checkpoint_completed": [],
+    "not_sent": 0,
+    "reads": 9,
+    "audit": [
+      {
+        "valid": true,
+        "key": "alpha",
+        "phase": 1,
+        "revision": 5,
+        "scope": {
+          "workspaceId": "workspace-1",
+          "collectionId": "collection-1"
+        },
+        "path": "checkpoint.json",
+        "checkpoint_sha256": "cb8d5e3def48627828a7f1c542bfeb7c2b493f2e1fd3ab9dc82e8c6206bc4da6"
+      }
+    ],
+    "phases": [
+      {
+        "phase": 1,
+        "seconds": 77.223,
+        "interrupted": false,
+        "timed_out": false,
+        "exit_code": 0,
+        "raw_sha256": "75b7b74321754907534eaa380120c02614d3b2602004b386daa0449e588d416c",
+        "model_calls": 14,
+        "tool_calls": 13,
+        "usage": {
+          "input": 14714,
+          "output": 1880,
+          "cacheRead": 101760,
+          "cacheWrite": 0,
+          "reasoning": 256,
+          "estimated_cost_usd": 0.0034289999999999998
+        }
+      },
+      {
+        "phase": 2,
+        "seconds": 40.637,
+        "interrupted": false,
+        "timed_out": false,
+        "exit_code": 0,
+        "raw_sha256": "f24d50d7913acb92b01f629acbcde69a808ff7650d2cd5a6e928ce889a6db02d",
+        "model_calls": 9,
+        "tool_calls": 10,
+        "usage": {
+          "input": 10529,
+          "output": 690,
+          "cacheRead": 39552,
+          "cacheWrite": 0,
+          "reasoning": 69,
+          "estimated_cost_usd": 0.00179342
+        }
+      }
+    ]
+  },
+  {
+    "scenario": "preflight",
+    "passed": true,
+    "exact_records": true,
+    "checkpoint_complete": true,
+    "blocked_reported": false,
+    "writes": 3,
+    "wrong_scope_writes": false,
+    "checkpoint_before_every_write": true,
+    "pending": null,
+    "pending_preserved": false,
+    "final_records": [
+      {
+        "fields": {
+          "key": "alpha",
+          "name": "Alpha"
+        },
+        "recordId": "id-0",
+        "status": "confirmed"
+      },
+      {
+        "fields": {
+          "key": "beta",
+          "name": "Beta"
+        },
+        "recordId": "id-1",
+        "status": "confirmed"
+      },
+      {
+        "fields": {
+          "key": "gamma",
+          "name": "Gamma"
+        },
+        "recordId": "id-2",
+        "status": "confirmed"
+      }
+    ],
+    "checkpoint_completed": [
+      {
+        "key": "alpha",
+        "recordId": "id-0"
+      },
+      {
+        "key": "beta",
+        "recordId": "id-1"
+      },
+      {
+        "key": "gamma",
+        "recordId": "id-2"
+      }
+    ],
+    "not_sent": 0,
+    "reads": 22,
+    "audit": [
+      {
+        "valid": true,
+        "key": "alpha",
+        "phase": 1,
+        "revision": 6,
+        "scope": {
+          "workspaceId": "workspace-1",
+          "collectionId": "collection-1"
+        },
+        "path": "checkpoint.json",
+        "checkpoint_sha256": "ae58635e65ca3a5c3781c5dfaaeea3cf76cd7c5f84bb843cba44b48358d222e6"
+      },
+      {
+        "valid": true,
+        "key": "beta",
+        "phase": 1,
+        "revision": 12,
+        "scope": {
+          "workspaceId": "workspace-1",
+          "collectionId": "collection-1"
+        },
+        "path": "checkpoint.json",
+        "checkpoint_sha256": "57391d6305bef6c5c5ee2f86e85431e1552baf52411f27d32a7bac590c52dd9e"
+      },
+      {
+        "valid": true,
+        "key": "gamma",
+        "phase": 1,
+        "revision": 18,
+        "scope": {
+          "workspaceId": "workspace-1",
+          "collectionId": "collection-1"
+        },
+        "path": "checkpoint.json",
+        "checkpoint_sha256": "70474d917a4a3de5814932677e5e9b420b791ceda1999815c8d0fc14f07f179c"
+      }
+    ],
+    "phases": [
+      {
+        "phase": 1,
+        "seconds": 76.922,
+        "interrupted": false,
+        "timed_out": false,
+        "exit_code": 0,
+        "raw_sha256": "e45447c00ac6df6a34d527ca800a5ac9ed571763622ece86fe5f3a9364024a48",
+        "model_calls": 11,
+        "tool_calls": 17,
+        "usage": {
+          "input": 18465,
+          "output": 2284,
+          "cacheRead": 62592,
+          "cacheWrite": 0,
+          "reasoning": 394,
+          "estimated_cost_usd": 0.003614420000000001
+        }
+      }
+    ]
+  },
+  {
+    "scenario": "restart",
+    "passed": true,
+    "exact_records": true,
+    "checkpoint_complete": true,
+    "blocked_reported": false,
+    "writes": 3,
+    "wrong_scope_writes": false,
+    "checkpoint_before_every_write": true,
+    "pending": null,
+    "pending_preserved": false,
+    "final_records": [
+      {
+        "fields": {
+          "key": "alpha",
+          "name": "Alpha"
+        },
+        "recordId": "id-0",
+        "status": "confirmed"
+      },
+      {
+        "fields": {
+          "key": "beta",
+          "name": "Beta"
+        },
+        "recordId": "id-1",
+        "status": "confirmed"
+      },
+      {
+        "fields": {
+          "key": "gamma",
+          "name": "Gamma"
+        },
+        "recordId": "id-2",
+        "status": "confirmed"
+      }
+    ],
+    "checkpoint_completed": [
+      {
+        "key": "alpha",
+        "recordId": "id-0"
+      },
+      {
+        "key": "beta",
+        "recordId": "id-1"
+      },
+      {
+        "key": "gamma",
+        "recordId": "id-2"
+      }
+    ],
+    "not_sent": 0,
+    "reads": 35,
+    "audit": [
+      {
+        "valid": true,
+        "key": "alpha",
+        "phase": 1,
+        "revision": 5,
+        "scope": {
+          "workspaceId": "workspace-1",
+          "collectionId": "collection-1"
+        },
+        "path": "checkpoint.json",
+        "checkpoint_sha256": "bdd2af29ffd80dcd0e6e9914da9de97566954770c40e89cf7fb2090c84336bf1"
+      },
+      {
+        "valid": true,
+        "key": "beta",
+        "phase": 2,
+        "revision": 9,
+        "scope": {
+          "workspaceId": "workspace-1",
+          "collectionId": "collection-1"
+        },
+        "path": "checkpoint.json",
+        "checkpoint_sha256": "1b320402aec3c90d5b879f2cee05a15c056cf748ef889c780b7102761944b714"
+      },
+      {
+        "valid": true,
+        "key": "gamma",
+        "phase": 2,
+        "revision": 15,
+        "scope": {
+          "workspaceId": "workspace-1",
+          "collectionId": "collection-1"
+        },
+        "path": "checkpoint.json",
+        "checkpoint_sha256": "f086c3cb3ec2d7ef988edf189df7e2e1b312f625170a7bd5841eb77a78218975"
+      }
+    ],
+    "phases": [
+      {
+        "phase": 1,
+        "seconds": 60.249,
+        "interrupted": true,
+        "timed_out": false,
+        "exit_code": 143,
+        "raw_sha256": "9440b93a96384f4f030aeb5c8bb18dc9460389999dad62d30f16f55c05101a00",
+        "model_calls": 11,
+        "tool_calls": 12,
+        "usage": {
+          "input": 9657,
+          "output": 1740,
+          "cacheRead": 52096,
+          "cacheWrite": 0,
+          "reasoning": 281,
+          "estimated_cost_usd": 0.00235666
+        }
+      },
+      {
+        "phase": 2,
+        "seconds": 44.103,
+        "interrupted": false,
+        "timed_out": false,
+        "exit_code": 0,
+        "raw_sha256": "1d9fbd39216a9696a174821cbce8b7cb46d22a7563af8b4ab6622526968397f6",
+        "model_calls": 7,
+        "tool_calls": 10,
+        "usage": {
+          "input": 10907,
+          "output": 1062,
+          "cacheRead": 30080,
+          "cacheWrite": 0,
+          "reasoning": 167,
+          "estimated_cost_usd": 0.0019225000000000002
+        }
+      }
+    ]
+  },
+  {
+    "scenario": "disconnect",
+    "passed": true,
+    "exact_records": true,
+    "checkpoint_complete": true,
+    "blocked_reported": false,
+    "writes": 3,
+    "wrong_scope_writes": false,
+    "checkpoint_before_every_write": true,
+    "pending": null,
+    "pending_preserved": false,
+    "final_records": [
+      {
+        "fields": {
+          "key": "alpha",
+          "name": "Alpha"
+        },
+        "recordId": "id-0",
+        "status": "confirmed"
+      },
+      {
+        "fields": {
+          "key": "beta",
+          "name": "Beta"
+        },
+        "recordId": "id-1",
+        "status": "confirmed"
+      },
+      {
+        "fields": {
+          "key": "gamma",
+          "name": "Gamma"
+        },
+        "recordId": "id-2",
+        "status": "confirmed"
+      }
+    ],
+    "checkpoint_completed": [
+      {
+        "key": "alpha",
+        "recordId": "id-0"
+      },
+      {
+        "key": "beta",
+        "recordId": "id-1"
+      },
+      {
+        "key": "gamma",
+        "recordId": "id-2"
+      }
+    ],
+    "not_sent": 0,
+    "reads": 27,
+    "audit": [
+      {
+        "valid": true,
+        "key": "alpha",
+        "phase": 1,
+        "revision": 5,
+        "scope": {
+          "workspaceId": "workspace-1",
+          "collectionId": "collection-1"
+        },
+        "path": "checkpoint.json",
+        "checkpoint_sha256": "071067468d8796878836c26cffb0bc69e78292db646148fc2f5bc3bbe3198146"
+      },
+      {
+        "valid": true,
+        "key": "beta",
+        "phase": 2,
+        "revision": 9,
+        "scope": {
+          "workspaceId": "workspace-1",
+          "collectionId": "collection-1"
+        },
+        "path": "checkpoint.json",
+        "checkpoint_sha256": "1d501888341b0f010f52795edbe6bf0ad0ba2ae8a90136eb27f95044351ebdea"
+      },
+      {
+        "valid": true,
+        "key": "gamma",
+        "phase": 2,
+        "revision": 15,
+        "scope": {
+          "workspaceId": "workspace-1",
+          "collectionId": "collection-1"
+        },
+        "path": "checkpoint.json",
+        "checkpoint_sha256": "645f012b8b0d0dce5b5169809448a98c8f52ca54f75ade0a9c62b31ec87792f8"
+      }
+    ],
+    "phases": [
+      {
+        "phase": 1,
+        "seconds": 69.45,
+        "interrupted": true,
+        "timed_out": false,
+        "exit_code": 143,
+        "raw_sha256": "f4eab0bcedef277232e733bed99828a2bc8c3e1bc4a7f22ae5cfaf47bc294dbe",
+        "model_calls": 8,
+        "tool_calls": 12,
+        "usage": {
+          "input": 18535,
+          "output": 2499,
+          "cacheRead": 30080,
+          "cacheWrite": 0,
+          "reasoning": 244,
+          "estimated_cost_usd": 0.0034038000000000002
+        }
+      },
+      {
+        "phase": 2,
+        "seconds": 35.031,
+        "interrupted": false,
+        "timed_out": false,
+        "exit_code": 0,
+        "raw_sha256": "3566a127bf38e203ed0e96a72a455582853e8cd6f4ac6d91acecf2e172998c8e",
+        "model_calls": 6,
+        "tool_calls": 10,
+        "usage": {
+          "input": 9853,
+          "output": 834,
+          "cacheRead": 26752,
+          "cacheWrite": 0,
+          "reasoning": 201,
+          "estimated_cost_usd": 0.00166982
+        }
+      }
+    ]
+  }
+]

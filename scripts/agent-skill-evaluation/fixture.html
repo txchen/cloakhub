@@ -1,0 +1,50 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>Inventory workbench</title>
+<style>body{font:16px system-ui;margin:30px;max-width:1050px}label{display:block;margin:10px 0}input{padding:6px}button{padding:8px;margin:8px}table{border-collapse:collapse}td,th{border:1px solid #bbb;padding:5px}#notice{min-height:25px}</style>
+<h1>Inventory workbench</h1><p>Account: <strong>evaluation-tenant</strong></p>
+<div id="summary" hidden><p>The dataset endpoint loads the full inventory; the table previews ten rows.</p>
+<button id="load">Load inventory</button><p id="dataset-status"></p><table id="preview"></table>
+<form id="summary-form"><label>Eligible rows <input name="eligibleRows" type="number" required></label>
+<label>Total stock <input name="totalStock" type="number" required></label>
+<label>Inventory value in cents <input name="valueCents" type="number" required></label><button>Save summary</button></form></div>
+<div id="entry" hidden><form id="entry-form"><label>Business key <input name="key" required></label>
+<label>Product name <input name="name" required></label><label>Quantity <input name="quantity" type="number" required></label>
+<label>Unit price in cents <input name="priceCents" type="number" required></label><button>Save record</button></form>
+<button id="refresh">Refresh saved records</button><table><thead><tr><th>Record ID</th><th>Business key</th><th>Product name</th><th>Quantity</th><th>Unit price in cents</th></tr></thead><tbody id="saved"></tbody></table></div>
+<p id="notice" role="status"></p>
+<script>
+const task = TASK_JSON;
+const base = location.pathname;
+const notice = document.querySelector('#notice');
+const cell = value => {const td = document.createElement('td');td.textContent=String(value);return td};
+async function records() {
+ const data=await fetch(base+'/records').then(r=>r.json());
+ const tbody=document.querySelector('#saved');tbody.replaceChildren();
+ for(const row of data.records){const tr=document.createElement('tr');for(const key of ['recordId','key','name','quantity','priceCents'])tr.append(cell(row[key]));tbody.append(tr)}
+}
+if(task==='extract'){
+ document.querySelector('#summary').hidden=false;
+ document.querySelector('#load').onclick=async()=>{
+  const data=await fetch(base+'/inventory').then(r=>r.json());
+  document.querySelector('#dataset-status').textContent=`Loaded ${data.items.length} inventory records. Showing first ten.`;
+  const table=document.querySelector('#preview');table.replaceChildren();
+  const header=document.createElement('tr');for(const label of ['Name','Price (cents)','Stock'])header.append(cell(label));table.append(header);
+  for(const row of data.items.slice(0,10)){const tr=document.createElement('tr');for(const key of ['name','priceCents','stock'])tr.append(cell(row[key]));table.append(tr)}
+ };
+ document.querySelector('#summary-form').onsubmit=async e=>{
+  e.preventDefault();const body=Object.fromEntries([...new FormData(e.target)].map(([k,v])=>[k,Number(v)]));
+  const response=await fetch(base+'/summary',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  notice.textContent=response.ok?'Summary saved':'Summary rejected';
+ };
+}else{
+ document.querySelector('#entry').hidden=false;document.querySelector('#refresh').onclick=records;
+ document.querySelector('#entry-form').onsubmit=async e=>{
+  e.preventDefault();notice.textContent='Saving...';
+  const values=Object.fromEntries(new FormData(e.target));values.quantity=Number(values.quantity);values.priceCents=Number(values.priceCents);
+  try{const response=await fetch(base+'/records',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(values)});
+   if(!response.ok){notice.textContent='Record rejected';return}
+   const data=await response.json();await records();notice.textContent='Saved '+data.recordId;e.target.reset();
+  }catch{notice.textContent='Save result unknown. Refresh saved records before deciding what to do next.'}
+ };
+ records();
+}
+</script></html>

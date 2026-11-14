@@ -1,0 +1,110 @@
+[
+  {
+    "arm": "current",
+    "task": "recovery",
+    "repeat": 0,
+    "seconds": 114.868,
+    "exit_code": 0,
+    "timed_out": false,
+    "business_correct": true,
+    "accepted_writes": 20,
+    "expected_writes": 20,
+    "duplicate_writes": 0,
+    "missing_records": 0,
+    "mismatched_records": 0,
+    "interruption_injected": true,
+    "interruption_completed": true,
+    "model_calls": 16,
+    "tool_calls": 21,
+    "usage": {
+      "input": 18911,
+      "output": 3507,
+      "cacheRead": 163456,
+      "cacheWrite": 0,
+      "reasoning": 186,
+      "estimated_cost_usd": 0.005279159999999999
+    },
+    "request_attempts": 20,
+    "reads": {
+      "page": 2,
+      "records": 22
+    },
+    "fault_error": null,
+    "cdp_sessions_after_agent": 0,
+    "raw_sha256": "5585373be7a2063dd5ece34545fdc8d963066b83ef5fbef07732e4eecab7581a",
+    "raw_bytes": 1202975,
+    "passed": true
+  },
+  {
+    "arm": "current",
+    "task": "recovery",
+    "repeat": 1,
+    "seconds": 96.62,
+    "exit_code": 0,
+    "timed_out": false,
+    "business_correct": true,
+    "accepted_writes": 20,
+    "expected_writes": 20,
+    "duplicate_writes": 0,
+    "missing_records": 0,
+    "mismatched_records": 0,
+    "interruption_injected": true,
+    "interruption_completed": true,
+    "model_calls": 14,
+    "tool_calls": 15,
+    "usage": {
+      "input": 13730,
+      "output": 2697,
+      "cacheRead": 102912,
+      "cacheWrite": 0,
+      "reasoning": 183,
+      "estimated_cost_usd": 0.00375062
+    },
+    "request_attempts": 20,
+    "reads": {
+      "page": 2,
+      "records": 22
+    },
+    "fault_error": null,
+    "cdp_sessions_after_agent": 0,
+    "raw_sha256": "83da52b4164c552f232976895d381602133b951995286b19eeeab1ee9afac9dc",
+    "raw_bytes": 945989,
+    "passed": true
+  },
+  {
+    "arm": "current",
+    "task": "recovery",
+    "repeat": 2,
+    "seconds": 81.55,
+    "exit_code": 0,
+    "timed_out": false,
+    "business_correct": true,
+    "accepted_writes": 20,
+    "expected_writes": 20,
+    "duplicate_writes": 0,
+    "missing_records": 0,
+    "mismatched_records": 0,
+    "interruption_injected": true,
+    "interruption_completed": true,
+    "model_calls": 11,
+    "tool_calls": 13,
+    "usage": {
+      "input": 12338,
+      "output": 2017,
+      "cacheRead": 66304,
+      "cacheWrite": 0,
+      "reasoning": 23,
+      "estimated_cost_usd": 0.0029053399999999997
+    },
+    "request_attempts": 20,
+    "reads": {
+      "page": 3,
+      "records": 22
+    },
+    "fault_error": null,
+    "cdp_sessions_after_agent": 0,
+    "raw_sha256": "1034224cbe3f04a99b50d7c4956a94482c2a6665a74219450b8206eb7d84d298",
+    "raw_bytes": 769143,
+    "passed": true
+  }
+]

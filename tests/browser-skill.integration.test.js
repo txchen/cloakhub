@@ -2,6 +2,7 @@ import { expect, test } from "bun:test";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import net from "node:net";
 import { chromium } from "playwright-core";
 import { startRelay } from "./helpers/relay-fixture.mjs";
 
@@ -28,8 +29,8 @@ realTest("skill CLI authenticates through CDP proxy, resumes a tab, and leaves t
       version: 1, defaultTarget: "test",
       targets: { test: { url: `http://127.0.0.1:${server.port}`, profile: "research", tokenEnv: "SKILL_TEST_TOKEN" } }
     }));
-    async function run(command, script = "") {
-      const child = Bun.spawn(["node", "skills/cloakhub-browser/scripts/browser.mjs", command], {
+    async function run(command, script = "", expectedCode = 0) {
+      const child = Bun.spawn(["node", "skills/cloakhub-browser/scripts/browser.mjs", ...(Array.isArray(command) ? command : [command])], {
         env: { ...process.env, CLOAKHUB_CLIENT_CONFIG: configPath, CLOAKHUB_TARGET: "test", SKILL_TEST_TOKEN: "test-profile-token" },
         stdin: "pipe", stdout: "pipe", stderr: "pipe"
       });
@@ -38,7 +39,7 @@ realTest("skill CLI authenticates through CDP proxy, resumes a tab, and leaves t
       const [stdout, stderr, code] = await Promise.all([
         new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited
       ]);
-      expect(code, stderr).toBe(0);
+      expect(code, stderr).toBe(expectedCode);
       return JSON.parse(stdout);
     }
     expect(await run("targets")).toHaveLength(1);
@@ -58,6 +59,81 @@ realTest("skill CLI authenticates through CDP proxy, resumes a tab, and leaves t
     expect(second).toEqual({ title: "Skill test", count: 2 });
     expect((await run("check")).ok).toBe(true);
     expect(await authenticated()).toBe(4);
+    const session = await run(['session', 'start', '--timeout-ms', '2000']);
+    try {
+      const result = await run(['session', 'exec', session.session], `
+        state.page = await context.newPage();
+        await state.page.goto('data:text/html,<title>Session integration</title>');
+        execution.reportProgress({completed: 1});
+      `);
+      expect(result.executionId).toBe(1);
+      const status = await run(['session', 'status', session.session]);
+      expect(status.executionTimeoutMs).toBe(2000);
+      expect(status.lastExecution).toMatchObject({executionId: 1, ok: true, progress: {completed: 1}});
+      const sendRaw = (payload, split = payload.length) => new Promise((resolve, reject) => {
+        const socket = net.createConnection(session.session);
+        socket.setEncoding('utf8');
+        socket.setTimeout(5000, () => socket.destroy(new Error('Protocol test timeout')));
+        let data = '';
+        socket.on('error', reject);
+        socket.on('connect', () => {
+          socket.write(payload.subarray(0, split));
+          if (split < payload.length) setTimeout(() => socket.write(payload.subarray(split)), 20);
+        });
+        socket.on('data', chunk => { data += chunk; });
+        socket.on('end', () => { try { resolve(JSON.parse(data)); } catch (error) { reject(error); } });
+      });
+      for (const malformed of ['null', '[]', 'false']) {
+        expect(await sendRaw(Buffer.from(malformed + '\n'))).toMatchObject({ok:false, error:'Invalid request'});
+      }
+      const utf8 = Buffer.from(JSON.stringify({command:'exec', source:'state.label = "库存中文 📦"; console.log(state.label);'}) + '\n');
+      const split = utf8.indexOf(Buffer.from('中')) + 1;
+      expect((await sendRaw(utf8, split)).output).toBe('库存中文 📦\n');
+      const escapedSource = '// ' + '\0'.repeat(40000) + '\nstate.escaped = true;';
+      expect((await sendRaw(Buffer.from(JSON.stringify({command:'exec', source:escapedSource}) + '\n'))).ok).toBe(true);
+      expect((await run(['session', 'exec', session.session], 'console.log(state.label, state.escaped)')).output).toBe('库存中文 📦 true\n');
+      // Feed the CLI stdin decoder a split multibyte sequence too.
+      const stdinClient = Bun.spawn(['node', 'skills/cloakhub-browser/scripts/browser.mjs', 'session', 'exec', session.session], {
+        stdin:'pipe', stdout:'pipe', stderr:'pipe'
+      });
+      const source = Buffer.from('console.log("库存中文 📦")');
+      const sourceSplit = source.indexOf(Buffer.from('中')) + 1;
+      stdinClient.stdin.write(source.subarray(0, sourceSplit));
+      stdinClient.stdin.flush();
+      await Bun.sleep(50);
+      stdinClient.stdin.write(source.subarray(sourceSplit));
+      stdinClient.stdin.end();
+      const stdinOutput = await new Response(stdinClient.stdout).text();
+      expect(await stdinClient.exited, await new Response(stdinClient.stderr).text()).toBe(0);
+      expect(JSON.parse(stdinOutput).output).toBe('库存中文 📦\n');
+
+      const active = run(['session', 'exec', session.session], `execution.reportProgress({completed: 2}); await new Promise(resolve => setTimeout(resolve, 500));`);
+      try {
+        let live;
+        for (let i = 0; i < 10; i++) {
+          live = await run(['session', 'status', session.session]);
+          if (live.running) break;
+          await Bun.sleep(20);
+        }
+        expect(live.currentExecution).toMatchObject({ progress: { completed: 2 } });
+      } finally { await active; }
+
+      const failure = await run(['session', 'exec', session.session], `throw new Error('locator.click: Timeout exceeded');`, 1);
+      expect(failure.hint).toContain('bringToFront');
+      const retained = await run(['session', 'exec', session.session], `console.log(await state.page.title()); await state.page.close();`);
+      expect(retained.output).toContain('Session integration');
+    } finally { await run(['session', 'end', session.session]); }
+    // A hard synchronous loop cannot defeat the independent process watchdog.
+    const limited = await run(['session', 'start', '--timeout-ms', '1000']);
+    const stuck = Bun.spawn(['node', 'skills/cloakhub-browser/scripts/browser.mjs', 'session', 'exec', limited.session], {
+      stdin: 'pipe', stdout: 'pipe', stderr: 'pipe'
+    });
+    stuck.stdin.write('while (true) {}'); stuck.stdin.end();
+    const code = await stuck.exited;
+    expect(code).toBe(1);
+    expect(await new Response(stuck.stderr).text()).toContain('outcome may be unknown');
+    expect((await run('check')).ok).toBe(true);
+
   } finally {
     await server?.stop();
     if (processHandle) { processHandle.kill(); await processHandle.exited; }
@@ -101,6 +177,7 @@ realTest("skill helpers observe, verify effects, capture responses, and detect c
       fetch(request) {
         const { pathname } = new URL(request.url);
         if (pathname === "/playground") return new Response(playground, { headers: { "content-type": "text/html" } });
+        if (pathname === "/api/many") return Response.json({ items: Array.from({ length: 1000 }, (_, id) => ({ id, amount: id + 1 })) });
         if (pathname === "/api/items") return Response.json({ items: ["a", "b"], page: { size: 2, total: 9 } });
         if (pathname === "/challenge") return new Response('<title>Shop</title><iframe src="/captcha/frame"></iframe>', { headers: { "content-type": "text/html" } });
         if (pathname === "/captcha/frame") return new Response("<p>widget</p>", { headers: { "content-type": "text/html" } });
@@ -125,11 +202,14 @@ realTest("skill helpers observe, verify effects, capture responses, and detect c
       const saved = await expectChange(page, page.getByLabel("Email"), () => page.getByRole("button", { name: "Save" }).click());
       const hitsBeforeLoad = await page.evaluate(() => window.hits.length);
       const responses = await captureResponses(page, "/api/items", () => page.getByRole("button", { name: "Load" }).click(), { quiet: 300 });
+      const large = await captureResponses(page, '/api/many', () => page.evaluate(() => fetch('/api/many').then(r => r.ok)), {
+        report: true, quiet: 0, project: ({json}) => ({count: json.items.length, sum: json.items.reduce((n, row) => n + row.amount, 0)})
+      });
       const listed = await tabs();
       const challengePage = await context.newPage();
       await challengePage.goto(${JSON.stringify(origin + "/challenge")});
       const challenge = await detectChallenge(challengePage);
-      console.log(JSON.stringify({ observed, noop, saved, hitsBeforeLoad, responses, listed, challenge }));
+      console.log(JSON.stringify({ observed, noop, saved, hitsBeforeLoad, responses, large, listed, challenge }));
     `);
     child.stdin.end();
     const [stdout, stderr, code] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited]);
@@ -146,6 +226,9 @@ realTest("skill helpers observe, verify effects, capture responses, and detect c
     expect(result.saved.changes).toContain('target + textbox "Email" [invalid]');
     // Only the page's own onclick handler touched hooked DOM APIs.
     expect(result.hitsBeforeLoad).toBe(2);
+    expect(result.large.complete).toBe(true);
+    expect(result.large.responses[0].data).toEqual({count: 1000, sum: 500500});
+    expect(result.large.responses[0].preview).toBeUndefined();
     expect(result.responses).toHaveLength(1);
     expect(result.responses[0]).toMatchObject({ method: "GET", status: 200, type: "fetch", keys: ["items", "page"] });
     expect(result.responses[0].preview).toBe('{"items":["a","b"],"page":{"size":2,"total":9}}');

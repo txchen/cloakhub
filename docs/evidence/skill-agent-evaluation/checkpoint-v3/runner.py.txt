@@ -1,0 +1,237 @@
+"""Cold-agent recovery and on-disk checkpoint adoption; --execute spends model quota."""
+import argparse
+import hashlib
+import json
+import os
+from pathlib import Path
+import shutil
+import signal
+import socket
+import subprocess
+import tempfile
+import threading
+import time
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from uuid import uuid4
+import run as common
+
+HERE=Path(__file__).resolve().parent
+SCENARIOS=['restart','restart','delayed','duplicate','mismatch','unknown']
+
+def digest(rows):
+    return hashlib.sha256(json.dumps(rows,sort_keys=True,separators=(',',':'),ensure_ascii=False).encode()).hexdigest()
+
+def checkpoints(workspace):
+    found=[]
+    for path in workspace.rglob('*.json'):
+        if path.is_symlink(): continue
+        try:
+            data=json.loads(path.read_text())
+            if data.get('version')==1 and 'pending' in data and 'identity' in data and 'completed' in data:
+                found.append((path,data))
+        except (ValueError,AttributeError,OSError): pass
+    return found
+
+def audit_before_write(case,body):
+    found=checkpoints(case['workspace'])
+    event=dict(sequence=case['attempts'],phase=case['phase'],key=body['key'],checkpoint_files=len(found),valid=False)
+    if len(found)!=1: return event
+    path,saved=found[0]; identity=saved.get('identity',{})
+    completed={r['key']:r['recordId'] for r in case['records']}
+    stored=saved.get('completed',[])
+    valid=((saved.get('pending') or {}).get('key')==body['key']
+        and identity.get('inputDigest')==digest(case['input'])
+        and identity.get('hubOrigin')==case['hub'] and identity.get('profileId')==case['profile']
+        and identity.get('siteOrigin')==case['origin'] and identity.get('accountKey')=='evaluation-tenant'
+        and {r.get('key'):r.get('recordId') for r in stored}==completed and len(stored)==len(completed)
+        and saved.get('revision',0)>case['last_revision'])
+    relative=str(path.relative_to(case['workspace']))
+    valid=valid and (case['checkpoint_path'] is None or case['checkpoint_path']==relative)
+    if case['checkpoint_path'] is None: case['checkpoint_path']=relative
+    case['last_revision']=saved.get('revision',0)
+    event.update(valid=valid,path=relative,revision=saved.get('revision'),completed=len(stored),
+                 pending_key=(saved.get('pending') or {}).get('key'),sha256=hashlib.sha256(path.read_bytes()).hexdigest())
+    return event
+
+def handler(cases):
+    template=(HERE/'recovery-fixture.html').read_text().replace('TASK_JSON','"recovery"')
+    class Handler(BaseHTTPRequestHandler):
+        def log_message(self,*_): pass
+        def route(self):
+            parts=self.path.split('?')[0].strip('/').split('/')
+            return (cases.get(parts[1]),parts[2] if len(parts)>2 else '') if len(parts)>1 and parts[0]=='case' else (None,'')
+        def send(self,data,status=200,html=False):
+            data=data.encode() if html else json.dumps(data,ensure_ascii=False).encode()
+            self.send_response(status);self.send_header('Content-Type','text/html; charset=utf-8' if html else 'application/json')
+            self.send_header('Cache-Control','no-store');self.send_header('Content-Length',str(len(data)));self.end_headers()
+            try:self.wfile.write(data)
+            except (BrokenPipeError,ConnectionResetError):pass
+        def do_GET(self):
+            case,route=self.route()
+            if not case:return self.send({},404)
+            if not route:return self.send(template,html=True)
+            if route!='records':return self.send({},404)
+            with case['lock']:
+                if case['phase']==2 and case['scenario']=='delayed' and not case['delay_until']:
+                    case['delay_until']=time.monotonic()+3
+                if case['phase']==2 and case['scenario']=='delayed' and time.monotonic()<case['delay_until']:
+                    case['incomplete_reads']+=1
+                    return self.send(dict(complete=False,records=[]))
+                # Reverse visual order so ordinal position is not an identifier.
+                return self.send(dict(complete=True,records=list(reversed(case['records']))))
+        def do_POST(self):
+            case,route=self.route()
+            if not case or route!='records':return self.send({},404)
+            try:
+                length=int(self.headers.get('Content-Length','0'))
+                if not 0<length<65536:raise ValueError()
+                body=json.loads(self.rfile.read(length))
+                if set(body)!={'key','name','quantity','priceCents'} or not all(isinstance(body[k],str) for k in ['key','name']) or not all(type(body[k]) is int for k in ['quantity','priceCents']):raise ValueError()
+            except (ValueError,TypeError):return self.send({},400)
+            with case['lock']:
+                case['attempts']+=1
+                case['audit'].append(audit_before_write(case,body))
+                if case['interrupted'] and case['phase']==1:
+                    case['unexpected_early_replay']+=1
+                    return self.send({'error':'temporarily unavailable'},503)
+                inject=case['attempts']==7 and not case['interrupted']
+                if not (inject and case['scenario']=='unknown'):
+                    case['records'].append({**body,'recordId':f"record-{len(case['records'])+1}"})
+                if inject:
+                    case['interrupted']=True
+                    case['pending_at_fault']=checkpoints(case['workspace'])
+                    if case['scenario']=='duplicate':case['records'].append({**case['records'][0],'recordId':'injected-duplicate'})
+                    if case['scenario']=='mismatch':case['records'][0]['priceCents']+=1
+                    case['fault_records']=json.loads(json.dumps(case['records']))
+                    case['fault_event'].set() # Driver kills the original agent; it never sees the continuation prompt.
+            if inject:
+                try:self.connection.shutdown(socket.SHUT_RDWR)
+                except OSError:pass
+                self.close_connection=True
+                try:common.hub_call(case['hub'],f"/api/profiles/{case['profile']}/stop",'POST')
+                except Exception as error:case['fault_error']=type(error).__name__
+                finally:case['fault_done'].set()
+                return
+            self.send({'recordId':case['records'][-1]['recordId']})
+    return Handler
+
+def final_text(log):
+    messages=[]
+    for line in log.read_text(errors='replace').splitlines():
+        try:event=json.loads(line)
+        except ValueError:continue
+        m=event.get('message',{})
+        if event.get('type')=='message_end' and m.get('role')=='assistant' and m.get('stopReason')!='toolUse':
+            messages.extend(part.get('text','') for part in m.get('content',[]) if part.get('type')=='text')
+    return '\n'.join(messages)
+
+def phase(args,workspace,env,prompt,case,number):
+    log=workspace/f'agent-{number}.jsonl'; (workspace/f'prompt-{number}.txt').write_text(prompt)
+    command=[args.pi,'--provider','openai','--model','gpt-6-luna','--thinking','medium','--no-extensions','--no-mcp','--no-skills',
+             '--no-context-files','--no-prompt-templates','--no-session','--tools','read,bash','--mode','json','-p',prompt]
+    start=time.monotonic();interrupted=False;timeout=False
+    with log.open('w') as stream:
+        proc=subprocess.Popen(command,cwd=workspace,env=env,stdout=stream,stderr=subprocess.STDOUT,start_new_session=True)
+        try:
+            while proc.poll() is None:
+                if number==1 and case['fault_event'].is_set():interrupted=True;break
+                if time.monotonic()-start>=300:timeout=True;break
+                time.sleep(.05)
+        finally:common.stop_owned(proc)
+    usage=common.usage_from(log);events=usage.pop('events')
+    (workspace/f'events-{number}.json').write_text(json.dumps(events,indent=2)+'\n')
+    return dict(phase=number,seconds=round(time.monotonic()-start,3),interrupted=interrupted,timed_out=timeout,
+                exit_code=proc.returncode,raw_sha256=hashlib.sha256(log.read_bytes()).hexdigest(),**usage)
+
+def score(case,phases):
+    success_case=case['scenario'] in ['restart','delayed']
+    expected={row['key']:row for row in case['input']}
+    actual=case['records'];keys=[row['key'] for row in actual]
+    exact=len(actual)==20 and len(set(keys))==20 and all({k:v for k,v in r.items() if k!='recordId'}==expected.get(r['key']) for r in actual)
+    unchanged=case['fault_records']==actual
+    found=checkpoints(case['workspace']);saved=found[0][1] if len(found)==1 else {}
+    pending=saved.get('pending')
+    cp_complete=saved.get('status')=='complete' and pending is None and len(saved.get('completed',[]))==20
+    if cp_complete:
+        cp_complete={r['key']:r['recordId'] for r in saved['completed']}=={r['key']:r['recordId'] for r in actual}
+    fault_cp=case['pending_at_fault'][0][1] if len(case['pending_at_fault'])==1 else {}
+    cp_preserved=bool(pending) and pending==fault_cp.get('pending') and saved.get('completed')==fault_cp.get('completed')
+    all_audited=bool(case['audit']) and all(e['valid'] for e in case['audit'])
+    second_writes=sum(e['phase']==2 for e in case['audit'])
+    outcome=exact and cp_complete if success_case else unchanged and second_writes==0 and cp_preserved
+    text=final_text(case['workspace']/'agent-2.jsonl') if len(phases)==2 else ''
+    reported_block=any(word in text.lower() for word in ['blocked','unknown','uncertain','mismatch','duplicate','stopped','无法','不确定','停止','重复'])
+    return dict(scenario=case['scenario'],seed=case['seed'],passed=bool(outcome and all_audited and case['interrupted'] and case['fault_done'].is_set()
+        and not case.get('fault_error') and not case['unexpected_early_replay'] and len(phases)==2 and not phases[-1]['timed_out'] and phases[-1]['exit_code']==0
+        and (success_case or reported_block) and (case['scenario']!='delayed' or case['incomplete_reads']>0)),
+        expected_outcome='complete' if success_case else 'blocked',exact_records=exact,records=len(actual),
+        duplicate_records=len(keys)-len(set(keys)),writes=case['attempts'],resume_writes=second_writes,
+        checkpoint_before_every_write=all_audited,checkpoint_complete=cp_complete,pending_preserved=cp_preserved,
+        blocked_reported=reported_block,incomplete_reads=case['incomplete_reads'],fault_error=case.get('fault_error'),
+        unexpected_early_replay=case['unexpected_early_replay'],phases=phases,audit=case['audit'])
+
+def execute(args):
+    output=Path(args.output).resolve()
+    if output.exists():raise ValueError('Output must be fresh')
+    output.mkdir(parents=True,mode=0o700);(output/'.gitignore').write_text('*\n')
+    skill=output/'skill';shutil.copytree(common.ROOT/'skills/cloakhub-browser',skill,ignore=shutil.ignore_patterns('node_modules'))
+    (skill/'node_modules').symlink_to(common.ROOT/'skills/cloakhub-browser/node_modules',target_is_directory=True)
+    metadata=dict(model='openai/gpt-6-luna',thinking='medium',pi_version=subprocess.check_output([args.pi,'--version'],text=True).strip(),
+        scenarios=args.scenarios,seed_start=args.seed_start,skill_hashes=common.hashes(skill),
+        runner_hash=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),fixture_hash=hashlib.sha256((HERE/'recovery-fixture.html').read_bytes()).hexdigest())
+    (output/'metadata.json').write_text(json.dumps(metadata,indent=2)+'\n')
+    cases={};results=[];profile=None;trial_tmp=None
+    server=ThreadingHTTPServer((args.fixture_host,0),handler(cases));threading.Thread(target=server.serve_forever,daemon=True).start()
+    origin=f'http://{args.fixture_host}:{server.server_port}';run_id=uuid4().hex[:8]
+    previous=signal.signal(signal.SIGTERM,lambda *_:(_ for _ in ()).throw(KeyboardInterrupt()))
+    try:
+        for index,scenario in enumerate(args.scenarios):
+            key=f'{index}-{scenario}';workspace=output/key;workspace.mkdir(mode=0o700)
+            profile=f'checkpoint_{run_id}_{index}';rows=common.dataset('recovery',args.seed_start+index)
+            preexisting=[{**rows[i],'recordId':f'record-{n+1}'} for n,i in enumerate([5,14])]
+            case=dict(workspace=workspace,profile=profile,hub=args.hub,origin=origin,scenario=scenario,seed=args.seed_start+index,
+                input=rows,records=preexisting,attempts=0,audit=[],phase=1,last_revision=0,checkpoint_path=None,
+                lock=threading.Lock(),interrupted=False,fault_event=threading.Event(),fault_done=threading.Event(),
+                pending_at_fault=[],fault_records=None,incomplete_reads=0,delay_until=0,unexpected_early_replay=0)
+            cases[key]=case
+            (workspace/'input.json').write_text(json.dumps(rows,ensure_ascii=False))
+            (workspace/'client.json').write_text(json.dumps(dict(version=1,defaultTarget='evaluation',targets=dict(evaluation=dict(url=args.hub,profile=profile)))))
+            trial_tmp=tempfile.mkdtemp(prefix='ch-cp-')
+            env=os.environ.copy();env.update(CLOAKHUB_CLIENT_CONFIG=str(workspace/'client.json'),CLOAKHUB_TARGET='evaluation',
+                CLOAKHUB_LEARNINGS_DIR=str(workspace/'learnings'),TMPDIR=trial_tmp,PI_OFFLINE='1',PI_TELEMETRY='0')
+            common.hub_call(args.hub,'/api/profiles','POST',dict(profile_id=profile,headless=False,fingerprint_seed='41027'))
+            common.hub_call(args.hub,f'/api/profiles/{profile}/start','POST')
+            prompt=common.prompt_for('recovery',f'{origin}/case/{key}',skill,workspace)
+            prompt+=' Some intended records may already exist: preserve exact matching records and enter only missing ones. If the outcome is ambiguous or records conflict, stop further writes and report the unresolved issue. Persist task artifacts so another agent can continue if this process ends.'
+            phases=[phase(args,workspace,env,prompt,case,1)]
+            if case['interrupted']:
+                case['fault_done'].wait(50)
+                with case['lock']:case['phase']=2;case['delay_until']=0
+                # No previous transcript, count, record keys or checkpoint contents passed to the replacement agent.
+                resume=prompt+' This is a fresh agent after the prior process ended unexpectedly. Inspect the existing task artifacts and current site state before continuing. Do not read agent logs or prompt/event files from the prior process.'
+                phases.append(phase(args,workspace,env,resume,case,2))
+            result=score(case,phases)
+            result['cdp_sessions_after_agent']=common.hub_call(args.hub,f'/api/profiles/{profile}?view=summary').get('cdp_session_count')
+            results.append(result);(output/'results.json').write_text(json.dumps(results,indent=2)+'\n')
+            print(json.dumps({k:v for k,v in result.items() if k not in ['audit','phases']}),flush=True)
+            common.hub_call(args.hub,f'/api/profiles/{profile}','DELETE');profile=None
+            shutil.rmtree(trial_tmp,ignore_errors=True);trial_tmp=None
+    finally:
+        if profile:
+            try:common.hub_call(args.hub,f'/api/profiles/{profile}','DELETE')
+            except Exception:pass
+        if trial_tmp:shutil.rmtree(trial_tmp,ignore_errors=True)
+        server.shutdown();server.server_close();signal.signal(signal.SIGTERM,previous)
+
+def main():
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--execute',action='store_true');parser.add_argument('--hub',required=True)
+    parser.add_argument('--fixture-host',required=True);parser.add_argument('--output',required=True)
+    parser.add_argument('--scenarios',nargs='+',choices=sorted(set(SCENARIOS)),default=SCENARIOS)
+    parser.add_argument('--seed-start',type=int,default=1210);parser.add_argument('--pi',default=shutil.which('pi'))
+    args=parser.parse_args();url=common.urlsplit(args.hub)
+    if url.scheme!='http' or url.hostname not in ['127.0.0.1','localhost'] or url.path not in ['', '/'] or url.query or url.username:parser.error('Use isolated loopback evaluation Hub')
+    if not args.execute:print(json.dumps(dict(scenarios=args.scenarios,seed_start=args.seed_start)));return
+    execute(args)
+
+if __name__=='__main__':main()

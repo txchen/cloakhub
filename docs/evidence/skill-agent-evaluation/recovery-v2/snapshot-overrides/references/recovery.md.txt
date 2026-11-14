@@ -1,0 +1,52 @@
+# Recover from an uncertain execution
+
+Use after lost replies, partial batches, session expiry or browser disconnects.
+
+1. Query `session status SOCKET` if the session still exists. `currentExecution` reports
+   an active execution ID and explicit progress. Do not submit another operation while it
+   is running. `recentExecutions` retains ten outcome summaries, without script/output data.
+   A completed `ok: true` means the script returned; its business checks define success.
+2. If the session is gone, reconnect to the same target and discover tabs again. Browser
+   restarts/sleep invalidate old tab IDs and page objects. Cookies survive; forms and live
+   state do not. A retained page object can also refer to a closed tab.
+3. Complete the structured reconciliation gate below, then read the private task checkpoint and verify input digest, operation version, exact browser target and freshly checked site
+   account/tenant. Reconcile
+   its pending business key against the site before advancing. Error or timeout does not
+   roll back prior state changes or website effects.
+4. Resume only confirmed remaining work. Unknown outcomes require reconciliation, not
+   automatic replay. Local files cannot provide exactly-once semantics for a remote site.
+
+## Structured reconciliation gate
+
+Complete this read-only step before resuming writes. First confirm the exact target and
+account, wait for the application's refresh/loading completion, and cover all relevant
+pages or search results. An empty or partial table during loading does not prove absence.
+
+Extract one object per saved record with its durable ID, exact business key and intended
+fields. For a DOM table, read separate cells using the observed headers (for example,
+`await row.locator('td').allTextContents()`); for network data, use named JSON fields.
+Whole-row text concatenates adjacent cells and loses field boundaries. Preserve string
+keys, whitespace in names, and explicit numeric units rather than inferring them from
+substrings. Validate the extractor against a known saved row before using it to skip or retry.
+
+Compare the complete structured result with the intended input:
+
+- One exact key match with all intended fields equal: confirmed; retain its durable ID.
+- Multiple matches, malformed fields, a field mismatch, or incomplete loading: stop writes
+  and report the discrepancy. Do not continue filling other missing rows around it.
+- No match: pending/unknown until the original request's final outcome and absence are
+  established, or a verified application idempotency mechanism makes retry safe.
+
+Print a compact reconciliation result (confirmed, missing, duplicates, mismatches,
+coverage complete) and save the confirmed IDs/pending key in the private checkpoint.
+Resume only after that gate passes. At the end, repeat the exact set-and-field comparison;
+a count alone or finding every expected key does not exclude duplicates.
+
+Progress is explicitly supplied by the script, not a scanner of `state`. Report counts
+and non-sensitive phase names; keep customer records and secrets out of progress/errors.
+Recent outcomes disappear when the session exits, so retain durable evidence in task files.
+
+For a user handoff, leave the required tab visible and describe the action in the viewer.
+Ending the session releases CDP and permits idle sleep, which can close that tab and its
+unfinished form. Tell the user if a fresh navigation may be needed when resuming; login
+cookies remain. Do not hold sessions open indefinitely just to avoid rediscovery.

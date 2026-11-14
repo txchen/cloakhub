@@ -1,0 +1,23 @@
+{
+  "total_runs": 3,
+  "tasks": {
+    "recovery": {
+      "arms": {
+        "current": {
+          "runs": 3,
+          "passed": 3,
+          "median_seconds": 96.62,
+          "mean_model_calls": 13.67,
+          "mean_tool_calls": 16.33,
+          "mean_input_tokens": 14993,
+          "mean_cache_read_tokens": 110890.67,
+          "mean_output_tokens": 2740.33,
+          "mean_estimated_cost_usd": 0.003978,
+          "duplicate_writes": 0,
+          "missing_records": 0
+        }
+      },
+      "pairs": []
+    }
+  }
+}

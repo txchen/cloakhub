@@ -1,0 +1,131 @@
+{
+  "method": "Search executed tool arguments for feature use, then inspect relevant actions; not proof of complete policy compliance.",
+  "trials": [
+    {
+      "trial": "batch-0-baseline",
+      "projection_used": false,
+      "progress_report_used": false,
+      "explicit_page_close": false,
+      "checkpoint_file_written": false
+    },
+    {
+      "trial": "batch-0-current",
+      "projection_used": false,
+      "progress_report_used": false,
+      "explicit_page_close": false,
+      "checkpoint_file_written": false
+    },
+    {
+      "trial": "batch-1-baseline",
+      "projection_used": false,
+      "progress_report_used": false,
+      "explicit_page_close": false,
+      "checkpoint_file_written": false
+    },
+    {
+      "trial": "batch-1-current",
+      "projection_used": false,
+      "progress_report_used": true,
+      "explicit_page_close": false,
+      "checkpoint_file_written": false
+    },
+    {
+      "trial": "batch-2-baseline",
+      "projection_used": false,
+      "progress_report_used": false,
+      "explicit_page_close": true,
+      "checkpoint_file_written": false
+    },
+    {
+      "trial": "batch-2-current",
+      "projection_used": false,
+      "progress_report_used": false,
+      "explicit_page_close": false,
+      "checkpoint_file_written": false
+    },
+    {
+      "trial": "extract-0-baseline",
+      "projection_used": false,
+      "progress_report_used": false,
+      "explicit_page_close": false,
+      "checkpoint_file_written": false
+    },
+    {
+      "trial": "extract-0-current",
+      "projection_used": true,
+      "progress_report_used": false,
+      "explicit_page_close": false,
+      "checkpoint_file_written": false
+    },
+    {
+      "trial": "extract-1-baseline",
+      "projection_used": false,
+      "progress_report_used": false,
+      "explicit_page_close": false,
+      "checkpoint_file_written": false
+    },
+    {
+      "trial": "extract-1-current",
+      "projection_used": true,
+      "progress_report_used": false,
+      "explicit_page_close": false,
+      "checkpoint_file_written": false
+    },
+    {
+      "trial": "extract-2-baseline",
+      "projection_used": false,
+      "progress_report_used": false,
+      "explicit_page_close": true,
+      "checkpoint_file_written": false
+    },
+    {
+      "trial": "extract-2-current",
+      "projection_used": true,
+      "progress_report_used": false,
+      "explicit_page_close": false,
+      "checkpoint_file_written": false
+    },
+    {
+      "trial": "recovery-0-baseline",
+      "projection_used": false,
+      "progress_report_used": false,
+      "explicit_page_close": false,
+      "checkpoint_file_written": false
+    },
+    {
+      "trial": "recovery-0-current",
+      "projection_used": false,
+      "progress_report_used": false,
+      "explicit_page_close": false,
+      "checkpoint_file_written": false
+    },
+    {
+      "trial": "recovery-1-baseline",
+      "projection_used": false,
+      "progress_report_used": false,
+      "explicit_page_close": false,
+      "checkpoint_file_written": false
+    },
+    {
+      "trial": "recovery-1-current",
+      "projection_used": false,
+      "progress_report_used": true,
+      "explicit_page_close": false,
+      "checkpoint_file_written": false
+    },
+    {
+      "trial": "recovery-2-baseline",
+      "projection_used": false,
+      "progress_report_used": false,
+      "explicit_page_close": false,
+      "checkpoint_file_written": false
+    },
+    {
+      "trial": "recovery-2-current",
+      "projection_used": false,
+      "progress_report_used": false,
+      "explicit_page_close": true,
+      "checkpoint_file_written": false
+    }
+  ]
+}

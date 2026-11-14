@@ -1,0 +1,34 @@
+{
+  "model": "openai/gpt-6-luna",
+  "thinking": "medium",
+  "pi_version": "1.5.0",
+  "scenarios": [
+    "restart",
+    "restart",
+    "delayed",
+    "duplicate",
+    "mismatch",
+    "unknown"
+  ],
+  "seed_start": 1210,
+  "skill_hashes": {
+    "SKILL.md": "ad559f94f129bfcf51d8a854bb386d5e652aa2320ba98df9af44fa6cc0df5b1f",
+    "package-lock.json": "cc278dc10625c79c45458f44b0bc1c713b76bb5b086ea961fdec880a5d73bfad",
+    "package.json": "0aa9912397a92f9ef70f7b693fa89fada321238cee37fe8e970f89a8bf5c5bea",
+    "references/batch-work.md": "9f2c15a255244a4e7ddfd115fe06e702b48e469165ec8ef46cfefaee132e235b",
+    "references/cdp.md": "cddf3289e4ba8fb4370db676fc953f46962df4213d572c645f93706de5b463d4",
+    "references/data-extraction.md": "dcaabe2db2248f3cf94300f2b3b630bc9cf7edd73700f1fc41074f91e7472f57",
+    "references/learnings.md": "5ba6490178c90e8f6479e2f2f9c5d9f9ce5989bcc11b2b565cd9a3b8973d33a7",
+    "references/operations.md": "9992f46a175a850dc57d8ece004df036638ccd560db40dd18f3eae44abfaf0b6",
+    "references/recovery.md": "2ad150457f8f870f928acb5ccbafddfcfb237c5bc6c2fb40b5c9c6ba3f215d90",
+    "references/sessions.md": "3b270dfe406fa7af3359d94d90feebe0b645d6c4006eca945aaf56329a198fe8",
+    "references/setup.md": "977bc252bb7530c511e975ec3103a4e27ddc8adf4293f3c3ca4e0a3995ffc6ee",
+    "scripts/browser.mjs": "8a695c618008adfd3f17eaf14e6c126f7261dfb45373e59ffa11d154f71175f9",
+    "scripts/checkpoint.mjs": "d46ff30cf3d1d861f70889fe0ccbac6dc2f06eeb3fa98d8de77a31f2ee78e194",
+    "scripts/helpers.mjs": "e3634b66729452843a88bbb36857fba8c5383fd613cbde9a2769151cf4121e46",
+    "scripts/learnings.mjs": "e943d30702cd5af8f55b1b19fc4fd12bf061571c7597627865e4eca9e20cca83",
+    "scripts/session.mjs": "aacc59d6b19dc731e261018a1c4b76a626d4c08023a5f5c119a7ac960a4c71a3"
+  },
+  "runner_hash": "715234922fc4d4d85be6e2c324b047a0ab9b1613e9bd1792a4d46e9a5ed2537c",
+  "fixture_hash": "2fd6989b387ad3ababf02429cf2e38274388e6dd8d1af7799e731a7143d31a70"
+}

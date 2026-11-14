@@ -234,10 +234,24 @@ shared JavaScript `state` object. The agent uses `session start`, `session exec`
 `session status`, and `session end`; single scripts can continue using `run`.
 See [task sessions](skills/cloakhub-browser/references/sessions.md) for examples.
 
-Sessions end after five minutes without execution, or when a script exceeds two
-minutes. End a session when its task finishes so the browser can sleep. This is a
+Sessions end after five minutes without execution, or when a script exceeds its
+execution budget (two minutes by default, configurable at session start). End a session when its task finishes so the browser can sleep. This is a
 client skill update; it requires no server upgrade. Refresh the skill with the
 installation command above and reload it in your agent client.
+
+The skill can project captured JSON into session memory, verify and checkpoint small
+batches, and report execution progress. `checkpointBatch` binds account and resource
+scope, requires fresh paginated evidence, and persists pending before submission.
+After reconnecting it reconciles exact saved records; missing or conflicting results
+stop the batch. Checkpoints survive a new agent process. The v2 JSON/fetch adapter
+contract uses a document gate that survives CDP disconnects; unsupported transports
+stop explicitly. See [adapter recovery](docs/adapter-recovery-evaluation.md).
+Site recipes support named updates and keyword
+lookup. See [data extraction](skills/cloakhub-browser/references/data-extraction.md),
+[batch work](skills/cloakhub-browser/references/batch-work.md), and
+[site learnings](skills/cloakhub-browser/references/learnings.md). An incomplete network capture
+now throws unless `report: true` is used to inspect partial results; it never certifies a
+write's success. Existing successful captures still return an array of response summaries.
 
 ## Configure the client
 

@@ -1,0 +1,22 @@
+{
+  "playwright": "1.63.0",
+  "scope": "synthetic profile; real Hub CDP and voxl video/keyboard transport",
+  "remoteVersion": "156.0.8078.47",
+  "viewerVersion": "158.0.8127.18",
+  "video": {
+    "readyState": 4,
+    "width": 1366,
+    "height": 768,
+    "decodedFrames": 1
+  },
+  "beforeAgent": "viewer-input",
+  "agentResult": "saved",
+  "afterAgent": "viewer-input-after-agent",
+  "taskAfterCleanup": {
+    "visible": "hidden",
+    "focused": true
+  },
+  "afterCleanup": "viewer-input-after-agent-after-cleanup",
+  "confirmed": true,
+  "profileDeleted": true
+}

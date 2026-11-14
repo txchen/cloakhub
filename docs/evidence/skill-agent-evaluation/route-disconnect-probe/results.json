@@ -1,0 +1,18 @@
+{
+  "results": [
+    {
+      "mode": "before-validation",
+      "before": 0,
+      "afterDisconnect": 1
+    },
+    {
+      "mode": "after-fetch",
+      "before": 1,
+      "afterDisconnect": 2
+    }
+  ],
+  "script_sha256": "f7804c641060752d9a16f8627fdbb6bca7c55a8f9610658aa302a46a127fae5a",
+  "playwright": "1.63.0",
+  "browser": "Google Chrome for Testing 158.0.8127.18",
+  "client": "Node; SIGKILL; browser left running"
+}

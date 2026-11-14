@@ -1,0 +1,34 @@
+{
+  "model": "openai/gpt-6-luna",
+  "thinking": "medium",
+  "scenarios": [
+    "pagination",
+    "scope-flip",
+    "async-reject",
+    "unknown",
+    "preflight",
+    "restart",
+    "disconnect"
+  ],
+  "skill_hashes": {
+    "SKILL.md": "de9e8d835863354ec12a657c220c3868360a141d44bbb43d0e441fd75ffe0753",
+    "package-lock.json": "cc278dc10625c79c45458f44b0bc1c713b76bb5b086ea961fdec880a5d73bfad",
+    "package.json": "0aa9912397a92f9ef70f7b693fa89fada321238cee37fe8e970f89a8bf5c5bea",
+    "references/batch-work.md": "2e37d451795fb98826842d4eaebf009facb90dc77234c72f8ffbd06818977e40",
+    "references/cdp.md": "cddf3289e4ba8fb4370db676fc953f46962df4213d572c645f93706de5b463d4",
+    "references/data-extraction.md": "dcaabe2db2248f3cf94300f2b3b630bc9cf7edd73700f1fc41074f91e7472f57",
+    "references/learnings.md": "5ba6490178c90e8f6479e2f2f9c5d9f9ce5989bcc11b2b565cd9a3b8973d33a7",
+    "references/operations.md": "9992f46a175a850dc57d8ece004df036638ccd560db40dd18f3eae44abfaf0b6",
+    "references/recovery.md": "c088e422bb2b6095a6d39eec1dd676ba445c4a00dc9681d91fddfb6fdd1d585e",
+    "references/sessions.md": "3b270dfe406fa7af3359d94d90feebe0b645d6c4006eca945aaf56329a198fe8",
+    "references/setup.md": "977bc252bb7530c511e975ec3103a4e27ddc8adf4293f3c3ca4e0a3995ffc6ee",
+    "scripts/browser.mjs": "8c51382b5b277d0c50afbee9b399b9faff3f29b8dee638c53384946f6249d642",
+    "scripts/checkpoint-gate.mjs": "6db2fcdc553c17b0acaa15fb4a6c314c37ba0939e301877efb479e089eb35e3a",
+    "scripts/checkpoint.mjs": "595b86a3228c06ce83f3205847c92e24298a75a6c545ebb208e811e5d15ebf43",
+    "scripts/helpers.mjs": "e3634b66729452843a88bbb36857fba8c5383fd613cbde9a2769151cf4121e46",
+    "scripts/learnings.mjs": "e943d30702cd5af8f55b1b19fc4fd12bf061571c7597627865e4eca9e20cca83",
+    "scripts/session.mjs": "bcdd102a358ec0a99a92a909fd11348b542003b56eb1e770632283b6317dd940"
+  },
+  "runner_sha256": "55cb4a051ee626985b3d7d317022a99a8d0240b3cebaad58f84418ac92f133ab",
+  "fixture_sha256": "f2b1039a19394ffe59de35d7b74737e7cb71035ae50b9eeabae859c14064f1d0"
+}

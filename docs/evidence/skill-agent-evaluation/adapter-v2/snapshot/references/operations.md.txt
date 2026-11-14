@@ -1,0 +1,221 @@
+# Browser operations
+
+Run these snippets inside `browser.mjs run`, using the tab ID from this task.
+Playwright API reference: https://playwright.dev/docs/api/class-page
+
+## Helper reference
+
+All helpers read pages through Playwright locators, network events, or CDP isolated
+worlds, never through the page's own JavaScript world.
+
+- `tabs()` → `[{ id, url, title, visible }]`. `visible` is the foreground tab;
+  `null` when unknown (for example `chrome://` pages).
+- `observe(page, { scope, maxChars = 12000 })` → string. Aria snapshot of `scope`
+  (CSS selector or Locator, default `body`), then **Page notices**: visible alerts,
+  status regions, toasts, error messages, and invalid fields. Text is wrapped in
+  `<page-content untrusted>`, credential-looking line groups are redacted, and long
+  output is truncated with a hint. Warnings for challenges and credential pages come first.
+- `expectChange(page, target, action, { scope, timeout = 3000, until })` →
+  `{ changed, changes, notices, url, met?, verificationError?, hint? }`. Compares the target's aria
+  snapshot (value, checked, expanded, disabled, text), the optional `scope`, the URL,
+  and new notices before and after `action`. `until` is an async predicate for the
+  expected state; `met` reports it. Sync predicates also work. Target removal is a change.
+  `timeout` bounds baseline observation and, separately, post-action verification; the action
+  uses its own Playwright timeout. A baseline failure throws before calling the action.
+  A stalled/throwing postcondition returns `verificationError` and an unknown outcome:
+  inspect before retrying. Predicates must be read-only; timeout stops waiting, not their
+  underlying work. Synchronous blocking code still requires the session watchdog.
+- `captureResponses(page, filter, trigger, options)`
+  → `[{ url, method, status, type, contentType, bytes, keys?, preview }]`. `filter` is a
+  URL substring, RegExp, function, or `null`. `types` defaults to `['xhr', 'fetch']`;
+  pass `'all'` for documents and scripts. `save` writes full request and response bodies
+  as JSONL on the client. `project` returns chosen JSON fields as `data`; `report: true`
+  returns `{ complete, reasons, responses }`. Incomplete captures otherwise throw. See
+  [data extraction](data-extraction.md) for deadlines and bounds.
+- `detectChallenge(page)` → `null` or `{ kind: 'challenge' | 'blocked', evidence }`, from
+  challenge iframes (Cloudflare, hCaptcha, reCAPTCHA, GeeTest, DataDome, ...) and page text.
+
+## Effect evidence
+
+```js
+const page = await tab('ID_FROM_PREVIOUS_OUTPUT');
+const save = page.getByRole('button', { name: 'Save' });
+console.log(await expectChange(page, page.getByLabel('Email'), () => save.click(), {
+  scope: page.locator('form'),
+  until: async () => await page.getByText('Saved').isVisible()
+}));
+```
+
+Read `met` for the explicit postcondition and `notices` for diagnostics. A validation error
+can produce `changed: true`; successful network evidence can produce `met: true` with
+`changed: false`. Use a condition tied to this record/attempt, not a stale generic toast.
+If the condition is not met, inspect business state before deciding whether to retry.
+
+## Data from the network
+
+Read [data extraction](data-extraction.md) for discovery, structured projection, pagination,
+capture limits, and the client/server network boundary.
+
+## Page-visible operations
+
+Observed through CloakHub on 2026-10-01 against Rebrowser's detector:
+connecting, navigating, locator reads, and the helpers left no detectable trace.
+These do:
+
+- `page.evaluate()` runs in the page's main world. A site that hooks DOM APIs sees
+  calls such as `getElementById` made from it (`mainWorldExecution`).
+- `page.exposeFunction()` leaves `__playwright__binding__` in the main world.
+- `page.addInitScript()` runs in the page; anything it writes is readable by the site.
+
+Use them only when the task needs page-world state (an in-page `fetch` with cookies,
+an app's JS object). None of this makes a profile anonymous or untrackable.
+
+## Background tabs
+
+Observed on CloakHub's headed browser with the skill's `noDefaults: true` connection: only the frontmost tab of the
+frontmost window renders. Every other tab, including tabs in other windows, reports
+`document.visibilityState: hidden`; `requestAnimationFrame` and `IntersectionObserver`
+callbacks never run, and timers are throttled (a 50 ms interval ran twice per second).
+
+| Works in a background tab | Needs `bringToFront()` |
+| --- | --- |
+| `goto`, `reload` | `click`, `dblclick`, `hover`, `check`, `tap`, `dragTo` |
+| `observe`, aria snapshots, `captureResponses`, `detectChallenge` | `scrollIntoViewIfNeeded`, `locator.screenshot` |
+| `fill`, `pressSequentially`, `selectOption`, `dispatchEvent` | Lazy loading, infinite scroll, `IntersectionObserver` |
+| Full-page `page.screenshot` | CSS animations/transitions that gate the next UI step |
+| Waiting for network responses | Pages that pause or skip rendering while hidden |
+
+Observed: `click`, `hover`, and `scrollIntoViewIfNeeded` timed out; the left column
+worked. The other pointer actions follow from Playwright's actionability rules. These are
+configuration-specific observations, not a guarantee about every Chromium or Playwright mode.
+
+Playwright stable-element checks wait for two animation frames to check that the element is stable, so
+in a background tab they time out at "waiting for element to be stable". The `run`
+error then carries a hint.
+
+Cost of `bringToFront()`: the viewer switches to this tab, and any other client's tab on
+the profile becomes hidden. Bring the tab forward immediately before the steps that
+need it and finish them in the same script; another client that later fails a pointer
+action brings its own tab forward. Avoid flipping tabs back and forth in a loop.
+
+Input in a hidden page is an automation signal: real users cannot type into a tab they
+cannot see, and hidden tabs also report inconsistent window geometry (`outerHeight`
+equal to `innerHeight`). On sites that watch for automation, bring the tab forward
+before typing too. `force: true` skips the stability wait but also the visibility and
+hit-target checks, and it still sends input to a hidden page; use it only for a target
+you have already verified.
+
+Opening a tab (`newPage`, `target="_blank"`, `window.open`) activates the new tab, so
+the previous foreground tab, possibly another client's, becomes hidden. After a popup
+closes, bring your original tab forward before pointer work.
+
+## Scrolling and lazy loading
+
+Scroll the container that actually scrolls: on a visible tab, hover it and use
+`await list.hover(); await page.mouse.wheel(0, 2000)`, which also wakes listeners
+that watch wheel events. Count items before and after; stop only after two rounds
+without growth. When nothing loads, check
+whether the tab is in the background and whether the data is already in a network response.
+
+## Rich text editors
+
+Editors such as Draft.js, Lexical, or ProseMirror may ignore `fill`. Click the editor,
+then try `page.keyboard.insertText(text)`; if the editor still does not update its
+model, dispatch a paste (page-visible):
+
+```js
+await editor.click();
+await editor.evaluate((el, text) => {
+  const data = new DataTransfer();
+  data.setData('text/plain', text);
+  el.dispatchEvent(new ClipboardEvent('paste', { clipboardData: data, bubbles: true, cancelable: true }));
+}, 'Hello');
+```
+
+Verify the submit button became enabled and that the request succeeded.
+
+## Observe and save a screenshot
+
+```js
+const page = await tab('ID_FROM_PREVIOUS_OUTPUT');
+console.log(await observe(page, { scope: 'main' }));
+// For a visual task instead:
+await page.screenshot({ path: '/absolute/client/path/result.png', fullPage: true });
+```
+
+Screenshots are saved on the client. Inspect the image with the agent's image tool
+before choosing coordinates. Scope snapshots or extracted text to relevant content
+to avoid flooding the agent's context. Iframe content needs its own scope:
+`observe(page, { scope: page.frameLocator('iframe#pay').locator('body') })`.
+
+## Popups
+
+```js
+const page = await tab('ID_FROM_PREVIOUS_OUTPUT');
+const pending = page.waitForEvent('popup');
+await page.getByRole('link', { name: 'Open report' }).click();
+const popup = await pending;
+console.log({ taskTab: await tabId(popup) });
+await popup.waitForLoadState('domcontentloaded');
+console.log(await observe(popup));
+```
+
+A click that opens a new tab leaves the original page unchanged; check for popups
+before concluding that a click did nothing.
+
+## Files across two machines
+
+The website runs on the server: `localhost` URLs point to the server, not the client.
+Do not assume server file paths refer to client files. For uploads, explicitly send
+client bytes rather than asking remote CDP to open a client path:
+
+```js
+const { readFile } = await import('node:fs/promises');
+const page = await tab('ID_FROM_PREVIOUS_OUTPUT');
+await page.getByLabel('Upload report').setInputFiles({
+  name: 'report.csv', mimeType: 'text/csv',
+  buffer: await readFile('/absolute/client/path/report.csv')
+});
+```
+
+This transport is intended for ordinary files, not directory or large-file uploads.
+CloakHub does not provide a file-transfer API. Remote CDP downloads may leave files
+on the server; do not promise client-side `download.saveAs()` support without verifying
+the deployment. Ask the operator for the server artifact if necessary. Do not change
+global download settings on a shared profile as a workaround.
+
+## Hand off to the user
+
+Hand a step to the user for CAPTCHAs and bot challenges, login, MFA, QR codes,
+payment approval, and anything outside the page: native file or save dialogs, browser
+permission prompts, `chrome://` pages. Never retry or work around a challenge.
+
+1. Leave the relevant tab open; call `bringToFront()` so the viewer shows it.
+2. Tell the user the target alias/profile, the tab label, and exactly what to do in the
+   CloakHub viewer, then let the current script finish, releasing its CDP connection.
+3. After the user confirms, reconnect to the same target, find the tab with `tabs()`,
+   and verify the result with `observe` before continuing. If the user declined, stop
+   that line of work.
+
+No automatic user/agent ownership mechanism is provided; coordinate instead of racing
+the user's input.
+
+## Recovery
+
+Server sleep preserves cookies and browser storage, not JS variables, unfinished
+forms, or in-flight operations. A later invocation automatically wakes the profile
+with a single new tab; earlier tabs are not reopened. Navigate again and inspect the
+intended website state.
+Only retry a side effect after determining whether the first attempt completed.
+
+## Completion
+
+```js
+const page = await tab('TASK_INTERMEDIATE_TAB_ID');
+await page.close();
+```
+
+Close only tabs created for this task that are no longer needed. A last-tab close
+may leave an `about:blank` tab because CloakHub protects the browser from exiting.
+Do not close all context pages. Returning from the script disconnects the client
+without stopping the server browser or deleting profile data.

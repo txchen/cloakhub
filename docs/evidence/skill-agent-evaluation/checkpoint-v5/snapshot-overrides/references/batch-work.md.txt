@@ -1,0 +1,118 @@
+# Durable batches
+
+For authorized repeated form submissions, use the built-in `checkpointBatch` in
+both `run` and task sessions. Use it for the first record too (`maxItems: 1` validates
+the workflow). It owns pending/completed state, reconciliation and bounded batching;
+keep site-specific locators and field extraction in two callbacks.
+
+## Prepare the task artifact before writing
+
+Save the input and executable adapter in the private task directory. Use one stable
+absolute `checkpoint.json` path for the task. A replacement agent needs those files,
+the target alias and task URL, not the previous conversation or in-memory `state`.
+Keep checkpoints out of site learnings. Inspect an existing task directory before
+choosing a path: a fresh file must not be used to bypass unresolved pending work.
+
+Observe the form and saved-record view. Define:
+
+- `read`: refresh/read the authoritative record set, await actual loading completion
+  and cover relevant pagination. Return `{ destination, complete, records }` where
+  each record is `{ recordId, ...inputRow }`. Extract individual cells or named JSON
+  fields; preserve exact string keys and numeric units. `complete: true` means the
+  relevant result set really is complete, not simply that a locator call returned.
+  Observe account identity afresh on every read. Project records to exactly the
+  input fields plus `recordId`; unrelated business keys can remain in the list.
+- `submit(row)`: fill the observed form and submit through ordinary UI actions.
+  Set finite operation timeouts and await response/loading completion when possible.
+  A returned click does not establish success; the helper calls `read` afterward.
+
+Save these functions in the task adapter. The following uses already defined
+`rows`, `readRecords`, `submitRow`, and a freshly verified `accountKey`:
+
+```js
+const result = await checkpointBatch({
+  path: '/absolute/private/task/checkpoint.json',
+  operation: 'record-entry-v1',
+  rows,
+  destination: { siteOrigin: new URL(page.url()).origin, accountKey },
+  read: readRecords,
+  submit: submitRow,
+  maxItems: 10,
+  budgetMs: 120000
+});
+console.log(result);
+```
+
+Save the adapter as a **script body**, then pass it on stdin to the skill runner.
+For a session, begin the saved file with `const page = state.page;` after assigning
+that task page in the session. Execute it with:
+
+```sh
+node /absolute/skill/scripts/browser.mjs session exec SOCKET < /absolute/private/task/adapter.js
+```
+
+The saved script sees `state`, `execution` and `checkpointBatch` because the runner
+injects them. A separately imported module does not inherit these variables. After
+reconnecting, rediscover/create the task page, assign `state.page`, then execute the
+same script. For one-shot `run`, make page discovery part of the script, use `run --target ALIAS < adapter.js`.
+
+The `read` callback must return both identity fields, not just records:
+
+```js
+return {
+  destination: {
+    siteOrigin: new URL(page.url()).origin,
+    accountKey: freshlyReadAccountKey
+  },
+  complete: relevantRecordsFullyLoaded,
+  records // [{ recordId, ...inputRow }], with separate exact typed fields
+};
+```
+
+Task sessions report checkpoint counts automatically for the current execution, even
+when a saved function is reused. Omit `onProgress`; custom callbacks capturing an old
+`execution` can become stale. Business checks belong in `read`, not progress callbacks.
+
+Use the same account-key representation in the expected destination and every read.
+If validation names a missing `read().destination` field, correct the saved adapter
+and rerun the same checkpoint. An adapter/schema error is not a new task and does
+not justify a new checkpoint path.
+
+`checkpointBatch` is already injected; do not import its internal module or supply
+browser-target metadata. It binds the actual connected Hub origin and profile.
+The task directory must exist. Rows must be finite JSON objects with unique nonempty
+string `key` values; `recordId` is reserved for the site's durable identifier.
+Input, operation version, account or destination changes reject the old checkpoint.
+
+The helper saves `pending` durably **before** invoking `submit`. It verifies exact
+fields and key uniqueness before marking the record complete, including a durable
+record ID. Every invocation refreshes the entire relevant set and verifies previously
+confirmed records. Repeat the same adapter/path until `status: "complete"`; `active`
+means the bounded call ended with work remaining. Do not claim success from process
+exit or progress counts alone.
+
+`maxItems` defaults to 10 (maximum 100). `budgetMs` checks elapsed time between
+operations; it does not cancel an in-flight callback. Reserve enough session time
+for the next read/submit/read sequence. Keep callbacks bounded. For a slow site,
+use smaller batches; do not run a second writer while the first is still active.
+
+## Recovery and stopping
+
+After a failed call, follow [recovery](recovery.md), reconnect to the same target,
+and rerun the saved adapter with the same input and checkpoint path. Do not manually
+advance an index or rewrite the checkpoint. A committed pending row is reconciled
+from an exact matching saved record without resubmitting it. Missing pending rows,
+duplicates, wrong fields, incomplete data or changed account stop further writes.
+An absent pending row is still uncertain; the helper deliberately has no automatic
+retry or “clear pending” switch. If outcome cannot be established, report blocked
+with the checkpoint path and preserve it for reconciliation.
+
+Checkpoint writes use a private file, fsync and atomic replacement. A per-path lock
+rejects concurrent writers; a dead process's lock can be reclaimed on the same host.
+An incomplete lock, another host or a possibly live/reused PID fails closed: inspect
+ownership rather than deleting it and retrying. Use a local filesystem with atomic
+rename/fsync; this is not a distributed lock. Different checkpoint paths cannot
+coordinate the same business operation. The site adapter supplies evidence and
+account identity; the helper cannot independently prove that `complete` is truthful
+or prevent arbitrary code from bypassing it. It does not promise exactly-once remote
+writes, and it never authorizes additional actions.

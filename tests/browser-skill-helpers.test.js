@@ -6,7 +6,7 @@ import {
   CRED_URL, compareProbes, diffLines, errorHint, installOutputFilter, isCredLine, matchChallenge,
   redactCreds, redactOutput, truncate, wrapUntrusted
 } from "../skills/cloakhub-browser/scripts/helpers.mjs";
-import { appendLearning, formatLearnings, listLearnings, readLearnings, siteKey } from "../skills/cloakhub-browser/scripts/learnings.mjs";
+import { appendLearning, formatLearnings, listLearnings, readLearnings, siteKey, upsertLearning } from "../skills/cloakhub-browser/scripts/learnings.mjs";
 import { diagnoseConnection } from "../skills/cloakhub-browser/scripts/browser.mjs";
 
 const roots = [];
@@ -166,4 +166,44 @@ describe("connection diagnosis", () => {
       .toContain("existing tab did not answer");
     expect(fetched).toBe(false);
   });
+});
+
+
+test("named recipes update in place, retain legacy notes, and can be selectively read", async () => {
+  const dir = await tempDir();
+  await appendLearning('example.org', '- Legacy login note', { dir });
+  await upsertLearning('example.org', 'orders-export', 'URL: /orders\nTask: export\nMethod: old endpoint', { dir });
+  await upsertLearning('example.org', 'profile-edit', 'URL: /settings\nTask: change avatar', { dir });
+  await upsertLearning('example.org', 'orders-export', 'URL: /orders\nTask: export\nMethod: new endpoint', { dir });
+  const read = await readLearnings('example.org', { dir });
+  expect(read.notes).toContain('Legacy login note');
+  expect(read.notes).not.toContain('old endpoint');
+  expect(read.notes.match(/## Recipe: orders-export/g)).toHaveLength(1);
+  const selected = formatLearnings(read, { query: 'orders export' });
+  expect(selected).toContain('new endpoint');
+  expect(selected).not.toContain('change avatar');
+  expect(formatLearnings(read, { query: 'no-match' })).toContain('No matching notes');
+  expect(formatLearnings(read, { maxChars: 100 })).toContain('truncated');
+  expect(formatLearnings(read, { all: true })).toContain('change avatar');
+  await expect(upsertLearning('example.org', '../bad', 'bad', { dir })).rejects.toThrow('Recipe ID');
+});
+
+test("learnings CLI upserts and filters without a browser connection", async () => {
+  const dir = await tempDir();
+  const script = resolve(import.meta.dir, '../skills/cloakhub-browser/scripts/browser.mjs');
+  const env = { ...process.env, CLOAKHUB_LEARNINGS_DIR: dir, CLOAKHUB_CLIENT_CONFIG: join(dir, 'missing.json') };
+  const write = Bun.spawnSync(['node', script, 'learnings', 'example.org', '--upsert', 'orders'], { env, stdin: Buffer.from('URL: /orders\nTask: export') });
+  expect(write.exitCode, write.stderr.toString()).toBe(0);
+  const read = Bun.spawnSync(['node', script, 'learnings', 'example.org', '--query', '/orders export', '--max-chars', '1000'], { env });
+  expect(read.exitCode, read.stderr.toString()).toBe(0);
+  expect(read.stdout.toString()).toContain('Task: export');
+});
+
+
+test("learning storage errors are reported instead of appearing as empty notes", async () => {
+  const root = await tempDir();
+  const dir = join(root, 'not-a-directory');
+  await writeFile(dir, 'fixture');
+  await expect(listLearnings({dir})).rejects.toMatchObject({code:'ENOTDIR'});
+  expect((await listLearnings({dir:join(root, 'missing')})).sites).toEqual([]);
 });

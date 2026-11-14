@@ -1,0 +1,26 @@
+# Recover from an uncertain execution
+
+Use after lost replies, partial batches, session expiry or browser disconnects.
+
+1. Query `session status SOCKET` if the session still exists. `currentExecution` reports
+   an active execution ID and explicit progress. Do not submit another operation while it
+   is running. `recentExecutions` retains ten outcome summaries, without script/output data.
+   A completed `ok: true` means the script returned; its business checks define success.
+2. If the session is gone, reconnect to the same target and discover tabs again. Browser
+   restarts/sleep invalidate old tab IDs and page objects. Cookies survive; forms and live
+   state do not. A retained page object can also refer to a closed tab.
+3. Read the private task checkpoint and verify input digest, operation version, exact browser target and freshly checked site
+   account/tenant. Reconcile
+   its pending business key against the site before advancing. Error or timeout does not
+   roll back prior state changes or website effects.
+4. Resume only confirmed remaining work. Unknown outcomes require reconciliation, not
+   automatic replay. Local files cannot provide exactly-once semantics for a remote site.
+
+Progress is explicitly supplied by the script, not a scanner of `state`. Report counts
+and non-sensitive phase names; keep customer records and secrets out of progress/errors.
+Recent outcomes disappear when the session exits, so retain durable evidence in task files.
+
+For a user handoff, leave the required tab visible and describe the action in the viewer.
+Ending the session releases CDP and permits idle sleep, which can close that tab and its
+unfinished form. Tell the user if a fresh navigation may be needed when resuming; login
+cookies remain. Do not hold sessions open indefinitely just to avoid rediscovery.

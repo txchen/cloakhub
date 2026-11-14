@@ -1,0 +1,122 @@
+# Verified batches
+
+Use for explicitly authorized repeated work after one record has established a reliable
+workflow and record-specific success check. Stop when scope, recipient, content, or another
+business choice needs new judgment. A loop does not authorize extra writes.
+
+## Prepare once
+
+Use a task session. Keep the input and validated operation helpers on `state`.
+Define `state.submit(row)` and `state.findConfirmed(row)` from the observed site:
+`findConfirmed` must return a matching durable record ID as a nonempty string only after verifying the intended
+fields, or `null` when not confirmed. It must not mistake a stale success toast for this row.
+Set finite per-operation timeouts. Retain exact money units and stable business keys.
+
+Use a private, task-specific client checkpoint path. This example assumes one session owns
+the file; do not run concurrent batches against the same file/account. Set `state.destination`
+from the actual connection and freshly verified site identity: exact `hubOrigin`, `profileId`,
+`siteOrigin`, and a non-secret `accountKey` identifying the account/tenant. An alias alone
+is insufficient. Re-verify the account on resume or after human intervention. Keep that
+identity in the private task checkpoint, not in shared site learnings. Initialize once:
+
+```js
+state.batchReady = false;
+const destinationFields = ['hubOrigin', 'profileId', 'siteOrigin', 'accountKey'];
+if (destinationFields.some(key => typeof state.destination?.[key] !== 'string' || !state.destination[key].trim())) {
+  throw new Error('Verify the exact browser target and site account/tenant before preparing a batch');
+}
+if (!Array.isArray(state.rows) || state.rows.some(row => typeof row?.key !== 'string' || !row.key.trim())) {
+  throw new Error('Every input row needs a nonempty string business key');
+}
+const keys = new Set(state.rows.map(row => row.key));
+if (keys.size !== state.rows.length) throw new Error('Duplicate input business keys');
+state.fs = await import('node:fs/promises');
+const { createHash } = await import('node:crypto');
+// Assign state.rows from verified input, and state.checkpointPath to an absolute task path.
+state.batchIdentity = () => ({
+  operationVersion: 'orders-entry-v1',
+  destination: Object.fromEntries(destinationFields.map(key => [key, state.destination[key]])),
+  inputDigest: createHash('sha256').update(JSON.stringify(state.rows)).digest('hex')
+});
+state.identity = state.batchIdentity();
+try {
+  state.checkpoint = JSON.parse(await state.fs.readFile(state.checkpointPath, 'utf8'));
+  if (JSON.stringify(state.checkpoint.identity) !== JSON.stringify(state.identity)) {
+    throw new Error('Checkpoint belongs to different input, operation or destination');
+  }
+} catch (error) {
+  if (error.code !== 'ENOENT') throw error;
+  state.checkpoint = { identity: state.identity, completed: [], pending: null };
+}
+const savedKeys = new Set();
+if (!Array.isArray(state.checkpoint.completed)) throw new Error('Invalid checkpoint records');
+for (const entry of state.checkpoint.completed) {
+  if (!keys.has(entry?.key) || savedKeys.has(entry.key) || typeof entry.recordId !== 'string' || !entry.recordId) {
+    throw new Error('Invalid or duplicate checkpoint record');
+  }
+  savedKeys.add(entry.key);
+}
+if (state.checkpoint.pending !== null && (!keys.has(state.checkpoint.pending) || savedKeys.has(state.checkpoint.pending))) {
+  throw new Error('Invalid pending checkpoint record');
+}
+state.saveCheckpoint = async () => {
+  const tmp = state.checkpointPath + '.tmp';
+  await state.fs.writeFile(tmp, JSON.stringify(state.checkpoint), { mode: 0o600 });
+  await state.fs.rename(tmp, state.checkpointPath);
+};
+state.batchReady = true;
+console.log({ completed: state.checkpoint.completed.length, pending: state.checkpoint.pending });
+```
+
+The recipe rejects duplicate input keys and malformed checkpoint records before writes.
+An older checkpoint without destination identity needs manual reconciliation; do not add
+the new identity and assume its old completions belong to that account.
+A loaded `pending` entry must be reconciled with the site before processing more rows.
+Never clear it just to make the loop run. Completed entries are evidence recorded by a
+previous execution, not proof that the remote data has remained unchanged forever.
+
+## Execute a bounded batch
+
+The following assumes each row has a unique stable `key`, `submit` and `findConfirmed`
+are already validated, and their combined worst-case timeout fits the reserved budget.
+Adapt the budget to those actual timeouts; return earlier for slow workflows.
+
+```js
+if (!state.batchReady) throw new Error('Prepare and validate the batch first');
+if (JSON.stringify(state.batchIdentity()) !== JSON.stringify(state.checkpoint.identity)) {
+  throw new Error('Input or destination changed; prepare and reconcile again');
+}
+if (state.checkpoint.pending !== null) throw new Error('Reconcile pending record first');
+const done = new Set(state.checkpoint.completed.map(item => item.key));
+let processed = 0;
+for (const row of state.rows) {
+  if (done.has(row.key)) continue;
+  if (processed >= 10 || execution.remainingMs() < 45000) break;
+  state.checkpoint.pending = row.key;
+  await state.saveCheckpoint(); // Record uncertainty before the side effect.
+  await state.submit(row);
+  const recordId = await state.findConfirmed(row);
+  if (typeof recordId !== 'string' || !recordId) throw new Error('Result unknown; inspect the pending record before continuing');
+  state.checkpoint.completed.push({ key: row.key, recordId });
+  state.checkpoint.pending = null;
+  await state.saveCheckpoint();
+  done.add(row.key);
+  processed++;
+  execution.reportProgress({ completed: done.size, total: state.rows.length });
+}
+console.log({ completed: done.size, total: state.rows.length, processed });
+```
+
+Do not catch an unknown row outcome and continue the loop. A failed checkpoint write after
+submission is also uncertain: the on-disk pending entry is deliberately retained. Before
+reporting full completion, compare the resulting record set and intended fields with the
+input. Save large results to the task directory and return only a summary to the model.
+
+## Resume
+
+Follow [recovery](recovery.md). Local checkpoint updates and remote submissions are not
+one transaction; this pattern cannot guarantee exactly-once writes. Re-query the pending
+business key. If exactly one matching result is confirmed, record its ID and clear pending.
+If the result is ambiguous, stop that record for reconciliation. Retry only when absence
+and the original request's final outcome are established, or the application supplies a
+verified idempotent operation. Reconnects and timeouts do not themselves establish either.

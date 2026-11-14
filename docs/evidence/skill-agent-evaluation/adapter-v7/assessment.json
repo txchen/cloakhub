@@ -1,0 +1,51 @@
+[
+  {
+    "scenario": "pagination",
+    "raw_passed": true,
+    "boundary_exercised": true,
+    "accepted": true,
+    "note": ""
+  },
+  {
+    "scenario": "scope-flip",
+    "raw_passed": true,
+    "boundary_exercised": true,
+    "accepted": true,
+    "note": ""
+  },
+  {
+    "scenario": "async-reject",
+    "raw_passed": true,
+    "boundary_exercised": true,
+    "accepted": true,
+    "note": ""
+  },
+  {
+    "scenario": "unknown",
+    "raw_passed": true,
+    "boundary_exercised": true,
+    "accepted": true,
+    "note": ""
+  },
+  {
+    "scenario": "preflight",
+    "raw_passed": true,
+    "boundary_exercised": true,
+    "accepted": true,
+    "note": ""
+  },
+  {
+    "scenario": "restart",
+    "raw_passed": true,
+    "boundary_exercised": true,
+    "accepted": true,
+    "note": ""
+  },
+  {
+    "scenario": "disconnect",
+    "raw_passed": true,
+    "boundary_exercised": true,
+    "accepted": true,
+    "note": ""
+  }
+]

@@ -1,0 +1,10 @@
+{
+  "cases": 6,
+  "passed": 3,
+  "successful_completions": 1,
+  "correct_blocks": 2,
+  "writes": 34,
+  "audited_writes": 34,
+  "total_estimated_cost_usd": 0.026651960000000002,
+  "median_case_seconds": 91.18299999999999
+}
